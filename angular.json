@@ -34,7 +34,8 @@
             "inlineStyleLanguage": "scss",
             "assets": [
               "src/favicon.ico",
-              "src/assets"
+              "src/assets",
+              "src/abi"
             ],
             "stylePreprocessorOptions": {
               "includePaths": [
@@ -102,7 +103,8 @@
             "inlineStyleLanguage": "scss",
             "assets": [
               "src/favicon.ico",
-              "src/assets"
+              "src/assets",
+              "src/abi"
             ],
             "styles": [
               "src/scss/main.scss"
