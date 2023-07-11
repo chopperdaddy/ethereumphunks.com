@@ -13,11 +13,12 @@ import { jsonRpcProvider } from '@wagmi/core/providers/jsonRpc';
 import { EthereumClient, w3mConnectors } from '@web3modal/ethereum';
 import { Web3Modal } from '@web3modal/html';
 
+import punkDataABI from '@/abi/punkData.json';
+
 const projectId = '9455b1a68e7f81eee6e1090c12edbf00';
 
 const punkDataAddressMainnet = '0x16F5A35647D6F03D5D3da7b35409D65ba03aF3B2';
 const punkDataAddressGoerli = '0xd61Cb6E357bF34B9280d6cC6F7CCF1E66C2bcf89';
-const punkDataABI = require('../abi/punkData.json');
 
 @Injectable({
   providedIn: 'root'
