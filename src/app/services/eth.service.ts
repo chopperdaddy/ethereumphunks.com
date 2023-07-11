@@ -13,7 +13,7 @@ import { jsonRpcProvider } from '@wagmi/core/providers/jsonRpc';
 import { EthereumClient, w3mConnectors } from '@web3modal/ethereum';
 import { Web3Modal } from '@web3modal/html';
 
-import punkDataABI from '@/abi/punkData.json';
+import punkDataABI from '@/abi/PunkData.json';
 
 const projectId = '9455b1a68e7f81eee6e1090c12edbf00';
 
