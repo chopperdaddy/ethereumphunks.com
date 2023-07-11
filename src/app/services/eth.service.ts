@@ -1,6 +1,5 @@
 import { Injectable } from '@angular/core';
 
-import { DataService } from './data.service';
 import { StateService } from './state.service';
 
 import { Observable, catchError, filter, of, tap } from 'rxjs';
@@ -8,7 +7,7 @@ import { Observable, catchError, filter, of, tap } from 'rxjs';
 import { Address, FallbackTransport, TransactionReceipt, formatEther, isAddress, parseEther, stringToHex, toHex } from 'viem';
 import { mainnet, goerli } from 'viem/chains';
 
-import { Chain, Config, PublicClient, WebSocketPublicClient, configureChains, createConfig, disconnect, getAccount, getNetwork, getPublicClient, getWalletClient, watchAccount } from '@wagmi/core';
+import { Chain, Config, PublicClient, WebSocketPublicClient, configureChains, createConfig, disconnect, getAccount, getPublicClient, getWalletClient, watchAccount } from '@wagmi/core';
 
 import { jsonRpcProvider } from '@wagmi/core/providers/jsonRpc';
 import { EthereumClient, w3mConnectors } from '@web3modal/ethereum';
@@ -16,8 +15,8 @@ import { Web3Modal } from '@web3modal/html';
 
 const projectId = '9455b1a68e7f81eee6e1090c12edbf00';
 
-// const punkDataAddress = '0x16F5A35647D6F03D5D3da7b35409D65ba03aF3B2';
-const punkDataAddress = '0xd61Cb6E357bF34B9280d6cC6F7CCF1E66C2bcf89';
+const punkDataAddressMainnet = '0x16F5A35647D6F03D5D3da7b35409D65ba03aF3B2';
+const punkDataAddressGoerli = '0xd61Cb6E357bF34B9280d6cC6F7CCF1E66C2bcf89';
 const punkDataABI = require('../abi/punkData.json');
 
 @Injectable({
@@ -37,18 +36,17 @@ export class EthService {
   phunk: any;
 
   constructor(
-    private stateSvc: StateService,
-    private dataSvc: DataService
+    private stateSvc: StateService
   ) {
 
     const { chains, publicClient, webSocketPublicClient } = configureChains(
       [
-        // mainnet,
+        mainnet,
         goerli
       ],
       [
         jsonRpcProvider({
-          rpc: (chain) => ({ http: 'http://goerli-geth.dappnode:8545' }),
+          rpc: (chain) => ({ http: `http://${chain.id === 5 ? 'goerli-' : ''}geth.dappnode:8545` }),
         }),
       ],
     );
@@ -179,8 +177,10 @@ export class EthService {
 
   async getPunkImage(tokenId: string): Promise<any> {
     const publicClient = getPublicClient();
+    const chainId = await publicClient?.getChainId();
+
     const punkImage = await publicClient?.readContract({
-      address: punkDataAddress as `0x${string}`,
+      address: chainId === 5 ? punkDataAddressGoerli : punkDataAddressMainnet as `0x${string}`,
       abi: punkDataABI,
       functionName: 'punkImageSvg',
       args: [`${tokenId}`],
@@ -189,10 +189,11 @@ export class EthService {
   }
 
   async getPunkAttributes(tokenId: string): Promise<any> {
-    console.log({ tokenId });
     const publicClient = getPublicClient();
+    const chainId = await publicClient?.getChainId();
+
     const punkAttributes = await publicClient?.readContract({
-      address: punkDataAddress as `0x${string}`,
+      address: chainId === 5 ? punkDataAddressGoerli : punkDataAddressMainnet as `0x${string}`,
       abi: punkDataABI,
       functionName: 'punkAttributes',
       args: [tokenId],
@@ -204,10 +205,11 @@ export class EthService {
     if (!content) return;
 
     const walletClient = await getWalletClient();
+    const chainId = await walletClient?.getChainId();
     const data = toHex(content);
 
     return await walletClient?.sendTransaction({
-      chain: goerli,
+      chain: chainId === 5 ? goerli : mainnet,
       to: this.stateSvc.getWalletAddress() as Address,
       value: BigInt(0),
       data,
@@ -217,6 +219,11 @@ export class EthService {
   async waitForTransaction(hash: `0x${string}`): Promise<TransactionReceipt> {
     const publicClient = getPublicClient();
     return publicClient.waitForTransactionReceipt({ hash });
+  }
+
+  async getActiveChain(): Promise<number> {
+    const publicClient = getPublicClient();
+    return publicClient.getChainId();
   }
 
 }

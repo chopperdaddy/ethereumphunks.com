@@ -1,13 +1,14 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { HttpClient } from '@angular/common/http';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 
 import { EthService } from '@/services/eth.service';
+import { StateService } from '@/services/state.service';
 
 import { defaultPunk } from './defaultPunk';
 
-import { catchError, debounceTime, filter, map, tap } from 'rxjs';
-import { HttpClient } from '@angular/common/http';
+import { Observable, catchError, debounceTime, filter, from, map, of, switchMap, tap } from 'rxjs';
 
 @Component({
   selector: 'app-ethscribe',
@@ -23,22 +24,26 @@ import { HttpClient } from '@angular/common/http';
 export class EthscribeComponent {
 
   phunkId: FormControl = new FormControl<number | null>(null);
-  activePhunkBase64: string = defaultPunk;
+
+  defaultPunk: string = defaultPunk;
+  activePhunkBase64!: string;
 
   loadingPhunk: boolean = false;
   downloadActive: boolean = false;
   notAvailable: number = -1;
 
   constructor(
-    private ethSvc: EthService,
-    private http: HttpClient
+    private http: HttpClient,
+    public stateSvc: StateService,
+    public ethSvc: EthService,
   ) {
 
     this.phunkId.valueChanges.pipe(
-      filter((value) => !!value),
       tap(() => {
+        this.activePhunkBase64 = '';
         this.notAvailable = -1;
         this.loadingPhunk = true;
+        this.downloadActive = false;
       }),
       debounceTime(500),
       map((value) => {
@@ -52,14 +57,19 @@ export class EthscribeComponent {
         }
         return value;
       }),
-      tap((value) => {
-        if (!value && value !== 0) {
-          this.activePhunkBase64 = defaultPunk;
-          return;
-        }
-        console.log(value.toString())
-        this.getPhunkData(value.toString());
+      switchMap((value) => {
+        if (!value && value !== 0) return of(defaultPunk);
+        return from(this.getPhunkData(value.toString()));
+      }),
+      switchMap((res) => {
+        this.activePhunkBase64 = res;
+        if (res !== defaultPunk) return this.checkExists(res);
+        return of(null);
+      }),
+      tap((res) => {
+        this.notAvailable = res ? 1 : 0;
         this.loadingPhunk = false;
+        console.log(res)
       }),
       catchError((err) => {
         console.log(err);
@@ -90,8 +100,6 @@ export class EthscribeComponent {
       const serialized = new XMLSerializer().serializeToString(svgElement);
       const base64 = btoa(serialized);
       const ethscription = 'data:image/svg+xml;base64,' + base64;
-
-      this.activePhunkBase64 = ethscription;
       return ethscription;
     } catch (error) {
       console.log(error);
@@ -99,10 +107,12 @@ export class EthscribeComponent {
   }
 
   async ethscribePhunk(): Promise<any> {
-    const ethscription = this.activePhunkBase64
+    const ethscription = this.activePhunkBase64;
     console.log(ethscription);
+
     const hash = await this.ethSvc.ethscribe(ethscription);
     console.log(hash);
+
     if (!hash) return;
 
     const receipt = await this.ethSvc.waitForTransaction(hash);
@@ -114,18 +124,23 @@ export class EthscribeComponent {
     this.phunkId.setValue(phunkId);
   }
 
-  async checkExists(): Promise<any> {
-    const ethscription = this.activePhunkBase64
-
-    const sha = await this.getSHA256Hash(ethscription);
+  checkExists(data: string): Observable<any> {
     const url = 'https://goerli-api.ethscriptions.com/api/ethscriptions/exists/';
 
-    this.http.get(`${url}/${sha}`).pipe(
-      map((res: any) => res.ethscription),
-      tap((res) => {
-        this.notAvailable = res ? 1 : 0;
+    return from(this.getSHA256Hash(data)).pipe(
+      switchMap((hash) => {
+        return this.http.get(`${url}/${hash}`);
       }),
-    ).subscribe();
+      map((res: any) => res.ethscription),
+    );
+  }
+
+  async getSHA256Hash(value: string): Promise<string> {
+    const msgUint8 = new TextEncoder().encode(value);
+    const hashBuffer = await window.crypto.subtle.digest('SHA-256', msgUint8);
+    const hashArray = Array.from(new Uint8Array(hashBuffer)); // convert buffer to byte array
+    const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join(''); // convert bytes to hex string
+    return hashHex;
   }
 
   async download(background: boolean = false): Promise<any> {
@@ -183,13 +198,4 @@ export class EthscribeComponent {
     link.click();  // Simulate click to start download
     document.body.removeChild(link);  // Clean up by removing the link
   }
-
-  async getSHA256Hash(value: string): Promise<string> {
-    const msgUint8 = new TextEncoder().encode(value);
-    const hashBuffer = await window.crypto.subtle.digest('SHA-256', msgUint8);
-    const hashArray = Array.from(new Uint8Array(hashBuffer)); // convert buffer to byte array
-    const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join(''); // convert bytes to hex string
-    return hashHex;
-  }
-
 }

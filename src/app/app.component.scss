@@ -1,12 +1,11 @@
+@import 'abstracts/variables';
+@import 'abstracts/mixins';
+
 :host {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-
   min-height: 100vh;
-
-  // background-color: rgba(var(--black), .75);
 }
 
 main {
@@ -16,9 +15,35 @@ main {
   width: 100%;
   max-width: 45rem;
 
+  padding-top: 20rem;
+
   h1 {
     font-size: 3rem;
     font-weight: 900;
     padding-bottom: 1rem;
+  }
+
+  @media (max-width: $mobile) {
+    padding: 2rem;
+
+    h2 {
+      font-size: 1.4rem;
+      line-height: 1.5;
+    }
+  }
+}
+
+p {
+  &.x-small {
+    padding: 0;
+    margin: 0;
+
+    a {
+      display: block;
+      padding: .5rem .25rem;
+      font-weight: 700;
+      color: rgba(var(--pink), 1);
+      text-decoration: none;
+    }
   }
 }

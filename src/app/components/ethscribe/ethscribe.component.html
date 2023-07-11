@@ -1,8 +1,7 @@
 <div class="form-wrapper">
   <div class="input-wrapper">
     <input type="number" placeholder="Phunk ID" [formControl]="phunkId" />
-    <div class="loader"
-      *ngIf="loadingPhunk">
+    <div class="loader" *ngIf="loadingPhunk">
       <img src="/assets/loader-light.gif" width="20" height="20" alt="">
     </div>
   </div>
@@ -10,24 +9,55 @@
   <button (click)="randomPhunk()">Random</button>
 </div>
 
-<ng-container *ngIf="notAvailable !== -1;">
-  <p class="error" *ngIf="notAvailable === 1">This Phunk has already been ethscribed.</p>
-  <p class="success" *ngIf="notAvailable === 0">This Phunk has NOT already been ethscribed.</p>
-</ng-container>
-
 <div class="image-wrapper">
-  <img [src]="activePhunkBase64" width="240" height="240" />
+  <img [src]="activePhunkBase64 || defaultPunk" width="240" height="240" />
 </div>
 
 <div class="actions-wrapper">
-  <button (click)="downloadActive = !downloadActive">download</button>
-  <button (click)="checkExists()">Check Availability</button>
-  <button (click)="ethscribePhunk()">Ethscribe</button>
+
+  <ng-container *ngIf="notAvailable !== -1;">
+    <p class="error" *ngIf="notAvailable === 1">This Phunk has already been ethscribed.</p>
+    <!-- <p class="success" *ngIf="notAvailable === 0">This Phunk is available to be ethscribed.</p> -->
+  </ng-container>
+
+  <div class="actions-buttons-wrapper">
+    <button
+      (click)="downloadActive = !downloadActive"
+      class="download"
+      [class.disabled]="!activePhunkBase64">
+
+      Download
+    </button>
+
+    <ng-container *ngIf="stateSvc.web3Connected$ | async; else connect">
+      <button
+        (click)="ethscribePhunk()"
+        class="ethscribe"
+        [class.disabled]="notAvailable !== 0">
+
+        Ethscribe
+      </button>
+    </ng-container>
+    <ng-template #connect>
+      <button
+        (click)="ethSvc.connect()"
+        class="ethscribe"
+        [class.disabled]="notAvailable !== 0">
+
+        Connect Wallet
+      </button>
+    </ng-template>
+  </div>
 </div>
 
 <div class="download-wrapper" *ngIf="downloadActive">
   <h3>Download Image</h3>
 
-  <button (click)="download(true)">With background</button>
-  <button (click)="download()">Without background</button>
+  <div class="download-buttons-wrapper">
+    <button (click)="download(true)">With Background</button>
+    <button (click)="download()">Without Background</button>
+  </div>
 </div>
+
+
+<!-- {{ notAvailable }} -->
