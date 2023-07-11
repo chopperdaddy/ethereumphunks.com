@@ -1,0 +1,37 @@
+// $tippy-color: var(--background);
+// $tippy-border: var(--color1);
+
+.tippy-box {
+  
+  border-radius: 2rem;
+
+  .tippy-content {
+    font-size: 1.2rem;
+    font-weight: 700;
+    padding: .5rem 1rem;
+    min-width: 5rem;
+    text-align: center;
+
+    h2 {
+      padding-top: .3rem;
+      font-weight: 700;
+    }
+  }
+
+  &[data-theme~='tipelectric'] {
+
+    background-color: rgba(var(--pink), 1);
+    box-shadow: 0 2rem 7rem 0 rgba(var(--dark-text), .1);
+
+    > .tippy-svg-arrow {
+      svg {
+        fill: rgba(var(--pink), 1);
+      }
+    }
+
+    .tippy-content {
+      color: rgba(var(--background), 1);
+    }
+  }
+
+}

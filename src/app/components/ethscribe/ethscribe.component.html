@@ -1,0 +1,33 @@
+<div class="form-wrapper">
+  <div class="input-wrapper">
+    <input type="number" placeholder="Phunk ID" [formControl]="phunkId" />
+    <div class="loader"
+      *ngIf="loadingPhunk">
+      <img src="/assets/loader-light.gif" width="20" height="20" alt="">
+    </div>
+  </div>
+
+  <button (click)="randomPhunk()">Random</button>
+</div>
+
+<ng-container *ngIf="notAvailable !== -1;">
+  <p class="error" *ngIf="notAvailable === 1">This Phunk has already been ethscribed.</p>
+  <p class="success" *ngIf="notAvailable === 0">This Phunk has NOT already been ethscribed.</p>
+</ng-container>
+
+<div class="image-wrapper">
+  <img [src]="activePhunkBase64" width="240" height="240" />
+</div>
+
+<div class="actions-wrapper">
+  <button (click)="downloadActive = !downloadActive">download</button>
+  <button (click)="checkExists()">Check Availability</button>
+  <button (click)="ethscribePhunk()">Ethscribe</button>
+</div>
+
+<div class="download-wrapper" *ngIf="downloadActive">
+  <h3>Download Image</h3>
+
+  <button (click)="download(true)">With background</button>
+  <button (click)="download()">Without background</button>
+</div>

@@ -1,0 +1,23 @@
+// -----------------------------------------------------------------------------
+// This file contains all application-wide Sass variables.
+// -----------------------------------------------------------------------------
+
+$primary-font-stack: 'Inter', sans-serif;
+$secondary-font-stack: 'Retro Computer', sans-serif !default;
+
+:root {
+  --header-height: 12rem;
+
+  --white: 255, 255, 255;
+  --black: 0, 0, 0;
+
+  --background: 255, 255, 255;
+  --text-color: 23,23,23;
+  --dark-text: 0, 0, 0;
+  --green: 195, 255, 0;
+  --pink: 255, 4, 180;
+}
+
+$mobile: 800px;
+
+$base-url: '/assets/' !default;
