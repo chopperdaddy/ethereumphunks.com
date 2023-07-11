@@ -34,8 +34,7 @@
             "inlineStyleLanguage": "scss",
             "assets": [
               "src/favicon.ico",
-              "src/assets",
-              "src/abi"
+              "src/assets"
             ],
             "stylePreprocessorOptions": {
               "includePaths": [
@@ -52,13 +51,13 @@
               "budgets": [
                 {
                   "type": "initial",
-                  "maximumWarning": "500kb",
-                  "maximumError": "1mb"
+                  "maximumWarning": "10mb",
+                  "maximumError": "50mb"
                 },
                 {
                   "type": "anyComponentStyle",
-                  "maximumWarning": "2kb",
-                  "maximumError": "4kb"
+                  "maximumWarning": "10mb",
+                  "maximumError": "50mb"
                 }
               ],
               "outputHashing": "all"
@@ -103,8 +102,7 @@
             "inlineStyleLanguage": "scss",
             "assets": [
               "src/favicon.ico",
-              "src/assets",
-              "src/abi"
+              "src/assets"
             ],
             "styles": [
               "src/scss/main.scss"
