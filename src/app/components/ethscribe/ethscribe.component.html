@@ -11,7 +11,7 @@
 </div>
 
 <div class="image-wrapper">
-  <img [src]="activePhunkBase64 || defaultPunk" width="240" height="240" />
+  <img [src]="activePhunkDataUri || defaultPunk" width="240" height="240" />
 </div>
 
 <div class="actions-wrapper">
@@ -20,7 +20,7 @@
     <button
       (click)="downloadActive = !downloadActive"
       class="download"
-      [class.disabled]="!activePhunkBase64">
+      [class.disabled]="!activePhunkDataUri">
 
       Download
     </button>

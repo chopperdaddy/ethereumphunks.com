@@ -9,6 +9,7 @@ import { StateService } from '@/services/state.service';
 import { defaultPunk } from './defaultPunk';
 
 import { Observable, catchError, debounceTime, filter, from, map, of, switchMap, tap } from 'rxjs';
+import { environment } from 'src/environments/environment';
 
 @Component({
   selector: 'app-ethscribe',
@@ -26,7 +27,7 @@ export class EthscribeComponent {
   phunkId: FormControl = new FormControl<number | null>(null);
 
   defaultPunk: string = defaultPunk;
-  activePhunkBase64!: string;
+  activePhunkDataUri!: string | null;
 
   transaction: any = {
     hash: null,
@@ -42,10 +43,9 @@ export class EthscribeComponent {
     public stateSvc: StateService,
     public ethSvc: EthService,
   ) {
-
     this.phunkId.valueChanges.pipe(
       tap(() => {
-        this.activePhunkBase64 = '';
+        this.activePhunkDataUri = null;
         this.notAvailable = -1;
         this.loadingPhunk = true;
         this.downloadActive = false;
@@ -67,7 +67,7 @@ export class EthscribeComponent {
         return from(this.getPhunkData(value.toString()));
       }),
       switchMap((res) => {
-        this.activePhunkBase64 = res;
+        this.activePhunkDataUri = res;
         if (res !== defaultPunk) return this.checkExists(res);
         return of(null);
       }),
@@ -103,8 +103,12 @@ export class EthscribeComponent {
       });
 
       const serialized = new XMLSerializer().serializeToString(svgElement);
-      const base64 = btoa(serialized);
-      const ethscription = 'data:image/svg+xml;base64,' + base64;
+      const ethscription = 'data:image/svg+xml,' + encodeURIComponent(serialized);
+
+      const fileSizeInBytes = ethscription.length / 2;
+      const fileSizeInKb = fileSizeInBytes / 1024;
+      console.log('File size in kilobytes:', fileSizeInKb);
+
       return ethscription;
     } catch (error) {
       console.log(error);
@@ -112,8 +116,7 @@ export class EthscribeComponent {
   }
 
   async ethscribePhunk(): Promise<any> {
-    const ethscription = this.activePhunkBase64;
-    console.log(ethscription);
+    const ethscription = this.activePhunkDataUri;
 
     const hash = await this.ethSvc.ethscribe(ethscription);
     this.transaction = {
@@ -135,17 +138,6 @@ export class EthscribeComponent {
     this.phunkId.setValue(phunkId);
   }
 
-  checkExists(data: string): Observable<any> {
-    const url = 'https://goerli-api.ethscriptions.com/api/ethscriptions/exists/';
-
-    return from(this.getSHA256Hash(data)).pipe(
-      switchMap((hash) => {
-        return this.http.get(`${url}/${hash}`);
-      }),
-      map((res: any) => res.ethscription),
-    );
-  }
-
   async getSHA256Hash(value: string): Promise<string> {
     const msgUint8 = new TextEncoder().encode(value);
     const hashBuffer = await window.crypto.subtle.digest('SHA-256', msgUint8);
@@ -155,8 +147,11 @@ export class EthscribeComponent {
   }
 
   async download(background: boolean = false): Promise<any> {
-    const ethscription = this.activePhunkBase64;
-    let svg = atob(ethscription.split(',')[1]);
+
+    const ethscription = this.activePhunkDataUri;
+    if (!ethscription) return;
+
+    let svg = decodeURIComponent(ethscription!.split(',')[1]);
 
     if (background) {
       const parser = new DOMParser();
@@ -178,5 +173,14 @@ export class EthscribeComponent {
 
     const win = window.open();
     win?.document.write(`<img src="${url}" />`);
+  }
+
+  checkExists(data: string): Observable<any> {
+    return from(this.getSHA256Hash(data)).pipe(
+      switchMap((hash) => {
+        return this.http.get(`${environment.ethScribeApi}/ethscriptions/exists/${hash}`);
+      }),
+      map((res: any) => res.ethscription),
+    );
   }
 }
