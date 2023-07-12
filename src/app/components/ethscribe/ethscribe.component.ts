@@ -28,6 +28,11 @@ export class EthscribeComponent {
   defaultPunk: string = defaultPunk;
   activePhunkBase64!: string;
 
+  transaction: any = {
+    hash: null,
+    status: null,
+  };
+
   loadingPhunk: boolean = false;
   downloadActive: boolean = false;
   notAvailable: number = -1;
@@ -111,12 +116,18 @@ export class EthscribeComponent {
     console.log(ethscription);
 
     const hash = await this.ethSvc.ethscribe(ethscription);
-    console.log(hash);
+    this.transaction = {
+      hash,
+      status: 'pending',
+    };
 
     if (!hash) return;
 
     const receipt = await this.ethSvc.waitForTransaction(hash);
-    console.log(receipt);
+    this.transaction = {
+      hash: receipt.transactionHash,
+      status: 'complete',
+    };
   }
 
   async randomPhunk(): Promise<any> {
@@ -144,58 +155,28 @@ export class EthscribeComponent {
   }
 
   async download(background: boolean = false): Promise<any> {
-
-    const ethscription = this.activePhunkBase64
-
-    const svg = atob(ethscription.split(',')[1]);
+    const ethscription = this.activePhunkBase64;
+    let svg = atob(ethscription.split(',')[1]);
 
     if (background) {
-      console.log(svg)
+      const parser = new DOMParser();
+      const svgDocument = parser.parseFromString(svg, 'image/svg+xml');
+
+      const backgroundRect = svgDocument.createElementNS('http://www.w3.org/2000/svg', 'rect');
+      backgroundRect.setAttribute('width', '100%');
+      backgroundRect.setAttribute('height', '100%');
+      backgroundRect.setAttribute('fill', 'rgb(195, 255, 0)');
+
+      svgDocument.documentElement.insertBefore(backgroundRect, svgDocument.documentElement.firstChild);
+
+      const serializer = new XMLSerializer();
+      svg = serializer.serializeToString(svgDocument.documentElement);
     }
 
-    const blob = new Blob([svg], { type: 'image/svg+xml' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
+    const svgBase64 = btoa(svg);
+    const url = `data:image/svg+xml;base64,${svgBase64}`;
 
-    link.href = url;
-    // link.download = `${phunkId}.svg`;
-    link.target = '_blank';
-    link.style.display = 'none';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  }
-
-  async addBackgroundAndDownload(): Promise<void> {
-    const ethscription = this.activePhunkBase64
-    const svgString = atob(ethscription.split(',')[1]);
-
-    // Parse SVG string into an actual SVG document
-    const parser = new DOMParser();
-    const svgDocument = parser.parseFromString(svgString, 'image/svg+xml');
-
-    // Create a new rectangle for the background
-    const backgroundRect = svgDocument.createElementNS('http://www.w3.org/2000/svg', 'rect');
-    backgroundRect.setAttribute('width', '100%');
-    backgroundRect.setAttribute('height', '100%');
-    backgroundRect.setAttribute('fill', 'rgb(195, 255, 0)');
-
-    // Insert the rectangle as the first child of the SVG
-    svgDocument.documentElement.insertBefore(backgroundRect, svgDocument.documentElement.firstChild);
-
-    // Serialize the modified SVG back into a string
-    const serializer = new XMLSerializer();
-    const newSvgString = serializer.serializeToString(svgDocument.documentElement);
-
-    // Continue with download process as before
-    const blob = new Blob([newSvgString], { type: 'image/svg+xml' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.target = '_blank'; // Open in new tab
-    link.style.display = 'none';  // Ensure the link isn't visible
-    document.body.appendChild(link);  // Append the link to the document
-    link.click();  // Simulate click to start download
-    document.body.removeChild(link);  // Clean up by removing the link
+    const win = window.open();
+    win?.document.write(`<img src="${url}" />`);
   }
 }

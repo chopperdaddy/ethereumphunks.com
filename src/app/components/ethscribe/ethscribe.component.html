@@ -1,5 +1,5 @@
 <div class="form-wrapper">
-  <h2>Coming soon</h2>
+  <h3>Coming soon</h3>
   <!-- <div class="input-wrapper">
     <input type="number" placeholder="Phunk ID" [formControl]="phunkId" />
     <div class="loader" *ngIf="loadingPhunk">
@@ -15,11 +15,6 @@
 </div>
 
 <div class="actions-wrapper">
-
-  <ng-container *ngIf="notAvailable !== -1;">
-    <p class="error" *ngIf="notAvailable === 1">This Phunk has already been ethscribed.</p>
-    <!-- <p class="success" *ngIf="notAvailable === 0">This Phunk is available to be ethscribed.</p> -->
-  </ng-container>
 
   <div class="actions-buttons-wrapper">
     <button
@@ -49,6 +44,14 @@
       </button>
     </ng-template>
   </div>
+
+  <ng-container *ngIf="notAvailable !== -1;">
+    <p class="error" *ngIf="notAvailable === 1">This Phunk has already been ethscribed.</p>
+  </ng-container>
+
+  <ng-container *ngIf="transaction.status">
+    <p class="pink">Your transaction is {{ transaction.status }}. View it on Etherscan <a [href]="'https://etherscan.com/tx/' + transaction.hash" target="_blank">here</a></p>
+  </ng-container>
 </div>
 
 <div class="download-wrapper" *ngIf="downloadActive">
