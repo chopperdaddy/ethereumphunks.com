@@ -21,7 +21,6 @@ import { EthscribeComponent } from './components/ethscribe/ethscribe.component';
 })
 
 export class AppComponent {
-  title = 'frontend';
 
   constructor(
     public ethSvc: EthService,
