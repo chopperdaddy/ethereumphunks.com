@@ -15,7 +15,7 @@ import { Web3Modal } from '@web3modal/html';
 
 import punkDataABI from '@/abi/PunkData.json';
 
-const projectId = '9455b1a68e7f81eee6e1090c12edbf00';
+const projectId = 'd183619f342281fd3f3ff85716b6016a';
 
 const punkDataAddressMainnet = '0x16F5A35647D6F03D5D3da7b35409D65ba03aF3B2';
 const punkDataAddressGoerli = '0xd61Cb6E357bF34B9280d6cC6F7CCF1E66C2bcf89';
