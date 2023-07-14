@@ -5,11 +5,14 @@ import { FormControl, ReactiveFormsModule } from '@angular/forms';
 
 import { EthService } from '@/services/eth.service';
 import { StateService } from '@/services/state.service';
+import { DataService } from '@/services/data.service';
 
-import { defaultPunk } from './defaultPunk';
+import { defaultPhunk } from './defaultPhunk';
 
-import { Observable, catchError, debounceTime, filter, from, map, of, switchMap, tap } from 'rxjs';
 import { environment } from 'src/environments/environment';
+
+import { Observable, catchError, debounceTime, filter, from, map, of, switchMap, tap, interval } from 'rxjs';
+import { startWith } from 'rxjs/operators';
 
 @Component({
   selector: 'app-ethscribe',
@@ -26,7 +29,7 @@ export class EthscribeComponent {
 
   phunkId: FormControl = new FormControl<number | null>(null);
 
-  defaultPunk: string = defaultPunk;
+  defaultPhunk: string = defaultPhunk;
   activePhunkDataUri!: string | null;
 
   transaction: any = {
@@ -38,10 +41,13 @@ export class EthscribeComponent {
   downloadActive: boolean = false;
   notAvailable: number = -1;
 
+  mintCount$: Observable<number> = of(0);
+
   constructor(
     private http: HttpClient,
     public stateSvc: StateService,
     public ethSvc: EthService,
+    private dataSvc: DataService,
   ) {
     this.phunkId.valueChanges.pipe(
       tap(() => {
@@ -63,12 +69,12 @@ export class EthscribeComponent {
         return value;
       }),
       switchMap((value) => {
-        if (!value && value !== 0) return of(defaultPunk);
+        if (!value && value !== 0) return of(defaultPhunk);
         return from(this.getPhunkData(value.toString()));
       }),
       switchMap((res) => {
         this.activePhunkDataUri = res;
-        if (res !== defaultPunk) return this.checkExists(res);
+        if (res !== defaultPhunk) return this.checkExists(res);
         return of(null);
       }),
       tap((res) => {
@@ -82,6 +88,11 @@ export class EthscribeComponent {
         return err;
       })
     ).subscribe();
+
+    this.mintCount$ = interval(5000).pipe(
+      startWith(0),
+      switchMap(_ => this.dataSvc.getMintCount()),
+    );
   }
 
   async getPhunkData(phunkId: string): Promise<any> {

@@ -19,6 +19,10 @@ main {
 
   padding-top: 20rem;
 
+  .intro-wrapper {
+
+  }
+
   h1 {
     font-size: 3rem;
     font-weight: 900;
@@ -31,6 +35,14 @@ main {
     h2 {
       font-size: 1.4rem;
       line-height: 1.5;
+    }
+  }
+}
+
+.owned-wrapper {
+  .image-wrapper {
+    img {
+      background-color: rgba(var(--green), 1);
     }
   }
 }

@@ -9,14 +9,15 @@ export class StateService {
   private web3Connected = new BehaviorSubject<boolean>(false);
   web3Connected$ = this.web3Connected.asObservable();
 
-  private walletAddress = new BehaviorSubject<any>(null);
+  private walletAddress = new BehaviorSubject<string | null>(null);
   walletAddress$ = this.walletAddress.asObservable();
 
   constructor() { }
 
   setWalletAddress(address: string | null | undefined): void {
+    if (!address) return;
     address = address?.toLowerCase();
-    this.walletAddress.next(address);
+    this.walletAddress.next(address as `0x${string}`);
   }
 
   getWalletAddress(): string | null {

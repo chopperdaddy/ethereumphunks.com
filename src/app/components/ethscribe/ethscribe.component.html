@@ -1,5 +1,9 @@
+
+<div class="mint-info-wrapper">
+  <span class="minted">{{ (mintCount$ | async) | number }}</span> / 10,000 ethscribed
+</div>
+
 <div class="form-wrapper">
-  <!-- <h3>Coming soon</h3> -->
   <div class="input-wrapper">
     <input type="number" placeholder="Phunk ID" [formControl]="phunkId" />
     <div class="loader" *ngIf="loadingPhunk">
@@ -11,7 +15,7 @@
 </div>
 
 <div class="image-wrapper">
-  <img [src]="activePhunkDataUri || defaultPunk" width="240" height="240" />
+  <img [src]="activePhunkDataUri || defaultPhunk" width="240" height="240" />
 </div>
 
 <div class="actions-wrapper">

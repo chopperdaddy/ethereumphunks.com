@@ -4,12 +4,20 @@
 :host {
   display: flex;
   flex-direction: column;
-  align-items: center;
-
   padding: 2rem 0;
 
   > * {
     user-select: none;
+  }
+}
+
+.mint-info-wrapper {
+  font-size: 1.2rem;
+  font-weight: 700;
+  padding: 0 0 .5rem 0;
+
+  .minted {
+    color: rgba(var(--pink), 1);
   }
 }
 

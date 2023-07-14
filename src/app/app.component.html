@@ -1,7 +1,9 @@
 <main>
-  <h1>Ethereum Phunks</h1>
-  <h2>Byte perfect flips of the onchain CryptoPunks</h2>
-  <p class="small">These <strong>SVG</strong> images are meticulously sourced from the CryptoPunks data contract, located <a href="https://etherscan.io/address/0x16f5a35647d6f03d5d3da7b35409d65ba03af3b2" target="_blank"><strong>here</strong></a>. Each image then undergoes a <strong>sophisticated algorithmic transformation</strong>, manipulating each individual pixel to orchestrate an aesthetically captivating <strong>mirror image</strong>, thus birthing a uniquely exquisite <strong>Phunk</strong>.</p>
+  <div class="intro-wrapper">
+    <h1>Ethereum Phunks</h1>
+    <h2>Byte perfect flips of the onchain CryptoPunks</h2>
+    <p class="small">These <strong>SVG</strong> images are meticulously sourced from the CryptoPunks data contract, located <a href="https://etherscan.io/address/0x16f5a35647d6f03d5d3da7b35409d65ba03af3b2" target="_blank"><strong>here</strong></a>. Each image then undergoes a <strong>sophisticated algorithmic transformation</strong>, manipulating each individual pixel to orchestrate an aesthetically captivating <strong>mirror image</strong>, thus birthing a uniquely exquisite <strong>Phunk</strong>.</p>
+  </div>
 
   <app-ethscribe />
 
@@ -10,3 +12,20 @@
     <a href="https://github.com/chopperdaddy/ethereumphunks.com" target="_blank">Source code</a>
   </p>
 </main>
+
+<!-- <ng-container *ngIf="(ethPhunks$ | async) as ethPhunks">
+  <div
+    class="owned-wrapper"
+    *ngIf="ethPhunks.length">
+
+    <div
+      [class.id]="phunk.hashId"
+      *ngFor="let phunk of ethPhunks">
+
+      <div class="image-wrapper">
+        <img [src]="phunk.data" width="100" height="100" alt="">
+      </div>
+      <div class="phunk-id">{{ phunk.phunkId }}</div>
+    </div>
+  </div>
+</ng-container> -->
