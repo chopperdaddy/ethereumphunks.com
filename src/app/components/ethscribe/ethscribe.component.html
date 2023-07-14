@@ -1,3 +1,4 @@
+<app-owned (phunkSelected)="phunkId.setValue($event)" />
 
 <div class="mint-info-wrapper">
   <span class="minted">{{ (mintCount$ | async) | number }}</span> / 10,000 ethscribed
@@ -66,6 +67,3 @@
     <button (click)="download()">Without Background</button>
   </div>
 </div>
-
-
-<!-- {{ notAvailable }} -->

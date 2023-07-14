@@ -4,11 +4,9 @@ import { RouterOutlet } from '@angular/router';
 
 import { EthService } from './services/eth.service';
 import { StateService } from './services/state.service';
-import { DataService } from './services/data.service';
 
 import { EthscribeComponent } from './components/ethscribe/ethscribe.component';
-
-import { Observable, from, of, switchMap, tap } from 'rxjs';
+import { OwnedComponent } from './components/owned/owned.component';
 
 @Component({
   selector: 'app-root',
@@ -17,27 +15,16 @@ import { Observable, from, of, switchMap, tap } from 'rxjs';
     CommonModule,
     RouterOutlet,
 
-    EthscribeComponent
+    EthscribeComponent,
+    OwnedComponent
   ],
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.scss']
 })
 
 export class AppComponent {
-
-  ethPhunks$!: Observable<any[]>;
-
   constructor(
     public ethSvc: EthService,
     public stateSvc: StateService,
-    private dataSvc: DataService
-  ) {
-    this.ethPhunks$ = this.stateSvc.walletAddress$.pipe(
-      switchMap((address: string | null) => {
-        if (!address) return of([]);
-        return from(this.dataSvc.getUserEthPhunks(address));
-      }),
-      tap((res) => console.log(res))
-    );
-  }
+  ) {}
 }

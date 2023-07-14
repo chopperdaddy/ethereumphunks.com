@@ -31,4 +31,5 @@ export class StateService {
   getWeb3Connected(): boolean {
     return this.web3Connected.getValue();
   }
+
 }

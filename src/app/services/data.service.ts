@@ -24,7 +24,7 @@ export class DataService {
   }
 
   async getUserEthPhunks(address: string): Promise<any> {
-    address = '0x000001f568875f378bf6d170b790967fe429c81a'.toLowerCase();
+    // address = '0x001b4d9dd4d95b021a50c99d09de97c87a1a09c0'.toLowerCase();
     if (!address) return [];
 
     const { data, error } = await supabase

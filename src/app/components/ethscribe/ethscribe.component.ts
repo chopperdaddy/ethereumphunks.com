@@ -7,9 +7,11 @@ import { EthService } from '@/services/eth.service';
 import { StateService } from '@/services/state.service';
 import { DataService } from '@/services/data.service';
 
-import { defaultPhunk } from './defaultPhunk';
+import { OwnedComponent } from '../owned/owned.component';
 
 import { environment } from 'src/environments/environment';
+
+import { defaultPhunk } from './defaultPhunk';
 
 import { Observable, catchError, debounceTime, filter, from, map, of, switchMap, tap, interval } from 'rxjs';
 import { startWith } from 'rxjs/operators';
@@ -20,6 +22,8 @@ import { startWith } from 'rxjs/operators';
   imports: [
     CommonModule,
     ReactiveFormsModule,
+
+    OwnedComponent
   ],
   templateUrl: './ethscribe.component.html',
   styleUrls: ['./ethscribe.component.scss']

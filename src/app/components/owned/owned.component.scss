@@ -1,0 +1,84 @@
+:host {
+  display: block;
+}
+
+.tab-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  padding: 1rem;
+  background-color: rgba(var(--green), 1);
+
+  h2 {
+    font-weight: 900;
+    padding: 0;
+  }
+
+  button {
+    background: none;
+
+    font-weight: 700;
+    font-size: 1.2rem;
+    color: rgba(var(--text-color), 1);
+  }
+}
+
+.owned-wrapper {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  row-gap: .5rem;
+  margin-bottom: 2rem;
+
+  height: 0;
+  overflow: hidden;
+  opacity: 0;
+  visibility: hidden;
+
+  .eth-phunk {
+    position: relative;
+
+    &:before {
+      content: '';
+      display: block;
+      padding-top: 100%;
+    }
+
+    .image-wrapper {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+    }
+
+    .image-wrapper {
+      img {
+        display: block;
+        background-color: rgba(var(--green), 1);
+        width: 100%;
+        height: 100%;
+        object-fit: contain;  // To maintain aspect ratio of the image
+        object-position: 0 100%;
+      }
+    }
+
+    // .phunk-id {
+    //   padding: .5rem 0;
+    //   background-color: rgba(var(--green), 1);
+
+    //   font-size: 1rem;
+    //   font-weight: 700;
+    //   text-align: center;
+    // }
+  }
+
+  &.expanded {
+    height: auto;
+    opacity: 1;
+    visibility: visible;
+
+    margin-top: 1rem;
+    margin-bottom: 2rem;
+  }
+}

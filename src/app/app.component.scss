@@ -15,9 +15,10 @@ main {
   flex-direction: column;
 
   width: 100%;
-  max-width: 45rem;
+  max-width: 50rem;
 
   padding-top: 20rem;
+  padding-bottom: 2rem;
 
   .intro-wrapper {
 
@@ -35,14 +36,6 @@ main {
     h2 {
       font-size: 1.4rem;
       line-height: 1.5;
-    }
-  }
-}
-
-.owned-wrapper {
-  .image-wrapper {
-    img {
-      background-color: rgba(var(--green), 1);
     }
   }
 }
