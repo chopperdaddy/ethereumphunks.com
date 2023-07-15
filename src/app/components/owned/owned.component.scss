@@ -28,7 +28,7 @@
   display: grid;
   grid-template-columns: repeat(8, 1fr);
   row-gap: .5rem;
-  margin-bottom: 2rem;
+  margin-bottom: .5rem;
 
   height: 0;
   overflow: hidden;
@@ -79,6 +79,6 @@
     visibility: visible;
 
     margin-top: 1rem;
-    margin-bottom: 2rem;
+    margin-bottom: 1rem;
   }
 }

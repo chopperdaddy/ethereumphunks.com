@@ -188,6 +188,7 @@ export class EthscribeComponent {
 
     const win = window.open();
     win?.document.write(`<img src="${url}" />`);
+    this.downloadActive = false;
   }
 
   checkExists(data: string): Observable<any> {

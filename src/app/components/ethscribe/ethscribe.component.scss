@@ -98,7 +98,6 @@ button {
   align-items: center;
 
   width: 100%;
-  margin-bottom: 2rem;
 
   .actions-buttons-wrapper {
     display: grid;
@@ -119,7 +118,6 @@ button {
   align-items: center;
 
   width: 100%;
-  margin-bottom: 2rem;
 
   h3 {
     font-size: 1.4rem;
@@ -132,10 +130,22 @@ button {
     grid-template-columns: 1fr 1fr;
     grid-gap: 1rem;
 
+    padding-top: .5rem;
     width: 100%;
 
     button {
       width: 100%;
+      font-size: 1.2rem;
+
+      &.with {
+        background-color: rgba(var(--green), 1);
+        color: rgba(var(--black), 1);
+      }
+
+      &.without {
+        background: none;
+        color: rgba(var(--text-color), 1);
+      }
     }
   }
 }
