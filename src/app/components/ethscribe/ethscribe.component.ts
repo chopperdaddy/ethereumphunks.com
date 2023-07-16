@@ -10,7 +10,7 @@ import { OwnedComponent } from '../owned/owned.component';
 
 import { defaultPhunk } from './defaultPhunk';
 
-import { EthPhunk } from 'indexer/src/models/ethPhunk';
+import { EthPhunk } from '@/models/ethPhunk';
 
 import { Observable, catchError, debounceTime, from, map, of, switchMap, tap, interval, startWith } from 'rxjs';
 
