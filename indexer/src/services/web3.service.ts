@@ -17,7 +17,7 @@ const startBlock = Number(process.env.ORIGIN_BLOCK); // Default Origin
 @Injectable()
 export class Web3Service {
 
-  rpcURL: string = 'http://geth.dappnode:8545';
+  rpcURL: string = process.env.RPC_URL;
   rpcURLGoerli: string = 'http://goerli-geth.dappnode:8545';
 
   client!: PublicClient;
