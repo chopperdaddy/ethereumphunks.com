@@ -36,7 +36,7 @@ export class DataService {
 
     const table = environment.chainId === 1 ? 'ethPhunks' : 'ethPhunks_goerli';
     const { data, error } = await supabase
-      .from('ethPhunks_goerli')
+      .from(table)
       .select('*')
       .eq('owner', address);
       console.log(data, error, address)
