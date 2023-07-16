@@ -30,6 +30,11 @@ button {
   background-color: rgba(var(--black), 1);
   justify-content: center;
 
+  &.transfer {
+    background-color: rgba(var(--green), 1);
+    color: rgba(var(--black), 1);
+  }
+
   &.ethscribe {
     background-color: rgba(var(--green), 1);
     color: rgba(var(--black), 1);
@@ -55,6 +60,10 @@ button {
 
   img {
     display: block;
+
+    &.loading {
+      // animation: flip .3s linear infinite;
+    }
   }
 }
 
@@ -98,6 +107,7 @@ button {
   align-items: center;
 
   width: 100%;
+  max-width: 100%;
 
   .actions-buttons-wrapper {
     display: grid;
@@ -108,6 +118,44 @@ button {
 
     button {
       width: 100%;
+    }
+  }
+
+  pre {
+    max-width: 100%;
+    overflow: hidden;
+  }
+}
+
+.transfer-wrapper {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding-top: .5rem;
+}
+
+.input-wrapper {
+  position: relative;
+  width: 100%;
+
+  input {
+    font-size: 1.6rem;
+    font-weight: 700;
+    height: 4rem;
+
+    &::placeholder {
+      color: rgba(var(--text-color), .25);
+    }
+  }
+
+  .loader {
+    position: absolute;
+    top: 50%;
+    right: 1rem;
+    transform: translateY(-50%);
+
+    img {
+      display: block;
     }
   }
 }

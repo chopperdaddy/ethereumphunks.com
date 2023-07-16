@@ -91,6 +91,10 @@ export class EthService {
     ).subscribe();
   }
 
+  //////////////////////////////////
+  // WALLET ////////////////////////
+  //////////////////////////////////
+
   async connect(): Promise<void> {
     try {
       await this.web3modal.openModal();
@@ -125,45 +129,48 @@ export class EthService {
   // TXNS //////////////////////////
   //////////////////////////////////
 
+  async ethscribe(content: string | null): Promise<`0x${string}` | undefined> {
+    if (!content) return;
+
+    const walletClient = await getWalletClient();
+    const data = toHex(content);
+
+    const chainId = await walletClient?.getChainId();
+    if (chainId !== environment.chainId) await switchNetwork({ chainId: environment.chainId });
+
+    return await walletClient?.sendTransaction({
+      chain: environment.production ? mainnet : goerli,
+      to: this.stateSvc.getWalletAddress() as Address,
+      value: BigInt(0),
+      data,
+    });
+  }
+
+  async transferEthPhunk(hashId: string, toAddress: string): Promise<`0x${string}` | undefined> {
+    const walletClient = await getWalletClient();
+    const chain = environment.production ? mainnet : goerli;
+
+    const chainId = await walletClient?.getChainId();
+    if (chainId !== environment.chainId) await switchNetwork({ chainId: environment.chainId });
+
+    return await walletClient?.sendTransaction({
+      chain,
+      to: toAddress as `0x${string}`,
+      value: BigInt(0),
+      data: hashId as `0x${string}`,
+    });
+  }
+
+  async waitForTransaction(hash: `0x${string}`): Promise<TransactionReceipt> {
+    const publicClient = getPublicClient();
+    return publicClient.waitForTransactionReceipt({ hash });
+  }
+
   async getTransaction(hash: string): Promise<any> {}
 
   //////////////////////////////////
-  // UTILS /////////////////////////
+  // PUNK STUFF ////////////////////
   //////////////////////////////////
-
-  async getCurrentBlock(): Promise<number> {
-    const blockNum = await getPublicClient().getBlockNumber();
-    return Number(blockNum);
-  }
-
-  ethToWei(eth: number): bigint {
-    return parseEther(`${eth}`, 'wei');
-  }
-
-  weiToEth(wei: any): string {
-    return formatEther(wei);
-  }
-
-  verifyAddress(address: string | null): string | null {
-    if (!address) return null;
-    const valid = isAddress(address);
-    if (valid) return address.toLowerCase();
-    return null;
-  }
-
-  async getEnsOwner(name: string) {
-    return await getPublicClient().getEnsAddress({ name });
-  }
-
-  async getEnsFromAddress(address: string | null | undefined): Promise<string | null> {
-    if (!address) return null;
-    try {
-      const ens = await getPublicClient().getEnsName({ address: address as `0x${string}` });
-      return ens;
-    } catch (err) {
-      return null;
-    }
-  }
 
   async getPunkImage(tokenId: string): Promise<any> {
     const publicClient = getPublicClient();
@@ -188,26 +195,46 @@ export class EthService {
     return punkAttributes as any;
   }
 
-  async ethscribe(content: string | null): Promise<`0x${string}` | undefined> {
-    if (!content) return;
-
-    const walletClient = await getWalletClient();
-    const data = toHex(content);
-
-    const chainId = await walletClient?.getChainId();
-    if (chainId !== environment.chainId) await switchNetwork({ chainId: environment.chainId });
-
-    return await walletClient?.sendTransaction({
-      chain: environment.production ? mainnet : goerli,
-      to: this.stateSvc.getWalletAddress() as Address,
-      value: BigInt(0),
-      data,
-    });
+  async getCurrentBlock(): Promise<number> {
+    const blockNum = await getPublicClient().getBlockNumber();
+    return Number(blockNum);
   }
 
-  async waitForTransaction(hash: `0x${string}`): Promise<TransactionReceipt> {
-    const publicClient = getPublicClient();
-    return publicClient.waitForTransactionReceipt({ hash });
+  //////////////////////////////////
+  // UTILS /////////////////////////
+  //////////////////////////////////
+
+  ethToWei(eth: number): bigint {
+    return parseEther(`${eth}`, 'wei');
+  }
+
+  weiToEth(wei: any): string {
+    return formatEther(wei);
+  }
+
+  verifyAddress(address: string | null): string | null {
+    if (!address) return null;
+    const valid = isAddress(address);
+    if (valid) return address.toLowerCase();
+    return null;
+  }
+
+  //////////////////////////////////
+  // ENS ///////////////////////////
+  //////////////////////////////////
+
+  async getEnsOwner(name: string) {
+    return await getPublicClient().getEnsAddress({ name });
+  }
+
+  async getEnsFromAddress(address: string | null | undefined): Promise<string | null> {
+    if (!address) return null;
+    try {
+      const ens = await getPublicClient().getEnsName({ address: address as `0x${string}` });
+      return ens;
+    } catch (err) {
+      return null;
+    }
   }
 
   async getActiveChain(): Promise<number> {

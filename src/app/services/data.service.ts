@@ -1,6 +1,9 @@
 import { Injectable } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
 
 import { environment } from 'src/environments/environment';
+
+import { Observable, from, switchMap, map, tap } from 'rxjs';
 
 import { createClient } from '@supabase/supabase-js';
 import { hexToString } from 'viem';
@@ -15,6 +18,10 @@ const supabase = createClient(
 })
 export class DataService {
 
+  constructor(
+    private http: HttpClient,
+  ) {}
+
   async getMintCount(): Promise<number> {
     const { data, error } = await supabase
       .rpc('count_ethphunks');
@@ -27,26 +34,35 @@ export class DataService {
     // address = '0x001b4d9dd4d95b021a50c99d09de97c87a1a09c0'.toLowerCase();
     if (!address) return [];
 
+    const table = environment.chainId === 1 ? 'ethPhunks' : 'ethPhunks_goerli';
     const { data, error } = await supabase
-      .from('ethPhunks')
+      .from('ethPhunks_goerli')
       .select('*')
       .eq('owner', address);
+      console.log(data, error, address)
     if (error) throw error;
 
     return data.map((res) => {
       const data = hexToString(res.data);
-      // console.log(data)
+      console.log(data)
       return { ...res, data };
     });
   }
 
-  async checkEthPhunksExist(sha: string): Promise<any> {
-    const { data, error } = await supabase
-      .from('shas')
-      .select('*')
-      .eq('sha', sha);
-    if (error) throw error;
-    return data.length > 0;
+  checkEthPhunkExists(data: string): Observable<any> {
+    return from(this.getSHA256Hash(data)).pipe(
+      switchMap((hash) => this.http.get(`${environment.ethScribeApi}/ethscriptions/exists/${hash}`)),
+      tap((res) => console.log({res})),
+      map((res: any) => res.ethscription),
+    );
+  }
+
+  async getSHA256Hash(value: string): Promise<string> {
+    const msgUint8 = new TextEncoder().encode(value);
+    const hashBuffer = await window.crypto.subtle.digest('SHA-256', msgUint8);
+    const hashArray = Array.from(new Uint8Array(hashBuffer)); // convert buffer to byte array
+    const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join(''); // convert bytes to hex string
+    return hashHex;
   }
 
   // const url = `${environment.ethScribeApi}ethscriptions/owned_by/${address}`;
@@ -75,5 +91,14 @@ export class DataService {
   //   const data = encoder.encode(input);
   //   const hash = await window.crypto.subtle.digest('SHA-256', data);
   //   return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, '0')).join('');
+  // }
+
+  // async checkEthPhunksExist(sha: string): Promise<any> {
+  //   const { data, error } = await supabase
+  //     .from('shas')
+  //     .select('*')
+  //     .eq('sha', sha);
+  //   if (error) throw error;
+  //   return data.length > 0;
   // }
 }

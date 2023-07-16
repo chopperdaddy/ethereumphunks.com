@@ -1,6 +1,5 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { HttpClient } from '@angular/common/http';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 
 import { EthService } from '@/services/eth.service';
@@ -9,12 +8,11 @@ import { DataService } from '@/services/data.service';
 
 import { OwnedComponent } from '../owned/owned.component';
 
-import { environment } from 'src/environments/environment';
-
 import { defaultPhunk } from './defaultPhunk';
 
-import { Observable, catchError, debounceTime, filter, from, map, of, switchMap, tap, interval } from 'rxjs';
-import { startWith } from 'rxjs/operators';
+import { EthPhunk } from 'indexer/src/models/ethPhunk';
+
+import { Observable, catchError, debounceTime, from, map, of, switchMap, tap, interval, startWith } from 'rxjs';
 
 @Component({
   selector: 'app-ethscribe',
@@ -32,34 +30,51 @@ import { startWith } from 'rxjs/operators';
 export class EthscribeComponent {
 
   phunkId: FormControl = new FormControl<number | null>(null);
+  transferAddress: FormControl = new FormControl<string>('');
 
   defaultPhunk: string = defaultPhunk;
   activePhunkDataUri!: string | null;
+  activeOwnedEthPhunk!: EthPhunk | null;
+  isLocked: boolean = false;
 
   transaction: any = {
     hash: null,
     status: null,
   };
 
+  error!: string | null;
+
+  notAvailable: number = -1;
   loadingPhunk: boolean = false;
   downloadActive: boolean = false;
-  notAvailable: number = -1;
 
+  transferActive: boolean = false;
+  ethscribing: boolean = false;
+  transferring: boolean = false;
+
+  ethPhunks$!: Observable<EthPhunk[] | null>;
   mintCount$: Observable<number> = of(0);
 
   constructor(
-    private http: HttpClient,
     public stateSvc: StateService,
     public ethSvc: EthService,
     private dataSvc: DataService,
   ) {
-    this.phunkId.valueChanges.pipe(
-      tap(() => {
-        this.activePhunkDataUri = null;
-        this.notAvailable = -1;
-        this.loadingPhunk = true;
-        this.downloadActive = false;
+
+    this.ethPhunks$ = this.stateSvc.walletAddress$.pipe(
+      switchMap((address: string | null) => {
+        if (!address) return of([]);
+        return from(this.dataSvc.getUserEthPhunks(address));
       }),
+      map((phunks: EthPhunk[]) => {
+        if (!phunks.length) return null;
+        return phunks;
+      })
+    );
+
+    let notAvailable = -1;
+    this.phunkId.valueChanges.pipe(
+      tap(() => this.reset()),
       debounceTime(500),
       map((value) => {
         if (value > 10000) {
@@ -78,13 +93,16 @@ export class EthscribeComponent {
       }),
       switchMap((res) => {
         this.activePhunkDataUri = res;
-        if (res !== defaultPhunk) return this.checkExists(res);
+        if (res !== defaultPhunk) return this.dataSvc.checkEthPhunkExists(res);
         return of(null);
       }),
+      tap((res) => notAvailable = res ? 1 : 0),
+      switchMap((res) => this.checkOwned(res?.transaction_hash)),
       tap((res) => {
-        this.notAvailable = res ? 1 : 0;
+        this.notAvailable = notAvailable;
         this.loadingPhunk = false;
-        console.log(res)
+        this.activeOwnedEthPhunk = res;
+        if (res) this.isLocked = this.unlockPhunk(res.hashId);
       }),
       catchError((err) => {
         console.log(err);
@@ -97,6 +115,27 @@ export class EthscribeComponent {
       startWith(0),
       switchMap(_ => this.dataSvc.getMintCount()),
     );
+  }
+
+  reset(): void {
+    this.activePhunkDataUri = null;
+    this.notAvailable = -1;
+    this.loadingPhunk = true;
+    this.downloadActive = false;
+    this.ethscribing = false;
+
+    this.transferActive = false;
+    this.transferring = false;
+
+    this.activeOwnedEthPhunk = null;
+    this.isLocked = false;
+
+    this.error = null;
+
+    this.transaction = {
+      hash: null,
+      status: null,
+    };
   }
 
   async getPhunkData(phunkId: string): Promise<any> {
@@ -131,8 +170,9 @@ export class EthscribeComponent {
   }
 
   async ethscribePhunk(): Promise<any> {
-    const ethscription = this.activePhunkDataUri;
+    this.ethscribing = true;
 
+    const ethscription = this.activePhunkDataUri;
     const hash = await this.ethSvc.ethscribe(ethscription);
     this.transaction = {
       hash,
@@ -146,19 +186,15 @@ export class EthscribeComponent {
       hash: receipt.transactionHash,
       status: 'complete',
     };
+
+    this.lockPhunk(receipt.transactionHash);
+    this.isLocked = true;
+    this.ethscribing = false;
   }
 
   async randomPhunk(): Promise<any> {
     const phunkId = Math.floor(Math.random() * 10000);
     this.phunkId.setValue(phunkId);
-  }
-
-  async getSHA256Hash(value: string): Promise<string> {
-    const msgUint8 = new TextEncoder().encode(value);
-    const hashBuffer = await window.crypto.subtle.digest('SHA-256', msgUint8);
-    const hashArray = Array.from(new Uint8Array(hashBuffer)); // convert buffer to byte array
-    const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join(''); // convert bytes to hex string
-    return hashHex;
   }
 
   async download(background: boolean = false): Promise<any> {
@@ -191,12 +227,97 @@ export class EthscribeComponent {
     this.downloadActive = false;
   }
 
-  checkExists(data: string): Observable<any> {
-    return from(this.getSHA256Hash(data)).pipe(
-      switchMap((hash) => {
-        return this.http.get(`${environment.ethScribeApi}/ethscriptions/exists/${hash}`);
+  checkOwned(hashId: string): Observable<EthPhunk | null> {
+    if (!hashId) return of(null);
+    return this.ethPhunks$.pipe(
+      map((phunks) => {
+        if (!phunks || !phunks.length) return null;
+        return phunks.filter((phunk) => phunk.hashId.toLowerCase() === hashId.toLowerCase())[0] || null;
       }),
-      map((res: any) => res.ethscription),
     );
   }
+
+  async transferEthPhunk(): Promise<any> {
+    try {
+      this.error = null;
+      this.transferring = true;
+      this.transferActive = false;
+
+      let toAddress: string = this.transferAddress.value;
+      if (!toAddress) throw new Error('Invalid address');
+
+      if (toAddress.endsWith('.eth')) {
+        const resolvedAddress = await this.ethSvc.getEnsOwner(toAddress);
+        if (resolvedAddress) toAddress = resolvedAddress;
+        else throw new Error('Invalid ENS name');
+      }
+
+      const validAddress = this.ethSvc.verifyAddress(toAddress);
+      if (!validAddress) throw new Error('Invalid address');
+
+      const hash = await this.ethSvc.transferEthPhunk(this.activeOwnedEthPhunk!.hashId, toAddress);
+      if (!hash) return;
+
+      this.lockPhunk(this.activeOwnedEthPhunk!.hashId);
+      this.isLocked = true;
+
+      console.log(hash);
+      this.transaction = {
+        hash,
+        status: 'pending',
+      };
+
+      const receipt = await this.ethSvc.waitForTransaction(hash);
+      console.log(receipt);
+      this.transaction = {
+        hash: receipt.transactionHash,
+        status: 'complete',
+      };
+
+      this.transferring = false;
+      this.transferAddress.setValue('');
+    } catch (error: any) {
+      console.log(error);
+      this.error = error.message || error || 'Unknown error, check devtools console.';
+      this.transferring = false;
+    }
+  }
+
+  lockPhunk(hashId: string): void {
+    hashId = hashId.toLowerCase();
+    const lockedPhunks = JSON.parse(localStorage.getItem('lockedPhunks') || '[]');
+    lockedPhunks.push({ hashId, timestamp: Date.now() + 300000 }); // Locks the phunk for 5 minutes
+    localStorage.setItem('lockedPhunks', JSON.stringify(lockedPhunks));
+  }
+
+  unlockPhunk(hashId: string): boolean { // Returns isLocked
+    if (!hashId) return false;
+    hashId = hashId?.toLowerCase();
+    const lockedPhunks = JSON.parse(localStorage.getItem('lockedPhunks') || '[]');
+    const match = lockedPhunks.find((phunk: any) => phunk?.hashId === hashId);
+
+    if (match) {
+      // Phunk exists in lockedPhunks. Check if it's locked or not.
+      if (match.timestamp < Date.now()) {
+        // The phunk is unlocked
+        const newArr = lockedPhunks.filter((phunk: any) => phunk.hashId !== hashId);
+        localStorage.setItem('lockedPhunks', JSON.stringify(newArr));
+        return false; // Unlocked
+      } else {
+        // The phunk is still locked
+        return true; // Locked
+      }
+    } else {
+      // Phunk doesn't exist in lockedPhunks, hence it's not locked
+      return false; // Unlocked
+    }
+  }
+
+
 }
+
+
+[{
+  "hashId": "0xb73019848d725c4502ed3b4f0d29f7481b54699409e5589dcda52d22829c8dee",
+  "timestamp": 1689501301669
+}]

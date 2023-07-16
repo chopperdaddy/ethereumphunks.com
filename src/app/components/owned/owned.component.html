@@ -1,12 +1,12 @@
-<ng-container *ngIf="(ethPhunks$ | async) as ethPhunks">
-  <div class="tab-wrapper">
+<ng-container *ngIf="ethPhunks">
+  <div class="tab-wrapper" (click)="expanded = !expanded">
     <h2>Owned Ethereum Phunks</h2>
-    <button (click)="expanded = !expanded">{{ expanded ? 'hide' : 'show' }}</button>
+    <button>{{ expanded ? 'hide' : 'show' }}</button>
   </div>
+
   <div
     class="owned-wrapper"
-    [class.expanded]="expanded"
-    *ngIf="ethPhunks.length">
+    [class.expanded]="expanded">
 
     <div
       (click)="setPhunkSelected(phunk.phunkId)"

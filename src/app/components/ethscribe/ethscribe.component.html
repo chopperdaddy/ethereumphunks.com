@@ -13,10 +13,18 @@
   <button (click)="randomPhunk()">Random</button>
 </div>
 
-<app-owned (phunkSelected)="phunkId.setValue($event)" />
+<app-owned
+  (phunkSelected)="phunkId.setValue($event)"
+  [ethPhunks]="ethPhunks$ | async"
+/>
 
 <div class="image-wrapper">
-  <img [src]="activePhunkDataUri || defaultPhunk" width="240" height="240" />
+  <img
+    [src]="activePhunkDataUri || defaultPhunk"
+    width="240"
+    height="240"
+    [class.loading]="loadingPhunk"
+  />
 </div>
 
 <div class="actions-wrapper">
@@ -25,7 +33,7 @@
 
     <div class="download-wrapper">
       <button
-        (click)="downloadActive = !downloadActive"
+        (click)="downloadActive = !downloadActive; transferActive = false"
         class="download"
         [class.disabled]="!activePhunkDataUri">
 
@@ -38,32 +46,65 @@
       </div>
     </div>
 
-    <ng-container *ngIf="stateSvc.web3Connected$ | async; else connect">
+    <ng-container *ngIf="!(stateSvc.web3Connected$ | async)">
+      <button
+        (click)="ethSvc.connect()"
+        class="ethscribe">
+
+        Connect Wallet
+      </button>
+    </ng-container>
+
+    <ng-container *ngIf="(stateSvc.web3Connected$ | async) && !activeOwnedEthPhunk">
       <button
         (click)="ethscribePhunk()"
         class="ethscribe"
-        [class.disabled]="notAvailable !== 0">
+        [class.disabled]="notAvailable !== 0 || ethscribing">
 
         Ethscribe
       </button>
     </ng-container>
 
-    <ng-template #connect>
+    <ng-container *ngIf="activeOwnedEthPhunk">
       <button
-        (click)="ethSvc.connect()"
-        class="ethscribe"
-        [class.disabled]="notAvailable !== 0">
+        (click)="transferActive = !transferActive; downloadActive = false; error = null"
+        class="transfer"
+        [class.disabled]="isLocked || transferring">
 
-        Connect Wallet
+        Transfer {{ isLocked ? '(Locked)' : '' }}
       </button>
-    </ng-template>
+    </ng-container>
   </div>
 
-  <ng-container *ngIf="notAvailable !== -1;">
+  <div
+    class="transfer-wrapper"
+    *ngIf="transferActive">
+
+    <div class="input-wrapper">
+      <input type="text" placeholder="0x or ENS" [formControl]="transferAddress">
+      <div class="loader" *ngIf="transferring">
+        <img src="/assets/loader-light.gif" width="20" height="20" alt="">
+      </div>
+    </div>
+    <button
+      (click)="transferEthPhunk()"
+      [class.disabled]="transferring">
+
+      Send
+    </button>
+  </div>
+
+  <ng-container *ngIf="notAvailable !== -1 && !activeOwnedEthPhunk">
     <p class="error" *ngIf="notAvailable === 1">This Phunk has already been ethscribed.</p>
+  </ng-container>
+
+  <ng-container *ngIf="error">
+    <pre class="pink">{{ error }}</pre>
   </ng-container>
 
   <ng-container *ngIf="transaction.status">
     <p class="pink">Your transaction is {{ transaction.status }}. <a [href]="'https://etherscan.com/tx/' + transaction.hash" target="_blank">View it on Etherscan</a></p>
   </ng-container>
 </div>
+
+<!-- {{ isLocked }} -->
