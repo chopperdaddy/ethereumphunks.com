@@ -1,0 +1,108 @@
+<div
+  class="billboard-wrapper"
+  *ngIf="data; else placeholder">
+
+  <div class="image-wrapper">
+    <img
+      #tokenImage
+      [lazyLoad]="dataSvc.staticUrl + '/phunk' + (data.id | tokenIdParse) + '.svg'"
+      [defaultImage]="'assets/loadingpunk.png'"
+      width="312"
+      height="312"
+      alt="EthPhunk #{{ data.id }}" />
+  </div>
+
+  <div class="breadcrumb">
+    <div class="inner">
+      <div class="crumbs">
+        <a
+          i18n
+          href="/"
+          [routerLink]="['/']">
+
+          Ethereum Phunks
+        </a>
+        <span class="divider">/</span>
+        <span class="number">{{ data.id }}</span>
+      </div>
+
+      <div class="save-pfp">
+        <button i18n (click)="openPFPModal()">Save PFP</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<ng-template #placeholder>
+  <div class="billboard-wrapper">
+
+    <div class="breadcrumb">
+      <div class="crumbs">
+        <a i18n>Loading</a>
+        <span class="divider">/</span>
+        <span class="number">0000</span>
+      </div>
+
+      <div class="save-pfp"><button i18n>Save PFP</button></div>
+    </div>
+
+    <div class="image-wrapper">
+
+      <img
+        #tokenImage
+        [src]="'assets/loadingpunk.png'"
+        width="312"
+        height="312" />
+    </div>
+  </div>
+</ng-template>
+
+<!-- SAVE PFP -->
+<div
+  class="modal-overlay"
+  [class.active]="pfpModalOpen">
+
+  <div
+    class="modal pfp-modal">
+
+    <div class="punk-info">
+      <h2 i18n>EthPhunk #{{ data?.id }}</h2>
+      <canvas
+        #pfp
+        id="pfp"
+        width="480"
+        height="480">
+      </canvas>
+    </div>
+
+    <div class="pfp-options">
+      <div class="shape-border">
+
+        <div class="shape-select">
+          <input type="radio" id="square" name="shape" value="square" [formControl]="shapeCheck">
+          <label i18n for="square">Square</label>
+        </div>
+
+        <div class="shape-select">
+          <input type="radio" id="round" name="shape" value="round" [formControl]="shapeCheck">
+          <label i18n for="round">Round</label>
+        </div>
+
+        <div class="shape-select">
+          <input type="radio" id="hexagon" name="shape" value="hex" [formControl]="shapeCheck">
+          <label i18n for="hexagon">Hexagon</label>
+        </div>
+
+        <div class="shape-select">
+          <input type="radio" id="transparent" name="shape" value="trans" [formControl]="shapeCheck">
+          <label i18n for="transparent">Transparent</label>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-actions">
+      <button i18n class="cancel" (click)="pfpModalOpen = false">Cancel</button>
+      <button i18n class="download" (click)="downloadCanvas()">Download</button>
+    </div>
+  </div>
+</div>

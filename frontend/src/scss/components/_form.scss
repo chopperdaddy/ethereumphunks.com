@@ -1,0 +1,69 @@
+input {
+  font-family: $primary-font-stack;
+  // height: 4rem;
+  color: rgba(var(--text-color), 1);
+  font-size: 2rem;
+  padding: 1rem;
+
+  background-color: rgba(var(--text-color), .1);
+  border: none;
+
+  width: 100%;
+
+  outline: none;
+
+  /* Chrome, Safari, Edge, Opera */
+  &::-webkit-outer-spin-button,
+  &::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+
+  /* Firefox */
+  &[type=number] {
+    -moz-appearance: textfield;
+  }
+
+  &:focus {
+    background-color: rgba(var(--text-color), .2);
+  }
+
+  &::placeholder {
+    color: rgba(var(--text-color), .3);
+    font-size: 1.6rem;
+    font-weight: 500;
+  }
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+
+  padding: 0 0 2rem;
+
+  label {
+    font-weight: 700;
+    padding-bottom: .5rem;
+  }
+}
+
+.form-actions {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  column-gap: 2rem;
+
+  padding-top: 1rem;
+
+  button {
+    padding: 1rem;
+    font-weight: 700;
+    font-size: 1.5rem;
+
+    &.disabled {
+      opacity: .5;
+      pointer-events: none;
+    }
+  }
+}
