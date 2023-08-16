@@ -2,57 +2,54 @@ import { Injectable, Logger } from '@nestjs/common';
 
 import { SupabaseService } from './supabase.service';
 
-import { PublicClient, createPublicClient, hexToString, http } from 'viem';
-import { goerli, mainnet } from 'viem/chains';
+import { FormattedTransaction, Transaction, createPublicClient, decodeEventLog, hexToString, http } from 'viem';
+import { mainnet } from 'viem/chains';
 
 import { readFile, writeFile } from 'fs/promises';
 
+import { TransferEthscriptionSignature } from 'src/constants/EthscriptionsProtocol';
+
 import punkDataABI from '../abi/PunkData.json';
+import { esip1Abi } from 'src/abi/EthscriptionsProtocol';
 
 import dotenv from 'dotenv';
 dotenv.config();
 
-const startBlock = Number(process.env.ORIGIN_BLOCK); // Default Origin
+const rpcURL: string = process.env.RPC_URL_MAINNET;
+const client = createPublicClient({ chain: mainnet, transport: http(rpcURL) });
 
 @Injectable()
 export class Web3Service {
 
-  rpcURL: string = process.env.RPC_URL;
-  rpcURLGoerli: string = 'http://goerli-geth.dappnode:8545';
-
-  client!: PublicClient;
-  clientGoerli!: PublicClient;
+  lastBlock: number = 0;
 
   constructor(
     private readonly sbSvc: SupabaseService
-  ) {
-    this.client = createPublicClient({ chain: mainnet, transport: http(this.rpcURL) });
+  ) {}
 
-    // this.start(startBlock).then(() => {
-    //   Logger.debug('Starting Block Watcher');
-    // });
+  // Method to start fetching and processing blocks from the network
+  async startBackfill(startBlock: number): Promise<void> {
+    let block: number = await this.getOrCreateBlockFile(startBlock);
 
-    this.client.watchBlocks({
+    while (block < 17764910) {
+      await this.processBlock(block);
+      await this.saveBlockNumber(block);
+      block++;
+    }
+  }
+
+  async startPolling(): Promise<void> {
+    client.watchBlocks({
       onBlock: async (block) => {
-        const blockNum = Number(block.number);
-        this.processBlock(blockNum - 32);
-        this.processBlock(blockNum - 16);
+        const blockNum = Number(block.number) - 16;
+        await this.processBlock(blockNum);
+        await this.saveBlockNumber(blockNum);
       },
     });
   }
 
-  // Method to start fetching and processing blocks from the network
-  async start(startBlock: number): Promise<void> {
-    let block: number = await this.getOrCreateBlockFile(startBlock);
-
-    while (true) {
-      await this.processBlock(block);
-
-      const lastBlock = await this.client.getBlockNumber();
-      if (block === Number(lastBlock)) break;
-      block++;
-      await writeFile('lastBlock.txt', block.toString());
-    }
+  async saveBlockNumber(block: number): Promise<void> {
+    return await writeFile(`lastBlock.txt`, block.toString());
   }
 
   async processBlock(block: number): Promise<void> {
@@ -62,30 +59,63 @@ export class Web3Service {
   }
 
   // Method to add transactions to the database
-  async processTransactions(txns: `0x${string}`[], createdAt: Date) {
+  async processTransactions(txns: FormattedTransaction[], createdAt: Date) {
+
+    // Filter empty transactions and sort by transaction index
+    txns = txns.filter((txn) => txn.input !== '0x').sort((a, b) => a.transactionIndex - b.transactionIndex);
+
     for (let i = 0; i < txns.length; i++) {
-      const hash = txns[i];
+
+      const transaction = txns[i];
+      const { hash } = transaction;
 
       try {
-        // Get the transaction
-        const transaction = await this.client.getTransaction({ hash });
-        // Get the data from the transaction
-        const stringData = hexToString(transaction.input.toString() as `0x${string}`);
-        // Remove null bytes from the string
-        const cleanedString = stringData.replace(/\x00/g, '');
-        // Check if the string starts with 'data:'
-        const possibleEthPhunk = cleanedString.startsWith('data:image/svg+xml,');
 
-        // Logger.debug('Processing transaction', transaction.hash);
-        if (possibleEthPhunk) {
-          Logger.debug('Processing transaction', transaction.hash);
-          await this.sbSvc.processEthscriptionEvent(transaction, createdAt, cleanedString);
-        }
+        // DISABLED: All 10,000 have been ethscribed
+        // Check if possible ethPhunk
+        // const { possibleEthPhunk, cleanedString } = this.possibleEthPhunk(transaction.input);
+        // if (possibleEthPhunk) {
+        //   Logger.debug('Processing ethscription', transaction.hash);
+        //   await this.sbSvc.processEthscriptionEvent(transaction as Transaction, createdAt, cleanedString);
+        //   continue;
+        // }
 
+        // Check if possible transfer
         const possibleTransfer = transaction.input.substring(2).length === 64;
         if (possibleTransfer) {
           Logger.debug('Processing transfer', transaction.hash);
-          await this.sbSvc.processTransferEvent(transaction);
+          await this.sbSvc.processTransferEvent(transaction as Transaction, createdAt);
+          continue;
+        }
+
+        // Check if possible marketplace event
+        const receipt = await client.getTransactionReceipt({ hash });
+        const ethscriptionTransfers = receipt.logs.filter((log: any) => {
+          return log.topics[0] === TransferEthscriptionSignature;
+        });
+
+        // Continue if no ethscription transfers
+        if (!ethscriptionTransfers.length) continue;
+
+        for (const log of ethscriptionTransfers) {
+          const decoded = decodeEventLog({
+            abi: esip1Abi,
+            data: log.data,
+            topics: log.topics
+          });
+
+          const sender = log.address;
+          const recipient = decoded.args['recipient'];
+          const ethscriptionId = decoded.args['ethscriptionId'];
+
+          Logger.debug('Processing marketplace event', transaction.hash);
+          await this.sbSvc.processMarketplaceEvent(
+            transaction as Transaction,
+            createdAt,
+            sender,
+            recipient,
+            ethscriptionId
+          );
         }
 
       } catch (error) {
@@ -96,39 +126,42 @@ export class Web3Service {
   }
 
   // Method to get transactions from a specific block
-  async getBlockTransactions(n: number): Promise<{
-    txns: `0x${string}`[],
-    createdAt: Date
-  }> {
-    const block = await this.client.getBlock({ blockNumber: BigInt(n) });
+  async getBlockTransactions(n: number): Promise<{ txns: FormattedTransaction[], createdAt: Date }> {
+    const block = await client.getBlock({ includeTransactions: true, blockNumber: BigInt(n) });
 
     const ts = Number(block.timestamp);
     const createdAt = new Date(ts * 1000);
-    const txns = block.transactions as `0x${string}`[];
+    const txns = block.transactions;
 
     return { txns, createdAt };
   }
 
-  async getTransactionFromHash(hash: `0x${string}`) {
-    try {
-      return await this.client.getTransaction({ hash });
-    } catch (error) {
-      return null;
-    }
-  }
+  // async getTransactionFromHash(hash: `0x${string}`) {
+  //   try {
+  //     return await client.getTransaction({ hash });
+  //   } catch (error) {
+  //     return null;
+  //   }
+  // }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   // PUNK DATA /////////////////////////////////////////////////////////////////////////////////////////////////////////
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  async getPunkImage(tokenId: number): Promise<any> {
-    const punkImage = await this.client?.readContract({
-      address: '0x16F5A35647D6F03D5D3da7b35409D65ba03aF3B2' as `0x${string}`,
-      abi: punkDataABI,
-      functionName: 'punkImageSvg',
-      args: [`${tokenId}`],
-    });
-    return punkImage as any;
+  async getOrCreateBlockFile(block: number) {
+    try {
+      const blockFromFile = await readFile(`lastBlock.txt`, 'utf8');
+      if (!blockFromFile) await writeFile(`lastBlock.txt`, block.toString());
+      if (blockFromFile) block = Number(blockFromFile.toString());
+
+      const lastBlock = await client.getBlockNumber();
+      this.lastBlock = Number(lastBlock);
+
+      return block;
+    } catch (err) {
+      Logger.error(err.message);
+      return block;
+    }
   }
 
   howLongAgo(timestamp: string): string {
@@ -144,7 +177,6 @@ export class Web3Service {
     const remainingHours: number = differenceInHours % 24;
     const remainingMinutes: number = differenceInMinutes % 60;
     const remainingSeconds: number = differenceInSeconds % 60;
-    const remainingMilliseconds: number = differenceInMilliseconds % 1000;
 
     let result: string = '';
 
@@ -160,21 +192,42 @@ export class Web3Service {
     if (remainingSeconds > 0 || remainingMinutes > 0 || remainingHours > 0 || differenceInDays > 0) {
         result += remainingSeconds + 'sec ';
     }
-    // result += remainingMilliseconds + ' millisecond(s) ago';
 
     return result;
   }
 
-  async getOrCreateBlockFile(block: number) {
-    try {
-      const blockFromFile = await readFile('lastBlock.txt', 'utf8');
-      if (!blockFromFile) await writeFile('lastBlock.txt', block.toString());
-      if (blockFromFile) block = Number(blockFromFile.toString());
-      return block;
-    } catch (err) {
-      Logger.error(err.message);
-      return block;
-    }
+  ///////////////////////////////////////////////////////////////////////////////
+  // Punk data contract interactions ////////////////////////////////////////////
+  ///////////////////////////////////////////////////////////////////////////////
+
+  possibleEthPhunk(input: string): { possibleEthPhunk: boolean, cleanedString: string } {
+    // Get the data from the transaction
+    const stringData = hexToString(input.toString() as `0x${string}`);
+    // Remove null bytes from the string
+    const cleanedString = stringData.replace(/\x00/g, '');
+    // Check if the string starts with 'data:'
+    const possibleEthPhunk = cleanedString.startsWith('data:image/svg+xml,');
+
+    return { possibleEthPhunk, cleanedString }
   }
 
+  async getPunkImage(tokenId: number): Promise<any> {
+    const punkImage = await client?.readContract({
+      address: '0x16F5A35647D6F03D5D3da7b35409D65ba03aF3B2' as `0x${string}`,
+      abi: punkDataABI,
+      functionName: 'punkImageSvg',
+      args: [`${tokenId}`],
+    });
+    return punkImage as any;
+  }
+
+  async getPunkAttributes(tokenId: number): Promise<any> {
+    const punkAttributes = await client?.readContract({
+      address: '0x16F5A35647D6F03D5D3da7b35409D65ba03aF3B2' as `0x${string}`,
+      abi: punkDataABI,
+      functionName: 'punkAttributes',
+      args: [`${tokenId}`],
+    });
+    return punkAttributes as any;
+  }
 }

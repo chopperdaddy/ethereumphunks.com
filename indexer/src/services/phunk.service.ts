@@ -17,9 +17,7 @@ export class PhunkService {
   constructor(
     private readonly ethSvc: Web3Service,
     private readonly sbSvc: SupabaseService
-  ) {
-    // this.getAllPunkData(0, 10000);
-  }
+  ) {}
 
   async getAllPunkData(start: number, end: number) {
 
