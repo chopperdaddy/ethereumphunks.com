@@ -1,0 +1,41 @@
+@mixin buttonReset() {
+  border: none;
+  background: none;
+  padding: 0;
+  margin: 0;
+  -webkit-appearance: none;
+  outline: none;
+  box-shadow: none;
+  cursor: pointer;
+}
+
+button,
+a.button {
+  @include buttonReset();
+
+  display: inline-flex;
+  align-items: center;
+  padding: .5rem 1rem;
+
+  font-family: $primary-font-stack;
+  font-weight: 600;
+  font-size: 1.6rem;
+  text-decoration: none;
+
+  color: rgba(var(--highlight), 1);
+  background-color: rgba(var(--button-color), 1);
+
+  &:active {
+    transform: translate(0, 1px);
+  }
+}
+
+ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  li {
+    padding: 0;
+    margin: 0;
+  }
+}
