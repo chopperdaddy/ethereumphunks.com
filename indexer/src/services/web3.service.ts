@@ -1,16 +1,17 @@
 import { Injectable, Logger } from '@nestjs/common';
 
 import { SupabaseService } from './supabase.service';
+import { TimeService } from './time.service';
 
 import { FormattedTransaction, Transaction, createPublicClient, decodeEventLog, hexToString, http } from 'viem';
 import { mainnet } from 'viem/chains';
 
 import { readFile, writeFile } from 'fs/promises';
 
-import { TransferEthscriptionSignature } from 'src/constants/EthscriptionsProtocol';
+import { TransferEthscriptionForPreviousOwnerSignature, TransferEthscriptionSignature } from 'src/constants/EthscriptionsProtocol';
 
 import punkDataABI from '../abi/PunkData.json';
-import { esip1Abi } from 'src/abi/EthscriptionsProtocol';
+import { esip1Abi, esip2Abi } from 'src/abi/EthscriptionsProtocol';
 
 import dotenv from 'dotenv';
 dotenv.config();
@@ -21,17 +22,21 @@ const client = createPublicClient({ chain: mainnet, transport: http(rpcURL) });
 @Injectable()
 export class Web3Service {
 
+  startTime: Date;
   lastBlock: number = 0;
 
   constructor(
-    private readonly sbSvc: SupabaseService
+    private readonly sbSvc: SupabaseService,
+    private readonly timeService: TimeService
   ) {}
 
   // Method to start fetching and processing blocks from the network
   async startBackfill(startBlock: number): Promise<void> {
+
+    this.startTime = new Date();
     let block: number = await this.getOrCreateBlockFile(startBlock);
 
-    while (block < 17764910) {
+    while (block < this.lastBlock) {
       await this.processBlock(block);
       await this.saveBlockNumber(block);
       block++;
@@ -54,23 +59,34 @@ export class Web3Service {
 
   async processBlock(block: number): Promise<void> {
     const { txns, createdAt } = await this.getBlockTransactions(block);
-    Logger.debug('Processing Block', `${block} -- ${this.howLongAgo(createdAt.toString())}`);
+
     await this.processTransactions(txns, createdAt);
+
+    // Log block processed
+    this.timeService.logBlockProcessed();
+    const timeSince = this.timeService.howLongAgo(createdAt.toString());
+    const timeRemaining = this.timeService.getTimeRemainingEstimate(block, this.lastBlock);
+
+    // Set last block to current block if it is a multiple of 16
+    if (block % 16 === 0) this.lastBlock = Number(await client.getBlockNumber());
+
+    // Log block processed
+    if (block % 100 === 0) Logger.verbose(`Time Remaining: ${timeRemaining}`);
+    Logger.debug(`Block Timestamp: ${timeSince}`, `Processing Block ${block}`);
   }
 
   // Method to add transactions to the database
   async processTransactions(txns: FormattedTransaction[], createdAt: Date) {
-
     // Filter empty transactions and sort by transaction index
-    txns = txns.filter((txn) => txn.input !== '0x').sort((a, b) => a.transactionIndex - b.transactionIndex);
+    txns = txns
+      .filter((txn) => txn.input !== '0x')
+      .sort((a, b) => a.transactionIndex - b.transactionIndex);
 
     for (let i = 0; i < txns.length; i++) {
-
-      const transaction = txns[i];
+      const transaction = txns[i] as Transaction;
       const { hash } = transaction;
 
       try {
-
         // DISABLED: All 10,000 have been ethscribed
         // Check if possible ethPhunk
         // const { possibleEthPhunk, cleanedString } = this.possibleEthPhunk(transaction.input);
@@ -84,50 +100,115 @@ export class Web3Service {
         const possibleTransfer = transaction.input.substring(2).length === 64;
         if (possibleTransfer) {
           Logger.debug('Processing transfer', transaction.hash);
-          await this.sbSvc.processTransferEvent(transaction as Transaction, createdAt);
+          await this.sbSvc.processTransferEvent(
+            transaction as Transaction,
+            createdAt
+          );
           continue;
         }
 
         // Check if possible marketplace event
         const receipt = await client.getTransactionReceipt({ hash });
-        const ethscriptionTransfers = receipt.logs.filter((log: any) => {
-          return log.topics[0] === TransferEthscriptionSignature;
-        });
 
-        // Continue if no ethscription transfers
-        if (!ethscriptionTransfers.length) continue;
-
-        for (const log of ethscriptionTransfers) {
-          const decoded = decodeEventLog({
-            abi: esip1Abi,
-            data: log.data,
-            topics: log.topics
-          });
-
-          const sender = log.address;
-          const recipient = decoded.args['recipient'];
-          const ethscriptionId = decoded.args['ethscriptionId'];
-
-          Logger.debug('Processing marketplace event', transaction.hash);
-          await this.sbSvc.processMarketplaceEvent(
-            transaction as Transaction,
-            createdAt,
-            sender,
-            recipient,
-            ethscriptionId
+        // Filter logs for ethscription transfers (esip1)
+        const esip1Transfers = receipt.logs.filter(
+          (log: any) => log.topics[0] === TransferEthscriptionSignature
+        );
+        if (esip1Transfers.length) {
+          Logger.debug(
+            'Processing marketplace event (esip1)',
+            transaction.hash
           );
+          await this.processEsip1(esip1Transfers, transaction, createdAt);
+          continue;
         }
 
+        // Filter logs for ethscription transfers (esip2)
+        const esip2Transfers = receipt.logs.filter(
+          (log: any) => log.topics[0] === TransferEthscriptionForPreviousOwnerSignature
+        );
+        if (esip2Transfers.length) {
+          Logger.debug(
+            'Processing marketplace event (esip2)',
+            transaction.hash
+          );
+          await this.processEsip2(esip2Transfers, transaction, createdAt);
+        }
       } catch (error) {
-        Logger.error(error.shortMessage || error, 'processTransactions()', hash);
+        Logger.error(
+          error.shortMessage || error,
+          'processTransactions()',
+          hash
+        );
         i = i - 1;
       }
     }
   }
 
+  async processEsip1(
+    ethscriptionTransfers: any[],
+    transaction: Transaction,
+    createdAt: Date
+  ): Promise<void> {
+    for (const log of ethscriptionTransfers) {
+      const decoded = decodeEventLog({
+        abi: esip1Abi,
+        data: log.data,
+        topics: log.topics,
+      });
+
+      const sender = log.address;
+      const recipient = decoded.args['recipient'];
+      const hashId = decoded.args['id'] || decoded.args['ethscriptionId'];
+
+      await this.sbSvc.processMarketplaceEvent(
+        transaction,
+        createdAt,
+        sender,
+        recipient,
+        hashId,
+        transaction.value
+      );
+    }
+  }
+
+  async processEsip2(
+    previousOwnerTransfers: any[],
+    transaction: Transaction,
+    createdAt: Date
+  ): Promise<void> {
+    for (const log of previousOwnerTransfers) {
+      const decoded = decodeEventLog({
+        abi: esip2Abi,
+        data: log.data,
+        topics: log.topics,
+      });
+
+      const sender = log.address;
+      const prevOwner = decoded.args['previousOwner'];
+      const recipient = decoded.args['recipient'];
+      const hashId = decoded.args['id'] || decoded.args['ethscriptionId'];
+
+      await this.sbSvc.processMarketplaceEvent(
+        transaction,
+        createdAt,
+        sender,
+        recipient,
+        hashId,
+        transaction.value,
+        prevOwner
+      );
+    }
+  }
+
   // Method to get transactions from a specific block
-  async getBlockTransactions(n: number): Promise<{ txns: FormattedTransaction[], createdAt: Date }> {
-    const block = await client.getBlock({ includeTransactions: true, blockNumber: BigInt(n) });
+  async getBlockTransactions(
+    n: number
+  ): Promise<{ txns: FormattedTransaction[]; createdAt: Date }> {
+    const block = await client.getBlock({
+      includeTransactions: true,
+      blockNumber: BigInt(n),
+    });
 
     const ts = Number(block.timestamp);
     const createdAt = new Date(ts * 1000);
@@ -135,14 +216,6 @@ export class Web3Service {
 
     return { txns, createdAt };
   }
-
-  // async getTransactionFromHash(hash: `0x${string}`) {
-  //   try {
-  //     return await client.getTransaction({ hash });
-  //   } catch (error) {
-  //     return null;
-  //   }
-  // }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   // PUNK DATA /////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -164,43 +237,14 @@ export class Web3Service {
     }
   }
 
-  howLongAgo(timestamp: string): string {
-    const now: Date = new Date();
-    const past: Date = new Date(timestamp);
-    const differenceInMilliseconds: number = now.getTime() - past.getTime();
-
-    const differenceInSeconds: number = Math.floor(differenceInMilliseconds / 1000);
-    const differenceInMinutes: number = Math.floor(differenceInSeconds / 60);
-    const differenceInHours: number = Math.floor(differenceInMinutes / 60);
-    const differenceInDays: number = Math.floor(differenceInHours / 24);
-
-    const remainingHours: number = differenceInHours % 24;
-    const remainingMinutes: number = differenceInMinutes % 60;
-    const remainingSeconds: number = differenceInSeconds % 60;
-
-    let result: string = '';
-
-    if (differenceInDays > 0) {
-        result += differenceInDays + 'day ';
-    }
-    if (remainingHours > 0 || differenceInDays > 0) {
-        result += remainingHours + 'hr ';
-    }
-    if (remainingMinutes > 0 || remainingHours > 0 || differenceInDays > 0) {
-        result += remainingMinutes + 'min ';
-    }
-    if (remainingSeconds > 0 || remainingMinutes > 0 || remainingHours > 0 || differenceInDays > 0) {
-        result += remainingSeconds + 'sec ';
-    }
-
-    return result;
-  }
-
   ///////////////////////////////////////////////////////////////////////////////
   // Punk data contract interactions ////////////////////////////////////////////
   ///////////////////////////////////////////////////////////////////////////////
 
-  possibleEthPhunk(input: string): { possibleEthPhunk: boolean, cleanedString: string } {
+  possibleEthPhunk(input: string): {
+    possibleEthPhunk: boolean;
+    cleanedString: string;
+  } {
     // Get the data from the transaction
     const stringData = hexToString(input.toString() as `0x${string}`);
     // Remove null bytes from the string
@@ -208,7 +252,7 @@ export class Web3Service {
     // Check if the string starts with 'data:'
     const possibleEthPhunk = cleanedString.startsWith('data:image/svg+xml,');
 
-    return { possibleEthPhunk, cleanedString }
+    return { possibleEthPhunk, cleanedString };
   }
 
   async getPunkImage(tokenId: number): Promise<any> {

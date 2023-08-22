@@ -1,1 +1,2 @@
 export const TransferEthscriptionSignature = '0xf30861289185032f511ff94a8127e470f3d0e6230be4925cb6fad33f3436dffb';
+export const TransferEthscriptionForPreviousOwnerSignature = '0xf1d95ed4d1680e6f665104f19c296ae52c1f64cd8114e84d55dc6349dbdafea3';

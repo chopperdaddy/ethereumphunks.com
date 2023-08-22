@@ -5,6 +5,7 @@ import { Web3Service } from './services/web3.service';
 import { SupabaseService } from './services/supabase.service';
 import { PhunkService } from './services/phunk.service';
 import { EmblemService } from './services/emblem.service';
+import { TimeService } from './services/time.service';
 
 @Module({
   providers: [
@@ -14,6 +15,8 @@ import { EmblemService } from './services/emblem.service';
     Web3Service,
     // Supabase Service handles all interactions with the Supabase database
     SupabaseService,
+    // Time service gets estimates of block times
+    TimeService,
     // Create SHAs to validate phunk ethscription images
     // PhunkService,
     // Emblem Service generates the JSON required for listing etherphunks with Emblem Vault

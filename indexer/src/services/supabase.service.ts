@@ -3,7 +3,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { createClient } from '@supabase/supabase-js';
 import { Transaction } from 'viem';
 
-import { EthPhunk, Sha, EthPhunkResponse, ShaResponse, UserResponse } from 'src/models/db';
+import { Phunk, Sha, PhunkResponse, ShaResponse, UserResponse, EventType } from 'src/models/db';
 
 import crypto from 'crypto';
 import dotenv from 'dotenv';
@@ -18,42 +18,49 @@ const supabase = createClient(supabaseUrl, serviceRole);
 
 export class SupabaseService {
 
-  suffix = '_mkt';
+  suffix = '';
 
   ////////////////////////////////////////////////////////////////////////////////
   // Processors //////////////////////////////////////////////////////////////////
   ////////////////////////////////////////////////////////////////////////////////
 
   async processEthscriptionEvent(txn: Transaction, createdAt: Date, cleanedString: string): Promise<void> {
-
     const content = cleanedString.split('data:image/svg+xml,')[1];
     if (!content) return;
 
+    const { from, to, hash } = txn;
     // Check if the sha already exists in the shas table
     const sha = crypto.createHash('sha256').update(cleanedString).digest('hex');
-    const ethPhunkId = await this.checkIsEthPhunks(sha);
-    if (!ethPhunkId && ethPhunkId !== 0) return;
+    const phunkId = await this.checkIsEthPhunks(sha);
+    if (!phunkId && phunkId !== 0) return;
 
     // Check if the sha already exists in the ethPhunks table
     const isDuplicate = await this.checkEthPhunkExistsBySha(sha);
     if (isDuplicate) return;
 
     // Add the ethereum phunk
-    await this.addEthPhunk(txn, createdAt, ethPhunkId, sha);
-    Logger.log('Added eth phunk', `${ethPhunkId} -- ${txn.hash.toLowerCase()}`);
+    await this.addEthPhunk(txn, createdAt, phunkId, sha);
+    // Add the creation event
+    await this.addEvent(txn, from, to, hash, phunkId, 'created', createdAt);
+    Logger.log('Added eth phunk', `${phunkId} -- ${hash.toLowerCase()}`);
   }
 
   async processTransferEvent(txn: Transaction, createdAt: Date): Promise<void> {
-    const ethPhunk: EthPhunk = await this.checkEthPhunkExistsByHash(txn.input);
+    const ethPhunk: Phunk = await this.checkEthPhunkExistsByHash(txn.input);
     if (!ethPhunk) return;
 
-    const isMatched = ethPhunk.hashId.toLowerCase() === txn.input.toLowerCase();
+    const { from, to } = txn;
+    const isMatchedHashId = ethPhunk.hashId.toLowerCase() === txn.input.toLowerCase();
     const transferrerIsOwner = ethPhunk.owner.toLowerCase() === txn.from.toLowerCase();
 
-    if (!isMatched || !transferrerIsOwner) return;
+    console.log({ isMatchedHashId, transferrerIsOwner });
 
-    await this.addEthPhunkTransfer(txn, createdAt);
-    await this.updateEthPhunkOwner(ethPhunk.hashId, txn.to);
+    if (!isMatchedHashId || !transferrerIsOwner) return;
+
+    // Update the eth phunk owner
+    await this.updateEthPhunkOwner(ethPhunk.hashId, ethPhunk.owner, txn.to);
+    // Add the transfer event
+    await this.addEvent(txn, from, to, ethPhunk.hashId, ethPhunk.phunkId, 'transfer', createdAt);
     Logger.log('Updated eth phunk owner', `Hash: ${ethPhunk.hashId} -- To: ${txn.to.toLowerCase()}`);
   }
 
@@ -62,18 +69,35 @@ export class SupabaseService {
     createdAt: Date,
     sender: string,
     recipient: string,
-    ethscriptionId: string
+    hashId: string,
+    value?: bigint,
+    prevOwner?: string
   ): Promise<void> {
-    const ethPhunk: EthPhunk = await this.checkEthPhunkExistsByHash(ethscriptionId);
+    const ethPhunk: Phunk = await this.checkEthPhunkExistsByHash(hashId);
     if (!ethPhunk) return;
 
-    const isMatched = ethPhunk.hashId.toLowerCase() === ethscriptionId.toLowerCase();
+    const isMatchedHashId = ethPhunk.hashId.toLowerCase() === hashId.toLowerCase();
     const transferrerIsOwner = ethPhunk.owner.toLowerCase() === sender.toLowerCase();
 
-    if (!isMatched || !transferrerIsOwner) return;
+    const samePrevOwner = (ethPhunk.prevOwner && prevOwner) ? ethPhunk.prevOwner.toLowerCase() === prevOwner.toLowerCase() : true;
 
-    await this.addEthPhunkTransfer(txn, createdAt);
-    await this.updateEthPhunkOwner(ethPhunk.hashId, recipient);
+    console.log({ sender, recipient, isMatchedHashId, transferrerIsOwner, samePrevOwner, prevOwner, ethPhunk });
+
+    if (!isMatchedHashId || !transferrerIsOwner || !samePrevOwner) return;
+
+    // Add the sale/transfer event
+    await this.addEvent(
+      txn,
+      sender,
+      recipient,
+      ethPhunk.hashId,
+      ethPhunk.phunkId,
+      value ? 'sale' : 'transfer',
+      createdAt,
+      value
+    );
+    // Update the eth phunk owner
+    await this.updateEthPhunkOwner(ethPhunk.hashId, ethPhunk.owner, recipient);
     Logger.log('Updated eth phunk owner (event)', `Hash: ${ethPhunk.hashId} -- To: ${recipient.toLowerCase()}`);
   }
 
@@ -95,8 +119,8 @@ export class SupabaseService {
   }
 
   async checkEthPhunkExistsBySha(sha: string): Promise<boolean> {
-    const response: EthPhunkResponse = await supabase
-      .from('ethPhunks' + this.suffix)
+    const response: PhunkResponse = await supabase
+      .from('phunks' + this.suffix)
       .select('*')
       .eq('sha', sha);
 
@@ -107,9 +131,9 @@ export class SupabaseService {
     return true;
   }
 
-  async checkEthPhunkExistsByHash(hash: string): Promise<EthPhunk> {
-    const response: EthPhunkResponse = await supabase
-      .from('ethPhunks' + this.suffix)
+  async checkEthPhunkExistsByHash(hash: string): Promise<Phunk> {
+    const response: PhunkResponse = await supabase
+      .from('phunks' + this.suffix)
       .select('*')
       .eq('hashId', hash.toLowerCase());
 
@@ -125,15 +149,13 @@ export class SupabaseService {
 
   async addEthPhunk(txn: Transaction, createdAt: Date, phunkId: number, sha: string): Promise<void> {
 
-    const response: EthPhunkResponse = await supabase
-      .from('ethPhunks' + this.suffix)
+    const response: PhunkResponse = await supabase
+      .from('phunks' + this.suffix)
       .insert([{
         createdAt,
         creator: txn.from.toLowerCase(),
         owner: txn.to.toLowerCase(),
         hashId: txn.hash.toLowerCase(),
-        blockHash: txn.blockHash.toLowerCase(),
-        txIndex: Number(txn.transactionIndex),
         data: txn.input,
         sha,
         phunkId
@@ -143,14 +165,26 @@ export class SupabaseService {
     if (error) throw error.message;
   }
 
-  async addEthPhunkTransfer(txn: Transaction, createdAt: Date): Promise<void> {
-    const response: EthPhunkResponse = await supabase
-      .from('ethPhunkTransfers' + this.suffix)
+  async addEvent(
+    txn: Transaction,
+    from: string,
+    to: string,
+    hashId: string,
+    phunkId: number,
+    type: EventType,
+    createdAt: Date,
+    value?: bigint
+  ): Promise<void> {
+    const response: PhunkResponse = await supabase
+      .from('events' + this.suffix)
       .insert([{
-        createdAt,
-        hashId: txn.input.toLowerCase(),
-        from: txn.from.toLowerCase(),
-        to: txn.to.toLowerCase(),
+        blockTimestamp: createdAt,
+        type,
+        phunkId,
+        value: value ? Number(value) : null,
+        hashId: hashId.toLowerCase(),
+        from: from.toLowerCase(),
+        to: to.toLowerCase(),
         blockNumber: Number(txn.blockNumber),
         blockHash: txn.blockHash.toLowerCase(),
         txIndex: Number(txn.transactionIndex),
@@ -199,10 +233,13 @@ export class SupabaseService {
   // Updates /////////////////////////////////////////////////////////////////////
   ////////////////////////////////////////////////////////////////////////////////
 
-  async updateEthPhunkOwner(hashId: string, newOwner: string): Promise<void> {
-    const response: EthPhunkResponse = await supabase
-      .from('ethPhunks' + this.suffix)
-      .update({ owner: newOwner.toLowerCase() })
+  async updateEthPhunkOwner(hashId: string, prevOwner: string, newOwner: string): Promise<void> {
+    const response: PhunkResponse = await supabase
+      .from('phunks' + this.suffix)
+      .update({
+        owner: newOwner.toLowerCase(),
+        prevOwner: prevOwner.toLowerCase()
+      })
       .eq('hashId', hashId);
 
     const { error } = response
@@ -213,9 +250,9 @@ export class SupabaseService {
   // Gets ////////////////////////////////////////////////////////////////////////
   ////////////////////////////////////////////////////////////////////////////////
 
-  async getPhunkById(phunkId: string): Promise<EthPhunk> {
-    const response: EthPhunkResponse = await supabase
-      .from('ethPhunks' + this.suffix)
+  async getPhunkById(phunkId: string): Promise<Phunk> {
+    const response: PhunkResponse = await supabase
+      .from('phunks' + this.suffix)
       .select('*')
       .eq('phunkId', phunkId);
 

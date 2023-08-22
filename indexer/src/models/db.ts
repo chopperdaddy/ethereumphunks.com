@@ -1,12 +1,12 @@
 import { PostgrestError } from '@supabase/supabase-js';
 
-export interface EthPhunkResponse {
-  data: EthPhunk[];
+export interface PhunkResponse {
+  data: Phunk[];
   error: PostgrestError | null;
 }
 
-export interface EthPhunkTransferResponse {
-  data: EthPhunkTransfer[];
+export interface EventResponse {
+  data: Event[];
   error: PostgrestError | null;
 }
 
@@ -20,31 +20,31 @@ export interface UserResponse {
   error: PostgrestError | null;
 }
 
-export interface EthPhunk {
-  id: number
-  createdAt: string | null
-  creator: string | null
-  owner: string | null
-  hashId: string
-  blockHash: string | null
-  txIndex: number | null
-  sha: string
-  phunkId: number | null
-  data: string | null
-  ethscriptionNumber: number | null
+export interface Phunk {
+  id: number;
+  createdAt: string | null;
+  creator: string | null;
+  owner: string | null;
+  prevOwner: string | null;
+  hashId: string;
+  sha: string;
+  phunkId: number | null;
+  data: string | null;
+  ethscriptionNumber: number | null;
 }
 
-export interface EthPhunkTransfer {
-  id: number
-  createdAt: string | null
-  hashId: string | null
-  from: string | null
-  to: string | null
-  blockHash: string | null
-  txIndex: string | null
-  txHash: string
-  phunkId: number | null
-  blockNumber: number | null
+export interface Event {
+  id: number;
+  type: EventType;
+  hashId: string | null;
+  from: string | null;
+  to: string | null;
+  blockHash: string | null;
+  txIndex: string | null;
+  txHash: string;
+  phunkId: number | null;
+  blockNumber: number | null;
+  blockTimestamp: string | null;
 }
 
 export interface Sha {
@@ -58,3 +58,5 @@ export interface User {
   createdAt: string | null;
   address: string | null;
 }
+
+export type EventType = 'transfer' | 'sale' | 'created' | 'burned';

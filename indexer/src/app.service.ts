@@ -18,6 +18,5 @@ export class AppService {
       Logger.debug('Starting Block Watcher');
       this.web3Svc.startPolling();
     });
-
   }
 }
