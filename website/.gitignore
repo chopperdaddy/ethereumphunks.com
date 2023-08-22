@@ -4,6 +4,7 @@
 
 # Compiled output
 /dist
+/marketplace
 /tmp
 /out-tsc
 /bazel-out

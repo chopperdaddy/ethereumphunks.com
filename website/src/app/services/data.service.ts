@@ -33,7 +33,7 @@ export class DataService {
   async getUserEthPhunks(address: string): Promise<any> {
     if (!address) return [];
 
-    const table = environment.chainId === 1 ? 'ethPhunks' : 'ethPhunks_goerli';
+    const table = environment.chainId === 1 ? 'phunks' : 'phunks_goerli';
     const { data, error } = await supabase
       .from(table)
       .select('*')
