@@ -1,0 +1,61 @@
+<div class="inner">
+
+  <a [routerLink]="['/']" class="logo">
+    <ng-template [ngTemplateOutlet]="logo"></ng-template>
+  </a>
+
+  <div class="user-tools">
+
+    <div class="connect-menu">
+      <ng-container *ngIf="(stateSvc.web3Connected$ | async)">
+        <a
+          *ngIf="(stateSvc.walletAddress$ | async) as address"
+          [routerLink]="['/', 'owned']"
+          [href]="'/owned'"
+          [queryParams]="{ address }">
+
+          <app-wallet-address
+            [address]="address">
+          </app-wallet-address>
+        </a>
+      </ng-container>
+
+      <button
+        *ngIf="stateSvc.hasWithdrawal$ | async; else connectButton"
+        (click)="web3Svc.withdraw()"
+        class="withdraw">
+
+        <ng-template [ngTemplateOutlet]="withdrawIcon"></ng-template>
+        Withdraw funds
+      </button>
+
+      <ng-template #connectButton>
+        <button
+          class="connect"
+          (click)="connect()">
+
+          {{ (stateSvc.web3Connected$ | async) ? 'Connected' : 'Connect' }}
+        </button>
+      </ng-template>
+    </div>
+
+    <div class="theme-switcher">
+      <button [class]="themeSvc.theme$ | async" (click)="switchTheme()">
+
+        <ng-template [ngTemplateOutlet]="themSwitcher"></ng-template>
+      </button>
+    </div>
+  </div>
+</div>
+
+<ng-template #logo>
+  <svg height="28" viewBox="0 0 132 28" width="132" xmlns="http://www.w3.org/2000/svg"><g fill="rgba(var(--header-text), 1)" fill-rule="nonzero"><g><path d="m18 2h3v3h-3z" opacity=".5"/><path d="m15 2h3v3h-3z" opacity=".5"/><path d="m3 2h3v3h-3z" opacity=".5"/><path d="m0 2h3v3h-3z" opacity=".5"/><path d="m18 5h3v3h-3z"/><path d="m3 5h3v3h-3z"/><path d="m0 5h3v3h-3z" opacity=".2"/><path d="m15 5h3v3h-3z" opacity=".2"/><path d="m9 14h3v3h-3z"/><path d="m6 14h3v3h-3z"/><path d="m12 23h3v3h-3z"/><path d="m15 20h3v3h-3z"/><path d="m9 23h3v3h-3z"/><path d="m6 23h3v3h-3z"/></g><g><g transform="translate(33.09668 13.666406)"><path d="m0 0h11.2v2.80758808h-8.4v2.80758807h8.4v2.80758808h-8.4v5.57723577h-2.8zm11.2 2.80758808h2.8v2.80758807h-2.8z"/><path d="m16 0h2.8v5.61517615h8.4v-5.61517615h2.8v14h-2.8v-5.57723577h-8.4v5.57723577h-2.8z"/><path d="m33 0h2.8v11.2303523h-2.8zm11.2 0h2.8v11.2303523h-2.8zm-8.4 11.2303523h8.4v2.7696477h-8.4z"/><path d="m50 0h2.8v2.80758808h2.8v2.80758807h-2.8v8.38482385h-2.8zm11.2 0h2.8v14h-2.8v-2.7696477h-2.8v-2.80758807h2.8zm-5.6 5.61517615h2.8v2.80758808h-2.8z"/><path d="m67 0h2.8v5.61517615h5.6v2.80758808h-5.6v5.57723577h-2.8zm11.2 0h2.8v2.80758808h-2.8zm-2.8 2.80758808h2.8v2.80758807h-2.8zm0 5.61517615h2.8v2.80758807h-2.8zm2.8 2.80758807h2.8v2.7696477h-2.8z"/><path d="m86.8 0h11.2v2.80758808h-11.2zm-2.8 2.80758808h2.8v2.80758807h-2.8zm2.8 2.80758807h8.4v2.80758808h-8.4zm8.4 2.80758808h2.8v2.80758807h-2.8zm-11.2 2.80758807h11.2v2.7696477h-11.2z"/></g><g transform="translate(33)"><path d="m0 0h10.6725533v2.13451067h-8.53804263v2.13451067h6.40353201v2.13451067h-6.40353201v2.13451067h8.53804263v2.10566592h-10.6725533z"/><path d="m12.4753495 0h10.6725534v2.13451067h-4.2690214v8.50919793h-2.1345106v-8.50919793h-4.2690214z"/><path d="m24.950699 0h2.1345107v4.26902134h6.403532v-4.26902134h2.1345107v10.6437086h-2.1345107v-4.24017659h-6.403532v4.24017659h-2.1345107z"/><path d="m37.4260486 0h10.6725533v2.13451067h-8.5380427v2.13451067h6.403532v2.13451067h-6.403532v2.13451067h8.5380427v2.10566592h-10.6725533z"/><path d="m49.9013981 0h8.5380427v2.13451067h-6.403532v2.13451067h6.403532v2.13451067h-6.403532v4.24017659h-2.1345107zm8.5380427 2.13451067h2.1345106v2.13451067h-2.1345106zm0 4.26902134h2.1345106v4.24017659h-2.1345106z"/><path d="m62.3767476 0h10.6725534v2.13451067h-8.5380427v2.13451067h6.403532v2.13451067h-6.403532v2.13451067h8.5380427v2.10566592h-10.6725534z"/><path d="m74.8520971 0h2.1345107v8.53804268h-2.1345107zm8.5380427 0h2.1345107v8.53804268h-2.1345107zm-6.403532 8.53804268h6.403532v2.10566592h-6.403532z"/><path d="m87.3274467 0h2.1345106v2.13451067h2.1345107v2.13451067h-2.1345107v6.37468726h-2.1345106zm8.5380426 0h2.1345107v10.6437086h-2.1345107v-6.37468726h-2.1345106v-2.13451067h2.1345106zm-4.2690213 4.26902134h2.1345107v2.13451067h-2.1345107z"/></g></g></g></svg>
+</ng-template>
+
+<ng-template #themSwitcher>
+  <svg height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg"><g fill="rgba(var(--header-text), 1)" fill-rule="evenodd"><path d="m3 3h9v18h-9z"/><path d="m18 21v3h-12v-3zm-12-3v3h-3v-3zm15 0v3h-3v-3zm-18-12v12h-3v-12zm21 0v12h-3v-12zm-3-3v3h-3v-3zm-15 0v3h-3v-3zm0 0v-3h12v3z"/></g></svg>
+</ng-template>
+
+<ng-template #withdrawIcon>
+  <svg height="6" viewBox="0 0 5 6" width="5" xmlns="http://www.w3.org/2000/svg"><g><path d="m0 0h1v1h-1z" opacity=".6"/><path d="m1 0h1v1h-1z" opacity=".7"/><path d="m2 0h1v1h-1z" opacity=".8"/><path d="m3 0h1v1h-1z" opacity=".7"/><path d="m4 0h1v1h-1z" opacity=".6"/><path d="m2 2h1v1h-1z"/><path d="m2 1h1v1h-1z"/><path d="m2 3h1v1h-1z"/><path d="m2 4h1v1h-1z"/><path d="m3 4h1v1h-1z"/><path d="m2 5h1v1h-1z"/><path d="m4 3h1v1h-1z"/><path d="m1 4h1v1h-1z"/><path d="m0 3h1v1h-1z"/></g></svg>
+</ng-template>

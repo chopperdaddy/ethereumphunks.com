@@ -1,0 +1,41 @@
+.walletconnect-qrcode__base {
+  background-color: rgba(var(--background), .5) !important;
+}
+
+.web3modal-modal-lightbox {
+  background-color: rgba(var(--background), .9) !important;
+  // backdrop-filter: blur(.5rem);
+  z-index: 2147483640 !important;
+}
+
+.web3modal-modal-card {
+  background-color: rgba(var(--background), 1) !important;
+  box-shadow: 0 0 8rem 0 rgba(var(--text-color), .25);
+  max-width: 30rem !important;
+  border-radius: 0 !important;
+
+  .web3modal-provider-wrapper {
+    border: none !important;
+  }
+}
+
+.web3modal-provider-container {
+  background-color: rgba(var(--background), 0) !important;
+}
+
+.web3modal-provider-icon {
+  width: 5rem !important;
+  height: 5rem !important;
+}
+
+.web3modal-provider-name {
+  color: rgba(var(--highlight), 1) !important;
+  font-size: 2rem !important;
+  font-weight: 700 !important;
+}
+
+.web3modal-provider-description {
+  color: rgba(var(--dark-text), .5) !important;
+  font-size: 1.6rem !important;
+  font-weight: 600 !important;
+}

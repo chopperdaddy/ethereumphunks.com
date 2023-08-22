@@ -1,0 +1,49 @@
+@charset 'UTF-8';
+
+@import 'tippy.js/dist/tippy.css';
+@import 'tippy.js/themes/translucent.css';
+@import 'tippy.js/animations/shift-away-subtle.css';
+@import 'tippy.js/dist/svg-arrow.css';
+@import 'tippy.js/dist/border.css';
+
+// 1. Configuration and helpers
+@import
+  'abstracts/variables',
+  'abstracts/functions',
+  'abstracts/mixins';
+
+// 2. Vendors
+@import
+  'vendor/normalize';
+
+// 3. Base stuff
+@import
+  'base/base',
+  'base/fonts',
+  'base/typography',
+  'base/helpers',
+  'base/components';
+
+// 5. Components
+@import
+  'components/form',
+  'components/pagination',
+  'components/web3modal',
+  'components/ng-select',
+  'components/tippy';
+//   'components/app-home',
+//   'components/app-punks-list',
+//   'components/app-item-view';
+
+// 4. Layout-related sections
+@import
+  'layout/header',
+  'layout/layout';
+
+// 6. Themes
+@import
+  'themes/default';
+
+// 7. Animations
+@import
+  'abstracts/animations';
