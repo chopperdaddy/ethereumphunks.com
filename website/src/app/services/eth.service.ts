@@ -13,8 +13,6 @@ import { jsonRpcProvider } from '@wagmi/core/providers/jsonRpc';
 import { EthereumClient, w3mConnectors } from '@web3modal/ethereum';
 import { Web3Modal } from '@web3modal/html';
 
-import punkDataABI from '@/abi/PunkData.json';
-
 import { environment } from 'src/environments/environment';
 
 const projectId = 'd183619f342281fd3f3ff85716b6016a';
@@ -177,7 +175,13 @@ export class EthService {
 
     const punkImage = await publicClient?.readContract({
       address: environment.punkDataAddress as `0x${string}`,
-      abi: punkDataABI,
+      abi: [{
+        "inputs": [{ "internalType": "uint16", "name": "index", "type": "uint16" }],
+        "name": "punkImageSvg",
+        "outputs": [{ "internalType": "string", "name": "svg", "type": "string" }],
+        "stateMutability": "view",
+        "type": "function"
+      }],
       functionName: 'punkImageSvg',
       args: [`${tokenId}`],
     });
@@ -188,7 +192,13 @@ export class EthService {
     const publicClient = getPublicClient();
     const punkAttributes = await publicClient?.readContract({
       address: environment.punkDataAddress as `0x${string}`,
-      abi: punkDataABI,
+      abi: [{
+        "inputs": [{ "internalType": "uint16", "name": "index", "type": "uint16" }],
+        "name": "punkAttributes",
+        "outputs": [{ "internalType": "string", "name": "text", "type": "string" }],
+        "stateMutability": "view",
+        "type": "function"
+      }],
       functionName: 'punkAttributes',
       args: [tokenId],
     });

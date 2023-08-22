@@ -312,12 +312,4 @@ export class EthscribeComponent {
       return false; // Unlocked
     }
   }
-
-
 }
-
-
-[{
-  "hashId": "0xb73019848d725c4502ed3b4f0d29f7481b54699409e5589dcda52d22829c8dee",
-  "timestamp": 1689501301669
-}]
