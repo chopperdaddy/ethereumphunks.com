@@ -126,23 +126,23 @@
 
   @media (max-width: $mobile) {
     .inner {
-      height: calc(var(--header-height) / 2);
+      height: calc(var(--header-height) / 1.5);
       padding: 0 1.5rem;
 
       .logo {
-        overflow: hidden;
-        width: 6rem;
+        // overflow: hidden;
+        // width: 3rem;
 
-        svg {
-          overflow: visible;
-          width: 20rem;
+        // svg {
+        //   overflow: visible;
+        //   width: 20rem;
 
-          path {
-            &#wordmark {
-              // display: none;
-            }
-          }
-        }
+        //   path {
+        //     &#wordmark {
+        //       // display: none;
+        //     }
+        //   }
+        // }
       }
 
       .user-tools {

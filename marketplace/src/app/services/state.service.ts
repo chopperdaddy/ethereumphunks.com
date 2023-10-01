@@ -57,13 +57,13 @@ export class StateService {
   ];
 
   defaultPeriod: any = this.periods[4].key || '1y';
-  
+
   private activePeriod = new BehaviorSubject<any>(this.periods[4]);
   activePeriod$ = this.activePeriod.asObservable();
 
   sortParams: any = {};
 
-  punkBoxAddress!: string | null;
+  phunkBoxAddress!: string | null;
 
   constructor(
     private router: Router,

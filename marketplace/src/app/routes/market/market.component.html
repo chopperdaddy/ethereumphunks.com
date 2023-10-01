@@ -1,10 +1,10 @@
 <div class="inner">
-  <app-punk-grid-view
-    [punkData]="(punkData$ | async) || []"
+  <app-phunk-grid-view
+    [phunkData]="(phunkData$ | async) || []"
     [viewType]="'market'"
     [sort]="activeSort"
     [limit]="200"
     [address]="route.snapshot.queryParams.address"
     [marketType]="(route.params | async)?.marketType || 'all'">
-  </app-punk-grid-view>
+  </app-phunk-grid-view>
 </div>

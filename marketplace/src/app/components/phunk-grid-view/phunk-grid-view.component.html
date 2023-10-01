@@ -1,15 +1,15 @@
-<ng-container *ngIf="viewType !== 'compact' && punkData">
+<ng-container *ngIf="viewType !== 'compact' && phunkData">
 
   <div class="header-wrapper">
     <h1 i18n>{{ marketTitles[marketType] }}</h1>
     <h2 *ngIf="address">by <app-wallet-address [address]="address" class="highlight"></app-wallet-address></h2>
 
-    <ng-container *ngIf="(stateSvc.marketLoading$ | async); else punkCount">
+    <ng-container *ngIf="(stateSvc.marketLoading$ | async); else phunkCount">
       <h3>Loading...</h3>
     </ng-container>
 
-    <ng-template #punkCount>
-      <h3>{{ (punkData | count : marketType) | number }} Punks Total</h3>
+    <ng-template #phunkCount>
+      <h3>{{ (phunkData | count : marketType) | number }} Phunks Total</h3>
     </ng-template>
   </div>
 
@@ -138,11 +138,11 @@
 </ng-container>
 
 <div
-  *ngIf="punkData; else placeholder"
+  *ngIf="phunkData; else placeholder"
   class="grid-wrapper"
   [class]="viewType">
 
-  <ng-container *ngFor="let item of punkData |
+  <ng-container *ngFor="let item of phunkData |
     properties : (activeFilters$ | async) : traitCount |
     filter: marketType : (activeWrappedFilters$ | async) |
     sort: ((activeSort$ | async)?.value || sorts[0].value) : marketType |
@@ -153,11 +153,11 @@
     trackBy: identify;
     index as i">
 
-    <ng-container *ngTemplateOutlet="punkItem; context:{ $implicit: item, idx: i }"></ng-container>
+    <ng-container *ngTemplateOutlet="phunkItem; context:{ $implicit: item, idx: i }"></ng-container>
   </ng-container>
 </div>
 
-<ng-template #punkItem let-item>
+<ng-template #phunkItem let-item>
   <div class="item">
 
     <ng-container *ngIf="viewType !== 'compact'">

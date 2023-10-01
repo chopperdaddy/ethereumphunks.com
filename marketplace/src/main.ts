@@ -3,7 +3,7 @@ import { bootstrapApplication } from '@angular/platform-browser';
 import { RouteReuseStrategy, provideRouter, withHashLocation } from '@angular/router';
 
 import { HttpClientModule } from '@angular/common/http';
-import { GraphQLModule } from './app/graphql.module';
+// import { GraphQLModule } from './app/graphql.module';
 import { TimeagoClock, TimeagoDefaultClock, TimeagoDefaultFormatter, TimeagoFormatter } from 'ngx-timeago';
 
 import { AppComponent } from './app/app.component';
@@ -26,10 +26,13 @@ bootstrapApplication(AppComponent, {
     { provide: TimeagoFormatter, useClass: TimeagoDefaultFormatter },
     { provide: TimeagoClock, useClass: TimeagoDefaultClock },
     { provide: WeiToEthPipe, useClass: WeiToEthPipe },
-    { provide: DEFAULT_CONFIG, useValue: { name: 'cryptopunksCE' } },
+    { provide: DEFAULT_CONFIG, useValue: { name: 'cryptophunksCE' } },
     { provide: RouteReuseStrategy, useClass: CustomReuseStrategy },
-    
-    importProvidersFrom(HttpClientModule, GraphQLModule),
+
+    importProvidersFrom(
+      HttpClientModule,
+      // GraphQLModule
+    ),
     provideRouter(routes, withHashLocation())
   ]
 });

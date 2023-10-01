@@ -127,11 +127,11 @@
 
         &.sale {
           td {
-            background-color: rgba(var(--base-color), .5);
+            background-color: rgba(var(--sale-color), .5);
 
             .cell-inner {
               &.type-label {
-                border-left: .3rem solid rgba(var(--base-color), 1);
+                border-left: .3rem solid rgba(var(--sale-color), 1);
               }
             }
           }

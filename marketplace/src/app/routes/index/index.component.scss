@@ -32,7 +32,7 @@ section {
 
   .section-stats-wrapper {}
 
-  &.punk-box {
+  &.phunk-box {
     form {
       display: flex;
       flex-direction: column;
@@ -77,7 +77,7 @@ section {
       align-items: flex-start;
       padding-bottom: 4rem;
 
-      .intro-punks {
+      .intro-phunks {
         display: grid;
         grid-template-columns: repeat(5, 20%);
         row-gap: 2rem;
@@ -118,7 +118,7 @@ section {
       .inner {
         flex-direction: column;
 
-        .intro-punks {
+        .intro-phunks {
           width: 100%;
           grid-template-columns: repeat(5, 1fr);
           row-gap: 1rem;

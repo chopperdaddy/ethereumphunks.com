@@ -5,7 +5,7 @@ import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 
 import { LazyLoadImageModule } from 'ng-lazyload-image';
 
-import { PunkBillboardComponent } from '@/components/punk-billboard/punk-billboard.component';
+import { PhunkBillboardComponent } from '@/components/phunk-billboard/phunk-billboard.component';
 import { TxHistoryComponent } from '@/components/tx-history/tx-history.component';
 import { WalletAddressDirective } from '@/directives/wallet-address.directive';
 
@@ -19,11 +19,12 @@ import { Web3Service } from '@/services/web3.service';
 import { StateService } from '@/services/state.service';
 import { ThemeService } from '@/services/theme.service';
 
-import { Punk } from '@/models/graph';
+import { Phunk } from '@/models/graph';
 
 import { switchMap, takeUntil, tap } from 'rxjs/operators';
 import { BehaviorSubject, Subject, fromEvent, merge } from 'rxjs';
 import { TransactionReceipt } from 'viem';
+import { environment } from 'src/environments/environment';
 
 interface TxStatus {
   title: string;
@@ -48,7 +49,7 @@ interface TxStatuses {
 
     LazyLoadImageModule,
 
-    PunkBillboardComponent,
+    PhunkBillboardComponent,
     TxHistoryComponent,
     WalletAddressDirective,
 
@@ -57,7 +58,7 @@ interface TxStatuses {
     WeiToEthPipe,
     FormatCashPipe
   ],
-  selector: 'app-punk-item-view',
+  selector: 'app-phunk-item-view',
   templateUrl: './item-view.component.html',
   styleUrls: ['./item-view.component.scss']
 })
@@ -66,8 +67,10 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
 
   @ViewChild('modal') modal!: ElementRef;
 
-  private punk = new BehaviorSubject<Punk | null>(null);
-  punk$ = this.punk.asObservable();
+  explorerUrl = `https://${environment.chainId === 5 ? 'goerli.' : ''}etherscan.io`;
+
+  private phunk = new BehaviorSubject<Phunk | null>(null);
+  phunk$ = this.phunk.asObservable();
 
   private destroy$ = new Subject<void>();
 
@@ -157,9 +160,9 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
 
   getData(): void {
     this.route.params.pipe(
-      tap((params: any) => this.punk.next({ id: params.tokenId, attributes: [{k:'Loading',v:'Loading'}] })),
-      switchMap((params: any) => this.dataSvc.fetchSinglePunk(params.tokenId)),
-      tap((res: Punk) => this.punk.next(res)),
+      tap((params: any) => this.phunk.next({ id: params.tokenId, attributes: [{k:'Loading',v:'Loading'}] })),
+      switchMap((params: any) => this.dataSvc.fetchSinglePhunk(params.tokenId)),
+      tap((res: Phunk) => this.phunk.next(res)),
       takeUntil(this.destroy$),
     ).subscribe();
   }
@@ -183,8 +186,8 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
     const shortHash = `${hash.slice(0, 6)}...${hash.slice(-6)}`;
     this.txStatus.submitted.message = (message || `
       <p>Your transaction is being processed on the Ethereum network.</p>
-      <p>Transaction hash: <a href="https://etherscan.io/tx/${hash}" target="_blank">${shortHash}</a></p>
-      <p>View it <a href="https://etherscan.io/tx/${hash}" target="_blank">here</a></p>
+      <p>Transaction hash: <a href="${this.explorerUrl}/tx/${hash}" target="_blank">${shortHash}</a></p>
+      <p>View it <a href="${this.explorerUrl}/tx/${hash}" target="_blank">here</a></p>
     `).replace(/\s+/g, ' ');
 
     this.txStatus = { ...this.txStatus };
@@ -202,8 +205,8 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
     const shortHash = `${hash.slice(0, 6)}...${hash.slice(-6)}`;
     this.txStatus.complete.message = message || `
       <p>Your transaction is complete.</p>
-      <p>Transaction hash: <a href="https://etherscan.io/tx/${hash}" target="_blank">${shortHash}</a></p>
-      <p>View it <a href="https://etherscan.io/tx/${hash}" target="_blank">here</a></p>
+      <p>Transaction hash: <a href="${this.explorerUrl}/tx/${hash}" target="_blank">${shortHash}</a></p>
+      <p>View it <a href="${this.explorerUrl}/tx/${hash}" target="_blank">here</a></p>
     `.replace(/\s+/g, ' ');
 
     this.txStatus = { ...this.txStatus };
@@ -269,13 +272,28 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
     this.closeBid();
   }
 
-  async submitListing(punk: Punk): Promise<void> {
+  async submitListing(phunk: Phunk): Promise<void> {
     try {
-      const tokenId = punk.id;
+      if (!phunk.hashId) throw new Error('Invalid hashId');
+      if (!this.listPrice.value) return;
+
+      const tokenId = phunk.hashId;
       const value = this.listPrice.value;
       let address = this.listToAddress.value;
 
-      if (!value) return;
+      const isInEscrow = await this.web3Svc.isInEscrow(tokenId);
+      if (!isInEscrow) {
+
+        this.closeListing();
+        this.initTransactionMessage();
+
+        const escrowHash = await this.web3Svc.sendEthscriptionToContract(tokenId);
+        this.setTransactionMessage(escrowHash!);
+
+        const escrowReceipt = await this.web3Svc.waitForTransaction(escrowHash!);
+        this.setProcessTransactionMessage(escrowReceipt);
+      }
+
       if (address) {
         if (address?.endsWith('.eth')) {
           const ensOwner = await this.web3Svc.getEnsOwner(address);
@@ -289,7 +307,7 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
       this.closeListing();
       this.initTransactionMessage();
 
-      const hash = await this.web3Svc.offerPunkForSale(tokenId, value, address);
+      const hash = await this.web3Svc.offerPhunkForSale(tokenId, value, address);
       this.setTransactionMessage(hash!);
 
       const receipt = await this.web3Svc.waitForTransaction(hash!);
@@ -300,13 +318,14 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
     }
   }
 
-  async punkNoLongerForSale(punk: Punk): Promise<void> {
+  async phunkNoLongerForSale(phunk: Phunk): Promise<void> {
     try {
-      const tokenId = punk.id;
+      if (!phunk.hashId) throw new Error('Invalid hashId');
+      const tokenId = phunk.hashId;
 
       this.initTransactionMessage();
 
-      const hash = await this.web3Svc.punkNoLongerForSale(tokenId);
+      const hash = await this.web3Svc.phunkNoLongerForSale(tokenId);
       this.setTransactionMessage(hash!);
 
       const receipt = await this.web3Svc.waitForTransaction(hash!);
@@ -317,13 +336,15 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
     }
   }
 
-  async withdrawBidForPunk(punk: Punk): Promise<void> {
+  async withdrawBidForPhunk(phunk: Phunk): Promise<void> {
     try {
-      const tokenId = punk.id;
+      if (!phunk.hashId) throw new Error('Invalid hashId');
+
+      const tokenId = phunk.hashId;
 
       this.initTransactionMessage();
 
-      const hash = await this.web3Svc.withdrawBidForPunk(tokenId);
+      const hash = await this.web3Svc.withdrawBidForPhunk(tokenId);
       this.setTransactionMessage(hash!);
 
       const receipt = await this.web3Svc.waitForTransaction(hash!);
@@ -334,22 +355,22 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
     }
   }
 
-  async acceptBidForPunk(punk: Punk): Promise<void> {
+  async acceptBidForPhunk(phunk: Phunk): Promise<void> {
     try {
-      const tokenId = punk.id;
-      const value = punk.bid?.value;
+      const tokenId = phunk.id;
+      const value = phunk.bid?.value;
 
       this.closeAcceptBid();
       this.initTransactionMessage();
 
-      const hash = await this.web3Svc.acceptBidForPunk(tokenId, value!);
+      const hash = await this.web3Svc.acceptBidForPhunk(tokenId, value!);
       const shortHash = `${hash?.slice(0, 6)}...${hash?.slice(-6)}`;
 
       this.setTransactionMessage(
         hash!,
         `<p>Your transaction was sent to the Flashbots builder and is waitng to be processed.</p>
-        <p>Transaction hash: <a href="https://etherscan.io/tx/${hash}" target="_blank">${shortHash}</a></p>
-        <p>You can <a href="https://etherscan.io/tx/${hash}" target="_blank">view it here</a> once complete.</p>
+        <p>Transaction hash: <a href="${this.explorerUrl}/tx/${hash}" target="_blank">${shortHash}</a></p>
+        <p>You can <a href="${this.explorerUrl}/tx/${hash}" target="_blank">view it here</a> once complete.</p>
       `);
 
       const receipt = await this.pollReceipt(hash!);
@@ -378,14 +399,16 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
     });
   }
 
-  async buyPunk(punk: Punk): Promise<void> {
+  async buyPhunk(phunk: Phunk): Promise<void> {
     try {
-      const tokenId = punk.id;
-      const value = punk.listing?.value;
+      if (!phunk.hashId) throw new Error('Invalid hashId');
+
+      const tokenId = phunk.hashId;
+      const value = phunk.listing?.value;
 
       this.initTransactionMessage();
 
-      const hash = await this.web3Svc.buyPunk(tokenId, value!);
+      const hash = await this.web3Svc.buyPhunk(tokenId, value!);
       this.setTransactionMessage(hash!);
 
       const receipt = await this.web3Svc.waitForTransaction(hash!);
@@ -396,16 +419,18 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
     }
   }
 
-  async submitBid(data: Punk): Promise<void> {
+  async submitBid(phunk: Phunk): Promise<void> {
     try {
+      if (!phunk.hashId) throw new Error('Invalid hashId');
       if (!this.bidPrice.value) return;
-      const tokenId = data.id;
+
+      const tokenId = phunk.hashId;
       const value = this.bidPrice.value;
 
       this.closeBid();
       this.initTransactionMessage();
 
-      const hash = await this.web3Svc.enterBidForPunk(tokenId, value);
+      const hash = await this.web3Svc.enterBidForPhunk(tokenId, value);
       this.setTransactionMessage(hash!);
 
       const receipt = await this.web3Svc.waitForTransaction(hash!);
@@ -416,7 +441,7 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
     }
   }
 
-  async submitTransfer(data: Punk): Promise<void> {
+  async submitTransfer(data: Phunk): Promise<void> {
     console.log('submitTransfer', data);
     try {
 
@@ -430,7 +455,7 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
       this.closeTransfer();
       this.initTransactionMessage();
 
-      const hash = await this.web3Svc.transferPunk(hashId, toAddress);
+      const hash = await this.web3Svc.transferPhunk(hashId, toAddress);
       this.setTransactionMessage(hash!);
 
       const receipt = await this.web3Svc.waitForTransaction(hash!);

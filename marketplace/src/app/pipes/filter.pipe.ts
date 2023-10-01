@@ -1,7 +1,7 @@
 import { Pipe, PipeTransform } from '@angular/core';
 
 import { Filters, WrappedFilters } from '@/models/pipes';
-import { Punk } from '@/models/graph';
+import { Phunk } from '@/models/graph';
 
 @Pipe({
   standalone: true,
@@ -10,7 +10,7 @@ import { Punk } from '@/models/graph';
 
 export class FilterPipe implements PipeTransform {
 
-  transform(value: Punk[], ...args: (Filters | WrappedFilters | null)[]): Punk[] {
+  transform(value: Phunk[], ...args: (Filters | WrappedFilters | null)[]): Phunk[] {
 
     if (!value?.length) return [];
     if (!args?.length) return value;

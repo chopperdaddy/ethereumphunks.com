@@ -1,13 +1,15 @@
 export interface Account {
   id: string;
-  punks: Punk[];
+  phunks?: Phunk[];
 }
 
-export interface Punk {
+export interface Phunk {
   id: string;
   hashId?: string;
   owner?: Account;
+  prevOwner?: Account;
   wrapped?: boolean;
+  isEscrowed?: boolean;
   bid?: Bid | null;
   listing?: Listing | null;
   attributes: Attribute[];
@@ -20,7 +22,7 @@ export interface Attribute {
 
 export interface Listing {
   id: string;
-  punk?: Punk;
+  phunk?: Phunk;
   value: string;
   usd?: string;
   fromAccount?: Account;
@@ -31,11 +33,11 @@ export interface Listing {
 
 export interface Bid {
   id: string;
-  punk: Punk;
+  phunk?: Phunk;
   value: string;
-  usd: string;
-  fromAccount: Account;
-  blockTimestamp: string;
+  usd?: string;
+  fromAccount?: Account;
+  blockTimestamp?: string;
   source?: Source;
 }
 
@@ -82,4 +84,4 @@ export interface Source {
   url: string;
 }
 
-export type EventType = 'All' | 'Created' | 'Transfer' | 'Offered' | 'BidEntered' | 'BidWithdrawn' | 'Sale' | 'OfferWithdrawn';
+export type EventType = 'All' | 'Created' | 'transfer' | 'Offered' | 'BidEntered' | 'BidWithdrawn' | 'sale' | 'OfferWithdrawn';

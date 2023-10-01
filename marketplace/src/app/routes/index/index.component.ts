@@ -6,7 +6,7 @@ import { FormControl, FormGroup, FormsModule, ReactiveFormsModule } from '@angul
 import { TimeagoModule } from 'ngx-timeago';
 import { LazyLoadImageModule } from 'ng-lazyload-image';
 
-import { PunkGridViewComponent } from '@/components/punk-grid-view/punk-grid-view.component';
+import { PhunkGridViewComponent } from '@/components/phunk-grid-view/phunk-grid-view.component';
 import { TxOverviewComponent } from '@/components/overview/overview.component';
 import { SplashComponent } from '@/components/splash/splash.component';
 
@@ -22,7 +22,7 @@ import { CalcPipe } from '@/pipes/calculate.pipe';
 import { CountPipe } from '@/pipes/count.pipe';
 import { TokenIdParsePipe } from '@/pipes/token-id-parse.pipe';
 
-import { Punk } from '@/models/graph';
+import { Phunk } from '@/models/graph';
 
 import { Observable } from 'rxjs';
 
@@ -37,7 +37,7 @@ import { Observable } from 'rxjs';
     LazyLoadImageModule,
 
     SplashComponent,
-    PunkGridViewComponent,
+    PhunkGridViewComponent,
     TxOverviewComponent,
 
     WeiToEthPipe,
@@ -53,16 +53,16 @@ import { Observable } from 'rxjs';
 
 export class IndexComponent implements OnInit {
 
-  allData$!: Observable<Punk[]>;
+  allData$!: Observable<Phunk[]>;
 
-  punkBoxLoading: boolean = false;
-  punkBoxError: boolean = false;
+  phunkBoxLoading: boolean = false;
+  phunkBoxError: boolean = false;
 
-  punkBox: FormGroup = new FormGroup({
+  phunkBox: FormGroup = new FormGroup({
     addressInput: new FormControl()
   });
 
-  randomPunks: string[] = [ '7209', ...Array.from({length: 9}, () => `${Math.floor(Math.random() * 10000)}`)];
+  randomPhunks: string[] = [ '7209', ...Array.from({length: 9}, () => `${Math.floor(Math.random() * 10000)}`)];
 
   constructor(
     public themeSvc: ThemeService,
@@ -78,9 +78,9 @@ export class IndexComponent implements OnInit {
 
   async onSubmit($event: any): Promise<void> {
     try {
-      this.punkBoxLoading = true;
+      this.phunkBoxLoading = true;
 
-      const addressInput  = this.punkBox?.value?.addressInput;
+      const addressInput  = this.phunkBox?.value?.addressInput;
       let address = addressInput;
 
       const isEns = addressInput?.includes('.eth');
@@ -91,7 +91,7 @@ export class IndexComponent implements OnInit {
 
       if (isTokenId) {
         this.router.navigate(['/', 'details', addressInput]);
-        this.punkBoxLoading = false;
+        this.phunkBoxLoading = false;
         return;
       }
 
@@ -101,12 +101,12 @@ export class IndexComponent implements OnInit {
       if (address) this.router.navigate(['/', 'owned'], { queryParams: { address }});
       else throw new Error('Invalid Address');
 
-      this.punkBoxLoading = false;
+      this.phunkBoxLoading = false;
 
     } catch (error) {
       console.log(error);
-      this.punkBoxLoading = false;
-      this.punkBoxError = true;
+      this.phunkBoxLoading = false;
+      this.phunkBoxError = true;
     }
   }
 

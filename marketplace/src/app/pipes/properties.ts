@@ -1,5 +1,5 @@
 import { Pipe, PipeTransform } from '@angular/core';
-import { Punk } from '@/models/graph';
+import { Phunk } from '@/models/graph';
 
 @Pipe({
   standalone: true,
@@ -8,7 +8,7 @@ import { Punk } from '@/models/graph';
 
 export class PropertiesPipe implements PipeTransform {
 
-  transform(value: Punk[], ...args: any[]): Punk[] {
+  transform(value: Phunk[], ...args: any[]): Phunk[] {
 
     if (args[0]['address']) delete args[0]['address'];
 
@@ -22,7 +22,7 @@ export class PropertiesPipe implements PipeTransform {
 
     const filtersLength = Object.keys(args[0]).length;
 
-    const filtered = value.filter((res: Punk) => {
+    const filtered = value.filter((res: Phunk) => {
       const attrs = res.attributes;
       if (attrs) {
         const found = attrs.filter((attr) => {

@@ -105,18 +105,25 @@
         <div class="label">
           <ng-container>
 
-            {{ labels[event.type] }}
+            <!-- {{ event.type }} -->
+            <!-- {{ labels[event.type] }} -->
 
-            <ng-container *ngIf="event.to && event.type === 'Transfer'">
+            <ng-container *ngIf="event.to && event.type === 'transfer'">
+              {{ labels[event.type] }}
               <app-wallet-address
                 [address]="event.to">
               </app-wallet-address>
             </ng-container>
 
-            <ng-container *ngIf="event.value !== '0'">
-              Ξ{{ event.value | weiToEth }}
+            <ng-container *ngIf="event.from && event.type === 'sale'">
+              Bought for Ξ{{ event.value | weiToEth }}
               ({{ ((event.value | weiToEth) * (+event.usd || (dataSvc.usd$ | async) || 0)) | currency }})
             </ng-container>
+
+            <!-- <ng-container *ngIf="event.value !== '0'">
+              Ξ{{ event.value | weiToEth }}
+              ({{ ((event.value | weiToEth) * (+event.usd || (dataSvc.usd$ | async) || 0)) | currency }})
+            </ng-container> -->
           </ng-container>
 
           <div class="date">

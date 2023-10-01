@@ -62,7 +62,7 @@
 
           <td>
             <div class="cell-inner">
-              <a [href]="'https://etherscan.io/tx/' + (event.txHash)" target="_blank">
+              <a [href]="explorerUrl + '/tx/' + (event.txHash)" target="_blank">
                 {{ event.blockTimestamp | date }}
               </a>
             </div>
@@ -75,5 +75,5 @@
 </div>
 
 <ng-template #placeholderCell>
-  <div class="placeholder">&nbsp;</div>
+  <div class="placeholder">---</div>
 </ng-template>

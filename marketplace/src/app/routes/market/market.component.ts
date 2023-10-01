@@ -8,16 +8,16 @@ import { StateService } from '@/services/state.service';
 import { BehaviorSubject } from 'rxjs';
 import { map, switchMap, tap } from 'rxjs/operators';
 
-import { PunkGridViewComponent } from '@/components/punk-grid-view/punk-grid-view.component';
+import { PhunkGridViewComponent } from '@/components/phunk-grid-view/phunk-grid-view.component';
 
 import { Filters, Sorts } from '@/models/pipes';
-import { Punk } from '@/models/graph';
+import { Phunk } from '@/models/graph';
 
 @Component({
   standalone: true,
   imports: [
     CommonModule,
-    PunkGridViewComponent
+    PhunkGridViewComponent
   ],
   selector: 'app-market',
   templateUrl: './market.component.html',
@@ -26,8 +26,8 @@ import { Punk } from '@/models/graph';
 
 export class MarketComponent {
 
-  private punkData = new BehaviorSubject<Punk[]>([]);
-  punkData$ = this.punkData.asObservable();
+  private phunkData = new BehaviorSubject<Phunk[]>([]);
+  phunkData$ = this.phunkData.asObservable();
 
   private marketType = new BehaviorSubject<Filters | null>(null);
   marketType$ = this.marketType.asObservable();
@@ -44,7 +44,7 @@ export class MarketComponent {
       map((res: any) => res?.marketType)
     );
 
-    this.punkData$ = this.route.params.pipe(
+    this.phunkData$ = this.route.params.pipe(
       tap((res: any) => this.stateSvc.setMarketLoading(true)),
       map((res: any) => res?.marketType),
       // tap((res: any) => console.log('marketType', res)),
@@ -68,7 +68,7 @@ export class MarketComponent {
 
         return this.dataSvc.marketData$;
       }),
-      // tap((res: Punk[]) => console.log('Punks', res.length)),
+      // tap((res: Phunk[]) => console.log('Phunks', res.length)),
       tap(() => this.stateSvc.setMarketLoading(false))
     );
   }

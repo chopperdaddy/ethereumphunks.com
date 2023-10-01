@@ -1,4 +1,4 @@
-import { AfterViewInit, Component, Input, OnChanges, OnDestroy, OnInit, SimpleChanges } from '@angular/core';
+import { Component, Input, OnChanges, OnDestroy, OnInit, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { HttpClientModule } from '@angular/common/http';
@@ -18,6 +18,7 @@ import { BehaviorSubject, Subject, catchError, filter, of, switchMap, takeUntil,
 import { Event } from '@/models/graph';
 
 import { ZERO_ADDRESS } from '@/constants/utils';
+import { environment } from 'src/environments/environment';
 
 @Component({
   standalone: true,
@@ -39,11 +40,13 @@ import { ZERO_ADDRESS } from '@/constants/utils';
   styleUrls: ['./tx-history.component.scss']
 })
 
-export class TxHistoryComponent implements AfterViewInit, OnDestroy, OnChanges {
+export class TxHistoryComponent implements OnDestroy, OnChanges {
 
   ZERO_ADDRESS = ZERO_ADDRESS;
 
   @Input() hashId!: string | undefined;
+
+  explorerUrl = `https://${environment.chainId === 5 ? 'goerli.' : ''}etherscan.io`;
 
   private activeHashId = new BehaviorSubject<string | undefined>(undefined);
   activeHashId$ = this.activeHashId.asObservable();
@@ -66,9 +69,6 @@ export class TxHistoryComponent implements AfterViewInit, OnDestroy, OnChanges {
         return of(null);
       })
     ).subscribe();
-  }
-
-  ngAfterViewInit(): void {
   }
 
   ngOnChanges(changes: SimpleChanges): void {

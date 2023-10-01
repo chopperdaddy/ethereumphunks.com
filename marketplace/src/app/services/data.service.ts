@@ -3,100 +3,101 @@ import { HttpClient } from '@angular/common/http';
 
 import { StateService } from './state.service';
 
-import { Attribute, Event, EventType, Punk, State } from '@/models/graph';
+import { Attribute, Bid, Event, EventType, Listing, Phunk, State } from '@/models/graph';
 
 import { WeiToEthPipe } from '@/pipes/wei-to-eth.pipe';
 import { filterData } from '@/constants/filterData';
 
-import { Observable, of, BehaviorSubject, EMPTY, forkJoin, timer, from } from 'rxjs';
-import { catchError, map, switchMap, tap } from 'rxjs/operators';
+import { Observable, of, BehaviorSubject, EMPTY, from, forkJoin } from 'rxjs';
+import { catchError, map, switchMap, tap, withLatestFrom } from 'rxjs/operators';
 
-import { Apollo, gql } from 'apollo-angular';
-import { QueryOptions } from '@apollo/client';
+// import { Apollo, gql } from 'apollo-angular';
+// import { QueryOptions } from '@apollo/client';
 
 import { createClient } from '@supabase/supabase-js'
 
 import { environment } from 'src/environments/environment';
+import { Web3Service } from './web3.service';
 
 const supabaseUrl = 'https://kcbuycbhynlmsrvoegzp.supabase.co'
 const supabaseKey = environment.supabaseKey;
 const supabase = createClient(supabaseUrl, supabaseKey)
 
-const WATCH_STATES_DATA = gql`
-  query GetStates($first: Int, $lastTimestamp: BigInt, $nowTimestamp: BigInt) {
-    states(
-      first: $first,
-      where: { timestamp_gt: $lastTimestamp, timestamp_lt: $nowTimestamp },
-      orderBy: "timestamp",
-      orderDirection: desc,
-    ) {
-      id
-      timestamp
-      usd
-      volume
-      floor
-      topSale {
-        tokenId
-        value
-      }
-      sales
-      owners
-      topBid {
-        tokenId
-        value
-      }
-      bids
-    }
-  }
-`;
+// const WATCH_STATES_DATA = gql`
+//   query GetStates($first: Int, $lastTimestamp: BigInt, $nowTimestamp: BigInt) {
+//     states(
+//       first: $first,
+//       where: { timestamp_gt: $lastTimestamp, timestamp_lt: $nowTimestamp },
+//       orderBy: "timestamp",
+//       orderDirection: desc,
+//     ) {
+//       id
+//       timestamp
+//       usd
+//       volume
+//       floor
+//       topSale {
+//         tokenId
+//         value
+//       }
+//       sales
+//       owners
+//       topBid {
+//         tokenId
+//         value
+//       }
+//       bids
+//     }
+//   }
+// `;
 
-const GET_ALL_LISTINGS = gql`
-  query GetListings(
-    $listingSkip: Int!,
-    $bidSkip: Int!,
-    $limit: Int!
-  ) {
-    listings(
-      first: $limit,
-      skip: $listingSkip,
-      orderBy: "blockTimestamp",
-      orderDirection: desc
-    ) {
-      id
-      value
-      blockTimestamp
-    }
+// const GET_ALL_LISTINGS = gql`
+//   query GetListings(
+//     $listingSkip: Int!,
+//     $bidSkip: Int!,
+//     $limit: Int!
+//   ) {
+//     listings(
+//       first: $limit,
+//       skip: $listingSkip,
+//       orderBy: "blockTimestamp",
+//       orderDirection: desc
+//     ) {
+//       id
+//       value
+//       blockTimestamp
+//     }
 
-    bids(
-      first: $limit,
-      skip: $bidSkip,
-      orderBy: "blockTimestamp",
-      orderDirection: desc
-    ) {
-      id
-      value
-      blockTimestamp
-    }
-  }
-`;
+//     bids(
+//       first: $limit,
+//       skip: $bidSkip,
+//       orderBy: "blockTimestamp",
+//       orderDirection: desc
+//     ) {
+//       id
+//       value
+//       blockTimestamp
+//     }
+//   }
+// `;
 
-const GET_TOP_SALES = gql`
-  query GetTopSales($limit: Int!) {
-    events(
-      where: {type: "Sale"},
-      first: $limit,
-      orderBy: value,
-      orderDirection: desc
-    ) {
-      type
-      tokenId
-      value
-      usd
-      blockTimestamp
-      transactionHash
-    }
-  }
-`;
+// const GET_TOP_SALES = gql`
+//   query GetTopSales($limit: Int!) {
+//     events(
+//       where: {type: "Sale"},
+//       first: $limit,
+//       orderBy: value,
+//       orderDirection: desc
+//     ) {
+//       type
+//       tokenId
+//       value
+//       usd
+//       blockTimestamp
+//       transactionHash
+//     }
+//   }
+// `;
 
 @Injectable({
   providedIn: 'root'
@@ -111,10 +112,10 @@ export class DataService {
   private statesData = new BehaviorSubject<State[]>([]);
   statesData$ = this.statesData.asObservable();
 
-  private marketData = new BehaviorSubject<Punk[]>([]);
+  private marketData = new BehaviorSubject<Phunk[]>([]);
   marketData$ = this.marketData.asObservable();
 
-  private ownedData = new BehaviorSubject<Punk[]>([]);
+  private ownedData = new BehaviorSubject<Phunk[]>([]);
   ownedData$ = this.ownedData.asObservable();
 
   private eventsData = new BehaviorSubject<Event[]>([]);
@@ -130,11 +131,13 @@ export class DataService {
 
   attributes!: any;
 
+  prefix: string = environment.chainId === 1 ? '_mainnet' : '_goerli';
+
   constructor(
     private http: HttpClient,
-    private apollo: Apollo,
     private stateSvc: StateService,
-    private weiToEthPipe: WeiToEthPipe
+    private weiToEthPipe: WeiToEthPipe,
+    private web3Svc: Web3Service
   ) {
     // this.fetchUSDPrice();
     // this.getMarketData();
@@ -161,10 +164,10 @@ export class DataService {
     );
   }
 
-  addAttributes(punks: Punk[]): Observable<Punk[]> {
+  addAttributes(phunks: Phunk[]): Observable<Phunk[]> {
     return this.getAttributes().pipe(
       map((res: any) => {
-        return punks.map((item: Punk) => ({
+        return phunks.map((item: Phunk) => ({
           ...item,
           attributes: res[item.id]
         }));
@@ -176,9 +179,10 @@ export class DataService {
   // OWNED /////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  fetchOwned(address: string): Observable<Punk[]> {
+  fetchOwned(address: string): Observable<Phunk[]> {
+
     const request = supabase
-      .from('phunks')
+      .from('phunks' + this.prefix)
       .select('*')
       .eq('owner', address);
 
@@ -187,11 +191,13 @@ export class DataService {
         id: item.phunkId,
         owner: {
           id: item.owner,
-          punks: []
+        },
+        prevOwner: {
+          id: item.prevOwner,
         },
         attributes: [],
       }))),
-      switchMap((res: Punk[]) => this.addAttributes(res)),
+      switchMap((res: Phunk[]) => this.addAttributes(res)),
       catchError((err) => {
         console.log(err);
         return EMPTY;
@@ -199,15 +205,15 @@ export class DataService {
     );
   }
 
-  getOwned(): Punk[] {
+  getOwned(): Phunk[] {
     return this.ownedData.getValue();
   }
 
-  setOwned(owned: Punk[]): void {
+  setOwned(owned: Phunk[]): void {
     this.ownedData.next(owned);
   }
 
-  getAllData(): Observable<Punk[]> {
+  getAllData(): Observable<Phunk[]> {
     return this.marketData$.pipe(
       switchMap(() => this.getAttributes()),
       map((attributes) => {
@@ -215,9 +221,9 @@ export class DataService {
           id: k,
           attributes: (attributes as any)[k],
         }));
-        for (const punk of this.marketData.getValue()) {
-          const i = Number(punk.id);
-          all[i] = punk;
+        for (const phunk of this.marketData.getValue()) {
+          const i = Number(phunk.id);
+          all[i] = phunk;
         }
         return all;
       })
@@ -230,69 +236,69 @@ export class DataService {
 
   getMarketData(): void {
 
-    const pageLimit = 1000;
-    let bidSkip = 0;
-    let listingSkip = 0;
-    let isFirst = true;
+    // const pageLimit = 1000;
+    // let bidSkip = 0;
+    // let listingSkip = 0;
+    // let isFirst = true;
 
-    const fetchDataWithCursor = (bidSkip: number, listingSkip: number) => {
-      const q: QueryOptions = {
-        query: GET_ALL_LISTINGS,
-        variables: { bidSkip, listingSkip, limit: pageLimit },
-      };
-      return this.apollo.query(q);
-    };
+    // const fetchDataWithCursor = (bidSkip: number, listingSkip: number) => {
+    //   const q: QueryOptions = {
+    //     query: GET_ALL_LISTINGS,
+    //     variables: { bidSkip, listingSkip, limit: pageLimit },
+    //   };
+    //   return this.apollo.query(q);
+    // };
 
-    const recursiveFetch = (bidSkip: number, listingSkip: number, bids: any[] = [], listings: any[] = []): Observable<any> => {
-      return fetchDataWithCursor(bidSkip, listingSkip).pipe(
-        switchMap((res: any) => {
-          const newBids = [...bids, ...res.data.bids];
-          const newListings = [...listings, ...res.data.listings];
+    // const recursiveFetch = (bidSkip: number, listingSkip: number, bids: any[] = [], listings: any[] = []): Observable<any> => {
+    //   return fetchDataWithCursor(bidSkip, listingSkip).pipe(
+    //     switchMap((res: any) => {
+    //       const newBids = [...bids, ...res.data.bids];
+    //       const newListings = [...listings, ...res.data.listings];
 
-          bidSkip += res.data.bids.length;
-          listingSkip += res.data.listings.length;
+    //       bidSkip += res.data.bids.length;
+    //       listingSkip += res.data.listings.length;
 
-          if (res.data.bids.length === pageLimit || res.data.listings.length === pageLimit) {
-            return recursiveFetch(bidSkip, listingSkip, newBids, newListings);
-          } else {
-            return of({ bids: newBids, listings: newListings });
-          }
-        })
-      );
-    };
+    //       if (res.data.bids.length === pageLimit || res.data.listings.length === pageLimit) {
+    //         return recursiveFetch(bidSkip, listingSkip, newBids, newListings);
+    //       } else {
+    //         return of({ bids: newBids, listings: newListings });
+    //       }
+    //     })
+    //   );
+    // };
 
-    timer(0, 30000).pipe(
-      switchMap(() => recursiveFetch(bidSkip, listingSkip)),
-      tap(() => {
-        bidSkip = 0;
-        listingSkip = 0;
-      }),
-      map(({ bids, listings }) => {
-        const merged: any = {};
-        for (const listing of listings) merged[listing.id] = {
-          ...merged[listing.id],
-          id: listing.id,
-          listing,
-        };
-        for (const bid of bids) merged[bid.id] = {
-          ...merged[bid.id],
-          id: bid.id,
-          bid,
-        };
-        return Object.values(merged) as Punk[];
-      }),
-      switchMap((res: any) => this.addAttributes(res)),
-      tap((res) => {
-        if (isFirst) this.marketData.next(res);
-        isFirst = false;
-      }),
-      tap((marketData) => this.marketData.next(marketData)),
-      tap((res) => console.log('market!', res)),
-      catchError((error) => {
-        console.error('Error fetching data:', error);
-        return EMPTY;
-      }),
-    ).subscribe();
+    // timer(0, 30000).pipe(
+    //   switchMap(() => recursiveFetch(bidSkip, listingSkip)),
+    //   tap(() => {
+    //     bidSkip = 0;
+    //     listingSkip = 0;
+    //   }),
+    //   map(({ bids, listings }) => {
+    //     const merged: any = {};
+    //     for (const listing of listings) merged[listing.id] = {
+    //       ...merged[listing.id],
+    //       id: listing.id,
+    //       listing,
+    //     };
+    //     for (const bid of bids) merged[bid.id] = {
+    //       ...merged[bid.id],
+    //       id: bid.id,
+    //       bid,
+    //     };
+    //     return Object.values(merged) as Phunk[];
+    //   }),
+    //   switchMap((res: any) => this.addAttributes(res)),
+    //   tap((res) => {
+    //     if (isFirst) this.marketData.next(res);
+    //     isFirst = false;
+    //   }),
+    //   tap((marketData) => this.marketData.next(marketData)),
+    //   tap((res) => console.log('market!', res)),
+    //   catchError((error) => {
+    //     console.error('Error fetching data:', error);
+    //     return EMPTY;
+    //   }),
+    // ).subscribe();
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -300,31 +306,32 @@ export class DataService {
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   watchStates(): Observable<State[]> {
+    return of([]);
 
-    const nowTimestamp = () => Math.floor(Date.now() / 1000);
-    let statesData: State[] = [];
+    // const nowTimestamp = () => Math.floor(Date.now() / 1000);
+    // let statesData: State[] = [];
 
-    return this.http.get<State[]>(`${environment.staticUrl}/_states.json`).pipe(
-      switchMap((res: State[]) => {
-        statesData = res;
-        this.statesData.next(res);
-        return this.apollo.watchQuery({
-          query: WATCH_STATES_DATA,
-          variables: {
-            first: 1000,
-            lastTimestamp: (Number(res[0]?.timestamp) + 1) || 0,
-            nowTimestamp: nowTimestamp(),
-          },
-          pollInterval: 5000,
-        }).valueChanges;
-      }),
-      map((res: any) => {
-        const merged = [ ...statesData, ...res.data.states ];
-        merged.sort((a: any, b: any) => Number(b.timestamp) - Number(a.timestamp));
-        this.statesData.next(merged);
-        return merged;
-      })
-    );
+    // return this.http.get<State[]>(`${environment.staticUrl}/_states.json`).pipe(
+    //   switchMap((res: State[]) => {
+    //     statesData = res;
+    //     this.statesData.next(res);
+    //     return this.apollo.watchQuery({
+    //       query: WATCH_STATES_DATA,
+    //       variables: {
+    //         first: 1000,
+    //         lastTimestamp: (Number(res[0]?.timestamp) + 1) || 0,
+    //         nowTimestamp: nowTimestamp(),
+    //       },
+    //       pollInterval: 5000,
+    //     }).valueChanges;
+    //   }),
+    //   map((res: any) => {
+    //     const merged = [ ...statesData, ...res.data.states ];
+    //     merged.sort((a: any, b: any) => Number(b.timestamp) - Number(a.timestamp));
+    //     this.statesData.next(merged);
+    //     return merged;
+    //   })
+    // );
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -335,7 +342,7 @@ export class DataService {
     console.log('fetchEvents', {limit, type});
 
     let query = supabase
-      .from('events')
+      .from('events' + this.prefix)
       .select('*')
       .order('blockTimestamp', { ascending: false })
       .limit(limit);
@@ -354,7 +361,7 @@ export class DataService {
 
   fetchSingleTokenEvents(hashId: string): Observable<any> {
     const response = supabase
-      .from('events')
+      .from('events' + this.prefix)
       .select('*')
       .eq('hashId', hashId)
       .order('blockTimestamp', { ascending: false });
@@ -370,54 +377,101 @@ export class DataService {
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   fetchTopSales(limit: number): Observable<any> {
-    return this.apollo.watchQuery({
-      query: GET_TOP_SALES,
-      variables: {
-        skip: 0,
-        limit: limit,
-      },
-      pollInterval: 5000,
-    }).valueChanges.pipe(
-      map((result: any) => result.data.events as any[]),
-    );
+    return of([]);
+    // return this.apollo.watchQuery({
+    //   query: GET_TOP_SALES,
+    //   variables: {
+    //     skip: 0,
+    //     limit: limit,
+    //   },
+    //   pollInterval: 5000,
+    // }).valueChanges.pipe(
+    //   map((result: any) => result.data.events as any[]),
+    // );
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   // SINGLE PUNK ///////////////////////////////////////////////////////////////////////////////////////////////////////
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  fetchSinglePunk(id: string): Observable<Punk> {
+  fetchSinglePhunk(id: string): Observable<Phunk> {
     const request = supabase
-      .from('phunks')
+      .from('phunks' + this.prefix)
       .select('*')
       .eq('phunkId', id)
       .single();
 
     return from(request).pipe(
-      tap((res) => console.log('fetchSinglePunk', res)),
+      tap((res) => console.log('fetchSinglePhunk', res)),
       map((res: any) => ({
         id: res.data.phunkId,
         hashId: res.data.hashId,
         owner: {
           id: res.data.owner,
-          punks: []
         },
+        prevOwner: {
+          id: res.data.prevOwner,
+        },
+        isEscrowed: res.data.owner === environment.phunksMarketAddress,
         attributes: [],
       })),
-      switchMap((res: Punk) => this.addAttributes([res])),
-      map((res) => ({
-        ...res[0],
-        attributes: res[0].attributes.sort((a: Attribute, b: Attribute) => {
+      switchMap((res: Phunk) => forkJoin([
+        this.addAttributes([res]),
+        from(Promise.all([
+          this.getListingForPhunkId(res.hashId),
+          this.getBidForPhunkId(res.hashId),
+        ]))
+      ])),
+      map(([[res], [listing, bid]]) => ({
+        ...res,
+        listing,
+        bid,
+        attributes: res.attributes.sort((a: Attribute, b: Attribute) => {
           if (a.k === "Sex") return -1;
           if (b.k === "Sex") return 1;
           return 0;
         }),
       })),
+      tap((res) => console.log(res)),
       catchError((err) => {
         console.log(err);
         return EMPTY;
       })
     );
+  }
+
+  async getListingForPhunkId(hashId: string | undefined): Promise<Listing | null> {
+    if (!hashId) return null;
+
+    const call = await this.web3Svc.readContract('phunksOfferedForSale', [hashId]);
+    if (!call[0]) return null;
+
+    return {
+      id: call[1],
+      value: call[3],
+      fromAccount: {
+        id: call[2]
+      },
+      toAccount: {
+        id: call[4]
+      },
+    };
+  }
+
+  async getBidForPhunkId(hashId: string | undefined): Promise<Bid | null> {
+    if (!hashId) return null;
+
+    const call = await this.web3Svc.readContract('phunkBids', [hashId]);
+    console.log('getBidForPhunkId', call);
+    if (!call[0]) return null;
+
+    return {
+      id: call[1],
+      value: call[3],
+      fromAccount: {
+        id: call[2]
+      },
+    };
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

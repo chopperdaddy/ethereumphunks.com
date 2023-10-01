@@ -3,24 +3,22 @@ import { Injectable } from '@angular/core';
 import { environment } from 'src/environments/environment';
 
 import { StateService } from './state.service';
-import { DataService } from './data.service';
 
-import { Observable, catchError, filter, firstValueFrom, of, tap } from 'rxjs';
+import { Observable, catchError, filter, of, tap } from 'rxjs';
 
-import CryptoPunksMarketABI from '@/abi/CryptoPunksMarket.json';
+import EtherPhunksMarketAbi from '@/abi/EtherPhunksMarket.json';
 
-import { FallbackTransport, TransactionReceipt, createWalletClient, custom, decodeFunctionData, formatEther, formatUnits, isAddress, parseEther } from 'viem';
+import { FallbackTransport, TransactionReceipt, createWalletClient, custom, decodeFunctionData, formatEther, isAddress, parseEther } from 'viem';
 import { mainnet, goerli } from 'viem/chains';
 
-import { Chain, Config, PublicClient, WebSocketPublicClient, configureChains, createConfig, disconnect, getAccount, getNetwork, getPublicClient, getWalletClient, readContract, watchAccount } from '@wagmi/core';
+import { Chain, Config, PublicClient, WebSocketPublicClient, configureChains, createConfig, disconnect, getAccount, getNetwork, getPublicClient, getWalletClient, watchAccount } from '@wagmi/core';
 
-import { alchemyProvider } from '@wagmi/core/providers/alchemy';
+import { jsonRpcProvider } from '@wagmi/core/providers/jsonRpc';
 import { EthereumClient, w3mConnectors } from '@web3modal/ethereum';
 import { Web3Modal } from '@web3modal/html';
+import { Listing } from '@/models/graph';
 
-const marketAddress = environment.punksMarketAddress;
-const cigAddress = environment.cigAddress;
-
+const marketAddress = environment.phunksMarketAddress;
 const projectId = '9455b1a68e7f81eee6e1090c12edbf00';
 
 @Injectable({
@@ -38,13 +36,20 @@ export class Web3Service {
   connectedState!: Observable<any>;
 
   constructor(
-    private stateSvc: StateService,
-    private dataSvc: DataService
+    private stateSvc: StateService
   ) {
+
+    const chain = environment.chainId === 5 ? goerli : mainnet;
 
     const { chains, publicClient, webSocketPublicClient } = configureChains(
       [mainnet, goerli],
-      [alchemyProvider({ apiKey: environment.alchemyApiKey })],
+      [
+        jsonRpcProvider({
+          rpc: (chain) => ({
+            http: environment.rpcHttpProvider,
+          }),
+        }),
+      ],
     );
 
     this.connectors = [ ...w3mConnectors({ projectId, chains }) ];
@@ -125,7 +130,7 @@ export class Web3Service {
     const publicClient = getPublicClient();
     const pendingWithdrawals = await publicClient?.readContract({
       address: marketAddress as `0x${string}`,
-      abi: CryptoPunksMarketABI,
+      abi: EtherPhunksMarketAbi,
       functionName: 'pendingWithdrawals',
       args: [address],
     });
@@ -141,15 +146,30 @@ export class Web3Service {
   // CONTRACT METHODS //////////////////////////////////////////////////////////////////////////////////////////////////
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+  async isInEscrow(tokenId: string): Promise<boolean> {
+    const publicClient = getPublicClient();
+    const isInEscrow = await publicClient?.readContract({
+      address: marketAddress as `0x${string}`,
+      abi: EtherPhunksMarketAbi,
+      functionName: 'userEthscriptionPossiblyStored',
+      args: [getAccount().address, tokenId],
+    });
+    return !!isInEscrow;
+  }
+
+  async sendEthscriptionToContract(tokenId: string): Promise<string | undefined> {
+    return await this.transferPhunk(tokenId, marketAddress as `0x${string}`);
+  }
+
   async decodeInputData(data: string): Promise<any> {
     const decoded = decodeFunctionData({
-      abi: CryptoPunksMarketABI,
+      abi: EtherPhunksMarketAbi,
       data: data as `0x${string}`,
     });
     return decoded;
   }
 
-  async punkContractInteraction(functionName: string, args: any[], value?: string): Promise<string | undefined> {
+  async marketContractInteraction(functionName: string, args: any[], value?: string): Promise<string | undefined> {
     if (!functionName) return;
 
     const network = getNetwork();
@@ -157,7 +177,7 @@ export class Web3Service {
 
     const tx: any = {
       address: marketAddress as `0x${string}`,
-      abi: CryptoPunksMarketABI,
+      abi: EtherPhunksMarketAbi,
       functionName,
       args
     };
@@ -166,33 +186,43 @@ export class Web3Service {
     return await walletClient?.writeContract(tx);
   }
 
+  async readContract(functionName: string, args: (string | undefined)[]): Promise<any> {
+    const publicClient = getPublicClient();
+    const call: any = await publicClient.readContract({
+      address: marketAddress as `0x${string}`,
+      abi: EtherPhunksMarketAbi,
+      functionName,
+      args,
+    });
+    return call;
+  }
+
   async waitForTransaction(hash: string): Promise<TransactionReceipt> {
     const publicClient = getPublicClient();
     const transaction = await publicClient.waitForTransactionReceipt({ hash: hash as `0x${string}` });
     return transaction;
   }
 
-  async offerPunkForSale(tokenId: string, value: number, toAddress?: string | null): Promise<string | undefined> {
-    // console.log('offerPunkForSale', tokenId, value, toAddress);
+  async offerPhunkForSale(tokenId: string, value: number, toAddress?: string | null): Promise<string | undefined> {
+    console.log('offerPhunkForSale', tokenId, value, toAddress);
 
     const weiValue = this.ethToWei(value);
     if (toAddress) {
       if (!isAddress(toAddress)) throw new Error('Invalid address');
-      return this.punkContractInteraction(
-        'offerPunkForSaleToAddress',
+      return this.marketContractInteraction(
+        'offerPhunkForSaleToAddress',
         [tokenId, weiValue, toAddress]
       );
     }
-    return this.punkContractInteraction('offerPunkForSale', [tokenId, weiValue]);
+    return this.marketContractInteraction('offerPhunkForSale', [tokenId, weiValue]);
   }
 
-  async punkNoLongerForSale(tokenId: string): Promise<string | undefined> {
-    return this.punkContractInteraction('punkNoLongerForSale', [tokenId]);
+  async phunkNoLongerForSale(tokenId: string): Promise<string | undefined> {
+    return this.marketContractInteraction('phunkNoLongerForSale', [tokenId]);
   }
 
-  async transferPunk(hashId: string, toAddress: string): Promise<string | undefined> {
+  async transferPhunk(hashId: string, toAddress: string): Promise<string | undefined> {
     const wallet = await getWalletClient();
-
     return wallet?.sendTransaction({
       chain: getNetwork().chain,
       account: getAccount().address as `0x${string}`,
@@ -202,29 +232,29 @@ export class Web3Service {
     });
   }
 
-  async enterBidForPunk(tokenId: string, value: number): Promise<string | undefined> {
+  async enterBidForPhunk(tokenId: string, value: number): Promise<string | undefined> {
     const weiValue = this.ethToWei(value);
-    return this.punkContractInteraction('enterBidForPunk', [tokenId], weiValue as any);
+    return this.marketContractInteraction('enterBidForPhunk', [tokenId], weiValue as any);
   }
 
-  async withdrawBidForPunk(tokenId: string): Promise<string | undefined> {
-    return this.punkContractInteraction('withdrawBidForPunk', [tokenId]);
+  async withdrawBidForPhunk(tokenId: string): Promise<string | undefined> {
+    return this.marketContractInteraction('withdrawBidForPhunk', [tokenId]);
   }
 
-  async acceptBidForPunk(tokenId: string, minPrice: string): Promise<string | undefined> {
+  async acceptBidForPhunk(tokenId: string, minPrice: string): Promise<string | undefined> {
     // We need to make sure this get's added.
     // Once added, this loop will run through as mm knows it's on the network.
     for (let i = 0; i < 11; i++) await this.addFlashbotsNetwork();
 
-    return this.punkContractInteraction('acceptBidForPunk', [tokenId, minPrice]);
+    return this.marketContractInteraction('acceptBidForPhunk', [tokenId, minPrice]);
   }
 
-  async buyPunk(tokenId: string, value: string): Promise<string | undefined> {
-    return this.punkContractInteraction('buyPunk', [tokenId], value as any);
+  async buyPhunk(tokenId: string, value: string): Promise<string | undefined> {
+    return this.marketContractInteraction('buyPhunk', [tokenId], value as any);
   }
 
   async withdraw(): Promise<any> {
-    const hash = await this.punkContractInteraction('withdraw', []);
+    const hash = await this.marketContractInteraction('withdraw', []);
     const receipt = await this.waitForTransaction(hash!);
     return await this.checkHasWithdrawal(receipt.from);
   }
@@ -293,6 +323,7 @@ export class Web3Service {
     try {
       if (!address) throw new Error('No address provided');
 
+      address = address.toLowerCase();
       const isEns = address?.includes('.eth');
       const isAddress = this.verifyAddress(address);
 
@@ -328,5 +359,10 @@ export class Web3Service {
     } catch (err) {
       return null;
     }
+  }
+
+  checkNetwork(): number | undefined {
+    const network = getNetwork();
+    return network.chain?.id;
   }
 }

@@ -9,7 +9,7 @@ import { LazyLoadImageModule } from 'ng-lazyload-image';
 import { NgSelectModule } from '@ng-select/ng-select';
 
 import { ViewType } from '@/models/view-types';
-import { Punk } from '@/models/graph';
+import { Phunk } from '@/models/graph';
 
 import { DataService } from '@/services/data.service';
 import { StateService } from '@/services/state.service';
@@ -29,7 +29,7 @@ import { Filters, Sorts, WrappedFilters } from '@/models/pipes';
 import { BehaviorSubject } from 'rxjs';
 
 @Component({
-  selector: 'app-punk-grid-view',
+  selector: 'app-phunk-grid-view',
   standalone: true,
   imports: [
     CommonModule,
@@ -49,11 +49,11 @@ import { BehaviorSubject } from 'rxjs';
     CountPipe,
     PropertiesPipe
   ],
-  templateUrl: './punk-grid-view.component.html',
-  styleUrls: ['./punk-grid-view.component.scss']
+  templateUrl: './phunk-grid-view.component.html',
+  styleUrls: ['./phunk-grid-view.component.scss']
 })
 
-export class PunkGridViewComponent implements AfterViewInit, OnChanges {
+export class PhunkGridViewComponent implements AfterViewInit, OnChanges {
 
   private activeFilters = new BehaviorSubject({});
   activeFilters$ = this.activeFilters.asObservable();
@@ -74,7 +74,7 @@ export class PunkGridViewComponent implements AfterViewInit, OnChanges {
   private activeWrappedFilters = new BehaviorSubject(this.wrappedFilters[0]);
   activeWrappedFilters$ = this.activeWrappedFilters.asObservable();
 
-  @Input() punkData: Punk[] = [];
+  @Input() phunkData: Phunk[] = [];
   @Input() viewType: ViewType = 'medium';
   @Input() limit: number = 110;
   @Input() marketType: Filters = 'all';

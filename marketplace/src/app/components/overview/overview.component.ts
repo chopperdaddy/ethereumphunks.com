@@ -63,8 +63,8 @@ export class TxOverviewComponent implements OnDestroy {
   txFilters: TxFilterItem[] = [
     { label: 'All', value: 'All' },
     { label: 'Created', value: 'Created' },
-    { label: 'Transferred', value: 'Transfer' },
-    { label: 'Sale', value: 'Sale' },
+    { label: 'Transferred', value: 'transfer' },
+    { label: 'Sale', value: 'sale' },
     { label: 'Bid Entered', value: 'BidEntered' },
     { label: 'Bid Withdrawn', value: 'BidWithdrawn' },
     { label: 'Offered', value: 'Offered' },
@@ -80,8 +80,8 @@ export class TxOverviewComponent implements OnDestroy {
     BidWithdrawn: 'Bid withdrawn',
     OfferWithdrawn: 'Offer withdrawn',
     Offered: 'Offered for',
-    Sale: 'Bought for',
-    Transferred: 'Transferred to',
+    sale: 'Bought for',
+    transfer: 'Transferred to',
     Unwrapped: 'Unwrapped by',
     Wrapped: 'Wrapped by',
   };
