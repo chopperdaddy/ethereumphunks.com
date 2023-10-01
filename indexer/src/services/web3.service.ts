@@ -3,8 +3,8 @@ import { Injectable, Logger } from '@nestjs/common';
 import { SupabaseService } from './supabase.service';
 import { TimeService } from './time.service';
 
-import { FormattedTransaction, Transaction, createPublicClient, decodeEventLog, hexToString, http } from 'viem';
-import { mainnet } from 'viem/chains';
+import { FormattedTransaction, Transaction, TransactionType, createPublicClient, decodeEventLog, hexToString, http } from 'viem';
+import { goerli, mainnet } from 'viem/chains';
 
 import { readFile, writeFile } from 'fs/promises';
 
@@ -16,8 +16,12 @@ import { esip1Abi, esip2Abi } from 'src/abi/EthscriptionsProtocol';
 import dotenv from 'dotenv';
 dotenv.config();
 
-const rpcURL: string = process.env.RPC_URL_MAINNET;
-const client = createPublicClient({ chain: mainnet, transport: http(rpcURL) });
+const chain: 'mainnet' | 'goerli' = process.env.CHAIN_ID === '5' ? 'goerli' : 'mainnet';
+const rpcURL: string = chain === 'goerli' ? process.env.RPC_URL_GOERLI : process.env.RPC_URL_MAINNET;
+const client = createPublicClient({
+  chain: chain === 'goerli' ? goerli : mainnet,
+  transport: http(rpcURL)
+});
 
 @Injectable()
 export class Web3Service {
@@ -43,10 +47,11 @@ export class Web3Service {
     }
   }
 
-  async startPolling(): Promise<void> {
+  async startPolling(blockDelay?: number): Promise<void> {
+    blockDelay = blockDelay || 16;
     client.watchBlocks({
       onBlock: async (block) => {
-        const blockNum = Number(block.number) - 16;
+        const blockNum = Number(block.number) - blockDelay;
         await this.processBlock(blockNum);
         await this.saveBlockNumber(blockNum);
       },
@@ -54,7 +59,7 @@ export class Web3Service {
   }
 
   async saveBlockNumber(block: number): Promise<void> {
-    return await writeFile(`lastBlock.txt`, block.toString());
+    return await writeFile(`lastBlock-${chain}.txt`, block.toString());
   }
 
   async processBlock(block: number): Promise<void> {
@@ -71,8 +76,8 @@ export class Web3Service {
     if (block % 16 === 0) this.lastBlock = Number(await client.getBlockNumber());
 
     // Log block processed
-    if (block % 100 === 0) Logger.verbose(`Time Remaining: ${timeRemaining}`);
-    Logger.debug(`Block Timestamp: ${timeSince}`, `Processing Block ${block}`);
+    if (block % 100 === 0) Logger.verbose(`Time Remaining: ${timeRemaining} (${chain})`);
+    Logger.debug(`Block Timestamp: ${timeSince}`, `Processing Block ${block} (${chain})`);
   }
 
   // Method to add transactions to the database
@@ -89,17 +94,17 @@ export class Web3Service {
       try {
         // DISABLED: All 10,000 have been ethscribed
         // Check if possible ethPhunk
-        // const { possibleEthPhunk, cleanedString } = this.possibleEthPhunk(transaction.input);
-        // if (possibleEthPhunk) {
-        //   Logger.debug('Processing ethscription', transaction.hash);
-        //   await this.sbSvc.processEthscriptionEvent(transaction as Transaction, createdAt, cleanedString);
-        //   continue;
-        // }
+        const { possibleEthPhunk, cleanedString } = this.possibleEthPhunk(transaction.input);
+        if (possibleEthPhunk) {
+          Logger.debug('Processing ethscription', transaction.hash);
+          await this.sbSvc.processEthscriptionEvent(transaction as Transaction, createdAt, cleanedString);
+          continue;
+        }
 
         // Check if possible transfer
         const possibleTransfer = transaction.input.substring(2).length === 64;
         if (possibleTransfer) {
-          Logger.debug('Processing transfer', transaction.hash);
+          Logger.debug(`Processing transfer (${chain})`, transaction.hash);
           await this.sbSvc.processTransferEvent(
             transaction as Transaction,
             createdAt
@@ -116,7 +121,7 @@ export class Web3Service {
         );
         if (esip1Transfers.length) {
           Logger.debug(
-            'Processing marketplace event (esip1)',
+            `Processing marketplace event (esip1) (${chain})`,
             transaction.hash
           );
           await this.processEsip1(esip1Transfers, transaction, createdAt);
@@ -129,7 +134,7 @@ export class Web3Service {
         );
         if (esip2Transfers.length) {
           Logger.debug(
-            'Processing marketplace event (esip2)',
+            `Processing marketplace event (esip2) (${chain})`,
             transaction.hash
           );
           await this.processEsip2(esip2Transfers, transaction, createdAt);
@@ -217,14 +222,38 @@ export class Web3Service {
     return { txns, createdAt };
   }
 
+  async getTransaction(hash: `0x${string}`): Promise<any> {
+    const transaction = await client.getTransaction({ hash });
+    return transaction;
+  }
+
+  async getTransactionReceipt(hash: `0x${string}`): Promise<any> {
+    const receipt = await client.getTransactionReceipt({ hash });
+    return receipt;
+  }
+
+  possibleEthPhunk(input: string): {
+    possibleEthPhunk: boolean;
+    cleanedString: string;
+  } {
+    // Get the data from the transaction
+    const stringData = hexToString(input.toString() as `0x${string}`);
+    // Remove null bytes from the string
+    const cleanedString = stringData.replace(/\x00/g, '');
+    // Check if the string starts with 'data:'
+    const possibleEthPhunk = cleanedString.startsWith('data:image/svg+xml,');
+
+    return { possibleEthPhunk, cleanedString };
+  }
+
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   // PUNK DATA /////////////////////////////////////////////////////////////////////////////////////////////////////////
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   async getOrCreateBlockFile(block: number) {
     try {
-      const blockFromFile = await readFile(`lastBlock.txt`, 'utf8');
-      if (!blockFromFile) await writeFile(`lastBlock.txt`, block.toString());
+      const blockFromFile = await readFile(`lastBlock-${chain}.txt`, 'utf8');
+      if (!blockFromFile) await writeFile(`lastBlock-${chain}.txt`, block.toString());
       if (blockFromFile) block = Number(blockFromFile.toString());
 
       const lastBlock = await client.getBlockNumber();
@@ -240,20 +269,6 @@ export class Web3Service {
   ///////////////////////////////////////////////////////////////////////////////
   // Punk data contract interactions ////////////////////////////////////////////
   ///////////////////////////////////////////////////////////////////////////////
-
-  possibleEthPhunk(input: string): {
-    possibleEthPhunk: boolean;
-    cleanedString: string;
-  } {
-    // Get the data from the transaction
-    const stringData = hexToString(input.toString() as `0x${string}`);
-    // Remove null bytes from the string
-    const cleanedString = stringData.replace(/\x00/g, '');
-    // Check if the string starts with 'data:'
-    const possibleEthPhunk = cleanedString.startsWith('data:image/svg+xml,');
-
-    return { possibleEthPhunk, cleanedString };
-  }
 
   async getPunkImage(tokenId: number): Promise<any> {
     const punkImage = await client?.readContract({

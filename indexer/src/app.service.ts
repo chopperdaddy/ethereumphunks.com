@@ -5,7 +5,8 @@ import { Web3Service } from './services/web3.service';
 import dotenv from 'dotenv';
 dotenv.config();
 
-const startBlock = Number(process.env.ORIGIN_BLOCK_MAINNET);
+const chain: 'mainnet' | 'goerli' = process.env.CHAIN_ID === '5' ? 'goerli' : 'mainnet';
+const startBlock = Number(chain === 'goerli' ? process.env.ORIGIN_BLOCK_GOERLI : process.env.ORIGIN_BLOCK_MAINNET);
 
 @Injectable()
 export class AppService {
@@ -15,8 +16,8 @@ export class AppService {
   ) {
 
     this.web3Svc.startBackfill(startBlock).then(() => {
-      Logger.debug('Starting Block Watcher');
-      this.web3Svc.startPolling();
+      Logger.debug('Starting Block Watcher', chain.toUpperCase());
+      this.web3Svc.startPolling(chain === 'goerli' ? 2 : 16);
     });
   }
 }

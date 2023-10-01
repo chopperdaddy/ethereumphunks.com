@@ -7,13 +7,19 @@ dotenv.config();
 const config: HardhatUserConfig = {
   defaultNetwork: 'goerli',
   solidity: {
-    version: '0.8.10',
+    version: '0.8.17',
     settings: {
       optimizer: {
         enabled: true,
         runs: 200,
       },
     },
+  },
+  paths: {
+    sources: './contracts',
+    tests: './test',
+    cache: './cache',
+    artifacts: './artifacts',
   },
   networks: {
     hardhat: {},

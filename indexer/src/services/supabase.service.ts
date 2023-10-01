@@ -3,7 +3,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { createClient } from '@supabase/supabase-js';
 import { Transaction } from 'viem';
 
-import { Phunk, Sha, PhunkResponse, ShaResponse, UserResponse, EventType } from 'src/models/db';
+import { Phunk, Sha, Event, PhunkResponse, ShaResponse, UserResponse, EventType, EventResponse } from 'src/models/db';
 
 import crypto from 'crypto';
 import dotenv from 'dotenv';
@@ -14,11 +14,13 @@ const serviceRole = process.env.SUPABASE_SERVICE_ROLE;
 
 const supabase = createClient(supabaseUrl, serviceRole);
 
+const chain: 'mainnet' | 'goerli' = process.env.CHAIN_ID === '5' ? 'goerli' : 'mainnet';
+
 @Injectable()
 
 export class SupabaseService {
 
-  suffix = '';
+  suffix = process.env.CHAIN_ID === '1' ? '' : `_goerli`;
 
   ////////////////////////////////////////////////////////////////////////////////
   // Processors //////////////////////////////////////////////////////////////////
@@ -81,7 +83,7 @@ export class SupabaseService {
 
     const samePrevOwner = (ethPhunk.prevOwner && prevOwner) ? ethPhunk.prevOwner.toLowerCase() === prevOwner.toLowerCase() : true;
 
-    console.log({ sender, recipient, isMatchedHashId, transferrerIsOwner, samePrevOwner, prevOwner, ethPhunk });
+    // console.log({ sender, recipient, isMatchedHashId, transferrerIsOwner, samePrevOwner, prevOwner, ethPhunk });
 
     if (!isMatchedHashId || !transferrerIsOwner || !samePrevOwner) return;
 
@@ -107,7 +109,7 @@ export class SupabaseService {
 
   async checkIsEthPhunks(sha: string): Promise<number | null> {
     const response: ShaResponse = await supabase
-      .from('shas' + this.suffix)
+      .from('shas')
       .select('*')
       .eq('sha', sha);
 
@@ -246,6 +248,16 @@ export class SupabaseService {
     if (error) throw error;
   }
 
+  async updateEvent(eventId: number, data: any): Promise<void> {
+    const response: EventResponse = await supabase
+      .from('events' + this.suffix)
+      .update(data)
+      .eq('id', eventId);
+
+    const { error } = response
+    if (error) throw error;
+  }
+
   ////////////////////////////////////////////////////////////////////////////////
   // Gets ////////////////////////////////////////////////////////////////////////
   ////////////////////////////////////////////////////////////////////////////////
@@ -261,4 +273,17 @@ export class SupabaseService {
     if (error) throw error;
     if (data?.length) return data[0];
   }
+
+  async getAllTransfers(): Promise<Event[]> {
+    const response: EventResponse = await supabase
+      .from('events' + this.suffix)
+      .select('*')
+      .eq('type', 'transfer');
+
+    const { data, error } = response;
+
+    if (error) throw error;
+    if (data?.length) return data;
+  }
+
 }
