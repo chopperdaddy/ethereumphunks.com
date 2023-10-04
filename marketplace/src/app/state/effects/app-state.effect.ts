@@ -29,7 +29,7 @@ export class AppStateEffects {
 
   fetchSinglePhunk$ = createEffect(() => this.actions$.pipe(
     ofType(fetchSinglePhunk),
-    delay(1000),
+    // delay(1000),
     switchMap((action) => this.dataSvc.fetchSinglePhunk(action.phunkId)),
     map((phunk: any) => ({
       id: phunk?.phunkId,
