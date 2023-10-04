@@ -1,9 +1,9 @@
 import { Injectable, Logger } from '@nestjs/common';
 
 import { createClient } from '@supabase/supabase-js';
-import { Transaction } from 'viem';
+import { DecodeEventLogReturnType, Log, Transaction } from 'viem';
 
-import { Phunk, Sha, Event, PhunkResponse, ShaResponse, UserResponse, EventType, EventResponse } from 'src/models/db';
+import { Phunk, Sha, Event, PhunkResponse, ShaResponse, UserResponse, EventType, EventResponse, User, ListingResponse, Listing } from 'src/models/db';
 
 import crypto from 'crypto';
 import dotenv from 'dotenv';
@@ -40,6 +40,12 @@ export class SupabaseService {
     const isDuplicate = await this.checkEthPhunkExistsBySha(sha);
     if (isDuplicate) return;
 
+    // Get or create the users from address
+    const [ toUser, fromUser ] = await Promise.all([
+      this.getOrCreateUser(from, createdAt),
+      this.getOrCreateUser(to, createdAt)
+    ]);
+
     // Add the ethereum phunk
     await this.addEthPhunk(txn, createdAt, phunkId, sha);
     // Add the creation event
@@ -59,6 +65,12 @@ export class SupabaseService {
 
     if (!isMatchedHashId || !transferrerIsOwner) return;
 
+    // Get or create the users from address
+    const [ toUser, fromUser ] = await Promise.all([
+      this.getOrCreateUser(from, createdAt),
+      this.getOrCreateUser(to, createdAt)
+    ]);
+
     // Update the eth phunk owner
     await this.updateEthPhunkOwner(ethPhunk.hashId, ethPhunk.owner, txn.to);
     // Add the transfer event
@@ -66,14 +78,15 @@ export class SupabaseService {
     Logger.log('Updated eth phunk owner', `Hash: ${ethPhunk.hashId} -- To: ${txn.to.toLowerCase()}`);
   }
 
-  async processMarketplaceEvent(
+  async processContractEvent(
     txn: Transaction,
     createdAt: Date,
     sender: string,
     recipient: string,
     hashId: string,
     value?: bigint,
-    prevOwner?: string
+    prevOwner?: string,
+    log?: Log,
   ): Promise<void> {
     const ethPhunk: Phunk = await this.checkEthPhunkExistsByHash(hashId);
     if (!ethPhunk) return;
@@ -83,9 +96,13 @@ export class SupabaseService {
 
     const samePrevOwner = (ethPhunk.prevOwner && prevOwner) ? ethPhunk.prevOwner.toLowerCase() === prevOwner.toLowerCase() : true;
 
-    // console.log({ sender, recipient, isMatchedHashId, transferrerIsOwner, samePrevOwner, prevOwner, ethPhunk });
-
     if (!isMatchedHashId || !transferrerIsOwner || !samePrevOwner) return;
+
+    // Get or create the users from address
+    const [ toUser, fromUser ] = await Promise.all([
+      this.getOrCreateUser(sender, createdAt),
+      this.getOrCreateUser(recipient, createdAt)
+    ]);
 
     // Add the sale/transfer event
     await this.addEvent(
@@ -96,11 +113,122 @@ export class SupabaseService {
       ethPhunk.phunkId,
       value ? 'sale' : 'transfer',
       createdAt,
-      value
+      value,
+      log.logIndex
     );
+
     // Update the eth phunk owner
     await this.updateEthPhunkOwner(ethPhunk.hashId, ethPhunk.owner, recipient);
     Logger.log('Updated eth phunk owner (event)', `Hash: ${ethPhunk.hashId} -- To: ${recipient.toLowerCase()}`);
+  }
+
+  async processMarketplaceEvent(
+    txn: Transaction,
+    createdAt: Date,
+    decoded: DecodeEventLogReturnType,
+  ): Promise<void> {
+
+    const { eventName } = decoded;
+
+    // console.log({ txn, decoded });
+
+    if (eventName === 'PhunkBought') {
+      const { fromAddress, toAddress, value, phunkId } = decoded.args as any;
+      await this.removeListing(createdAt, phunkId);
+    }
+
+    if (eventName === 'PhunkBidEntered') {
+      const { phunkId, fromAddress, value } = decoded.args as any;
+      await this.createBid(txn, createdAt, phunkId, fromAddress, value);
+    }
+
+    if (eventName === 'PhunkBidWithdrawn') {
+      const { phunkId } = decoded.args as any;
+      await this.removeBid(createdAt, phunkId);
+    }
+
+    if (eventName === 'PhunkNoLongerForSale') {
+      const { phunkId } = decoded.args as any;
+      await this.removeListing(createdAt, phunkId);
+    }
+
+    if (eventName === 'PhunkOffered') {
+      const { phunkId, toAddress, minValue } = decoded.args as any;
+      await this.createListing(txn, createdAt, phunkId, toAddress, minValue);
+    }
+
+    if (eventName === 'PotentialEthscriptionDeposited') {}
+    if (eventName === 'PotentialEthscriptionWithdrawn') {}
+  }
+
+  async removeBid(createdAt: Date, phunkId: number): Promise<void> {
+    const response: ListingResponse = await supabase
+      .from('bids' + this.suffix)
+      .delete()
+      .eq('hashId', phunkId);
+    const { error } = response;
+    if (error) return Logger.error(error.details, error.message);
+    Logger.log('Removed bid', phunkId);
+  }
+
+  async createBid(
+    txn: Transaction,
+    createdAt: Date,
+    phunkId: string,
+    fromAddress: string,
+    value: bigint
+  ): Promise<void> {
+    const response: ListingResponse = await supabase
+      .from('bids' + this.suffix)
+      .insert({
+        createdAt,
+        hashId: phunkId,
+        value: value.toString(),
+        fromAddress,
+        txHash: txn.hash.toLowerCase(),
+      });
+
+    const { error } = response;
+    if (error) return Logger.error(error.details, error.message);
+    Logger.log('Created bid', phunkId);
+  }
+
+  async createListing(
+    txn: Transaction,
+    createdAt: Date,
+    phunkId: string,
+    toAddress: string,
+    minValue: bigint
+  ): Promise<void> {
+    const response: ListingResponse = await supabase
+      .from('listings' + this.suffix)
+      .insert({
+        hashId: phunkId,
+        createdAt,
+        txHash: txn.hash.toLowerCase(),
+        listed: true,
+        minValue: minValue.toString(),
+        listedBy: txn.from.toLowerCase(),
+        toAddress,
+      });
+
+    const { error } = response;
+    if (error) return Logger.error(error.details, error.message);
+    Logger.log('Created listing', phunkId);
+  }
+
+  async removeListing(createdAt: Date, phunkId: number): Promise<void> {
+    const response: ListingResponse = await supabase
+      .from('listings' + this.suffix)
+      .delete()
+      .eq('hashId', phunkId);
+    const { error } = response;
+    if (error) return Logger.error(error.details, error.message);
+    Logger.log('Removed listing', phunkId);
+  }
+
+  async updateListing() {
+
   }
 
   ////////////////////////////////////////////////////////////////////////////////
@@ -175,7 +303,8 @@ export class SupabaseService {
     phunkId: number,
     type: EventType,
     createdAt: Date,
-    value?: bigint
+    value?: bigint,
+    logIndex?: number
   ): Promise<void> {
     const response: PhunkResponse = await supabase
       .from('events' + this.suffix)
@@ -190,7 +319,8 @@ export class SupabaseService {
         blockNumber: Number(txn.blockNumber),
         blockHash: txn.blockHash.toLowerCase(),
         txIndex: Number(txn.transactionIndex),
-        txHash: txn.hash.toLowerCase()
+        txHash: txn.hash.toLowerCase(),
+        txId: `${txn.hash.toLowerCase()}_${txn.transactionIndex}_${logIndex || Date.now()}`,
       }]);
 
     const { error } = response;
@@ -208,7 +338,7 @@ export class SupabaseService {
     if (data?.length) return data[0];
   }
 
-  async getOrCreateUser(address: string) {
+  async getOrCreateUser(address: string, createdAt?: Date): Promise<User> {
     address = address.toLowerCase();
 
     const response: UserResponse = await supabase
@@ -222,8 +352,9 @@ export class SupabaseService {
     if (data.length) return data[0];
 
     const newUserResponse: UserResponse = await supabase
-      .from('users')
-      .insert([{ address }]);
+      .from('users' + this.suffix)
+      .insert({ address, createdAt: new Date() })
+      .select();
 
     const { data: newUser, error: newError } = newUserResponse;
 

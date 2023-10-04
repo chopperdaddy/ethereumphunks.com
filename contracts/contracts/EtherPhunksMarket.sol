@@ -1,10 +1,9 @@
 // SPDX-License-Identifier: MIT License
 pragma solidity 0.8.17;
 
-import "@solidstate/contracts/security/reentrancy_guard/ReentrancyGuard.sol";
-
 import "./EthscriptionsEscrower.sol";
-import "solady/src/utils/ERC1967FactoryConstants.sol";
+// import "solady/src/utils/ERC1967FactoryConstants.sol";
+import "@solidstate/contracts/security/reentrancy_guard/ReentrancyGuard.sol";
 
 contract EtherPhunksMarket is ReentrancyGuard, EthscriptionsEscrower {
 
@@ -12,7 +11,7 @@ contract EtherPhunksMarket is ReentrancyGuard, EthscriptionsEscrower {
         bool isForSale;
         bytes32 phunkId;
         address seller;
-        uint minValue; // Ether
+        uint minValue;
         address onlySellTo;
     }
 
@@ -55,25 +54,17 @@ contract EtherPhunksMarket is ReentrancyGuard, EthscriptionsEscrower {
     );
     event PhunkNoLongerForSale(bytes32 indexed phunkId);
 
-    /* Allows the owner of a CryptoPhunks to stop offering it for sale */
+    /* Allows the owner of a EtherPhunk to stop offering it for sale */
     function phunkNoLongerForSale(bytes32 phunkId) public nonReentrant {
         require(
             !userEthscriptionDefinitelyNotStored(msg.sender, phunkId),
             "Sender is not depositor"
         );
 
-        phunksOfferedForSale[phunkId] = Offer(
-            false,
-            phunkId,
-            msg.sender,
-            0,
-            address(0x0)
-        );
-
-        emit PhunkNoLongerForSale(phunkId);
+        _invalidateListing(phunkId);
     }
 
-    /* Allows a CryptoPhunk owner to offer it for sale */
+    /* Allows an EtherPhunk owner to offer it for sale */
     function offerPhunkForSale(
         bytes32 phunkId,
         uint minSalePriceInWei
@@ -93,7 +84,7 @@ contract EtherPhunksMarket is ReentrancyGuard, EthscriptionsEscrower {
         emit PhunkOffered(phunkId, minSalePriceInWei, address(0x0));
     }
 
-    /* Allows a CryptoPhunk owner to offer it for sale to a specific address */
+    /* Allows an EtherPhunk owner to offer it for sale to a specific address */
     function offerPhunkForSaleToAddress(
         bytes32 phunkId,
         uint minSalePriceInWei,
@@ -114,7 +105,7 @@ contract EtherPhunksMarket is ReentrancyGuard, EthscriptionsEscrower {
         emit PhunkOffered(phunkId, minSalePriceInWei, toAddress);
     }
 
-    /* Allows users to buy a CryptoPhunk offered for sale */
+    /* Allows users to buy an EtherPhunk offered for sale */
     function buyPhunk(bytes32 phunkId) public payable nonReentrant {
         // Get the offer (listing)
         Offer memory offer = phunksOfferedForSale[phunkId];
@@ -158,7 +149,7 @@ contract EtherPhunksMarket is ReentrancyGuard, EthscriptionsEscrower {
         }
     }
 
-    /* Allows users to enter bids for any CryptoPhunk */
+    /* Allows users to enter bids for any EtherPhunk */
     function enterBidForPhunk(bytes32 phunkId) public payable nonReentrant {
         // if (phunksContract.ownerOf(phunkId) == msg.sender) revert("you already own this phunk");
         if (msg.value == 0) revert("cannot enter bid of zero");
@@ -172,13 +163,19 @@ contract EtherPhunksMarket is ReentrancyGuard, EthscriptionsEscrower {
         emit PhunkBidEntered(phunkId, msg.value, msg.sender);
     }
 
-    /* Allows CryptoPhunk owners to accept bids for their Phunks */
+    /* Allows EtherPhunk owners to accept bids for their Phunks */
     function acceptBidForPhunk(
         bytes32 phunkId,
         uint minPrice
     ) public nonReentrant {
-        // if (phunksContract.ownerOf(phunkId) != msg.sender) revert("Sender is not depositor");
+
         address seller = msg.sender;
+
+        require(
+            !userEthscriptionDefinitelyNotStored(seller, phunkId),
+            "Sender is not depositor"
+        );
+
         Bid memory bid = phunkBids[phunkId];
         if (bid.value == 0) revert("cannot enter bid of zero");
         if (bid.value < minPrice) revert("your bid is too low");
@@ -192,14 +189,15 @@ contract EtherPhunksMarket is ReentrancyGuard, EthscriptionsEscrower {
             0,
             address(0x0)
         );
-        uint amount = bid.value;
-        phunkBids[phunkId] = Bid(false, phunkId, address(0x0), 0);
 
+        uint amount = bid.value;
         pendingWithdrawals[seller] += amount;
 
-        // Transfer th ethscription
+        // Transfer the ethscription
         _transferEthscription(seller, bidder, phunkId);
-        emit PhunkBought(phunkId, bid.value, seller, bidder);
+        emit PhunkBought(phunkId, amount, seller, bidder);
+
+        phunkBids[phunkId] = Bid(false, phunkId, address(0x0), 0);
     }
 
     /* Allows bidders to withdraw their bids */
@@ -215,6 +213,18 @@ contract EtherPhunksMarket is ReentrancyGuard, EthscriptionsEscrower {
         payable(msg.sender).transfer(amount);
     }
 
+    /* Invalidate a listing by phunkId */
+    function _invalidateListing(bytes32 phunkId) internal {
+        phunksOfferedForSale[phunkId] = Offer(
+            false,
+            phunkId,
+            msg.sender,
+            0,
+            address(0x0)
+        );
+        emit PhunkNoLongerForSale(phunkId);
+    }
+
     /* Allows users to retrieve ETH from sales */
     function withdraw() public nonReentrant {
         if (pendingWithdrawals[msg.sender] == 0)
@@ -226,19 +236,27 @@ contract EtherPhunksMarket is ReentrancyGuard, EthscriptionsEscrower {
         payable(msg.sender).transfer(amount);
     }
 
+    /* Allows EtherPhunk owners to withdraw their Phunks from escrow */
     function withdrawPhunk(bytes32 phunkId) public {
         require(
             !userEthscriptionDefinitelyNotStored(msg.sender, phunkId),
             "Sender is not depositor"
         );
 
+        // Withdraw ethscription
         super.withdrawEthscription(phunkId);
+
+        Offer memory offer = phunksOfferedForSale[phunkId];
+        // Check that the offer is valid
+        if (offer.isForSale) {
+          // Invalidate listing
+          _invalidateListing(phunkId);
+        }
     }
 
-    function multicall(bytes[] calldata calls) external {
-        for (uint256 i = 0; i < calls.length; i++) {
-            (bool success, ) = address(this).delegatecall(calls[i]);
-            require(success, "Multicall failed");
+    function withdrawBatchPhunks(bytes32[] memory phunkIds) public {
+        for (uint i = 0; i < phunkIds.length; i++) {
+            withdrawPhunk(phunkIds[i]);
         }
     }
 

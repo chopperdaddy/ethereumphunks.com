@@ -17,7 +17,7 @@ export class AppService {
 
     this.web3Svc.startBackfill(startBlock).then(() => {
       Logger.debug('Starting Block Watcher', chain.toUpperCase());
-      this.web3Svc.startPolling(chain === 'goerli' ? 2 : 16);
+      this.web3Svc.startPolling(chain === 'goerli' ? 1 : 16);
     });
   }
 }

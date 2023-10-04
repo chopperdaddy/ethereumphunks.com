@@ -20,6 +20,22 @@ export interface UserResponse {
   error: PostgrestError | null;
 }
 
+export interface ListingResponse {
+  data: Listing[];
+  error: PostgrestError | null;
+}
+
+export interface Listing {
+  hashId: string
+  blockNum: number
+  createdAt: string
+  isListed: boolean
+  onlySellTo: string | null
+  seller: string
+  transactionHash: string
+  value: number
+}
+
 export interface Phunk {
   id: number;
   createdAt: string | null;
@@ -54,9 +70,8 @@ export interface Sha {
 }
 
 export interface User {
-  id: string;
-  createdAt: string | null;
-  address: string | null;
+  createdAt: Date;
+  address: string;
 }
 
 export type EventType = 'transfer' | 'sale' | 'created' | 'burned';

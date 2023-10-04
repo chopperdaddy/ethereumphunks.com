@@ -1,0 +1,7 @@
+{
+  "solidity.compileUsingLocalVersion": "/Users/saw/Sites/ethereumphunks.com/contracts/soljson-v0.8.17+commit.8df45f5f.js",
+  "solidity.compileUsingRemoteVersion": "v0.8.17+commit.8df45f5f",
+  "solidity.packageDefaultDependenciesContractsDirectory": "",
+  "solidity.packageDefaultDependenciesDirectory": "contracts/node_modules",
+
+}

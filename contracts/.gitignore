@@ -1,5 +1,6 @@
 # Dependency directories
 node_modules/
+soljson-v0.8.17+commit.8df45f5f.js
 
 # Truffle build directory
 build/

@@ -3,7 +3,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { SupabaseService } from './supabase.service';
 import { TimeService } from './time.service';
 
-import { FormattedTransaction, Transaction, TransactionType, createPublicClient, decodeEventLog, hexToString, http } from 'viem';
+import { FormattedTransaction, Log, Transaction, TransactionType, createPublicClient, decodeEventLog, hexToString, http } from 'viem';
 import { goerli, mainnet } from 'viem/chains';
 
 import { readFile, writeFile } from 'fs/promises';
@@ -14,6 +14,7 @@ import punkDataABI from '../abi/PunkData.json';
 import { esip1Abi, esip2Abi } from 'src/abi/EthscriptionsProtocol';
 
 import dotenv from 'dotenv';
+import { etherPhunksMarketAbi } from 'src/abi/EtherPhunksMarket';
 dotenv.config();
 
 const chain: 'mainnet' | 'goerli' = process.env.CHAIN_ID === '5' ? 'goerli' : 'mainnet';
@@ -22,6 +23,8 @@ const client = createPublicClient({
   chain: chain === 'goerli' ? goerli : mainnet,
   transport: http(rpcURL)
 });
+
+const marketAddress = '0xAeC64fe68B8b12A501DDCE30d022fead68948db0'.toLowerCase();
 
 @Injectable()
 export class Web3Service {
@@ -64,7 +67,6 @@ export class Web3Service {
 
   async processBlock(block: number): Promise<void> {
     const { txns, createdAt } = await this.getBlockTransactions(block);
-
     await this.processTransactions(txns, createdAt);
 
     // Log block processed
@@ -139,6 +141,15 @@ export class Web3Service {
           );
           await this.processEsip2(esip2Transfers, transaction, createdAt);
         }
+
+        // Filter logs for EtherPhunk Marketplace events
+        const marketplaceLogs = receipt.logs.filter(
+          (log: any) => log.address === marketAddress
+        );
+        if (marketplaceLogs.length) {
+          await this.processMarketplaceEvents(marketplaceLogs, transaction, createdAt);
+        }
+
       } catch (error) {
         Logger.error(
           error.shortMessage || error,
@@ -166,13 +177,15 @@ export class Web3Service {
       const recipient = decoded.args['recipient'];
       const hashId = decoded.args['id'] || decoded.args['ethscriptionId'];
 
-      await this.sbSvc.processMarketplaceEvent(
+      await this.sbSvc.processContractEvent(
         transaction,
         createdAt,
         sender,
         recipient,
         hashId,
-        transaction.value
+        transaction.value,
+        null,
+        log
       );
     }
   }
@@ -194,14 +207,38 @@ export class Web3Service {
       const recipient = decoded.args['recipient'];
       const hashId = decoded.args['id'] || decoded.args['ethscriptionId'];
 
-      await this.sbSvc.processMarketplaceEvent(
+      await this.sbSvc.processContractEvent(
         transaction,
         createdAt,
         sender,
         recipient,
         hashId,
         transaction.value,
-        prevOwner
+        prevOwner,
+        log
+      );
+    }
+  }
+
+  async processMarketplaceEvents(
+    marketplaceLogs: any[],
+    transaction: Transaction,
+    createdAt: Date
+  ): Promise<void> {
+    for (const log of marketplaceLogs) {
+
+      if (log.address.toLowerCase() !== marketAddress) continue;
+
+      const decoded = decodeEventLog({
+        abi: etherPhunksMarketAbi,
+        data: log.data,
+        topics: log.topics,
+      });
+
+      await this.sbSvc.processMarketplaceEvent(
+        transaction,
+        createdAt,
+        decoded,
       );
     }
   }
