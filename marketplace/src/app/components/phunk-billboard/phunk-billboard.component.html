@@ -3,13 +3,10 @@
   *ngIf="data; else placeholder">
 
   <div class="image-wrapper">
-    <img
-      #tokenImage
-      [lazyLoad]="dataSvc.staticUrl + '/phunk' + (data.id | tokenIdParse) + '.svg'"
-      [defaultImage]="'assets/loadingphunk.png'"
-      width="312"
-      height="312"
-      alt="EthPhunk #{{ data.id }}" />
+
+    <app-phunk-image
+      [tokenId]="data.id"
+    />
   </div>
 
   <div class="breadcrumb">
@@ -66,25 +63,34 @@
 </div>
 
 <ng-template #placeholder>
-  <div class="billboard-wrapper">
 
-    <div class="breadcrumb">
-      <div class="crumbs">
-        <a i18n>Loading</a>
-        <span class="divider">/</span>
-        <span class="number">0000</span>
+  <div class="image-wrapper">
+    <img
+      #tokenImage
+      [src]="'assets/loadingphunk.png'"
+      width="312"
+      height="312"
+    />
+  </div>
+
+  <div class="breadcrumb">
+    <div class="inner">
+
+      <div class="crumbs-wrapper">
+        <div class="crumbs">
+          <a
+            i18n
+            href="/"
+            [routerLink]="['/']">
+
+            Ethereum Phunks
+          </a>
+          <span class="divider">/</span>
+          <span class="number">0000</span>
+        </div>
+
+        <div class="save-pfp"></div>
       </div>
-
-      <div class="save-pfp"><button i18n>Save PFP</button></div>
-    </div>
-
-    <div class="image-wrapper">
-
-      <img
-        #tokenImage
-        [src]="'assets/loadingphunk.png'"
-        width="312"
-        height="312" />
     </div>
   </div>
 </ng-template>

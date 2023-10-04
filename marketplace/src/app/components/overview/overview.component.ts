@@ -82,8 +82,6 @@ export class TxOverviewComponent implements OnDestroy {
     Offered: 'Offered for',
     sale: 'Bought for',
     transfer: 'Transferred to',
-    Unwrapped: 'Unwrapped by',
-    Wrapped: 'Wrapped by',
   };
 
   constructor(
@@ -98,7 +96,7 @@ export class TxOverviewComponent implements OnDestroy {
 
     this.activeTxFilter$.pipe(
       // tap((res) => console.log('activeTxFilter', res)),
-      switchMap((filter: TxFilterItem) => this.dataSvc.fetchEvents(12, filter.value)),
+      switchMap((filter: TxFilterItem) => this.dataSvc.fetchEvents(6, filter.value)),
       tap((events: Event[]) => this.events.next(events)),
       takeUntil(this.destroy$)
     ).subscribe();

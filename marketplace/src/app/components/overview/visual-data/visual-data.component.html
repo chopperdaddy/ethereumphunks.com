@@ -8,7 +8,7 @@
 
     <div class="stats-wrapper">
       <div class="floor">
-        <div class="label">Current Lowest Price EthPhunk</div>
+        <div class="label">Current Lowest Price EtherPhunk</div>
         <div class="value">
           Ξ{{ (statsData?.floor | weiToEth) | formatCash }}
           (${{ ((statsData?.floor | weiToEth) * ((dataSvc.usd$ | async) || 0)) | formatCash }} USD)

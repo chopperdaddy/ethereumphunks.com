@@ -154,8 +154,7 @@
       display: flex;
       align-items: center;
 
-      .sort-wrapper,
-      .wrapped-filter {
+      .sort-wrapper {
         display: flex;
         align-items: center;
         padding-right: 2rem;
@@ -173,12 +172,6 @@
           display: none;
           opacity: .25;
           pointer-events: none;
-        }
-      }
-
-      .wrapped-filter {
-        ng-select {
-          min-width: 14rem;
         }
       }
 
@@ -202,8 +195,7 @@
         align-items: stretch;
         width: 100%;
 
-        .sort-wrapper,
-        .wrapped-filter {
+        .sort-wrapper {
           padding: 0 0 1rem;
 
           ng-select {
@@ -328,6 +320,12 @@
       &.bid {
         img {
           background-color: rgba(var(--bid-color), 1);
+        }
+      }
+
+      &.in-escrow {
+        img {
+          background-color: rgba(var(--escrow-color), 1);
         }
       }
     }

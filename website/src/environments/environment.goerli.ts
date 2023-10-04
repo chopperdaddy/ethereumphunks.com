@@ -1,7 +1,7 @@
 export const environment = {
-  production: false,
+  production: true,
   ethScribeApi: 'https://goerli-api.ethscriptions.com/api/',
-  rpcUrl: 'http://goerli-geth.dappnode:8545',
+  rpcUrl: 'https://eth-goerli.g.alchemy.com/v2/Oq4QaAbjSOc5d3XuyaWcpMutW6jU8-6s',
   chainId: 5,
   punkDataAddress: '0xd61Cb6E357bF34B9280d6cC6F7CCF1E66C2bcf89',
   supabaseUrl: 'https://kcbuycbhynlmsrvoegzp.supabase.co',

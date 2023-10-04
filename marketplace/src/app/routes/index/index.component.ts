@@ -25,6 +25,8 @@ import { TokenIdParsePipe } from '@/pipes/token-id-parse.pipe';
 import { Phunk } from '@/models/graph';
 
 import { Observable } from 'rxjs';
+import { GlobalState } from '@/models/global-state';
+import { Store } from '@ngrx/store';
 
 @Component({
   standalone: true,
@@ -64,7 +66,12 @@ export class IndexComponent implements OnInit {
 
   randomPhunks: string[] = [ '7209', ...Array.from({length: 9}, () => `${Math.floor(Math.random() * 10000)}`)];
 
+  walletAddress$ = this.store.select(state => state.appState.walletAddress);
+  marketData$ = this.store.select(state => state.appState.marketData);
+  ownedPhunks$ = this.store.select(state => state.appState.ownedPhunks);
+
   constructor(
+    private store: Store<GlobalState>,
     public themeSvc: ThemeService,
     public stateSvc: StateService,
     public dataSvc: DataService,

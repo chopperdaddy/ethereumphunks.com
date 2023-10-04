@@ -3,7 +3,6 @@ import { Location } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 
 import { BehaviorSubject, Observable, Subject } from 'rxjs';
-import { CigBalances } from '@/models/cig';
 
 export interface Period {
   key: string;
@@ -16,18 +15,6 @@ export interface Period {
 })
 
 export class StateService {
-
-  private web3Connected = new BehaviorSubject<boolean>(false);
-  web3Connected$ = this.web3Connected.asObservable();
-
-  private walletAddress = new BehaviorSubject<any>(null);
-  walletAddress$ = this.walletAddress.asObservable();
-
-  private hasWithdrawal = new BehaviorSubject<boolean>(false);
-  hasWithdrawal$ = this.hasWithdrawal.asObservable();
-
-  private cigBalances = new BehaviorSubject<CigBalances | null>(null);
-  cigBalances$ = this.cigBalances.asObservable();
 
   private pagination = new BehaviorSubject<number>(1);
   pagination$: Observable<number> = this.pagination.asObservable();
@@ -79,31 +66,6 @@ export class StateService {
     return this.isMobile.getValue();
   }
 
-  setWalletAddress(address: string | null | undefined): void {
-    address = address?.toLowerCase();
-    this.walletAddress.next(address);
-  }
-
-  getWalletAddress(): string | null {
-    return this.walletAddress.getValue();
-  }
-
-  setWeb3Connected(status: boolean): void {
-    this.web3Connected.next(status);
-  }
-
-  getWeb3Connected(): boolean {
-    return this.web3Connected.getValue();
-  }
-
-  setHasWithdrawal(status: boolean): void {
-    this.hasWithdrawal.next(status);
-  }
-
-  getHasWithdrawal(): boolean {
-    return this.hasWithdrawal.getValue();
-  }
-
   setPagination(page: number): void {
     this.pagination.next(page);
   }
@@ -122,10 +84,6 @@ export class StateService {
 
   getActivePeriod(): any {
     return this.activePeriod.getValue();
-  }
-
-  setCigBalances(balances: CigBalances | null): void {
-    this.cigBalances.next({ ...this.cigBalances.getValue(), ...balances });
   }
 
   setDocumentClick(event: MouseEvent): void {

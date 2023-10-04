@@ -84,7 +84,8 @@
   height: 50rem;
   background-color: rgba(var(--highlight), 1);
 
-  img {
+  img,
+  app-phunk-image {
     width: 31.2rem;
     height: 31.2rem;
     image-rendering: pixelated;

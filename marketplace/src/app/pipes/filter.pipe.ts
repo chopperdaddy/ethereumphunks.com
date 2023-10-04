@@ -1,6 +1,6 @@
 import { Pipe, PipeTransform } from '@angular/core';
 
-import { Filters, WrappedFilters } from '@/models/pipes';
+import { Filters } from '@/models/pipes';
 import { Phunk } from '@/models/graph';
 
 @Pipe({
@@ -10,19 +10,14 @@ import { Phunk } from '@/models/graph';
 
 export class FilterPipe implements PipeTransform {
 
-  transform(value: Phunk[], ...args: (Filters | WrappedFilters | null)[]): Phunk[] {
+  transform(value: Phunk[], ...args: (Filters | null)[]): Phunk[] {
 
     if (!value?.length) return [];
     if (!args?.length) return value;
 
     value = [...value];
 
-    value.filter((res) => res.listing?.value !== '0' && res.bid?.value !== '0');
-
-    if (args[1]) {
-      if (args[1] === 'Wrapped') value = value.filter((item: any) => item.wrapped);
-      if (args[1] === 'Unwrapped') value = value.filter((item: any) => !item.wrapped);
-    }
+    value.filter((res) => res.listing?.minValue !== '0' && res.bid?.value !== '0');
 
     if (args[0] === 'listings') return value.filter((item: any) => item.listing && item.listing.value !== '0');
     if (args[0] === 'bids') return value.filter((item: any) => item.bid && item.bid.value !== '0');

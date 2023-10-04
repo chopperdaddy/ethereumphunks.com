@@ -64,20 +64,6 @@
       <div class="right">
 
         <div
-          class="wrapped-filter"
-          [class.disabled]="marketType === 'bids' || marketType === 'all'">
-
-          <div class="label">Show:</div>
-          <ng-select
-            [(ngModel)]="activeWrappedFilterModel"
-            [items]="wrappedFilters"
-            (change)="setWrappedFilter($event)"
-            [searchable]="false"
-            [clearable]="false">
-          </ng-select>
-        </div>
-
-        <div
           class="sort-wrapper"
           [class.disabled]="marketType === 'all'">
 
@@ -144,7 +130,7 @@
 
   <ng-container *ngFor="let item of phunkData |
     properties : (activeFilters$ | async) : traitCount |
-    filter: marketType : (activeWrappedFilters$ | async) |
+    filter: marketType |
     sort: ((activeSort$ | async)?.value || sorts[0].value) : marketType |
     paginate: {
       itemsPerPage: limit,
@@ -184,7 +170,7 @@
         class="image-wrapper"
         [class.listing]="marketType === 'listings' && item?.listing"
         [class.bid]="marketType === 'bids' && item?.bid"
-        [class.wrapped]="item?.wrapped">
+        [class.in-escrow]="item.owner === escrowAddress">
 
         <img
           [lazyLoad]="dataSvc.staticUrl + '/phunk' + (item.id | tokenIdParse) + '.svg'"
@@ -258,4 +244,8 @@
 
 <ng-template #nextIcon>
   <svg height="13" viewBox="0 0 8 13" width="8" xmlns="http://www.w3.org/2000/svg"><path d="m2.6015625 10.40625v2.5664062h-2.6015625v-2.5664062zm2.6015625-2.6015625v2.6015625h-2.6015625v-2.6015625zm2.6015625-2.6015625v2.6015625h-2.6015625v-2.6015625zm-2.6015625-2.6015625v2.6015625h-2.6015625v-2.6015625zm-2.6015625-2.6015625v2.6015625h-2.6015625v-2.6015625z" fill="rgba(var(--text-color), 1)"/></svg>
+</ng-template>
+
+<ng-template #thumbUpIcon>
+  <svg height="16" viewBox="0 0 15 16" width="15" xmlns="http://www.w3.org/2000/svg"><g fill="none" fill-rule="evenodd"><g fill="#ffca00"><path d="m5 0h1v4h-1z"/><path d="m11 13h1v1h-1z"/><path d="m11 10h2v1h-2z"/><path d="m11 7h2v1h-2z"/><path d="m10 8h1v2h-1z"/><path d="m13 6h1v1h-1z"/><path d="m14 8h1v2h-1z"/><path d="m13 11h1v2h-1z"/><path d="m12 5h1v1h-1z"/><path d="m10 11h1v2h-1z"/><path d="m10 14h1v1h-1z"/></g><path d="m6 0h1v6h-1z" fill="#ffe73e"/><path d="m5 4h1v10h-1z" fill="#ffe73e"/><path d="m4 6h1v8h-1z" fill="#ffe73e"/><path d="m0 9h2v4h-2z" fill="#ffe73e"/><path d="m10 5h2v2h-2z" fill="#ffe73e"/><path d="m11 8h3v2h-3z" fill="#ffe73e"/><path d="m11 11h2v2h-2z" fill="#ffe73e"/><path d="m11 14h1v1h-1z" fill="#ffe73e"/><path d="m12 6h1v1h-1z" fill="#ffe73e"/><path d="m3 7h1v6h-1z" fill="#ffe73e"/><path d="m7 1h1v4h-1z" fill="#ffe73e"/><path d="m4 4h1v2h-1z" fill="#ffca00"/><path d="m3 6h1v1h-1z" fill="#ffca00"/><path d="m0 8h2v1h-2z" fill="#ffca00"/><path d="m0 13h2v1h-2z" fill="#ffca00"/><path d="m3 13h1v1h-1z" fill="#ffca00"/><path d="m4 14h2v1h-2z" fill="#ffca00"/><path d="m6 14h2v1h-2z" fill="#ffca00"/><path d="m6 6h1v8h-1z" fill="#ffca00"/><path d="m2 9h1v4h-1z" fill="#ffca00"/><path d="m7 5h1v1h-1z" fill="#ffca00"/><path d="m0 7h3v1h-3z" fill="#ff9e00"/><path d="m8 5h2v1h-2z" fill="#ff9e00"/><path d="m9 6h1v1h-1z" fill="#ff9e00"/><path d="m9 14h1v1h-1z" fill="#ff9e00"/><path d="m9 11h1v2h-1z" fill="#ff9e00"/><path d="m9 8h1v2h-1z" fill="#ff9e00"/><path d="m10 7h1v1h-1z" fill="#ff9e00"/><path d="m10 10h1v1h-1z" fill="#ff9e00"/><path d="m10 13h1v1h-1z" fill="#ff9e00"/><path d="m0 14h3v1h-3z" fill="#d76525"/><path d="m3 15h9v1h-9z" fill="#d76525"/><path d="m8 6h1v9h-1z" fill="#d76525"/><path d="m9 7h1v1h-1z" fill="#d76525"/><path d="m9 10h1v1h-1z" fill="#d76525"/><path d="m9 13h1v1h-1z" fill="#d76525"/><path d="m2 8h1v1h-1z" fill="#ff9e00"/><path d="m13 7h1v1h-1z" fill="#ff9e00"/><path d="m13 10h1v1h-1z" fill="#ff9e00"/><path d="m12 13h1v2h-1z" fill="#ff9e00"/><path d="m7 6h1v8h-1z" fill="#ff9e00"/><path d="m2 13h1v1h-1z" fill="#ff9e00"/><path d="m3 14h1v1h-1z" fill="#ff9e00"/></g></svg>
 </ng-template>

@@ -38,13 +38,6 @@ canvas {
         }
       }
 
-      .wrapped-unwrapped {
-        padding-top: 0;
-        margin-top: 0;
-        color: rgba(var(--text-color), 1);
-        font-size: 1.8rem;
-      }
-
       h2 {
         font-size: 1.8rem;
         .pink {
@@ -198,7 +191,7 @@ canvas {
   left: 0;
   width: 100%;
   height: 100%;
-  background-color: rgba(var(--background), .2);
+  background-color: rgba(var(--highlight), .5);
 
   @include trans($duration: .2s);
   opacity: 0;
@@ -308,14 +301,17 @@ canvas {
         height: 24rem;
         background-color: rgba(var(--base-color), 1);
 
-        &.wrapped {
-          background-color: rgba(var(--phunk-purple), 1);
-        }
-
         img {
           width: 20rem;
           height: 20rem;
           image-rendering: pixelated;
+        }
+      }
+    }
+
+    &.listing {
+      .phunk-info {
+        .state-selector {
         }
       }
     }
@@ -347,14 +343,6 @@ canvas {
     }
   }
 
-  &.transaction {
-    padding-top: var(--header-height);
-
-    .modal {
-      max-width: 48rem;
-    }
-  }
-
   &.active {
     opacity: 1;
     visibility: visible;
@@ -367,6 +355,73 @@ canvas {
     .modal {
       width: 100%;
 
+    }
+  }
+}
+
+.state-selector-wrapper {
+  width: calc(100% + 6rem);
+  padding: 4rem 0 0;
+
+  .selector-items {
+    display: flex;
+    justify-content: center;
+
+    width: 100%;
+    height: calc(2.4rem * 6);
+    background-color: rgba(var(--base-color), 1);
+
+    .escrow,
+    .list {
+      position: relative;
+      padding: 0 2rem;
+
+      opacity: .35;
+      pointer-events: none;
+
+      .label {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        position: absolute;
+        top: 0;
+        left: 0;
+        z-index: 1;
+
+        width: 100%;
+        height: 4rem;
+
+        transform: translate(0, -4rem);
+
+        font-family: $secondary-font-stack;
+        font-size: 1.3rem;
+        color: rgba(var(--text-color), 1);
+        font-weight: normal;
+        text-align: center;
+
+        .emoji {
+          padding-left: .5rem;
+          font-size: 1.6rem;
+        }
+      }
+
+      app-phunk-image {
+        width: calc(2.4rem * 6);
+        height: calc(2.4rem * 6);
+      }
+
+      &.active {
+        opacity: 1;
+
+        .label {
+          color: rgba(var(--highlight), 1);
+        }
+
+        app-phunk-image {
+          // background-color: rgba(var(--sale-color), 1);
+        }
+      }
     }
   }
 }

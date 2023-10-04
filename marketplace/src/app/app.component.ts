@@ -2,16 +2,21 @@ import { Component, HostListener, Inject } from '@angular/core';
 import { CommonModule, DOCUMENT } from '@angular/common';
 import { NavigationEnd, NavigationStart, Router, RouterModule } from '@angular/router';
 
+import { Store } from '@ngrx/store';
+
 import { HeaderComponent } from './components/header/header.component';
 import { FooterComponent } from './components/footer/footer.component';
 
 import { StateService } from './services/state.service';
 import { Web3Service } from './services/web3.service';
 import { DataService } from './services/data.service';
+import { ThemeService } from './services/theme.service';
 
 import { filter, observeOn, scan, tap, throttleTime } from 'rxjs/operators';
 import { asyncScheduler, fromEvent, Observable } from 'rxjs';
-import { ThemeService } from './services/theme.service';
+
+import { GlobalState } from './models/global-state';
+import { fetchMarketData } from './state/actions/app-state.action';
 
 @Component({
   standalone: true,
@@ -33,12 +38,15 @@ export class AppComponent {
 
   constructor(
     @Inject(DOCUMENT) private document: Document,
+    private store: Store<GlobalState>,
     public dataSvc: DataService,
     public web3Svc: Web3Service,
     public stateSvc: StateService,
     private themeSvc: ThemeService,
     private router: Router
   ) {
+
+    this.store.dispatch(fetchMarketData());
 
     const mode = localStorage.getItem('mode');
     const defaultMode = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';

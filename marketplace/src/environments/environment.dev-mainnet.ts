@@ -7,7 +7,7 @@ export const environment = {
   // graphURI: 'http://localhost:8000/subgraphs/name/cryptophunks_eth',
   // staticUrl: 'http://10.0.0.53:3001',
   staticUrl: 'https://punkcdn.com/static',
-  phunksMarketAddress: '0xb47e3cd837ddf8e4c57f05d70ab865de6e193bbb'.toLowerCase(),
+  phunksMarketAddress: '0xAeC64fe68B8b12A501DDCE30d022fead68948db0'.toLowerCase(),
   startBlock: 0,
   // rpcHttpProvider: 'http://geth.dappnode:8545',
   rpcHttpProvider: 'https://eth-mainnet.g.alchemy.com/v2/DmQk3glk8ycdD_Wvtzoklb02lNCOAcSC',

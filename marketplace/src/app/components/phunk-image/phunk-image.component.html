@@ -1,0 +1,11 @@
+<img
+  *ngIf="phunkImgSrc; else placeholder"
+  [src]="phunkImgSrc"
+  [alt]="'EtherPhunk #'"
+/>
+
+<ng-template #placeholder>
+  <img
+    [src]="'assets/loadingphunk.png'"
+  />
+</ng-template>

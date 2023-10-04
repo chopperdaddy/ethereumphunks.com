@@ -1,4 +1,4 @@
-import { enableProdMode, importProvidersFrom } from '@angular/core';
+import { enableProdMode, importProvidersFrom, isDevMode } from '@angular/core';
 import { bootstrapApplication } from '@angular/platform-browser';
 import { RouteReuseStrategy, provideRouter, withHashLocation } from '@angular/router';
 
@@ -19,6 +19,12 @@ import { environment } from './environments/environment';
 
 import 'chartjs-adapter-moment';
 
+import { provideStore } from '@ngrx/store';
+import { provideEffects } from '@ngrx/effects';
+import { provideStoreDevtools } from '@ngrx/store-devtools';
+import { appStateReducer } from '@/state/reducers/app-state.reducer';
+import { AppStateEffects } from '@/state/effects/app-state.effect';
+
 if (environment.production) enableProdMode();
 
 bootstrapApplication(AppComponent, {
@@ -28,6 +34,18 @@ bootstrapApplication(AppComponent, {
     { provide: WeiToEthPipe, useClass: WeiToEthPipe },
     { provide: DEFAULT_CONFIG, useValue: { name: 'cryptophunksCE' } },
     { provide: RouteReuseStrategy, useClass: CustomReuseStrategy },
+
+    provideStore({
+      appState: appStateReducer,
+    }),
+    provideEffects([
+      AppStateEffects,
+    ]),
+    provideStoreDevtools({
+      maxAge: 25,
+      logOnly: !isDevMode(),
+      trace: true,
+    }),
 
     importProvidersFrom(
       HttpClientModule,

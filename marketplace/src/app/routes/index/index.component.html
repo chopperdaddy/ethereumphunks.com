@@ -16,7 +16,7 @@
 
 <app-splash />
 
-<ng-container *ngIf="(dataSvc.marketData$ | async) as marketData">
+<ng-container *ngIf="(marketData$ | async) as marketData">
 
   <section class="overview">
     <div class="inner">
@@ -28,15 +28,15 @@
   <section class="phunk-box">
     <div class="inner">
 
-      <h3 i18n>EthPhunk Search</h3>
-      <p i18n>Search a wallet address to view their EthPhunk collection or</p>
-      <p>Enter an EthPhunk ID to view a specific EthPhunk</p>
+      <h3 i18n>EtherPhunk Search</h3>
+      <p i18n>Search a wallet address to view their EtherPhunk collection or</p>
+      <p>Enter an EtherPhunk ID to view a specific EtherPhunk</p>
 
       <form [formGroup]="phunkBox" (ngSubmit)="onSubmit($event)">
         <div class="input-wrapper">
           <input
             type="text"
-            placeholder="0x, ens or EthPhunkID"
+            placeholder="0x, ens or EtherPhunkID"
             formControlName="addressInput"
             [class.disabled]="phunkBoxLoading"
           />
@@ -48,7 +48,7 @@
           />
         </div>
         <ng-container *ngIf="phunkBoxError">
-          <p class="highlight">Invalid Address or EthPhunkId</p>
+          <p class="highlight">Invalid Address or EtherPhunkId</p>
         </ng-container>
         <button i18n type="submit">Go</button>
       </form>
@@ -56,14 +56,14 @@
     </div>
   </section>
 
-  <ng-container *ngIf="(dataSvc.ownedData$ | async) as ownedData">
+  <ng-container *ngIf="(ownedPhunks$ | async) as ownedData">
     <ng-container *ngIf="ownedData.length">
-      <section *ngIf="(stateSvc.walletAddress$ | async) as address">
+      <section *ngIf="(walletAddress$ | async) as address">
         <div class="inner">
           <h3 i18n>Owned</h3>
 
           <div class="section-stats-wrapper">
-            <p i18n>Showing owned EthPhunks,
+            <p i18n>Showing owned EtherPhunks,
               <a
                 class="highlight"
                 [routerLink]="['/', 'owned']"
@@ -98,7 +98,7 @@
           i18n
           *ngIf="(listings | calc : 'lowestListingPrice') as ethPrice">
 
-          The lowest price EthPhunk currently for sale is
+          The lowest price EtherPhunk currently for sale is
           <span class="bold">Ξ{{ ethPrice | number : '1.2-2' }} ({{ (ethPrice * ((dataSvc.usd$ | async) || 0)) | currency }} USD)</span>.
         </p>
 
@@ -186,7 +186,7 @@
             [routerLink]="['/all']"
             [href]="'/all'">
 
-            View all 10,000 EthPhunks.
+            View all 10,000 EtherPhunks.
           </a>
         </p>
       </div>

@@ -3,10 +3,13 @@ import { CommonModule } from '@angular/common';
 import { Router, ActivatedRoute, RouterModule } from '@angular/router';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 
+import { Store } from '@ngrx/store';
 import { LazyLoadImageModule } from 'ng-lazyload-image';
 
 import { PhunkBillboardComponent } from '@/components/phunk-billboard/phunk-billboard.component';
 import { TxHistoryComponent } from '@/components/tx-history/tx-history.component';
+import { PhunkImageComponent } from '@/components/phunk-image/phunk-image.component';
+
 import { WalletAddressDirective } from '@/directives/wallet-address.directive';
 
 import { TokenIdParsePipe } from '@/pipes/token-id-parse.pipe';
@@ -20,11 +23,16 @@ import { StateService } from '@/services/state.service';
 import { ThemeService } from '@/services/theme.service';
 
 import { Phunk } from '@/models/graph';
+import { GlobalState } from '@/models/global-state';
 
 import { switchMap, takeUntil, tap } from 'rxjs/operators';
 import { BehaviorSubject, Subject, fromEvent, merge } from 'rxjs';
 import { TransactionReceipt } from 'viem';
+
 import { environment } from 'src/environments/environment';
+
+import { fetchSinglePhunk, resetSinglePhunk } from '@/state/actions/app-state.action';
+import { selectSinglePhunk, selectWalletAddress } from '@/state/selectors/app-state.selector';
 
 interface TxStatus {
   title: string;
@@ -35,6 +43,7 @@ interface TxStatus {
 interface TxStatuses {
   pending: TxStatus;
   submitted: TxStatus;
+  escrow: TxStatus;
   complete: TxStatus;
   error: TxStatus;
 }
@@ -52,6 +61,7 @@ interface TxStatuses {
     PhunkBillboardComponent,
     TxHistoryComponent,
     WalletAddressDirective,
+    PhunkImageComponent,
 
     TokenIdParsePipe,
     TraitCountPipe,
@@ -68,11 +78,7 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
   @ViewChild('modal') modal!: ElementRef;
 
   explorerUrl = `https://${environment.chainId === 5 ? 'goerli.' : ''}etherscan.io`;
-
-  private phunk = new BehaviorSubject<Phunk | null>(null);
-  phunk$ = this.phunk.asObservable();
-
-  private destroy$ = new Subject<void>();
+  escrowAddress = environment.phunksMarketAddress;
 
   txModalActive: boolean = false;
 
@@ -100,6 +106,11 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
       message: null,
       active: false
     },
+    escrow: {
+      title: 'Transaction Submitted',
+      message: null,
+      active: false
+    },
     complete: {
       title: 'Transaction Complete',
       message: null,
@@ -117,7 +128,15 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
 
   objectValues = Object.values;
 
+  refreshPhunk$ = new Subject<void>();
+
+  walletAddress$ = this.store.select(selectWalletAddress);
+  singlePhunk$ = this.store.select(selectSinglePhunk);
+
+  private destroy$ = new Subject<void>();
+
   constructor(
+    private store: Store<GlobalState>,
     public route: ActivatedRoute,
     public router: Router,
     public dataSvc: DataService,
@@ -125,7 +144,9 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
     public stateSvc: StateService,
     public themeSvc: ThemeService,
   ) {
-    this.getData();
+    this.route.params.pipe(
+      tap((params: any) => this.store.dispatch(fetchSinglePhunk({ phunkId: params.tokenId }))),
+    ).subscribe();
     this.listPrice.setValue(this.dataSvc.getFloor());
   }
 
@@ -154,17 +175,9 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    this.store.dispatch(resetSinglePhunk());
     this.destroy$.next();
     this.destroy$.complete();
-  }
-
-  getData(): void {
-    this.route.params.pipe(
-      tap((params: any) => this.phunk.next({ id: params.tokenId, attributes: [{k:'Loading',v:'Loading'}] })),
-      switchMap((params: any) => this.dataSvc.fetchSinglePhunk(params.tokenId)),
-      tap((res: Phunk) => this.phunk.next(res)),
-      takeUntil(this.destroy$),
-    ).subscribe();
   }
 
   initTransactionMessage(message?: string): void {
@@ -193,7 +206,7 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
     this.txStatus = { ...this.txStatus };
   }
 
-  setProcessTransactionMessage(receipt: any, message?: string): void {
+  setTransactionCompleteMessage(receipt: any, message?: string): void {
     // console.log('receipt', receipt);
 
     this.txModalActive = true;
@@ -290,8 +303,8 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
         const escrowHash = await this.web3Svc.sendEthscriptionToContract(tokenId);
         this.setTransactionMessage(escrowHash!);
 
-        const escrowReceipt = await this.web3Svc.waitForTransaction(escrowHash!);
-        this.setProcessTransactionMessage(escrowReceipt);
+        const escrowReceipt = await this.pollReceipt(escrowHash!);
+        this.setTransactionCompleteMessage(escrowReceipt);
       }
 
       if (address) {
@@ -310,12 +323,42 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
       const hash = await this.web3Svc.offerPhunkForSale(tokenId, value, address);
       this.setTransactionMessage(hash!);
 
-      const receipt = await this.web3Svc.waitForTransaction(hash!);
-      this.setProcessTransactionMessage(receipt);
+      const receipt = await this.pollReceipt(hash!);
+      this.setTransactionCompleteMessage(receipt);
     } catch (err) {
       console.log(err);
       this.setErrorTransactionMessage(err);
     }
+  }
+
+  async sendToEscrow(phunk: Phunk): Promise<void> {
+    try {
+      if (!phunk.hashId) throw new Error('Invalid hashId');
+
+      this.initTransactionMessage();
+      const tokenId = phunk.hashId;
+      const hash = await this.web3Svc.transferPhunk(tokenId, this.escrowAddress);
+      this.setEscrowMessage(hash!);
+
+      const receipt = await this.pollReceipt(hash!);
+      this.setTransactionCompleteMessage(receipt);
+    } catch (err) {
+      console.log(err);
+      this.setErrorTransactionMessage(err);
+    }
+  }
+
+  setEscrowMessage(hash: string, message?: string): void {
+    this.txStatus.escrow.active = true;
+
+    const shortHash = `${hash.slice(0, 6)}...${hash.slice(-6)}`;
+    this.txStatus.submitted.message = (message || `
+      <p>Your transaction is being processed on the Ethereum network.</p>
+      <p>Transaction hash: <a href="${this.explorerUrl}/tx/${hash}" target="_blank">${shortHash}</a></p>
+      <p>View it <a href="${this.explorerUrl}/tx/${hash}" target="_blank">here</a></p>
+    `).replace(/\s+/g, ' ');
+
+    this.txStatus = { ...this.txStatus };
   }
 
   async phunkNoLongerForSale(phunk: Phunk): Promise<void> {
@@ -328,8 +371,8 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
       const hash = await this.web3Svc.phunkNoLongerForSale(tokenId);
       this.setTransactionMessage(hash!);
 
-      const receipt = await this.web3Svc.waitForTransaction(hash!);
-      this.setProcessTransactionMessage(receipt);
+      const receipt = await this.pollReceipt(hash!);
+      this.setTransactionCompleteMessage(receipt);
     } catch (err) {
       console.log(err);
       this.setErrorTransactionMessage(err);
@@ -347,8 +390,8 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
       const hash = await this.web3Svc.withdrawBidForPhunk(tokenId);
       this.setTransactionMessage(hash!);
 
-      const receipt = await this.web3Svc.waitForTransaction(hash!);
-      this.setProcessTransactionMessage(receipt);
+      const receipt = await this.pollReceipt(hash!);
+      this.setTransactionCompleteMessage(receipt);
     } catch (err) {
       console.log(err);
       this.setErrorTransactionMessage(err);
@@ -357,7 +400,9 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
 
   async acceptBidForPhunk(phunk: Phunk): Promise<void> {
     try {
-      const tokenId = phunk.id;
+      if (!phunk.hashId) throw new Error('Invalid hashId');
+
+      const tokenId = phunk.hashId;
       const value = phunk.bid?.value;
 
       this.closeAcceptBid();
@@ -374,7 +419,7 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
       `);
 
       const receipt = await this.pollReceipt(hash!);
-      this.setProcessTransactionMessage(receipt);
+      this.setTransactionCompleteMessage(receipt);
     } catch (err) {
       console.log(err);
       this.setErrorTransactionMessage(err);
@@ -404,15 +449,15 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
       if (!phunk.hashId) throw new Error('Invalid hashId');
 
       const tokenId = phunk.hashId;
-      const value = phunk.listing?.value;
+      const value = phunk.listing?.minValue;
 
       this.initTransactionMessage();
 
       const hash = await this.web3Svc.buyPhunk(tokenId, value!);
       this.setTransactionMessage(hash!);
 
-      const receipt = await this.web3Svc.waitForTransaction(hash!);
-      this.setProcessTransactionMessage(receipt);
+      const receipt = await this.pollReceipt(hash!);
+      this.setTransactionCompleteMessage(receipt);
     } catch (err) {
       console.log(err);
       this.setErrorTransactionMessage(err);
@@ -433,22 +478,22 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
       const hash = await this.web3Svc.enterBidForPhunk(tokenId, value);
       this.setTransactionMessage(hash!);
 
-      const receipt = await this.web3Svc.waitForTransaction(hash!);
-      this.setProcessTransactionMessage(receipt);
+      const receipt = await this.pollReceipt(hash!);
+      this.setTransactionCompleteMessage(receipt);
     } catch (err) {
       console.log(err);
       this.setErrorTransactionMessage(err);
     }
   }
 
-  async submitTransfer(data: Phunk): Promise<void> {
+  async submitTransfer(data: Phunk, address?: string): Promise<void> {
     console.log('submitTransfer', data);
     try {
 
       const hashId = data.hashId;
       if (!hashId) throw new Error('Invalid hashId');
 
-      let toAddress: string | null = this.transferAddress.value;
+      let toAddress: string | null = address || this.transferAddress.value;
       toAddress = await this.web3Svc.verifyAddressOrEns(toAddress);
       if (!toAddress) throw new Error('Invalid address');
 
@@ -458,10 +503,31 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
       const hash = await this.web3Svc.transferPhunk(hashId, toAddress);
       this.setTransactionMessage(hash!);
 
-      const receipt = await this.web3Svc.waitForTransaction(hash!);
-      this.setProcessTransactionMessage(receipt);
+      const receipt = await this.pollReceipt(hash!);
+      this.setTransactionCompleteMessage(receipt);
     } catch (err) {
       this.closeAll();
+      this.setErrorTransactionMessage(err);
+    }
+  }
+
+  async withdrawPhunk(phunk: Phunk): Promise<void> {
+    try {
+      if (!phunk.hashId) throw new Error('Invalid hashId');
+
+      const tokenId = phunk.hashId;
+
+      this.initTransactionMessage();
+
+      const hash = await this.web3Svc.withdrawPhunk(tokenId);
+      if (!hash) throw new Error('Could not proccess transaction');
+
+      this.setTransactionMessage(hash!);
+
+      const receipt = await this.pollReceipt(hash!);
+      this.setTransactionCompleteMessage(receipt);
+    } catch (err) {
+      console.log(err);
       this.setErrorTransactionMessage(err);
     }
   }

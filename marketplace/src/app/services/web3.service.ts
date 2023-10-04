@@ -1,8 +1,8 @@
 import { Injectable } from '@angular/core';
 
-import { environment } from 'src/environments/environment';
+import { Store } from '@ngrx/store';
 
-import { StateService } from './state.service';
+import { environment } from 'src/environments/environment';
 
 import { Observable, catchError, filter, of, tap } from 'rxjs';
 
@@ -11,12 +11,15 @@ import EtherPhunksMarketAbi from '@/abi/EtherPhunksMarket.json';
 import { FallbackTransport, TransactionReceipt, createWalletClient, custom, decodeFunctionData, formatEther, isAddress, parseEther } from 'viem';
 import { mainnet, goerli } from 'viem/chains';
 
-import { Chain, Config, PublicClient, WebSocketPublicClient, configureChains, createConfig, disconnect, getAccount, getNetwork, getPublicClient, getWalletClient, watchAccount } from '@wagmi/core';
+import { Chain, Config, PublicClient, WebSocketPublicClient, configureChains, createConfig, disconnect, getAccount, getNetwork, getPublicClient, getWalletClient, switchNetwork, watchAccount } from '@wagmi/core';
 
+import { Web3Modal } from '@web3modal/html';
 import { jsonRpcProvider } from '@wagmi/core/providers/jsonRpc';
 import { EthereumClient, w3mConnectors } from '@web3modal/ethereum';
-import { Web3Modal } from '@web3modal/html';
-import { Listing } from '@/models/graph';
+
+import { setConnected, setHasWithdrawal, setWalletAddress } from '@/state/actions/app-state.action';
+
+import { GlobalState } from '@/models/global-state';
 
 const marketAddress = environment.phunksMarketAddress;
 const projectId = '9455b1a68e7f81eee6e1090c12edbf00';
@@ -36,10 +39,8 @@ export class Web3Service {
   connectedState!: Observable<any>;
 
   constructor(
-    private stateSvc: StateService
+    private store: Store<GlobalState>
   ) {
-
-    const chain = environment.chainId === 5 ? goerli : mainnet;
 
     const { chains, publicClient, webSocketPublicClient } = configureChains(
       [mainnet, goerli],
@@ -111,22 +112,23 @@ export class Web3Service {
     if (!address) return;
     address = address.toLowerCase();
 
-    this.stateSvc.setWeb3Connected(true);
-    this.setWalletAddress(address);
-    this.checkHasWithdrawal(address);
+    this.store.dispatch(setWalletAddress({ walletAddress: address }));
+    this.store.dispatch(setConnected({ connected: true }));
+
+    if (this.checkNetwork() !== environment.chainId) {
+      await switchNetwork({ chainId: environment.chainId });
+    }
   }
 
   async disconnectWeb3(): Promise<void> {
     if (getAccount().isConnected) {
       await disconnect();
-      this.stateSvc.setWeb3Connected(false);
-      this.stateSvc.setWalletAddress(null);
-      this.stateSvc.setCigBalances(null);
-      this.setWalletAddress(null);
+      this.store.dispatch(setWalletAddress({ walletAddress: '' }));
+      this.store.dispatch(setConnected({ connected: getAccount().isConnected }));
     }
   }
 
-  async checkHasWithdrawal(address: string): Promise<void> {
+  async checkHasWithdrawal(address: string): Promise<boolean> {
     const publicClient = getPublicClient();
     const pendingWithdrawals = await publicClient?.readContract({
       address: marketAddress as `0x${string}`,
@@ -134,12 +136,7 @@ export class Web3Service {
       functionName: 'pendingWithdrawals',
       args: [address],
     });
-
-    this.stateSvc.setHasWithdrawal(!!pendingWithdrawals);
-  }
-
-  setWalletAddress(address: any) {
-    this.stateSvc.setWalletAddress(address);
+    return !!pendingWithdrawals;
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -159,6 +156,16 @@ export class Web3Service {
 
   async sendEthscriptionToContract(tokenId: string): Promise<string | undefined> {
     return await this.transferPhunk(tokenId, marketAddress as `0x${string}`);
+  }
+
+  async withdrawPhunk(tokenId: string): Promise<string | undefined> {
+    const escrowed = await this.isInEscrow(tokenId);
+    if (!escrowed) return;
+
+    return await this.marketContractInteraction(
+      'withdrawPhunk',
+      [tokenId]
+    );
   }
 
   async decodeInputData(data: string): Promise<any> {
@@ -206,7 +213,7 @@ export class Web3Service {
   async offerPhunkForSale(tokenId: string, value: number, toAddress?: string | null): Promise<string | undefined> {
     console.log('offerPhunkForSale', tokenId, value, toAddress);
 
-    const weiValue = this.ethToWei(value);
+    const weiValue = value * 1e18;
     if (toAddress) {
       if (!isAddress(toAddress)) throw new Error('Invalid address');
       return this.marketContractInteraction(
@@ -244,7 +251,7 @@ export class Web3Service {
   async acceptBidForPhunk(tokenId: string, minPrice: string): Promise<string | undefined> {
     // We need to make sure this get's added.
     // Once added, this loop will run through as mm knows it's on the network.
-    for (let i = 0; i < 11; i++) await this.addFlashbotsNetwork();
+    // for (let i = 0; i < 11; i++) await this.addFlashbotsNetwork();
 
     return this.marketContractInteraction('acceptBidForPhunk', [tokenId, minPrice]);
   }

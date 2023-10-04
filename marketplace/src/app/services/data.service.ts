@@ -8,96 +8,20 @@ import { Attribute, Bid, Event, EventType, Listing, Phunk, State } from '@/model
 import { WeiToEthPipe } from '@/pipes/wei-to-eth.pipe';
 import { filterData } from '@/constants/filterData';
 
-import { Observable, of, BehaviorSubject, EMPTY, from, forkJoin } from 'rxjs';
-import { catchError, map, switchMap, tap, withLatestFrom } from 'rxjs/operators';
+import { Observable, of, BehaviorSubject, EMPTY, from, forkJoin, merge } from 'rxjs';
+import { catchError, debounceTime, filter, map, skip, startWith, switchMap, tap, withLatestFrom } from 'rxjs/operators';
 
-// import { Apollo, gql } from 'apollo-angular';
-// import { QueryOptions } from '@apollo/client';
-
-import { createClient } from '@supabase/supabase-js'
+import { RealtimePostgresChangesPayload, createClient } from '@supabase/supabase-js'
 
 import { environment } from 'src/environments/environment';
 import { Web3Service } from './web3.service';
+import { Store } from '@ngrx/store';
+import { GlobalState } from '@/models/global-state';
+import { fetchMarketData, refreshSinglePhunk } from '@/state/actions/app-state.action';
 
 const supabaseUrl = 'https://kcbuycbhynlmsrvoegzp.supabase.co'
 const supabaseKey = environment.supabaseKey;
 const supabase = createClient(supabaseUrl, supabaseKey)
-
-// const WATCH_STATES_DATA = gql`
-//   query GetStates($first: Int, $lastTimestamp: BigInt, $nowTimestamp: BigInt) {
-//     states(
-//       first: $first,
-//       where: { timestamp_gt: $lastTimestamp, timestamp_lt: $nowTimestamp },
-//       orderBy: "timestamp",
-//       orderDirection: desc,
-//     ) {
-//       id
-//       timestamp
-//       usd
-//       volume
-//       floor
-//       topSale {
-//         tokenId
-//         value
-//       }
-//       sales
-//       owners
-//       topBid {
-//         tokenId
-//         value
-//       }
-//       bids
-//     }
-//   }
-// `;
-
-// const GET_ALL_LISTINGS = gql`
-//   query GetListings(
-//     $listingSkip: Int!,
-//     $bidSkip: Int!,
-//     $limit: Int!
-//   ) {
-//     listings(
-//       first: $limit,
-//       skip: $listingSkip,
-//       orderBy: "blockTimestamp",
-//       orderDirection: desc
-//     ) {
-//       id
-//       value
-//       blockTimestamp
-//     }
-
-//     bids(
-//       first: $limit,
-//       skip: $bidSkip,
-//       orderBy: "blockTimestamp",
-//       orderDirection: desc
-//     ) {
-//       id
-//       value
-//       blockTimestamp
-//     }
-//   }
-// `;
-
-// const GET_TOP_SALES = gql`
-//   query GetTopSales($limit: Int!) {
-//     events(
-//       where: {type: "Sale"},
-//       first: $limit,
-//       orderBy: value,
-//       orderDirection: desc
-//     ) {
-//       type
-//       tokenId
-//       value
-//       usd
-//       blockTimestamp
-//       transactionHash
-//     }
-//   }
-// `;
 
 @Injectable({
   providedIn: 'root'
@@ -105,18 +29,14 @@ const supabase = createClient(supabaseUrl, supabaseKey)
 
 export class DataService {
 
+  public prefix: string = environment.chainId === 1 ? '_mainnet' : '_goerli';
+
   staticUrl = environment.staticUrl;
 
   private attributesData!: any;
 
   private statesData = new BehaviorSubject<State[]>([]);
   statesData$ = this.statesData.asObservable();
-
-  private marketData = new BehaviorSubject<Phunk[]>([]);
-  marketData$ = this.marketData.asObservable();
-
-  private ownedData = new BehaviorSubject<Phunk[]>([]);
-  ownedData$ = this.ownedData.asObservable();
 
   private eventsData = new BehaviorSubject<Event[]>([]);
   eventsData$ = this.eventsData.asObservable();
@@ -127,13 +47,26 @@ export class DataService {
   private usd = new BehaviorSubject<number>(0);
   usd$ = this.usd.asObservable();
 
+  private phunksTableUpdate = new BehaviorSubject<RealtimePostgresChangesPayload<any> | {}>({});
+  phunksTableUpdate$ = this.phunksTableUpdate.asObservable();
+
+  private eventsTableUpdate = new BehaviorSubject<RealtimePostgresChangesPayload<any> | {}>({});
+  eventsTableUpdate$ = this.eventsTableUpdate.asObservable();
+
+  private listingsTableUpdate = new BehaviorSubject<RealtimePostgresChangesPayload<any> | {}>({});
+  listingsTableUpdate$ = this.listingsTableUpdate.asObservable();
+
+  private bidsTableUpdate = new BehaviorSubject<RealtimePostgresChangesPayload<any> | {}>({});
+  bidsTableUpdate$ = this.bidsTableUpdate.asObservable();
+
   filterData = filterData;
 
   attributes!: any;
 
-  prefix: string = environment.chainId === 1 ? '_mainnet' : '_goerli';
+  walletAddress$ = this.store.select(state => state.appState.walletAddress);
 
   constructor(
+    private store: Store<GlobalState>,
     private http: HttpClient,
     private stateSvc: StateService,
     private weiToEthPipe: WeiToEthPipe,
@@ -147,10 +80,53 @@ export class DataService {
     //   tap((res) => this.currentFloor.next(this.weiToEthPipe.transform(res[0].floor)))
     // ).subscribe();
 
-    this.stateSvc.walletAddress$.pipe(
-      switchMap((res) => res ? this.fetchOwned(res) : of([])),
-      tap((res) => this.setOwned(res))
-    ).subscribe();
+    supabase
+      .channel('any')
+      .on('postgres_changes', { event: '*', schema: 'public' }, (payload) => {
+
+        console.log('Realtime update', payload);
+
+        if (!payload) return;
+        const { table } = payload;
+
+        // if (table === 'phunks' + this.prefix) {
+        //   this.phunksTableUpdate.next(payload);
+        // }
+
+        if (table === 'events' + this.prefix) {
+          this.store.dispatch(refreshSinglePhunk());
+          this.store.dispatch(fetchMarketData());
+        }
+
+        // if (table === 'listings' + this.prefix) {
+        //   this.store.dispatch(refreshSinglePhunk());
+        //   this.store.dispatch(fetchMarketData());
+        // }
+
+        // if (table === 'bids' + this.prefix) {
+        //   this.store.dispatch(refreshSinglePhunk());
+        //   this.store.dispatch(fetchMarketData());
+        // }
+
+      }).subscribe();
+  }
+
+  getAllData(): Observable<Phunk[]> {
+    return of([]);
+    // return this.marketData$.pipe(
+    //   switchMap(() => this.getAttributes()),
+    //   map((attributes) => {
+    //     const all = Object.keys(attributes).map((k) => ({
+    //       id: k,
+    //       attributes: (attributes as any)[k],
+    //     }));
+    //     for (const phunk of this.marketData.getValue()) {
+    //       const i = Number(phunk.id);
+    //       all[i] = phunk;
+    //     }
+    //     return all;
+    //   })
+    // );
   }
 
   getFloor(): number {
@@ -179,126 +155,32 @@ export class DataService {
   // OWNED /////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  fetchOwned(address: string): Observable<Phunk[]> {
-
+  fetchOwned(address: string): Observable<any[]> {
+    address = address.toLowerCase();
     const request = supabase
       .from('phunks' + this.prefix)
       .select('*')
-      .eq('owner', address);
-
-    return from(request).pipe(
-      map((res: any) => res.data.map((item: any) => ({
-        id: item.phunkId,
-        owner: {
-          id: item.owner,
-        },
-        prevOwner: {
-          id: item.prevOwner,
-        },
-        attributes: [],
-      }))),
-      switchMap((res: Phunk[]) => this.addAttributes(res)),
-      catchError((err) => {
-        console.log(err);
-        return EMPTY;
-      })
-    );
-  }
-
-  getOwned(): Phunk[] {
-    return this.ownedData.getValue();
-  }
-
-  setOwned(owned: Phunk[]): void {
-    this.ownedData.next(owned);
-  }
-
-  getAllData(): Observable<Phunk[]> {
-    return this.marketData$.pipe(
-      switchMap(() => this.getAttributes()),
-      map((attributes) => {
-        const all = Object.keys(attributes).map((k) => ({
-          id: k,
-          attributes: (attributes as any)[k],
-        }));
-        for (const phunk of this.marketData.getValue()) {
-          const i = Number(phunk.id);
-          all[i] = phunk;
-        }
-        return all;
-      })
-    );
+      .or(`owner.eq.${address},and(owner.eq.${environment.phunksMarketAddress},prevOwner.eq.${address})`);
+    return from(request).pipe(map((res) => res.data as any[]));
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   // MARKET DATA ///////////////////////////////////////////////////////////////////////////////////////////////////////
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  getMarketData(): void {
+  fetchMarketData(): Observable<[Listing[], Bid[]]> {
+    const listingsQuery = supabase
+      .from('listings' + this.prefix)
+      .select(`*, phunks${this.prefix}(phunkId)`);
 
-    // const pageLimit = 1000;
-    // let bidSkip = 0;
-    // let listingSkip = 0;
-    // let isFirst = true;
+    const bidsQuery = supabase
+      .from('bids' + this.prefix)
+      .select(`*, phunks${this.prefix}(phunkId)`);
 
-    // const fetchDataWithCursor = (bidSkip: number, listingSkip: number) => {
-    //   const q: QueryOptions = {
-    //     query: GET_ALL_LISTINGS,
-    //     variables: { bidSkip, listingSkip, limit: pageLimit },
-    //   };
-    //   return this.apollo.query(q);
-    // };
-
-    // const recursiveFetch = (bidSkip: number, listingSkip: number, bids: any[] = [], listings: any[] = []): Observable<any> => {
-    //   return fetchDataWithCursor(bidSkip, listingSkip).pipe(
-    //     switchMap((res: any) => {
-    //       const newBids = [...bids, ...res.data.bids];
-    //       const newListings = [...listings, ...res.data.listings];
-
-    //       bidSkip += res.data.bids.length;
-    //       listingSkip += res.data.listings.length;
-
-    //       if (res.data.bids.length === pageLimit || res.data.listings.length === pageLimit) {
-    //         return recursiveFetch(bidSkip, listingSkip, newBids, newListings);
-    //       } else {
-    //         return of({ bids: newBids, listings: newListings });
-    //       }
-    //     })
-    //   );
-    // };
-
-    // timer(0, 30000).pipe(
-    //   switchMap(() => recursiveFetch(bidSkip, listingSkip)),
-    //   tap(() => {
-    //     bidSkip = 0;
-    //     listingSkip = 0;
-    //   }),
-    //   map(({ bids, listings }) => {
-    //     const merged: any = {};
-    //     for (const listing of listings) merged[listing.id] = {
-    //       ...merged[listing.id],
-    //       id: listing.id,
-    //       listing,
-    //     };
-    //     for (const bid of bids) merged[bid.id] = {
-    //       ...merged[bid.id],
-    //       id: bid.id,
-    //       bid,
-    //     };
-    //     return Object.values(merged) as Phunk[];
-    //   }),
-    //   switchMap((res: any) => this.addAttributes(res)),
-    //   tap((res) => {
-    //     if (isFirst) this.marketData.next(res);
-    //     isFirst = false;
-    //   }),
-    //   tap((marketData) => this.marketData.next(marketData)),
-    //   tap((res) => console.log('market!', res)),
-    //   catchError((error) => {
-    //     console.error('Error fetching data:', error);
-    //     return EMPTY;
-    //   }),
-    // ).subscribe();
+    return forkJoin([
+      from(listingsQuery).pipe(map((res) => res.data as any[])),
+      from(bidsQuery).pipe(map((res) => res.data as any[])),
+    ]);
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -339,20 +221,15 @@ export class DataService {
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   fetchEvents(limit: number, type?: EventType): Observable<any> {
-    console.log('fetchEvents', {limit, type});
-
     let query = supabase
       .from('events' + this.prefix)
       .select('*')
       .order('blockTimestamp', { ascending: false })
       .limit(limit);
 
-    if (type && type !== 'All') {
-      query = query.eq('type', type.toLowerCase());
-    }
+    if (type && type !== 'All') query = query.eq('type', type.toLowerCase());
 
     const response = query;
-
     return from(response).pipe(
       tap((res) => console.log('fetchEvents', res)),
       map((res: any) => res.data),
@@ -367,7 +244,7 @@ export class DataService {
       .order('blockTimestamp', { ascending: false });
 
     return from(response).pipe(
-      tap((res) => console.log('fetchSingleTokenEvents', res)),
+      // tap((res) => console.log('fetchSingleTokenEvents', res)),
       map((res: any) => res.data),
     );
   }
@@ -391,53 +268,19 @@ export class DataService {
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  // SINGLE PUNK ///////////////////////////////////////////////////////////////////////////////////////////////////////
+  // SINGLE PHUNK //////////////////////////////////////////////////////////////////////////////////////////////////////
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  fetchSinglePhunk(id: string): Observable<Phunk> {
-    const request = supabase
+  fetchSinglePhunk(phunkId: string): Observable<any> {
+    let query = supabase
       .from('phunks' + this.prefix)
       .select('*')
-      .eq('phunkId', id)
-      .single();
+      .limit(1);
 
-    return from(request).pipe(
-      tap((res) => console.log('fetchSinglePhunk', res)),
-      map((res: any) => ({
-        id: res.data.phunkId,
-        hashId: res.data.hashId,
-        owner: {
-          id: res.data.owner,
-        },
-        prevOwner: {
-          id: res.data.prevOwner,
-        },
-        isEscrowed: res.data.owner === environment.phunksMarketAddress,
-        attributes: [],
-      })),
-      switchMap((res: Phunk) => forkJoin([
-        this.addAttributes([res]),
-        from(Promise.all([
-          this.getListingForPhunkId(res.hashId),
-          this.getBidForPhunkId(res.hashId),
-        ]))
-      ])),
-      map(([[res], [listing, bid]]) => ({
-        ...res,
-        listing,
-        bid,
-        attributes: res.attributes.sort((a: Attribute, b: Attribute) => {
-          if (a.k === "Sex") return -1;
-          if (b.k === "Sex") return 1;
-          return 0;
-        }),
-      })),
-      tap((res) => console.log(res)),
-      catchError((err) => {
-        console.log(err);
-        return EMPTY;
-      })
-    );
+    if (phunkId.startsWith('0x')) query = query.eq('hashId', phunkId);
+    else query = query.eq('phunkId', phunkId);
+
+    return from(query).pipe(map((res: any) => res.data[0]));
   }
 
   async getListingForPhunkId(hashId: string | undefined): Promise<Listing | null> {
@@ -447,14 +290,12 @@ export class DataService {
     if (!call[0]) return null;
 
     return {
-      id: call[1],
-      value: call[3],
-      fromAccount: {
-        id: call[2]
-      },
-      toAccount: {
-        id: call[4]
-      },
+      createdAt: new Date(),
+      hashId: call[1],
+      minValue: call[3],
+      listedBy: call[2],
+      toAddress: call[4],
+      listed: call[0],
     };
   }
 
@@ -462,20 +303,19 @@ export class DataService {
     if (!hashId) return null;
 
     const call = await this.web3Svc.readContract('phunkBids', [hashId]);
-    console.log('getBidForPhunkId', call);
+    // console.log('getBidForPhunkId', call);
     if (!call[0]) return null;
 
     return {
-      id: call[1],
+      createdAt: new Date(),
+      hashId: call[1],
       value: call[3],
-      fromAccount: {
-        id: call[2]
-      },
+      fromAddress: call[2],
     };
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  // CIG ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  // USD ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   fetchUSDPrice() {

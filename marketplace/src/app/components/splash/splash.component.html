@@ -1,14 +1,12 @@
 
-<div class="images-wrapper">
+<div class="images-wrapper" *ngIf="tokenIds?.length">
   <div
     class="image-wrapper"
-    *ngFor="let svg of svgs">
+    *ngFor="let tokenId of tokenIds">
 
-    <img
-      [src]="svg"
-      alt=""
-      width="320"
-      height="320"
+    <app-phunk-image
+      [tokenId]="tokenId"
+      [color]="false"
     />
   </div>
 </div>

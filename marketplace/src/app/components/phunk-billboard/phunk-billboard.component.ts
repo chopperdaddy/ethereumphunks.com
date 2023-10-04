@@ -5,6 +5,8 @@ import { RouterModule } from '@angular/router';
 
 import { LazyLoadImageModule } from 'ng-lazyload-image';
 
+import { PhunkImageComponent } from '../phunk-image/phunk-image.component';
+
 import { TokenIdParsePipe } from '@/pipes/token-id-parse.pipe';
 
 import { DataService } from '@/services/data.service';
@@ -23,6 +25,7 @@ import { tap } from 'rxjs';
     LazyLoadImageModule,
     RouterModule,
 
+    PhunkImageComponent,
     TokenIdParsePipe
   ],
   templateUrl: './phunk-billboard.component.html',

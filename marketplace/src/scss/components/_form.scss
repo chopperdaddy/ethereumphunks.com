@@ -79,6 +79,11 @@ input {
     font-weight: 700;
     padding-bottom: .5rem;
   }
+
+  &.disabled {
+    opacity: .5;
+    pointer-events: none;
+  }
 }
 
 .form-actions {
@@ -97,5 +102,10 @@ input {
       opacity: .5;
       pointer-events: none;
     }
+  }
+
+  &.disabled {
+    opacity: .5;
+    pointer-events: none;
   }
 }

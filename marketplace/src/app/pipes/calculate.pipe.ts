@@ -18,7 +18,7 @@ export class CalcPipe implements PipeTransform {
     if (!type) return 0;
 
     if (type === 'lowestListingPrice') {
-      let val = Math.min(...value.map((item) => Number(formatEther(BigInt(item.listing!.value!)))));
+      let val = Math.min(...value.map((item) => Number(formatEther(BigInt(item.listing!.minValue!)))));
       return val;
     }
 

@@ -24,9 +24,10 @@ import { PropertiesPipe } from '@/pipes/properties';
 
 import { WalletAddressDirective } from '@/directives/wallet-address.directive';
 
-import { Filters, Sorts, WrappedFilters } from '@/models/pipes';
+import { Filters, Sorts } from '@/models/pipes';
 
 import { BehaviorSubject } from 'rxjs';
+import { environment } from 'src/environments/environment';
 
 @Component({
   selector: 'app-phunk-grid-view',
@@ -55,6 +56,8 @@ import { BehaviorSubject } from 'rxjs';
 
 export class PhunkGridViewComponent implements AfterViewInit, OnChanges {
 
+  escrowAddress = environment.phunksMarketAddress;
+
   private activeFilters = new BehaviorSubject({});
   activeFilters$ = this.activeFilters.asObservable();
   activeFiltersModel: any = {};
@@ -68,11 +71,6 @@ export class PhunkGridViewComponent implements AfterViewInit, OnChanges {
   private activeSort = new BehaviorSubject(this.sorts[0]);
   activeSort$ = this.activeSort.asObservable();
   activeSortModel: any = this.sorts[0];
-
-  wrappedFilters: WrappedFilters[] = ['All', 'Wrapped', 'Unwrapped'];
-  activeWrappedFilterModel: WrappedFilters = this.wrappedFilters[0];
-  private activeWrappedFilters = new BehaviorSubject(this.wrappedFilters[0]);
-  activeWrappedFilters$ = this.activeWrappedFilters.asObservable();
 
   @Input() phunkData: Phunk[] = [];
   @Input() viewType: ViewType = 'medium';
@@ -89,10 +87,10 @@ export class PhunkGridViewComponent implements AfterViewInit, OnChanges {
   objectKeys = Object.keys;
   limitArr = Array.from({length: this.limit}, (_, i) => i);
   marketTitles: any = {
-    all: 'All EthPhunks',
-    listings: 'EthPhunks for Sale',
+    all: 'All EtherPhunks',
+    listings: 'EtherPhunks for Sale',
     bids: 'Current Bids',
-    owned: 'EthPhunks Owned'
+    owned: 'EtherPhunks Owned'
   };
 
   constructor(
@@ -143,10 +141,6 @@ export class PhunkGridViewComponent implements AfterViewInit, OnChanges {
 
   setSort($event: any): void {
     this.activeSort.next({ ...$event });
-  }
-
-  setWrappedFilter($event: any): void {
-    this.activeWrappedFilters.next($event);
   }
 
   pageChanged($event: any) {

@@ -1,17 +1,19 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
+import { Store } from '@ngrx/store';
 
 import { DataService } from '@/services/data.service';
 import { StateService } from '@/services/state.service';
+
+import { GlobalState } from '@/models/global-state';
+import { Filters, Sorts } from '@/models/pipes';
+import { Phunk } from '@/models/graph';
 
 import { BehaviorSubject } from 'rxjs';
 import { map, switchMap, tap } from 'rxjs/operators';
 
 import { PhunkGridViewComponent } from '@/components/phunk-grid-view/phunk-grid-view.component';
-
-import { Filters, Sorts } from '@/models/pipes';
-import { Phunk } from '@/models/graph';
 
 @Component({
   standalone: true,
@@ -26,7 +28,7 @@ import { Phunk } from '@/models/graph';
 
 export class MarketComponent {
 
-  private phunkData = new BehaviorSubject<Phunk[]>([]);
+  private phunkData = new BehaviorSubject<Phunk[] | null>([]);
   phunkData$ = this.phunkData.asObservable();
 
   private marketType = new BehaviorSubject<Filters | null>(null);
@@ -34,7 +36,10 @@ export class MarketComponent {
 
   activeSort: Sorts = 'price-low';
 
+  marketData$ = this.store.select(state => state.appState.marketData);
+
   constructor(
+    private store: Store<GlobalState>,
     public route: ActivatedRoute,
     private router: Router,
     public dataSvc: DataService,
@@ -66,7 +71,7 @@ export class MarketComponent {
           return this.dataSvc.getAllData();
         }
 
-        return this.dataSvc.marketData$;
+        return this.marketData$;
       }),
       // tap((res: Phunk[]) => console.log('Phunks', res.length)),
       tap(() => this.stateSvc.setMarketLoading(false))

@@ -3,9 +3,11 @@
   "version": "0.0.0",
   "scripts": {
     "ng": "ng",
-    "start": "ng serve",
+    "start": "ng serve --host 0.0.0.0 --port 4300",
     "start:prod": "ng serve --configuration production",
     "build": "ng build",
+    "build:goerli": "ng build --configuration goerli",
+    "build:mainnet": "ng build --configuration mainnet",
     "watch": "ng build --watch --configuration development",
     "test": "ng test"
   },

@@ -7,7 +7,7 @@ import { Observable, catchError, filter, of, tap } from 'rxjs';
 import { Address, FallbackTransport, TransactionReceipt, formatEther, isAddress, parseEther, toHex } from 'viem';
 import { mainnet, goerli } from 'viem/chains';
 
-import { Chain, Config, PublicClient, WebSocketPublicClient, configureChains, createConfig, disconnect, getAccount, getPublicClient, getWalletClient, switchNetwork, watchAccount } from '@wagmi/core';
+import { Chain, Config, PublicClient, WebSocketPublicClient, configureChains, createConfig, disconnect, getAccount, getNetwork, getPublicClient, getWalletClient, switchNetwork, watchAccount } from '@wagmi/core';
 import { jsonRpcProvider } from '@wagmi/core/providers/jsonRpc';
 
 import { EthereumClient, w3mConnectors } from '@web3modal/ethereum';
@@ -103,6 +103,11 @@ export class EthService {
   }
 
   async connectWeb3(address: string): Promise<void> {
+
+    if (this.checkNetwork() !== environment.chainId) {
+      await switchNetwork({ chainId: environment.chainId });
+    }
+
     if (!address) return;
     address = address.toLowerCase();
 
@@ -123,6 +128,11 @@ export class EthService {
     this.stateSvc.setWalletAddress(address);
   }
 
+  checkNetwork(): number | undefined {
+    const network = getNetwork();
+    return network.chain?.id;
+  }
+
   //////////////////////////////////
   // TXNS //////////////////////////
   //////////////////////////////////
@@ -133,11 +143,8 @@ export class EthService {
     const walletClient = await getWalletClient();
     const data = toHex(content);
 
-    const chainId = await walletClient?.getChainId();
-    if (chainId !== environment.chainId) await switchNetwork({ chainId: environment.chainId });
-
     return await walletClient?.sendTransaction({
-      chain: environment.production ? mainnet : goerli,
+      chain: this.checkNetwork() === 1 ? mainnet : goerli,
       to: this.stateSvc.getWalletAddress() as Address,
       value: BigInt(0),
       data,
@@ -146,13 +153,10 @@ export class EthService {
 
   async transferEthPhunk(hashId: string, toAddress: string): Promise<`0x${string}` | undefined> {
     const walletClient = await getWalletClient();
-    const chain = environment.production ? mainnet : goerli;
-
     const chainId = await walletClient?.getChainId();
-    if (chainId !== environment.chainId) await switchNetwork({ chainId: environment.chainId });
 
     return await walletClient?.sendTransaction({
-      chain,
+      chain: this.checkNetwork() === 1 ? mainnet : goerli,
       to: toAddress as `0x${string}`,
       value: BigInt(0),
       data: hashId as `0x${string}`,

@@ -39,9 +39,7 @@
             <ng-container
               *ngIf="
                 event.toAccount &&
-                (event.type === 'Transferred' ||
-                event.type === 'Wrapped' ||
-                event.type === 'Unwrapped')">
+                (event.type === 'Transferred'">
 
               <app-wallet-address
                 [address]="event.toAccount.id">
@@ -141,7 +139,7 @@
   <section class="sales-wrapper">
     <h2>Largest Sales</h2>
     <div class="sales-items">
-      <div class="sales-item" *ngFor="let i of [1,1,1,1,1,1,1,1,1,1,1,1]">
+      <div class="sales-item" *ngFor="let i of [1,1,1,1,1,1]">
         <div class="image-wrapper placeholder">
           <img
             [lazyLoad]="'assets/loadingphunk.png'"
@@ -164,7 +162,7 @@
   <section class="events-wrapper">
     <h2>Recent Transactions</h2>
     <div class="events-items">
-      <div class="event-item" *ngFor="let i of [1,1,1,1,1,1,1,1,1,1,1,1]">
+      <div class="event-item" *ngFor="let i of [1,1,1,1,1,1,]">
         <div class="image-wrapper placeholder">
           <img
             [lazyLoad]="'assets/loadingphunk.png'"

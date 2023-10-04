@@ -6,13 +6,12 @@ export interface Account {
 export interface Phunk {
   id: string;
   hashId?: string;
-  owner?: Account;
-  prevOwner?: Account;
-  wrapped?: boolean;
+  owner?: string;
+  prevOwner?: string | null;
+  attributes: Attribute[];
   isEscrowed?: boolean;
   bid?: Bid | null;
   listing?: Listing | null;
-  attributes: Attribute[];
 }
 
 export interface Attribute {
@@ -21,24 +20,23 @@ export interface Attribute {
 }
 
 export interface Listing {
-  id: string;
-  phunk?: Phunk;
-  value: string;
-  usd?: string;
-  fromAccount?: Account;
-  toAccount?: Account;
-  blockTimestamp?: string;
-  source?: Source;
+  hashId: string;
+  createdAt: Date;
+  toAddress: string;
+  listed: boolean;
+  minValue: string;
+  listedBy: string;
+  txHash?: string;
+  [key: string]: any;
 }
 
 export interface Bid {
-  id: string;
-  phunk?: Phunk;
+  hashId: string;
+  createdAt: Date;
+  fromAddress: string;
   value: string;
-  usd?: string;
-  fromAccount?: Account;
-  blockTimestamp?: string;
-  source?: Source;
+  txHash?: string;
+  [key: string]: any;
 }
 
 export interface Event {

@@ -7,9 +7,9 @@
   <div class="user-tools">
 
     <div class="connect-menu">
-      <ng-container *ngIf="(stateSvc.web3Connected$ | async)">
+      <ng-container *ngIf="(connected$ | async)">
         <a
-          *ngIf="(stateSvc.walletAddress$ | async) as address"
+          *ngIf="(walletAddress$ | async) as address"
           [routerLink]="['/', 'owned']"
           [href]="'/owned'"
           [queryParams]="{ address }">
@@ -21,7 +21,7 @@
       </ng-container>
 
       <button
-        *ngIf="stateSvc.hasWithdrawal$ | async; else connectButton"
+        *ngIf="hasWithdrawal$ | async; else connectButton"
         (click)="web3Svc.withdraw()"
         class="withdraw">
 
@@ -32,9 +32,9 @@
       <ng-template #connectButton>
         <button
           class="connect"
-          (click)="connect()">
+          (click)="connect$.next()">
 
-          {{ (stateSvc.web3Connected$ | async) ? 'Connected' : 'Connect' }}
+          {{ (connected$ | async) ? 'Disconnect' : 'Connect' }}
         </button>
       </ng-template>
     </div>

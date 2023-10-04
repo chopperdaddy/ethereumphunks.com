@@ -1590,6 +1590,27 @@
   dependencies:
     tslib "^2.3.1"
 
+"@ngrx/effects@^16.3.0":
+  version "16.3.0"
+  resolved "https://registry.yarnpkg.com/@ngrx/effects/-/effects-16.3.0.tgz#ebc3508d9e41b9f7dfab6b28585a6e2461b7cdfa"
+  integrity sha512-QvN+jJFqBHH6x5eqtFVeMTcotoWMLTrDjK4wW61hmbYafGmBbEnIgikTsn2DSPA67io0DhgDtBHoBKnicy1gEw==
+  dependencies:
+    tslib "^2.0.0"
+
+"@ngrx/store-devtools@^16.3.0":
+  version "16.3.0"
+  resolved "https://registry.yarnpkg.com/@ngrx/store-devtools/-/store-devtools-16.3.0.tgz#c5e8971f6ca03d8b6ea22075d248eafd59bfb4f9"
+  integrity sha512-Ou/aXxJmd9UgYliL09hmnlLdk35dJ8S56rJCHgeJlMPb8j0LDR7Olfpsa7Asi63Zvtg2MYZn1p1G0Tsb+0rk/Q==
+  dependencies:
+    tslib "^2.0.0"
+
+"@ngrx/store@^16.3.0":
+  version "16.3.0"
+  resolved "https://registry.yarnpkg.com/@ngrx/store/-/store-16.3.0.tgz#e1174438f8e05d7ddf8db4c38013515b1ac80796"
+  integrity sha512-aWQY41M7O0sMpTmM+OOPBPwKQWHhmkCStizFB1GdiGud8DU5fz0BdUiy6o2+feZypMzczqbwTnq+AxxxrWYqoA==
+  dependencies:
+    tslib "^2.0.0"
+
 "@ngtools/webpack@16.1.3":
   version "16.1.3"
   resolved "https://registry.yarnpkg.com/@ngtools/webpack/-/webpack-16.1.3.tgz#c8afd2504e1c5dbcc688be897b2f441a7bd91800"
