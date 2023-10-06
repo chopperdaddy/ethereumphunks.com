@@ -1,3 +1,8 @@
+// Possible edg cases
+// - Non EtherPhunk is sent to contract
+// - User escrows, lists & removes from escrow -- Listing is still valid
+// -
+
 // SPDX-License-Identifier: MIT License
 pragma solidity 0.8.17;
 
@@ -168,7 +173,6 @@ contract EtherPhunksMarket is ReentrancyGuard, EthscriptionsEscrower {
         bytes32 phunkId,
         uint minPrice
     ) public nonReentrant {
-
         address seller = msg.sender;
 
         require(
