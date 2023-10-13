@@ -24,7 +24,7 @@ export class DataService {
 
   async getMintCount(): Promise<number> {
     const { data, error } = await supabase
-      .rpc('count_ethphunks');
+      .rpc('count_ethphunks_goerli');
 
     if (error) throw error;
     return data;
