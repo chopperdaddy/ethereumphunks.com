@@ -172,6 +172,8 @@ export class EthscribeComponent {
   async ethscribePhunk(): Promise<any> {
     this.ethscribing = true;
 
+    await this.ethSvc.switchNetwork();
+
     const ethscription = this.activePhunkDataUri;
     const hash = await this.ethSvc.ethscribe(ethscription);
     this.transaction = {
@@ -245,6 +247,8 @@ export class EthscribeComponent {
 
       let toAddress: string = this.transferAddress.value;
       if (!toAddress) throw new Error('Invalid address');
+
+      await this.ethSvc.switchNetwork();
 
       if (toAddress.endsWith('.eth')) {
         const resolvedAddress = await this.ethSvc.getEnsOwner(toAddress);

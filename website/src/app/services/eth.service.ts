@@ -102,11 +102,14 @@ export class EthService {
     }
   }
 
-  async connectWeb3(address: string): Promise<void> {
-
+  async switchNetwork(): Promise<void> {
     if (this.checkNetwork() !== environment.chainId) {
       await switchNetwork({ chainId: environment.chainId });
     }
+  }
+
+  async connectWeb3(address: string): Promise<void> {
+    await this.switchNetwork();
 
     if (!address) return;
     address = address.toLowerCase();
