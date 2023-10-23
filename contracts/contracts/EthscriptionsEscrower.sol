@@ -60,7 +60,7 @@ contract EthscriptionsEscrower {
   function withdrawEthscription(bytes32 ethscriptionId) internal virtual {
     _transferEthscription(msg.sender, msg.sender, ethscriptionId);
 
-    emit PotentialEthscriptionWithdrawn(msg.sender, ethscriptionId);
+    // emit PotentialEthscriptionWithdrawn(msg.sender, ethscriptionId);
   }
 
   function _onPotentialEthscriptionDeposit(
@@ -81,7 +81,7 @@ contract EthscriptionsEscrower {
       previousOwner
     ][potentialEthscriptionId] = block.number;
 
-    emit PotentialEthscriptionDeposited(previousOwner, potentialEthscriptionId);
+    // emit PotentialEthscriptionDeposited(previousOwner, potentialEthscriptionId);
   }
 
   function _validateTransferEthscription(

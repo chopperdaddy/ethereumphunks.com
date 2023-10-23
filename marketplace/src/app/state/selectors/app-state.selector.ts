@@ -33,3 +33,48 @@ export const selectOwnedPhunks = createSelector(
   selectAppState,
   (appState: AppState) => appState.ownedPhunks
 );
+
+export const selectAllPhunks = createSelector(
+  selectAppState,
+  (appState: AppState) => appState.allPhunks
+);
+
+export const selectMarketType = createSelector(
+  selectAppState,
+  (appState: AppState) => appState.marketType
+);
+
+export const selectActiveSort = createSelector(
+  selectAppState,
+  (appState: AppState) => appState.activeSort
+);
+
+// export const selectActiveFilters = createSelector(
+//   selectAppState,
+//   (appState: AppState) => appState.activeFilters
+// );
+
+export const selectListings = createSelector(
+  selectAppState,
+  (appState: AppState) => appState.listings
+);
+
+export const selectBids = createSelector(
+  selectAppState,
+  (appState: AppState) => appState.bids
+);
+
+export const selectEvents = createSelector(
+  selectAppState,
+  (appState: AppState) => appState.events
+);
+
+export const selectTxHistory = createSelector(
+  selectAppState,
+  (appState: AppState) => appState.txHistory
+);
+
+export const selectActiveTraitFilters = createSelector(
+  selectAppState,
+  (appState: AppState) => appState.activeTraitFilters
+);

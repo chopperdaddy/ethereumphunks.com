@@ -14,8 +14,10 @@ export class CalcPipe implements PipeTransform {
 
   transform(value: Phunk[], type: Calcs): number {
 
+    // console.log(value, type)
     if (!value?.length) return 0;
     if (!type) return 0;
+    // console.log(value)
 
     if (type === 'lowestListingPrice') {
       let val = Math.min(...value.map((item) => Number(formatEther(BigInt(item.listing!.minValue!)))));
@@ -33,16 +35,7 @@ export class CalcPipe implements PipeTransform {
     }
 
     if (type === 'totalBidsValue') {
-      // console.log(value)
       let val = value.reduce((sum, obj) => sum + Number(formatEther(BigInt(obj.bid!.value!))), 0);
-
-      let v = 0;
-      value.sort((a, b) => Number(formatEther(BigInt(b.bid!.value))) - Number(formatEther(BigInt(a.bid!.value)))).map((res) => {
-        v = v + Number(formatEther(BigInt(res.bid!.value)))
-        // console.log(v, Number(formatEther(BigInt(res.bid!.value))))
-      });
-
-      // console.log('val', v)
       return val;
     }
 

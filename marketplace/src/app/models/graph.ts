@@ -1,3 +1,5 @@
+import { EventType } from './global-state';
+
 export interface Account {
   id: string;
   phunks?: Phunk[];
@@ -81,5 +83,3 @@ export interface Source {
   icon: string;
   url: string;
 }
-
-export type EventType = 'All' | 'Created' | 'transfer' | 'Offered' | 'BidEntered' | 'BidWithdrawn' | 'sale' | 'OfferWithdrawn';

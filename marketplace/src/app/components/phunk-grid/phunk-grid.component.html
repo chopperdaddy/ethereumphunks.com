@@ -1,0 +1,135 @@
+<ng-container *ngIf="(marketType$ | async) as marketType">
+  <div
+    *ngIf="phunkData; else placeholder"
+    class="grid-wrapper"
+    [class.selectable]="selectable"
+    [class]="viewType">
+
+    <ng-container *ngFor="let item of phunkData |
+      properties : (activeTraitFilters$ | async) : traitCount |
+      sort: (activeSort$ | async) |
+      paginate: {
+        id: 'market',
+        itemsPerPage: limit,
+        currentPage: currentPage
+      };
+      trackBy: identify;
+      index as i">
+
+      <ng-container *ngTemplateOutlet="phunkItem; context:{ $implicit: item, idx: i }"></ng-container>
+    </ng-container>
+  </div>
+
+  <ng-template #phunkItem let-item>
+    <div
+      class="item"
+      [class.selected]="selected.includes(item.hashId)">
+
+      <ng-container *ngIf="viewType !== 'compact'">
+        <ng-container *ngIf="item.listing?.source as source">
+          <a
+            [href]="item.listing?.source?.url"
+            target="_blank"
+            class="listing-source">
+            <img
+              [src]="source.icon"
+              width="20"
+              height="20"
+            />
+          </a>
+        </ng-container>
+      </ng-container>
+
+      <div
+        *ngIf="selectable"
+        class="selector">
+
+        <input
+          #phunkCheck
+          type="checkbox"
+          [id]="'checkbox-' + item.id"
+          [attr.data-hash-id]="item.hashId"
+          (change)="selectPhunk(item.hashId)"
+        />
+
+        <label [for]="'checkbox-' + item.id">
+          <div class="check"></div>
+        </label>
+      </div>
+
+      <a
+        class="item-link"
+        [routerLink]="['/', 'details', item.id]"
+        [href]="'/details/' + item.id">
+
+        <div
+          class="image-wrapper"
+          [class.listing]="marketType === 'listings' && item?.listing"
+          [class.bid]="marketType === 'bids' && item?.bid"
+          [class.in-escrow]="item.owner === escrowAddress">
+
+          <img
+            [lazyLoad]="dataSvc.staticUrl + '/images/phunk' + (item.id | tokenIdParse) + '.svg'"
+            [defaultImage]="'assets/loadingphunk.png'"
+            width="50"
+            height="50"
+          />
+        </div>
+
+        <div
+          class="labels-wrapper"
+          *ngIf="viewType !== 'compact'">
+
+          <div class="label">#{{ item.id }}</div>
+
+          <ng-container *ngIf="marketType === 'listings'">
+            <ng-container *ngIf="item.listing as listing">
+              <p i18n>
+                {{ (listing.minValue | weiToEth) | formatCash }}Ξ<br />
+                ${{ ((listing.minValue | weiToEth) * ((dataSvc.usd$ | async) || 0)) | formatCash }}
+              </p>
+            </ng-container>
+          </ng-container>
+
+          <ng-container *ngIf="marketType === 'bids'">
+            <ng-container *ngIf="item.bid as bid">
+              <p i18n>
+                {{ (bid.value | weiToEth) | formatCash }}Ξ<br />
+                ${{ ((bid.value | weiToEth) * ((dataSvc.usd$ | async) || 0)) | formatCash }}
+              </p>
+            </ng-container>
+          </ng-container>
+        </div>
+      </a>
+
+    </div>
+  </ng-template>
+</ng-container>
+
+<ng-template #placeholder>
+  <div
+    class="grid-wrapper"
+    [class]="viewType">
+
+    <div class="item-link" *ngFor="let i of limitArr">
+      <div class="item">
+
+        <div class="image-wrapper">
+          <img
+            [src]="'assets/loadingphunk.png'"
+            width="50"
+            height="50"
+          />
+        </div>
+
+        <div
+          class="labels-wrapper"
+          *ngIf="viewType !== 'compact'">
+
+          <div class="label">#0000</div>
+          <div class="label">Loading...<br />&nbsp;</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</ng-template>

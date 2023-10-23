@@ -3,7 +3,7 @@ export type Calcs = 'lowestListingPrice' | 'highestListingPrice' | 'lowestBidPri
 
 export type Sorts = 'recent' | 'price-low' | 'price-high' | 'id';
 
-export type Filters = 'listings' | 'bids' | 'owned' | 'all';
+export type MarketTypes = 'listings' | 'bids' | 'owned' | 'all';
 
 export type Totals = 'sales';
 

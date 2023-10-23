@@ -1,21 +1,25 @@
 @import 'abstracts/variables';
 @import 'abstracts/mixins';
 
-canvas {
-  // border: 1px solid red;
-  width: 24rem;
-  height: 24rem;
-  // image-rendering: -moz-crisp-edges;
-  // image-rendering: -webkit-crisp-edges;
-  // image-rendering: pixelated;
-  // image-rendering: crisp-edges;
+:host {
+  display: block;
+}
+
+app-phunk-billboard {
+  position: fixed;
+  z-index: 0;
+  top: 0;
+  left: 0;
+  width: 100%;
 }
 
 .view-item-wrapper {
+  margin-top: var(--billboard-height);
+  position: relative;
+  z-index: 1;
+  background-color: rgba(var(--background), 1);
 
   .details-wrapper {
-
-    padding: 0 8rem;
 
     .title-wrapper {
       .title-color {
@@ -29,13 +33,6 @@ canvas {
 
           transform: translate(-.3rem, 0);
         }
-
-        p {
-          padding: 0;
-          margin: 0;
-          font-size: 1.4rem;
-          font-weight: 700;
-        }
       }
 
       h2 {
@@ -46,9 +43,20 @@ canvas {
       }
     }
 
-    .accessories-wrapper {
-      padding-top: 4rem;
+    .split {
+      display: grid;
+      grid-template-columns: calc(70% - 2rem) calc(30% - 2rem);
+      column-gap: 4rem;
 
+      padding-bottom: 6rem;
+
+      .left {}
+      .right {
+        padding: 4rem 0 0;
+      }
+    }
+
+    .accessories-wrapper {
       h2 {
         font-size: 2.4rem;
         padding-bottom: 2rem;
@@ -56,7 +64,7 @@ canvas {
 
       .accessories {
         display: grid;
-        grid-template-columns: repeat(4, 25%);
+        grid-template-columns: 100%;
         row-gap: 2rem;
 
         .accessory {
@@ -116,8 +124,6 @@ canvas {
 
     .actions-wrapper {
       padding: 2rem 0;
-      padding-bottom: 4rem;
-
       button,
       a {
         display: block;
@@ -184,181 +190,6 @@ canvas {
   }
 }
 
-.modal-overlay {
-  position: fixed;
-  z-index: 1001;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(var(--highlight), .5);
-
-  @include trans($duration: .2s);
-  opacity: 0;
-  visibility: hidden;
-  pointer-events: none;
-
-  display: flex;
-  align-items: flex-start;
-  justify-content: center;
-  padding-top: 16rem;
-
-  backdrop-filter: blur(.25rem);
-
-  .modal {
-    position: relative;
-    width: 100%;
-
-    max-height: 100%;
-    max-width: 60rem;
-
-    padding: 3rem;
-
-    background-color: rgba(var(--background), 1);
-    box-shadow: 0 3rem 10rem 0 rgba(var(--black), .25);
-
-    overflow: scroll;
-
-    .close-modal {
-      position: absolute;
-      top: 0;
-      right: 0;
-      z-index: 1;
-    }
-
-    h3 {
-      display: flex;
-      align-items: center;
-      font-size: 2rem;
-      font-weight: 700;
-      padding-bottom: 2rem;
-
-      img {
-        margin-right: 1rem;
-      }
-    }
-
-    .p-wrapper {
-      line-height: 1.5;
-      font-weight: 700;
-
-      .error {
-        color: rgba(var(--highlight), 1);
-      }
-    }
-
-    .floor-notice {
-      font-size: 1.4rem;
-      font-weight: 700;
-      padding: .5rem 0 0;
-      color: rgba(var(--highlight), 1);
-    }
-
-    .phunk-info {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-
-      padding-bottom: 3rem;
-
-      h2 {
-        padding: 0 0 2rem 0;
-      }
-
-      h4 {
-        line-height: 1.4;
-        font-size: 1.8rem;
-        text-align: center;
-
-        padding: 1rem 0;
-        margin-bottom: 1rem;
-
-        border-top: .2rem solid rgba(var(--text-color), .1);
-        border-bottom: .2rem solid rgba(var(--text-color), .1);
-      }
-
-      p {
-        min-width: 100%;
-      }
-
-      ul {
-        list-style: disc;
-        padding-left: 2rem;
-        padding-bottom: 2rem;
-
-        li {
-          padding: 0 0 .5rem 1rem;
-          line-height: 1.4;
-        }
-      }
-
-      .image-wrapper {
-        display: flex;
-        align-items: flex-end;
-        justify-content: center;
-        width: 24rem;
-        height: 24rem;
-        background-color: rgba(var(--base-color), 1);
-
-        img {
-          width: 20rem;
-          height: 20rem;
-          image-rendering: pixelated;
-        }
-      }
-    }
-
-    &.listing {
-      .phunk-info {
-        .state-selector {
-        }
-      }
-    }
-
-    @media (max-width: $mobile) {
-      top: 0;
-
-      .phunk-info {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-
-        h2 {
-          padding: 0 0 2rem 0;
-        }
-
-        .image-wrapper {
-          width: 24rem;
-          height: 18rem;
-
-          img {
-            width: 20rem;
-            height: 20rem;
-            image-rendering: pixelated;
-          }
-        }
-      }
-    }
-  }
-
-  &.active {
-    opacity: 1;
-    visibility: visible;
-    pointer-events: all;
-  }
-
-  @media (max-width: $mobile) {
-    padding-top: 0;
-
-    .modal {
-      width: 100%;
-
-    }
-  }
-}
-
 .state-selector-wrapper {
   width: calc(100% + 6rem);
   padding: 4rem 0 0;
@@ -421,6 +252,85 @@ canvas {
         app-phunk-image {
           // background-color: rgba(var(--sale-color), 1);
         }
+      }
+    }
+  }
+}
+
+// Modal
+
+.modal-phunk-info {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  padding-bottom: 3rem;
+
+  h2 {
+    padding: 0 0 2rem 0;
+  }
+
+  h4 {
+    line-height: 1.4;
+    font-size: 1.8rem;
+    text-align: center;
+
+    padding: 1rem 0;
+    margin-bottom: 1rem;
+
+    border-top: .2rem solid rgba(var(--text-color), .1);
+    border-bottom: .2rem solid rgba(var(--text-color), .1);
+  }
+
+  p {
+    min-width: 100%;
+  }
+
+  ul {
+    list-style: disc;
+    padding-left: 2rem;
+    padding-bottom: 2rem;
+
+    li {
+      padding: 0 0 .5rem 1rem;
+      line-height: 1.4;
+    }
+  }
+
+  .image-wrapper {
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    width: 24rem;
+    height: 24rem;
+    background-color: rgba(var(--base-color), 1);
+
+    img {
+      width: 20rem;
+      height: 20rem;
+      image-rendering: pixelated;
+    }
+  }
+
+  @media (max-width: $mobile) {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+
+    h2 {
+      padding: 0 0 2rem 0;
+    }
+
+    .image-wrapper {
+      width: 24rem;
+      height: 18rem;
+
+      img {
+        width: 20rem;
+        height: 20rem;
+        image-rendering: pixelated;
       }
     }
   }

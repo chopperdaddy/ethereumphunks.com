@@ -27,13 +27,12 @@ export class PhunkImageComponent implements OnChanges {
   constructor(private http: HttpClient) {}
 
   ngOnChanges(): void {
-
     const tokenId = this.formatNumber(this.tokenId);
-    const url = `${environment.staticUrl}/phunk${tokenId}.svg`;
+    const url = `${environment.staticUrl}/images/phunk${tokenId}.svg`;
 
     firstValueFrom(
       this.http.get(url, { responseType: 'text' }).pipe(
-        // tap(data => console.log(tokenId)),
+        // tap(data => console.log(data)),
         switchMap(data => from(svgson.parse(data))),
         map(data => this.color ? data : this.stripColors(data)),
         map(data => this.convertToBase64(data))

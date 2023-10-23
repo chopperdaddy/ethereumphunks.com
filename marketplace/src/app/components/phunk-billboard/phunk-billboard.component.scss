@@ -5,74 +5,6 @@
   display: block;
 }
 
-.breadcrumb {
-  display: flex;
-  align-items: center;
-
-  padding: 1.5rem 1rem;
-  background-color: rgba(var(--dark-text), .1);
-
-  .inner {
-    padding: 0 10rem;
-
-    .pfp-options-wrapper {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 0 1rem 2rem;
-
-      .pfp-options {
-        display: flex;
-        align-items: center;
-      }
-
-      .download-pfp {
-
-      }
-    }
-
-    .crumbs-wrapper {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-
-      .crumbs {
-        a {
-          padding: 0 1rem;
-
-          font-weight: 300;
-          font-size: 1.8rem;
-          color: rgba(var(--highlight), 1);
-          text-decoration: none;
-        }
-
-        .number {
-          font-size: 1.8rem;
-          padding-left: .5rem;
-          padding: 0 1rem;
-        }
-      }
-
-      .save-pfp {
-        button {
-          background: none;
-          padding: 0 1rem;
-          margin: 0;
-          color: rgba(var(--highlight), 1);
-          font-weight: 700;
-          font-size: 1.4rem;
-        }
-      }
-    }
-  }
-
-  @media (max-width: $mobile) {
-    .inner {
-      padding: 0;
-    }
-  }
-}
-
 .image-wrapper {
   position: relative;
 
@@ -81,7 +13,7 @@
   justify-content: center;
 
   width: 100%;
-  height: 50rem;
+  height: var(--billboard-height);
   background-color: rgba(var(--highlight), 1);
 
   img,

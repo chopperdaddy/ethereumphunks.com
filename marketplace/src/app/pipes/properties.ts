@@ -1,5 +1,6 @@
 import { Pipe, PipeTransform } from '@angular/core';
 import { Phunk } from '@/models/graph';
+import { TraitFilter } from '@/models/global-state';
 
 @Pipe({
   standalone: true,
@@ -8,19 +9,16 @@ import { Phunk } from '@/models/graph';
 
 export class PropertiesPipe implements PipeTransform {
 
-  transform(value: Phunk[], ...args: any[]): Phunk[] {
+  transform(value: Phunk[], activeTraitFilters: TraitFilter | null, traitCount: number): Phunk[] {
 
-    if (args[0]['address']) delete args[0]['address'];
+    if (!value) return [];
+    if (!activeTraitFilters) return value;
 
-    if (!value?.length) return [];
-    if (!args?.length) return value;
-
-    const traitCount = args[1];
     if (traitCount || traitCount === 0) {
       value = value.filter((res) => (res.attributes?.length - 2) === traitCount);
     }
 
-    const filtersLength = Object.keys(args[0]).length;
+    const filtersLength = Object.keys(activeTraitFilters).length;
 
     const filtered = value.filter((res: Phunk) => {
       const attrs = res.attributes;
@@ -28,7 +26,7 @@ export class PropertiesPipe implements PipeTransform {
         const found = attrs.filter((attr) => {
           const key = attr?.k?.replace(/ /g, '-')?.toLowerCase();
           const val = attr?.v?.replace(/ /g, '-')?.toLowerCase();
-          return args[0][key] === val;
+          return activeTraitFilters[key] === val;
         });
         if (found.length === filtersLength) return true;
       }

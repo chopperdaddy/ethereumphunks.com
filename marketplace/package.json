@@ -25,6 +25,7 @@
     "@apollo/client": "^3.7.16",
     "@ng-select/ng-select": "^10.0.3",
     "@ngrx/effects": "^16.3.0",
+    "@ngrx/router-store": "^16.3.0",
     "@ngrx/store": "^16.3.0",
     "@ngrx/store-devtools": "^16.3.0",
     "@supabase/supabase-js": "^2.32.0",

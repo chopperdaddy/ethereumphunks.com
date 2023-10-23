@@ -3,10 +3,11 @@ import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
 import { FormControl, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 
+import { Store } from '@ngrx/store';
 import { TimeagoModule } from 'ngx-timeago';
 import { LazyLoadImageModule } from 'ng-lazyload-image';
 
-import { PhunkGridViewComponent } from '@/components/phunk-grid-view/phunk-grid-view.component';
+import { PhunkGridComponent } from '@/components/phunk-grid/phunk-grid.component';
 import { TxOverviewComponent } from '@/components/overview/overview.component';
 import { SplashComponent } from '@/components/splash/splash.component';
 
@@ -17,16 +18,11 @@ import { Web3Service } from '@/services/web3.service';
 import { StateService } from '@/services/state.service';
 import { ThemeService } from '@/services/theme.service';
 
-import { FilterPipe } from '@/pipes/filter.pipe';
+import { FilterPipe } from '@/pipes/market-filter.pipe';
 import { CalcPipe } from '@/pipes/calculate.pipe';
-import { CountPipe } from '@/pipes/count.pipe';
 import { TokenIdParsePipe } from '@/pipes/token-id-parse.pipe';
 
-import { Phunk } from '@/models/graph';
-
-import { Observable } from 'rxjs';
 import { GlobalState } from '@/models/global-state';
-import { Store } from '@ngrx/store';
 
 @Component({
   standalone: true,
@@ -39,13 +35,12 @@ import { Store } from '@ngrx/store';
     LazyLoadImageModule,
 
     SplashComponent,
-    PhunkGridViewComponent,
+    PhunkGridComponent,
     TxOverviewComponent,
 
     WeiToEthPipe,
     FilterPipe,
     CalcPipe,
-    CountPipe,
     TokenIdParsePipe
   ],
   selector: 'app-index',
@@ -54,8 +49,6 @@ import { Store } from '@ngrx/store';
 })
 
 export class IndexComponent implements OnInit {
-
-  allData$!: Observable<Phunk[]>;
 
   phunkBoxLoading: boolean = false;
   phunkBoxError: boolean = false;
@@ -67,7 +60,11 @@ export class IndexComponent implements OnInit {
   randomPhunks: string[] = [ '7209', ...Array.from({length: 9}, () => `${Math.floor(Math.random() * 10000)}`)];
 
   walletAddress$ = this.store.select(state => state.appState.walletAddress);
-  marketData$ = this.store.select(state => state.appState.marketData);
+  allPhunks$ = this.store.select(state => state.appState.allPhunks);
+  // marketData$ = this.store.select(state => state.appState.marketData);
+
+  listings$ = this.store.select(state => state.appState.listings);
+  bids$ = this.store.select(state => state.appState.bids);
   ownedPhunks$ = this.store.select(state => state.appState.ownedPhunks);
 
   constructor(
@@ -77,9 +74,7 @@ export class IndexComponent implements OnInit {
     public dataSvc: DataService,
     public web3Svc: Web3Service,
     private router: Router
-  ) {
-    this.allData$ = this.dataSvc.getAllData();
-  }
+  ) {}
 
   ngOnInit(): void {}
 

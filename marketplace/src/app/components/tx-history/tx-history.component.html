@@ -17,7 +17,7 @@
       </thead>
       <tbody>
         <tr
-          *ngFor="let event of (tokenSales$ | async)"
+          *ngFor="let event of tokenSales"
           [class]="(event.type | lowercase) || 'transfer'">
 
           <td>

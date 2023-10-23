@@ -1,8 +1,9 @@
-import { Component, Input, OnChanges, OnDestroy, OnInit, SimpleChanges } from '@angular/core';
+import { Component, Input, OnChanges, OnDestroy, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { HttpClientModule } from '@angular/common/http';
 
+import { Store } from '@ngrx/store';
 import { LazyLoadImageModule } from 'ng-lazyload-image';
 
 import { WalletAddressDirective } from '@/directives/wallet-address.directive';
@@ -11,14 +12,13 @@ import { WeiToEthPipe } from '@/pipes/wei-to-eth.pipe';
 import { FormatCashPipe } from '@/pipes/format-cash.pipe';
 import { CamelCase2TitleCase } from '@/pipes/cc2tc.pipe';
 
-import { DataService } from '@/services/data.service';
+import { GlobalState } from '@/models/global-state';
 
-import { BehaviorSubject, Subject, catchError, filter, of, switchMap, takeUntil, tap } from 'rxjs';
-
-import { Event } from '@/models/graph';
-
-import { ZERO_ADDRESS } from '@/constants/utils';
 import { environment } from 'src/environments/environment';
+import { ZERO_ADDRESS } from '@/constants/utils';
+
+import { selectTxHistory } from '@/state/selectors/app-state.selector';
+import { clearTxHistory, fetchTxHistory } from '@/state/actions/app-state.action';
 
 @Component({
   standalone: true,
@@ -40,44 +40,25 @@ import { environment } from 'src/environments/environment';
   styleUrls: ['./tx-history.component.scss']
 })
 
-export class TxHistoryComponent implements OnDestroy, OnChanges {
+export class TxHistoryComponent implements OnChanges, OnDestroy {
 
   ZERO_ADDRESS = ZERO_ADDRESS;
+  explorerUrl = `https://${environment.chainId === 5 ? 'goerli.' : ''}etherscan.io`;
 
   @Input() hashId!: string | undefined;
 
-  explorerUrl = `https://${environment.chainId === 5 ? 'goerli.' : ''}etherscan.io`;
-
-  private activeHashId = new BehaviorSubject<string | undefined>(undefined);
-  activeHashId$ = this.activeHashId.asObservable();
-
-  private tokenSales = new BehaviorSubject<Event[] | null>(null);
-  tokenSales$ = this.tokenSales.asObservable();
-
-  private destroy$ = new Subject<void>();
+  tokenSales$ = this.store.select(selectTxHistory);
 
   constructor(
-    public dataSvc: DataService
-  ) {
-    this.activeHashId$.pipe(
-      filter((res) => !!res),
-      switchMap((res) => this.dataSvc.fetchSingleTokenEvents(res as string)),
-      tap((res: Event[]) => this.tokenSales.next(res)),
-      takeUntil(this.destroy$),
-      catchError((err) => {
-        console.log(err);
-        return of(null);
-      })
-    ).subscribe();
-  }
+    private store: Store<GlobalState>,
+  ) {}
 
   ngOnChanges(changes: SimpleChanges): void {
-    this.activeHashId.next(changes.hashId.currentValue);
+    console.log('TxHistoryComponent', changes);
+    this.store.dispatch(fetchTxHistory({ hashId: changes.hashId.currentValue }));
   }
 
   ngOnDestroy(): void {
-    this.destroy$.next();
-    this.destroy$.complete();
+    this.store.dispatch(clearTxHistory());
   }
-
 }

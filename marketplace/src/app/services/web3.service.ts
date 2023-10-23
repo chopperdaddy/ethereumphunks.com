@@ -155,17 +155,20 @@ export class Web3Service {
   }
 
   async sendEthscriptionToContract(tokenId: string): Promise<string | undefined> {
+    const escrowed = await this.isInEscrow(tokenId);
+    if (escrowed) throw new Error('Phunk already in escrow');
     return await this.transferPhunk(tokenId, marketAddress as `0x${string}`);
   }
 
   async withdrawPhunk(tokenId: string): Promise<string | undefined> {
     const escrowed = await this.isInEscrow(tokenId);
-    if (!escrowed) return;
+    if (!escrowed) throw new Error('Phunk not in escrow');
+    return await this.marketContractInteraction('withdrawPhunk', [tokenId]);
+  }
 
-    return await this.marketContractInteraction(
-      'withdrawPhunk',
-      [tokenId]
-    );
+  async withdrawBatch(hashIds: string[]): Promise<string | undefined> {
+    if (!hashIds.length) throw new Error('No phunks selected');
+    return await this.marketContractInteraction('withdrawBatchPhunks', [hashIds]);
   }
 
   async decodeInputData(data: string): Promise<any> {
@@ -211,7 +214,7 @@ export class Web3Service {
   }
 
   async offerPhunkForSale(tokenId: string, value: number, toAddress?: string | null): Promise<string | undefined> {
-    console.log('offerPhunkForSale', tokenId, value, toAddress);
+    // console.log('offerPhunkForSale', tokenId, value, toAddress);
 
     const weiValue = value * 1e18;
     if (toAddress) {

@@ -31,8 +31,10 @@ import { TransactionReceipt } from 'viem';
 
 import { environment } from 'src/environments/environment';
 
-import { fetchSinglePhunk, resetSinglePhunk } from '@/state/actions/app-state.action';
-import { selectSinglePhunk, selectWalletAddress } from '@/state/selectors/app-state.selector';
+import * as actions from '@/state/actions/app-state.action';
+import * as selectors from '@/state/selectors/app-state.selector';
+import { ModalComponent } from '@/components/modal/modal.component';
+import { BreadcrumbsComponent } from '@/components/breadcrumbs/breadcrumbs.component';
 
 interface TxStatus {
   title: string;
@@ -62,6 +64,8 @@ interface TxStatuses {
     TxHistoryComponent,
     WalletAddressDirective,
     PhunkImageComponent,
+    ModalComponent,
+    BreadcrumbsComponent,
 
     TokenIdParsePipe,
     TraitCountPipe,
@@ -130,8 +134,8 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
 
   refreshPhunk$ = new Subject<void>();
 
-  walletAddress$ = this.store.select(selectWalletAddress);
-  singlePhunk$ = this.store.select(selectSinglePhunk);
+  walletAddress$ = this.store.select(selectors.selectWalletAddress);
+  singlePhunk$ = this.store.select(selectors.selectSinglePhunk);
 
   private destroy$ = new Subject<void>();
 
@@ -145,39 +149,33 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
     public themeSvc: ThemeService,
   ) {
     this.route.params.pipe(
-      tap((params: any) => this.store.dispatch(fetchSinglePhunk({ phunkId: params.tokenId }))),
+      tap((params: any) => this.store.dispatch(actions.fetchSinglePhunk({ phunkId: params.tokenId }))),
     ).subscribe();
     this.listPrice.setValue(this.dataSvc.getFloor());
   }
 
-  ngAfterViewInit(): void {
-    let mouseDownInsideModal = false;
-    merge(
-      this.stateSvc.keyDownEscape$,
-      this.stateSvc.documentClick$,
-      fromEvent<MouseEvent>(this.modal.nativeElement, 'mousedown')
-    ).pipe(
-      tap(($event: KeyboardEvent | MouseEvent) => {
-        const modal = this.modal.nativeElement as HTMLElement;
-        const target = $event?.target as HTMLElement;
-
-        if ($event instanceof KeyboardEvent) this.closeAll();
-
-        if ($event.type === 'mousedown' && modal.contains(target)) {
-          mouseDownInsideModal = true;
-        } else if ($event.type === 'mouseup') {
-          if (!mouseDownInsideModal && !modal.contains(target)) this.closeAll();
-          mouseDownInsideModal = false;
-        }
-      }),
-      takeUntil(this.destroy$)
-    ).subscribe();
-  }
+  ngAfterViewInit(): void {}
 
   ngOnDestroy(): void {
-    this.store.dispatch(resetSinglePhunk());
+    this.store.dispatch(actions.clearSinglePhunk());
     this.destroy$.next();
     this.destroy$.complete();
+  }
+
+  sellPhunk(): void {
+    this.sellModalActive = true;
+  }
+
+  transferPhunk(): void {
+    this.transferModalActive = true;
+  }
+
+  bidOnPhunk(): void {
+    this.bidModalActive = true;
+  }
+
+  acceptBid(): void {
+    this.acceptBidModalActive = true;
   }
 
   initTransactionMessage(message?: string): void {
@@ -278,6 +276,7 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
   }
 
   closeAll(): void {
+    console.log('closeAll');
     this.closeTxModal();
     this.closeAcceptBid();
     this.closeListing();

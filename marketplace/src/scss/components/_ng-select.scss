@@ -58,7 +58,8 @@
     }
   }
 
-  &.ng-select-focused:not(.ng-select-opened) {
+  &.ng-select-focused:not(.ng-select-opened),
+  &.active {
     .ng-select-container {
       border: .2rem solid rgba(var(--highlight), 1);
       box-shadow: none;

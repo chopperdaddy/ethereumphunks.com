@@ -74,4 +74,4 @@ export interface User {
   address: string;
 }
 
-export type EventType = 'transfer' | 'sale' | 'created' | 'burned';
+export type EventType = 'transfer' | 'sale' | 'created' | 'burned' | 'PhunkOffered' | 'PhunkBidEntered' | 'PhunkBought' | 'PhunkBidWithdrawn' | 'PhunkDeposited' | 'PhunkWithdrawn' | 'PhunkNoLongerForSale';

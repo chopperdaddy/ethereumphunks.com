@@ -3,67 +3,11 @@
   *ngIf="data; else placeholder">
 
   <div class="image-wrapper">
-
-    <app-phunk-image
-      [tokenId]="data.id"
-    />
-  </div>
-
-  <div class="breadcrumb">
-    <div class="inner">
-
-      <div
-        class="pfp-options-wrapper"
-        *ngIf="pfpOptionsActive">
-
-        <div class="pfp-options">
-          <div class="shape-select">
-            <input type="radio" id="square" name="shape" value="square" [formControl]="shapeCheck">
-            <label i18n for="square">Square</label>
-          </div>
-
-          <div class="shape-select">
-            <input type="radio" id="round" name="shape" value="round" [formControl]="shapeCheck">
-            <label i18n for="round">Round</label>
-          </div>
-
-          <div class="shape-select">
-            <input type="radio" id="transparent" name="shape" value="trans" [formControl]="shapeCheck">
-            <label i18n for="transparent">Transparent</label>
-          </div>
-        </div>
-
-        <button i18n class="download-pfp" (click)="downloadCanvas()">Download</button>
-      </div>
-
-      <div class="crumbs-wrapper">
-        <div class="crumbs">
-          <a
-            i18n
-            href="/"
-            [routerLink]="['/']">
-
-            Ethereum Phunks
-          </a>
-          <span class="divider">/</span>
-          <span class="number">{{ data.id }}</span>
-        </div>
-
-        <div class="save-pfp">
-          <button
-            i18n
-            (click)="togglePfpOptions()">
-
-            {{ pfpOptionsActive ? 'Cancel' : 'Save PFP' }}
-          </button>
-        </div>
-      </div>
-    </div>
+    <app-phunk-image [tokenId]="data.id" />
   </div>
 </div>
 
 <ng-template #placeholder>
-
   <div class="image-wrapper">
     <img
       #tokenImage
@@ -72,33 +16,4 @@
       height="312"
     />
   </div>
-
-  <div class="breadcrumb">
-    <div class="inner">
-
-      <div class="crumbs-wrapper">
-        <div class="crumbs">
-          <a
-            i18n
-            href="/"
-            [routerLink]="['/']">
-
-            Ethereum Phunks
-          </a>
-          <span class="divider">/</span>
-          <span class="number">0000</span>
-        </div>
-
-        <div class="save-pfp"></div>
-      </div>
-    </div>
-  </div>
 </ng-template>
-
-<canvas
-  style="display: none;"
-  #pfp
-  id="pfp"
-  width="480"
-  height="480">
-</canvas>

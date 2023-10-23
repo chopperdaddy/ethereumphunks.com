@@ -1,5 +1,6 @@
 import { enableProdMode, importProvidersFrom, isDevMode } from '@angular/core';
 import { bootstrapApplication } from '@angular/platform-browser';
+import { provideAnimations } from '@angular/platform-browser/animations';
 import { RouteReuseStrategy, provideRouter, withHashLocation } from '@angular/router';
 
 import { HttpClientModule } from '@angular/common/http';
@@ -21,9 +22,13 @@ import 'chartjs-adapter-moment';
 
 import { provideStore } from '@ngrx/store';
 import { provideEffects } from '@ngrx/effects';
+import { provideRouterStore, routerReducer } from '@ngrx/router-store';
 import { provideStoreDevtools } from '@ngrx/store-devtools';
+
 import { appStateReducer } from '@/state/reducers/app-state.reducer';
 import { AppStateEffects } from '@/state/effects/app-state.effect';
+
+import { TokenIdParsePipe } from '@/pipes/token-id-parse.pipe';
 
 if (environment.production) enableProdMode();
 
@@ -32,11 +37,13 @@ bootstrapApplication(AppComponent, {
     { provide: TimeagoFormatter, useClass: TimeagoDefaultFormatter },
     { provide: TimeagoClock, useClass: TimeagoDefaultClock },
     { provide: WeiToEthPipe, useClass: WeiToEthPipe },
+    { provide: TokenIdParsePipe, useClass: TokenIdParsePipe },
     { provide: DEFAULT_CONFIG, useValue: { name: 'cryptophunksCE' } },
     { provide: RouteReuseStrategy, useClass: CustomReuseStrategy },
 
     provideStore({
       appState: appStateReducer,
+      router: routerReducer
     }),
     provideEffects([
       AppStateEffects,
@@ -47,9 +54,11 @@ bootstrapApplication(AppComponent, {
       trace: true,
     }),
 
+    provideAnimations(),
+    provideRouterStore(),
+
     importProvidersFrom(
-      HttpClientModule,
-      // GraphQLModule
+      HttpClientModule
     ),
     provideRouter(routes, withHashLocation())
   ]

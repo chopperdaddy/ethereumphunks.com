@@ -118,26 +118,28 @@ section {
       }
     }
 
-    &.sale {
+    &.sale,
+    &.phunkbought {
       .image-wrapper {
         background-color: rgba(var(--sale-color), 1);
       }
     }
 
-    &.offered {
+    &.offered,
+    &.phunkoffered {
       .image-wrapper {
         background-color: rgba(var(--listed-color), 1);
       }
     }
 
-    &.offerwithdrawn {
+    &.phunkofferwithdrawn {
       .image-wrapper {
         background-color: rgba(var(--listed-color), 1);
       }
     }
 
-    &.bidentered,
-    &.bidwithdrawn {
+    &.phunkbidentered,
+    &.phunkbidwithdrawn {
       .image-wrapper {
         background-color: rgba(var(--bid-color), 1);
       }

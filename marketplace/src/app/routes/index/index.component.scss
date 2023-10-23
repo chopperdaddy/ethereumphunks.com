@@ -32,6 +32,10 @@ section {
 
   .section-stats-wrapper {}
 
+  &.overview {
+    padding-bottom: 0;
+  }
+
   &.phunk-box {
     form {
       display: flex;

@@ -59,6 +59,12 @@ contract EtherPhunksMarket is ReentrancyGuard, EthscriptionsEscrower {
     );
     event PhunkNoLongerForSale(bytes32 indexed phunkId);
 
+    // Event for bulk deposit -- Stupid & pointless
+    // event BulkPotentialEthscriptionsDeposited(
+    //     address indexed owner,
+    //     bytes32[] potentialEthscriptionIds
+    // );
+
     /* Allows the owner of a EtherPhunk to stop offering it for sale */
     function phunkNoLongerForSale(bytes32 phunkId) public nonReentrant {
         require(
@@ -87,6 +93,21 @@ contract EtherPhunksMarket is ReentrancyGuard, EthscriptionsEscrower {
             address(0x0)
         );
         emit PhunkOffered(phunkId, minSalePriceInWei, address(0x0));
+    }
+
+    /* Allows an EtherPhunk owner to offer multiple for sale */
+    function batchOfferPhunkForSale(
+        bytes32[] memory phunkIds,
+        uint[] memory minSalePricesInWei
+    ) public nonReentrant {
+        require(
+            phunkIds.length == minSalePricesInWei.length,
+            "Array lengths do not match"
+        );
+
+        for (uint i = 0; i < phunkIds.length; i++) {
+            offerPhunkForSale(phunkIds[i], minSalePricesInWei[i]);
+        }
     }
 
     /* Allows an EtherPhunk owner to offer it for sale to a specific address */
@@ -262,6 +283,41 @@ contract EtherPhunksMarket is ReentrancyGuard, EthscriptionsEscrower {
         for (uint i = 0; i < phunkIds.length; i++) {
             withdrawPhunk(phunkIds[i]);
         }
+    }
+
+    function _onPotentialEthscriptionDeposit(
+        address previousOwner,
+        bytes calldata userCalldata
+    ) internal virtual override {
+        // Ensure calldata length is a multiple of 32 bytes (64 characters)
+        require(userCalldata.length % 32 == 0, "InvalidEthscriptionLength");
+
+        bytes32[] memory ids = new bytes32[](userCalldata.length / 32);
+
+        // Process each ethscriptionId
+        for (uint256 i = 0; i < userCalldata.length / 32; i++) {
+            bytes32 potentialEthscriptionId = abi.decode(slice(userCalldata, i * 32, 32), (bytes32));
+
+            if (userEthscriptionPossiblyStored(previousOwner, potentialEthscriptionId)) {
+                revert EthscriptionAlreadyReceivedFromSender();
+            }
+
+            EthscriptionsEscrowerStorage.s().ethscriptionReceivedOnBlockNumber[previousOwner][potentialEthscriptionId] = block.number;
+
+            ids[i] = potentialEthscriptionId;
+        }
+
+        // Probably dont need this pointless event
+        // emit BulkPotentialEthscriptionsDeposited(previousOwner, ids);
+    }
+
+    // Helper function to slice bytes
+    function slice(bytes memory data, uint256 start, uint256 len) internal pure returns (bytes memory) {
+        bytes memory b = new bytes(len);
+        for (uint256 i = 0; i < len; i++) {
+            b[i] = data[i + start];
+        }
+        return b;
     }
 
     fallback() external {

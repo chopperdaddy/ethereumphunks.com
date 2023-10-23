@@ -3,7 +3,7 @@
     "compile": "npx hardhat compile",
     "test": "hardhat test",
     "deploy": "npx hardhat run --network goerli scripts/deploy.ts",
-    "verify": "npx hardhat verify --network goerli 0xAeC64fe68B8b12A501DDCE30d022fead68948db0",
+    "verify": "npx hardhat verify --network goerli 0x58523aa5B583FFc600F8784C273AC38E9491b5ce",
     "clean": "npx hardhat clean"
   },
   "devDependencies": {

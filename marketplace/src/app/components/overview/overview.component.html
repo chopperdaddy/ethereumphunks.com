@@ -1,66 +1,3 @@
-<!-- <section>
-  <app-visual-data
-    [statesData]="(dataSvc.statesData$ | async) || []">
-  </app-visual-data>
-</section> -->
-
-<!-- <section
-  class="sales-wrapper"
-  *ngIf="(topSales$ | async) as topSales; else eventsPlaceholder">
-
-  <h2>Largest Sales</h2>
-
-  <div class="sales-items">
-    <a
-      [routerLink]="['/details', event.tokenId]"
-      [href]="'/details/' + event.tokenId"
-      class="sale-item"
-      [class]="event.type | lowercase"
-      *ngFor="let event of topSales; trackBy: trackByFn; let i = index">
-
-      <span class="index">{{ i + 1 }}</span>
-
-      <div class="image-wrapper">
-        <img
-          [lazyLoad]="dataSvc.staticUrl + '/phunk' + (event.tokenId | tokenIdParse) + '.svg'"
-          [defaultImage]="'assets/loadingphunk.png'"
-          width="160"
-          height="160"
-        />
-      </div>
-
-      <div class="labels-wrapper">
-
-        <div class="token-id">#{{ event.tokenId }}</div>
-
-        <div class="label">
-          <ng-container>
-
-            <ng-container
-              *ngIf="
-                event.toAccount &&
-                (event.type === 'Transferred'">
-
-              <app-wallet-address
-                [address]="event.toAccount.id">
-              </app-wallet-address>
-            </ng-container>
-
-            <ng-container *ngIf="event.value !== '0'">
-              Ξ{{ event.value | weiToEth | formatCash }}
-              (${{ ((event.value | weiToEth) * (+event.usd || (dataSvc.usd$ | async) || 0)) | formatCash }})
-            </ng-container>
-          </ng-container>
-
-          <div class="date">
-            {{ (+event.blockTimestamp * 1000) | date : 'MMM d, y' }}
-          </div>
-        </div>
-      </div>
-    </a>
-  </div>
-</section> -->
-
 <section
   class="events-wrapper"
   *ngIf="(events$ | async) as recent; else eventsPlaceholder">
@@ -89,7 +26,7 @@
 
       <div class="image-wrapper">
         <img
-          [lazyLoad]="dataSvc.staticUrl + '/phunk' + (event.phunkId | tokenIdParse) + '.svg'"
+          [lazyLoad]="dataSvc.staticUrl + '/images/phunk' + (event.phunkId | tokenIdParse) + '.svg'"
           [defaultImage]="'assets/loadingphunk.png'"
           width="160"
           height="160"
@@ -102,9 +39,6 @@
 
         <div class="label">
           <ng-container>
-
-            <!-- {{ event.type }} -->
-            <!-- {{ labels[event.type] }} -->
 
             <ng-container *ngIf="event.to && event.type === 'transfer'">
               {{ labels[event.type] }}
@@ -128,8 +62,6 @@
             {{ event.blockTimestamp | timeago : true }}
           </div>
         </div>
-
-        <!-- <span class="date">{{ (+event.blockTimestamp / 1000) | timeago : true }}</span> -->
       </div>
     </a>
   </div>

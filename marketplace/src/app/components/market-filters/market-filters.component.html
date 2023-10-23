@@ -1,0 +1,31 @@
+<div
+  [id]="key"
+  class="filter-group-wrapper"
+  *ngFor="let key of objectKeys(dataSvc.filterData); let i = index">
+
+  <ng-select
+    [(ngModel)]="activeFiltersModel[key]"
+    placeholder="{{ key | titlecase }}"
+    (change)="selectFilter($event, key)"
+    [searchable]="true"
+    [class.active]="((activeTraitFilters$ | async) || {})[key]">
+
+    <ng-option
+      *ngFor="let item of dataSvc.filterData[key]"
+      [value]="item">
+
+      {{ item.replaceAll('-', ' ') | titlecase }}
+    </ng-option>
+  </ng-select>
+</div>
+
+<!-- {{ activeTraitFilters$ | async | json }} -->
+
+<div class="filter-group-wrapper">
+  <ng-select
+    [items]="[0, 1, 2, 3, 4, 5, 6, 7]"
+    [(ngModel)]="traitCount"
+    [searchable]="false"
+    placeholder="Trait Count">
+  </ng-select>
+</div>

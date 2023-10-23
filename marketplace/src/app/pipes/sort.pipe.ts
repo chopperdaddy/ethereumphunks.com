@@ -1,6 +1,6 @@
 import { Pipe, PipeTransform } from '@angular/core';
 
-import { Filters, Sorts } from '@/models/pipes';
+import { MarketTypes, Sorts } from '@/models/pipes';
 import { Phunk } from '@/models/graph';
 
 @Pipe({
@@ -10,12 +10,12 @@ import { Phunk } from '@/models/graph';
 
 export class SortPipe implements PipeTransform {
 
-  transform(value: Phunk[], ...args: [Sorts, Filters]): Phunk[] {
+  transform(value: Phunk[], args: Sorts | null): Phunk[] {
 
     // console.log('sort pipe', {value, args});
 
     if (!value?.length) return [];
-    if (!args?.length) return value;
+    if (!args) return value;
 
     let sorted = [ ...value ];
 
