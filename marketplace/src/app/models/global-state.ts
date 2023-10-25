@@ -20,6 +20,7 @@ export interface AppState {
   ownedPhunks: Phunk[] | null;
   activeMarketRouteData: Phunk[] | null;
   txHistory: any[] | null;
+  selectedPhunks: Phunk[] | null;
 
   activeTraitFilters: TraitFilter;
 
@@ -27,8 +28,6 @@ export interface AppState {
   activeSort: Sorts;
   // activeFilters: any;
   activeEventType: EventType;
-
-  modalState: ModalState | null;
 }
 
 export interface TraitFilter { [key: string]: string };

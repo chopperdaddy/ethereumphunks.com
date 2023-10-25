@@ -69,6 +69,11 @@ export const selectEvents = createSelector(
   (appState: AppState) => appState.events
 );
 
+export const selectActiveEventType = createSelector(
+  selectAppState,
+  (appState: AppState) => appState.activeEventType
+);
+
 export const selectTxHistory = createSelector(
   selectAppState,
   (appState: AppState) => appState.txHistory
@@ -77,4 +82,9 @@ export const selectTxHistory = createSelector(
 export const selectActiveTraitFilters = createSelector(
   selectAppState,
   (appState: AppState) => appState.activeTraitFilters
+);
+
+export const selectSelectedPhunks = createSelector(
+  selectAppState,
+  (appState: AppState) => appState.selectedPhunks
 );

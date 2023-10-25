@@ -7,16 +7,13 @@
 
     <ng-container *ngFor="let item of phunkData |
       properties : (activeTraitFilters$ | async) : traitCount |
-      sort: (activeSort$ | async) |
-      paginate: {
-        id: 'market',
-        itemsPerPage: limit,
-        currentPage: currentPage
-      };
+      sort: (activeSort$ | async);
       trackBy: identify;
       index as i">
 
-      <ng-container *ngTemplateOutlet="phunkItem; context:{ $implicit: item, idx: i }"></ng-container>
+      <ng-container *ngIf="i < limit">
+        <ng-container *ngTemplateOutlet="phunkItem; context:{ $implicit: item, idx: i }"></ng-container>
+      </ng-container>
     </ng-container>
   </div>
 
@@ -48,6 +45,7 @@
           #phunkCheck
           type="checkbox"
           [id]="'checkbox-' + item.id"
+          [checked]="selected.includes(item.hashId)"
           [attr.data-hash-id]="item.hashId"
           (change)="selectPhunk(item.hashId)"
         />

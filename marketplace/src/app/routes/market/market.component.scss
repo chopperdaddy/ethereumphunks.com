@@ -156,26 +156,6 @@
       display: flex;
       align-items: center;
 
-      .sort-wrapper {
-        display: flex;
-        align-items: center;
-
-        .label {
-          padding-right: 1rem;
-          font-weight: 700;
-        }
-
-        ng-select {
-          min-width: 20rem;
-        }
-
-        &.disabled {
-          display: none;
-          opacity: .25;
-          pointer-events: none;
-        }
-      }
-
       button {
         height: 3.6rem;
         margin-left: 2rem;
@@ -231,6 +211,26 @@
         }
       }
     }
+  }
+}
+
+.sort-wrapper {
+  display: flex;
+  align-items: center;
+
+  .label {
+    padding-right: 1rem;
+    font-weight: 700;
+  }
+
+  ng-select {
+    min-width: 20rem;
+  }
+
+  &.disabled {
+    display: none;
+    opacity: .25;
+    pointer-events: none;
   }
 }
 
@@ -332,6 +332,22 @@
     &.compact {
       grid-template-columns: repeat(10, calc(100% / 10));
       column-gap: 0;
+    }
+  }
+}
+
+.tx-phunks {
+  border: 1px solid red;
+  display: grid;
+  grid-template-columns: repeat(4, calc(100% / 4));
+
+  .phunk-item {
+    display: flex;
+    align-items: center;
+    border: 1px solid red;
+
+    img {
+      display: block;
     }
   }
 }

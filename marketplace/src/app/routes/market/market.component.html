@@ -102,12 +102,12 @@
         class="selection-toolbar">
 
         <div class="selected-label">
-          Selected: {{ selectedPhunks.length }}
+          Selected: {{ selectedHashIds.length }}
         </div>
 
         <div
           class="actions"
-          [class.disabled]="!selectedPhunks.length">
+          [class.disabled]="!selectedHashIds.length">
 
           <button (click)="batchAction('transfer')">Transfer</button>
           <button (click)="batchAction('escrow')">Escrow</button>
@@ -132,7 +132,7 @@
       marketType === 'owned' &&
       (route.snapshot.queryParams.address | lowercase) === (walletAddress$ | async)
     "
-    [(selected)]="selectedPhunks"
+    [(selected)]="selectedHashIds"
     [selectAll]="selectAll"
   />
 </div>
@@ -140,10 +140,34 @@
 <app-modal
   *ngIf="transferModalActive"
   [class.active]="transferModalActive"
+  [class]="'subtle'"
   (closeModalEvent)="closeModal()">
 
   <ng-container *ngIf="transferModalActive">
-    Modal
+    <h2 i18n>{{ txType }} {{ selectedPhunks.length }} EtherPhunks</h2>
+    <div class="tx-phunks">
+
+      <ng-container *ngFor="let phunk of selectedPhunks; let i = index">
+        <div
+          class="phunk-item"
+          *ngIf="i < 7">
+
+          <img
+            [lazyLoad]="dataSvc.staticUrl + '/images/phunk' + (phunk.phunkId | tokenIdParse) + '.svg'"
+            [defaultImage]="'assets/loadingphunk.png'"
+            width="50"
+            height="50"
+          />
+
+          <span>#{{ phunk.phunkId }}</span>
+        </div>
+      </ng-container>
+
+      <ng-container *ngIf="selectedPhunks.length > 7">
+        <span>+ {{ selectedPhunks.length - 7 }} More</span>
+      </ng-container>
+
+    </div>
   </ng-container>
 </app-modal>
 

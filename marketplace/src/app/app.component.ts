@@ -17,8 +17,8 @@ import { filter, observeOn, scan, tap } from 'rxjs/operators';
 import { asyncScheduler, fromEvent, Observable } from 'rxjs';
 
 import { GlobalState } from './models/global-state';
-import { fetchAllPhunks, fetchEvents, fetchMarketData } from './state/actions/app-state.action';
 
+import * as actions from './state/actions/app-state.action';
 import * as selectors from './state/selectors/app-state.selector';
 
 @Component({
@@ -50,9 +50,9 @@ export class AppComponent {
     private router: Router
   ) {
 
-    this.store.dispatch(fetchEvents({ eventType: 'All' }));
-    this.store.dispatch(fetchMarketData());
-    this.store.dispatch(fetchAllPhunks());
+    this.store.dispatch(actions.setEventType({ eventType: 'All' }));
+    this.store.dispatch(actions.fetchMarketData());
+    this.store.dispatch(actions.fetchAllPhunks());
 
     const mode = localStorage.getItem('mode');
     const defaultMode = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';

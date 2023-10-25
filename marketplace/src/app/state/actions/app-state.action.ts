@@ -157,3 +157,8 @@ export const sendTransaction = createAction(
   '[App State] Send Transaction',
   props<{ tx: TX }>()
 );
+
+export const setSelectedPhunks = createAction(
+  '[Market] Set Selected Phunks',
+  props<{ selectedPhunks: Phunk[] }>()
+);

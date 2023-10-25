@@ -22,6 +22,7 @@ import { Phunk } from '@/models/graph';
 import { DataService } from '@/services/data.service';
 import { ModalComponent } from '@/components/modal/modal.component';
 import { Web3Service } from '@/services/web3.service';
+import { TokenIdParsePipe } from '@/pipes/token-id-parse.pipe';
 
 @Component({
   selector: 'app-phunk-grid-view',
@@ -35,6 +36,8 @@ import { Web3Service } from '@/services/web3.service';
     FormsModule,
 
     WalletAddressDirective,
+
+    TokenIdParsePipe,
 
     PhunkGridComponent,
     MarketFiltersComponent,
@@ -73,7 +76,10 @@ export class MarketComponent {
 
   selectMutipleActive: boolean = false;
   selectAll: boolean = false;
-  selectedPhunks: Phunk['hashId'][] = [];
+  selectedHashIds: Phunk['hashId'][] = [];
+
+  txType!: 'Transferring' | 'Withdrawing';
+  selectedPhunks: any[] = [];
 
   walletAddress$ = this.store.select(state => state.appState.walletAddress);
   activeMarketRouteData$ = this.store.select(state => state.appState.activeMarketRouteData);
@@ -82,7 +88,7 @@ export class MarketComponent {
   constructor(
     private store: Store<GlobalState>,
     public route: ActivatedRoute,
-    private dataSvc: DataService,
+    public dataSvc: DataService,
     private web3Svc: Web3Service
   ) {}
 
@@ -99,24 +105,31 @@ export class MarketComponent {
     this.selectAll = false;
   }
 
+  clearSelectedAndClose() {
+    this.selectAll = false;
+    this.selectedHashIds = [];
+  }
+
   async batchAction(type: 'transfer' | 'escrow' | 'withdraw'): Promise<void> {
-    if (!this.selectedPhunks.length) return;
+    if (!this.selectedHashIds.length) return;
 
     this.transferModalActive = true;
 
     if (type === 'escrow') await this.batchTransfer(this.escrowAddress);
     if (type === 'withdraw') await this.withdrawBatch();
-
   }
 
   async batchTransfer(toAddress: string): Promise<string | undefined> {
 
     const canTransfer = await firstValueFrom(
-      this.dataSvc.phunksCanTransfer(this.selectedPhunks)
+      this.dataSvc.phunksCanTransfer(this.selectedHashIds)
     );
 
+    this.selectedPhunks = [ ...canTransfer ];
+    this.txType = 'Transferring';
+
     const selected = [ ...canTransfer.map((phunk: Phunk) => phunk.hashId) ];
-    this.selectedPhunks = selected;
+    this.selectedHashIds = selected;
 
     const hexString = selected.map(hashId => hashId?.substring(2)).join('');
     const hex = `0x${hexString}`;
@@ -126,15 +139,18 @@ export class MarketComponent {
 
   async withdrawBatch(): Promise<string | undefined> {
 
-      const canWithdraw = await firstValueFrom(
-        this.dataSvc.phunksCanWithdraw(this.selectedPhunks)
-      );
+    const canWithdraw = await firstValueFrom(
+      this.dataSvc.phunksCanWithdraw(this.selectedHashIds)
+    );
 
-      const selected = [ ...canWithdraw.map((phunk: Phunk) => phunk.hashId) ];
-      this.selectedPhunks = selected;
+    this.selectedPhunks = [ ...canWithdraw ];
+    this.txType = 'Withdrawing';
 
-      return await this.web3Svc.withdrawBatch(selected);
-    }
+    const selected = [ ...canWithdraw.map((phunk: Phunk) => phunk.hashId) ];
+    this.selectedHashIds = selected;
+
+    return await this.web3Svc.withdrawBatch(selected);
+  }
 
   closeModal(): void {
     this.transferModalActive = false;

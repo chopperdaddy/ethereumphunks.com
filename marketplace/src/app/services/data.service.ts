@@ -11,8 +11,8 @@ import { EventType, GlobalState } from '@/models/global-state';
 import { Bid, Event, Listing, Phunk, State } from '@/models/graph';
 
 import { createClient } from '@supabase/supabase-js'
-import { Observable, of, BehaviorSubject, from, forkJoin } from 'rxjs';
-import { debounceTime, map, switchMap, tap } from 'rxjs/operators';
+import { Observable, of, BehaviorSubject, from, forkJoin, merge, timer, interval, zip, Subject } from 'rxjs';
+import { auditTime, debounceTime, distinctUntilChanged, map, mergeMap, sampleTime, share, startWith, switchMap, takeLast, tap, throttleTime, windowTime } from 'rxjs/operators';
 
 import { environment } from 'src/environments/environment';
 
@@ -59,24 +59,28 @@ export class DataService {
     private web3Svc: Web3Service
   ) {
     // this.fetchUSDPrice();
+    const sharedSource$ = new Subject<any>();
 
-    new Observable((observer) => {
-      supabase
-        .channel('any')
-        .on('postgres_changes', { event: '*', schema: 'public' }, (payload) => {
-          observer.next(payload);
-        }).subscribe();
-    }).pipe(
-      debounceTime(1000),
+    supabase
+      .channel('any')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public' },
+        (payload) => sharedSource$.next(payload),
+      ).subscribe();
+
+    const throttled$ = sharedSource$.pipe(throttleTime(2000));
+    const debounced$ = sharedSource$.pipe(debounceTime(3000));
+
+    merge(throttled$, debounced$).pipe(
       tap((payload: any) => {
-
         if (!payload) return;
         const { table } = payload;
-        if (table === 'events' + this.prefix) this.store.dispatch(actions.dbEventTriggered({ payload }));
-
-        console.log('dbEventTriggered', payload);
-      }),
-    ).subscribe()
+        if (table === 'events' + this.prefix) {
+          this.store.dispatch(actions.dbEventTriggered({ payload }));
+        }
+      })
+    ).subscribe();
   }
 
   getFloor(): number {
@@ -188,7 +192,7 @@ export class DataService {
       .order('blockTimestamp', { ascending: false })
       .limit(limit);
 
-    if (type && type !== 'All') query = query.eq('type', type.toLowerCase());
+    if (type && type !== 'All') query = query.eq('type', type);
 
     const response = query;
     return from(response).pipe(map((res: any) => res.data));

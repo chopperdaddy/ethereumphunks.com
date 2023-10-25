@@ -22,8 +22,8 @@ import { GlobalState, TxFilterItem } from '@/models/global-state';
 
 import { BehaviorSubject, Subject, tap } from 'rxjs';
 
-import { selectEvents } from '@/state/selectors/app-state.selector';
-import { fetchEvents } from '@/state/actions/app-state.action';
+import * as selectors from '@/state/selectors/app-state.selector';
+import * as actions from '@/state/actions/app-state.action';
 
 @Component({
   standalone: true,
@@ -73,9 +73,7 @@ export class TxOverviewComponent {
     transfer: 'Transferred to',
   };
 
-  events$ = this.store.select(selectEvents).pipe(
-    tap((events) => console.log('events', events?.map((res) => res.type))),
-  );
+  events$ = this.store.select(selectors.selectEvents);
 
   constructor(
     private store: Store<GlobalState>,
@@ -88,8 +86,8 @@ export class TxOverviewComponent {
   }
 
   setActiveTxFilter(filter: TxFilterItem): void {
-    this.store.dispatch(fetchEvents({ eventType: filter.value }));
-    console.log('setActiveTxFilter', filter);
+    this.store.dispatch(actions.setEventType({ eventType: filter.value }));
+    // console.log('setActiveTxFilter', filter);
     // this.activeTxFilter.next(filter);
   }
 }

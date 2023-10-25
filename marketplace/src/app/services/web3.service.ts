@@ -11,7 +11,7 @@ import EtherPhunksMarketAbi from '@/abi/EtherPhunksMarket.json';
 import { FallbackTransport, TransactionReceipt, createWalletClient, custom, decodeFunctionData, formatEther, isAddress, parseEther } from 'viem';
 import { mainnet, goerli } from 'viem/chains';
 
-import { Chain, Config, PublicClient, WebSocketPublicClient, configureChains, createConfig, disconnect, getAccount, getNetwork, getPublicClient, getWalletClient, switchNetwork, watchAccount } from '@wagmi/core';
+import { Chain, Config, PublicClient, WebSocketPublicClient, configureChains, createConfig, disconnect, getAccount, getNetwork, getPublicClient, getWalletClient, switchNetwork, watchAccount, watchBlockNumber } from '@wagmi/core';
 
 import { Web3Modal } from '@web3modal/html';
 import { jsonRpcProvider } from '@wagmi/core/providers/jsonRpc';
@@ -97,6 +97,23 @@ export class Web3Service {
         return of(err);
       }),
     ).subscribe();
+  }
+
+  async cooldownTimer(cooldown: number = 5): Promise<void> {
+    return new Promise<void>((resolve) => {
+      let endBlock = 0;
+      const unwatch = watchBlockNumber({
+        chainId: environment.chainId,
+        listen: true,
+      }, (block) => {
+        console.log('block', block);
+        if (!endBlock) endBlock = Number(block) + cooldown;
+        if (Number(block) >= endBlock) {
+          unwatch();
+          resolve();
+        }
+      });
+    });
   }
 
   async connect(): Promise<void> {

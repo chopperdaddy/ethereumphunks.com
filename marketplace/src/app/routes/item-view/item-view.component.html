@@ -68,6 +68,7 @@
             <ng-container *ngIf="(walletAddress$ | async) as address; else notConnected">
               <ng-container *ngIf="phunk.owner as owner">
 
+                <!-- Buy button -->
                 <button
                   i18n
                   *ngIf="
@@ -81,6 +82,7 @@
                   Buy
                 </button>
 
+                <!-- Sell (Ownership actions) -->
                 <ng-container *ngIf="
                   ((owner | lowercase) === (escrowAddress | lowercase) &&
                   (phunk.prevOwner | lowercase) === (address | lowercase)) ||
@@ -91,10 +93,30 @@
                     i18n
                     class="sell"
                     (click)="sellPhunk()"
-                    *ngIf="!phunk.listing">
+                    [class.active]="sellActive">
 
                     Sell
                   </button>
+
+                  <!-- Sell Actions -->
+                  <ng-container *ngIf="sellActive">
+                    <ng-container *ngIf="phunk.isEscrowed; else sendToEscrowActions">
+                      <ng-container *ngTemplateOutlet="sellForm; context:{ $implicit: phunk }" />
+                    </ng-container>
+
+                    <ng-template #sendToEscrowActions>
+                      <div class="form-wrapper">
+                        <p i18n>Your EtherPhunk must be held in escrow in order to be listed.</p>
+                        <button
+                          i18n
+                          class="sell"
+                          (click)="sendToEscrow(phunk)">
+
+                          Send to Escrow
+                        </button>
+                      </div>
+                    </ng-template>
+                  </ng-container>
 
                   <ng-container *ngIf="phunk.isEscrowed">
                     <button
@@ -107,16 +129,24 @@
                   </ng-container>
                 </ng-container>
 
+                <!-- Transfer -->
                 <ng-container *ngIf="(owner | lowercase) === (address | lowercase)">
                   <button
                     i18n
                     class="transfer"
+                    [class.active]="transferActive"
                     (click)="transferPhunk()">
 
                     Transfer
                   </button>
+
+                  <!-- Transfer Actions -->
+                  <ng-container *ngIf="transferActive">
+                    <ng-container *ngTemplateOutlet="transferForm; context:{ $implicit: phunk }" />
+                  </ng-container>
                 </ng-container>
 
+                <!-- Delist button -->
                 <ng-container *ngIf="
                   phunk.listing &&
                   (owner | lowercase) === (escrowAddress | lowercase) &&
@@ -132,18 +162,26 @@
                   </button>
                 </ng-container>
 
+                <!-- Bid button -->
                 <button
                   i18n
                   *ngIf="
                     (owner | lowercase) !== (address | lowercase) &&
                     (phunk.prevOwner | lowercase) !== (address | lowercase)
                   "
+                  [class.active]="bidActive"
                   class="sell"
                   (click)="bidOnPhunk()">
 
                   Place Bid
                 </button>
 
+                <!-- Bid Actions -->
+                <ng-container *ngIf="bidActive">
+                  <ng-container *ngTemplateOutlet="bidForm; context:{ $implicit: phunk }" />
+                </ng-container>
+
+                <!-- Withdraw Bid button -->
                 <button
                   i18n
                   *ngIf="((phunk.bid?.fromAddress | lowercase) === (address | lowercase))"
@@ -153,6 +191,7 @@
                   Withdraw Bid
                 </button>
 
+                <!-- Accept Bid button -->
                 <button
                   i18n
                   *ngIf="
@@ -204,177 +243,81 @@
   </div>
 </div>
 
-<ng-container
-  *ngIf="(txModalActive || sellModalActive || bidModalActive || transferModalActive || acceptBidModalActive) as active">
+<ng-template #transferForm let-phunk>
+  <div class="form-wrapper">
+    <div class="form-group">
+      <label i18n for="transfer-address">Transfer to address</label>
+      <input
+        type="text"
+        id="transfer-address"
+        [formControl]="transferAddress"
+        placeholder="0x or .ens"
+        role="presentation"
+        autocomplete="off"
+      />
+    </div>
+
+    <div class="form-actions">
+      <button i18n class="cancel" (click)="closeTransfer()">Cancel</button>
+      <button i18n
+        class="submit"
+        (click)="submitTransfer(phunk)">
+
+        Submit
+      </button>
+    </div>
+  </div>
+</ng-template>
+
+<ng-template #bidForm let-phunk>
+  <div class="form-wrapper">
+    <div class="form-group">
+      <label i18n for="bid-price">Bid Price (Ξ)</label>
+      <input type="number" id="bid-price" [formControl]="bidPrice" placeholder="0" />
+    </div>
+
+    <div class="form-actions">
+      <button i18n class="cancel" (click)="closeBid()">Cancel</button>
+      <button i18n class="submit" (click)="submitBid(phunk)">Submit</button>
+    </div>
+  </div>
+</ng-template>
+
+<ng-template #sellForm let-phunk>
+  <div class="form-wrapper">
+    <div class="form-group">
+      <label i18n for="list-price">Asking Price in ETH (Ξ)</label>
+      <input type="number" id="list-price" [min]="0" [formControl]="listPrice" />
+    </div>
+
+    <div class="form-group" [class.disabled]="!phunk.isEscrowed">
+      <label i18n for="list-to-address">Offer to Address (0x or ens)</label>
+      <input
+        type="text"
+        id="list-to-address"
+        [placeholder]="'Anyone'"
+        [formControl]="listToAddress"
+        role="presentation"
+        autocomplete="off"
+      />
+    </div>
+
+    <div class="form-actions" [class.disabled]="!phunk.isEscrowed">
+      <button i18n class="cancel" (click)="closeListing()">Cancel</button>
+      <button i18n class="submit" (click)="submitListing(phunk)">Offer EtherPhunk</button>
+    </div>
+  </div>
+</ng-template>
+
+<ng-container *ngIf="txModalActive as active">
 
   <app-modal
     [class]="txModalActive ? 'transaction' : ''"
     [class.active]="active"
-    (closeModalEvent)="closeAll()">
+    class="sidebar"
+    (closeModalEvent)="txModalActive = false">
 
     <ng-container *ngIf="(singlePhunk$ | async) as phunk;">
-      <!-- ACCEPT BID -->
-      <ng-container *ngIf="acceptBidModalActive">
-        <div class="modal-phunk-info">
-          <h2 i18n>Accept bid for <span class="highlight">{{ phunk.bid?.value || '0' | weiToEth }} ETH</span></h2>
-          <h4>Bids can only be accepted when connected to the Flashbots Protect RPC.</h4>
-          <p class="pink center">Flashbots Protect RPC provides the following benefits:</p>
-          <ul>
-            <li><span class="bold">Frontrunning protection:</span> transactions will not be seen by hungry sandwich bots in the public mempool.</li>
-            <li><span class="bold">No failed transactions:</span> transactions will only be included if it doesn't include any reverts, so users don't pay for failed transactions. Note: transactions could be included in uncled blocks, emitted to the mempool, and then included on-chain.</li>
-            <li><span class="bold">Etherscan integration:</span> users can see the status of their transactions on Etherscan.</li>
-          </ul>
-
-          <button (click)="addFlashbotsNetwork()">Add to MetaMask</button>
-        </div>
-
-        <div class="form-actions">
-          <button i18n class="cancel" (click)="closeAcceptBid()">Cancel</button>
-          <button i18n class="submit" (click)="acceptBidForPhunk(phunk)">Accept Bid</button>
-        </div>
-      </ng-container>
-
-      <!-- SELL -->
-      <ng-container *ngIf="sellModalActive">
-        <div class="modal-phunk-info">
-          <h2 i18n>Offer EtherPhunk #{{ phunk.id }} For Sale</h2>
-
-          <div class="state-selector-wrapper">
-
-            <div class="selector-items">
-              <div
-                class="escrow"
-                [class.active]="!phunk.isEscrowed">
-
-                <div class="label">1. Escrow <span class="emoji" *ngIf="phunk.isEscrowed">👍</span></div>
-                <app-phunk-image
-                  [tokenId]="phunk.id"
-                  [color]="false"
-                />
-              </div>
-
-              <div
-                class="list"
-                [class.active]="phunk.isEscrowed">
-
-                <div class="label">2. List</div>
-                <app-phunk-image
-                  [tokenId]="phunk.id"
-                />
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="form-group" *ngIf="!phunk.isEscrowed">
-          <p>Your EtherPhunk must be held in escrow in order to be listed.</p>
-          <button (click)="sendToEscrow(phunk)">Send to escrow</button>
-        </div>
-
-        <ng-container *ngIf="phunk.isEscrowed">
-          <div class="form-group">
-            <label i18n for="list-price">Asking Price in ETH (Ξ)</label>
-            <input type="number" id="list-price" [min]="0" [formControl]="listPrice" />
-            <div
-              class="floor-notice"
-              *ngIf="
-                (listPrice.value ?? 0) < ((dataSvc.currentFloor$ | async) || 0) &&
-                listPrice.value !== 0
-              ">
-
-              You are listing below floor price!
-            </div>
-          </div>
-
-          <div class="form-group" [class.disabled]="!phunk.isEscrowed">
-            <label i18n for="list-to-address">Offer to Address (0x or ens)</label>
-            <input
-              type="text"
-              id="list-to-address"
-              [placeholder]="'Anyone'"
-              [formControl]="listToAddress"
-              role="presentation"
-              autocomplete="off"
-            />
-          </div>
-
-          <div class="form-actions" [class.disabled]="!phunk.isEscrowed">
-            <button i18n class="cancel" (click)="closeListing()">Cancel</button>
-            <button i18n class="submit" (click)="submitListing(phunk)">Offer EtherPhunk</button>
-          </div>
-        </ng-container>
-      </ng-container>
-
-      <!-- BID -->
-      <ng-container *ngIf="bidModalActive">
-        <div class="modal-phunk-info">
-          <h2 i18n>Bid on EtherPhunk #{{ phunk.id }}</h2>
-          <div class="image-wrapper">
-            <img
-              [src]="dataSvc.staticUrl + '/images/phunk' + (phunk.id | tokenIdParse) + '.svg'"
-              width="200"
-              height="200" />
-          </div>
-        </div>
-
-        <div class="form-group">
-          <label i18n for="bid-price">Bid Price (Ξ)</label>
-          <input type="number" id="bid-price" [formControl]="bidPrice" placeholder="0" />
-        </div>
-
-        <div class="form-actions">
-          <button i18n class="cancel" (click)="closeBid()">Cancel</button>
-          <button i18n class="submit" (click)="submitBid(phunk)">Submit</button>
-        </div>
-      </ng-container>
-
-      <!-- Transfer -->
-      <ng-container *ngIf="transferModalActive">
-        <div class="modal-phunk-info">
-          <h2 i18n>Transfer EtherPhunk #{{ phunk.id }}</h2>
-          <div class="image-wrapper">
-            <img
-              [src]="dataSvc.staticUrl + '/images/phunk' + (phunk.id | tokenIdParse) + '.svg'"
-              width="200"
-              height="200" />
-          </div>
-        </div>
-
-        <div class="form-group">
-          <label i18n for="transfer-address">Transfer to address</label>
-          <input
-            type="text"
-            id="transfer-address"
-            [formControl]="transferAddress"
-            placeholder="0x or .ens"
-            role="presentation"
-            autocomplete="off"
-          />
-          <div
-            class="floor-notice"
-            *ngIf="
-              transferAddress.value?.toLowerCase() === '0x000000000000000000000000000000000000dead' ||
-              transferAddress.value?.toLowerCase() === '0x0000000000000000000000000000000000000000'
-            ">
-
-            Transfering to the burn address is disabled.
-          </div>
-        </div>
-
-        <div class="form-actions">
-          <button i18n class="cancel" (click)="closeTransfer()">Cancel</button>
-          <button i18n
-            class="submit"
-            (click)="submitTransfer(phunk)"
-            [class.disabled]="
-              transferAddress.value?.toLowerCase() === '0x000000000000000000000000000000000000dead' ||
-              transferAddress.value?.toLowerCase() === '0x0000000000000000000000000000000000000000'
-            ">
-
-            Submit
-          </button>
-        </div>
-      </ng-container>
 
       <ng-container *ngIf="txModalActive">
 

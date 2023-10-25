@@ -190,10 +190,10 @@ export class ProcessingService {
     if (!isMatchedHashId || !transferrerIsOwner || !samePrevOwner) return;
 
     // Get or create the users from address
-    const [ toUser, fromUser ] = await Promise.all([
-      from.toLowerCase() === to.toLowerCase() ? null : this.sbSvc.getOrCreateUser(from, createdAt),
-      this.sbSvc.getOrCreateUser(to, createdAt)
-    ]);
+    await this.sbSvc.getOrCreateUser(to, createdAt);
+
+    // Update the eth phunk owner
+    await this.sbSvc.updateEthPhunkOwner(ethPhunk.hashId, ethPhunk.owner, to);
 
     // Add the sale/transfer event
     await this.sbSvc.addEvent(
@@ -207,10 +207,7 @@ export class ProcessingService {
       value,
       log.logIndex
     );
-
-    // Update the eth phunk owner
-    await this.sbSvc.updateEthPhunkOwner(ethPhunk.hashId, ethPhunk.owner, to);
-    Logger.log('Updated eth phunk owner (event)', `Hash: ${ethPhunk.hashId} -- To: ${to.toLowerCase()}`);
+    Logger.log('Updated eth phunk owner (contract event)', `Hash: ${ethPhunk.hashId} -- To: ${to.toLowerCase()}`);
   }
 
   async processEsip1(

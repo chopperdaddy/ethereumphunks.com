@@ -43,6 +43,28 @@ app-phunk-billboard {
       }
     }
 
+    h2 {
+      font-size: 2.4rem;
+      padding-bottom: 2rem;
+    }
+
+    p {
+      padding: 0;
+      margin: 0;
+      padding-bottom: 1rem;
+
+      a {
+        font-size: 1.8rem;
+        font-weight: 700;
+        color: rgba(var(--highlight), 1);
+        text-decoration: none;
+      }
+
+      .bold {
+        font-weight: 700;
+      }
+    }
+
     .split {
       display: grid;
       grid-template-columns: calc(70% - 2rem) calc(30% - 2rem);
@@ -98,32 +120,35 @@ app-phunk-billboard {
 
     .market-status {
       padding-top: 4rem;
+    }
 
-      h2 {
-        font-size: 2.4rem;
-        padding-bottom: 2rem;
-      }
+    .form-wrapper {
+      padding: 1rem;
+      margin: 0 0 1rem;
+      background-color: rgba(var(--highlight), 1);
+      color: rgba(var(--background), 1);
+      width: 100%;
+      max-width: 46rem;
 
       p {
-        padding: 0;
-        margin: 0;
-        padding-bottom: 1rem;
+        font-size: 1.4rem;
+        line-height: 1.4;
+        font-weight: 600;
+      }
 
-        a {
-          font-size: 1.8rem;
-          font-weight: 700;
-          color: rgba(var(--highlight), 1);
-          text-decoration: none;
-        }
+      input {
+        color: rgba(var(--background), 1);
+        background-color: rgba(var(--background), .1);
 
-        .bold {
-          font-weight: 700;
+        &::placeholder {
+          color: rgba(var(--background), .3);
         }
       }
     }
 
     .actions-wrapper {
       padding: 2rem 0;
+
       button,
       a {
         display: block;
@@ -134,6 +159,12 @@ app-phunk-billboard {
         font-size: 1.5rem;
         width: 100%;
         max-width: 46rem;
+
+        &.active {
+          background: none;
+          color: rgba(var(--highlight), 1);
+          box-shadow: 0 .2rem 0 0 rgba(var(--highlight), 1);
+        }
       }
 
       .notice {
@@ -159,6 +190,15 @@ app-phunk-billboard {
       .title-wrapper {
         h1 {
           font-size: 2.8rem;
+        }
+      }
+
+      .split {
+        display: block;
+
+        .left,
+        .right {
+          padding: 0;
         }
       }
 

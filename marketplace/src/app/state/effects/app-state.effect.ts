@@ -1,5 +1,4 @@
 import { Injectable } from '@angular/core';
-import { ActivatedRoute, Router } from '@angular/router';
 import { HttpParams } from '@angular/common/http';
 import { Location } from '@angular/common';
 
@@ -15,7 +14,7 @@ import { GlobalState } from '@/models/global-state';
 import { Attribute, Phunk } from '@/models/graph';
 import { MarketTypes } from '@/models/pipes';
 
-import { catchError, filter, forkJoin, from, map, mergeMap, of, switchMap, tap, withLatestFrom } from 'rxjs';
+import { filter, forkJoin, from, map, mergeMap, switchMap, tap, withLatestFrom } from 'rxjs';
 
 import { environment } from 'src/environments/environment';
 
@@ -26,14 +25,17 @@ import { TransactionService } from '@/services/transaction.service';
 @Injectable()
 export class AppStateEffects {
 
-  setMarketType$ = createEffect(() => this.actions$.pipe(
+  setMarketTypeFromRoute$ = createEffect(() => this.actions$.pipe(
     ofType(ROUTER_NAVIGATION),
     withLatestFrom(
       this.store.select(getRouterSelectors().selectRouteParam('marketType')),
       this.store.select(getRouterSelectors().selectQueryParams),
     ),
     tap(([action, marketType, queryParams]) => {
-      if (!marketType) this.store.dispatch(actions.clearActiveTraitFilters());
+      if (!marketType) {
+        this.store.dispatch(actions.clearActiveTraitFilters());
+        this.store.dispatch(actions.clearActiveMarketRouteData());
+      }
     }),
     filter(([action, marketType, queryParams]) => !!marketType),
     mergeMap(([action, marketType, queryParams]) => {
@@ -54,15 +56,14 @@ export class AppStateEffects {
       this.store.select(selectors.selectMarketType),
     ),
     switchMap(([action, address, marketType]) => {
-
-      console.log('setMarketType', { action, address, marketType });
-
-      const type = action.type === '[App State] DB Event Triggered' ? marketType : action.marketType;
-
       if (address) return this.dataSvc.fetchOwned(address);
-      if (type === 'all') return this.store.select(selectors.selectAllPhunks);
-      if (type === 'listings') return this.store.select(selectors.selectListings);
-      if (type === 'bids') return this.store.select(selectors.selectBids);
+
+      if (action.type === '[App State] DB Event Triggered') {
+
+      }
+      if (marketType === 'all') return this.store.select(selectors.selectAllPhunks);
+      if (marketType === 'listings') return this.store.select(selectors.selectListings);
+      if (marketType === 'bids') return this.store.select(selectors.selectBids);
       return this.store.select(selectors.selectMarketData);
     }),
     map((phunks) => actions.setActiveMarketRouteData({ activeMarketRouteData: phunks || [] })),
@@ -85,18 +86,20 @@ export class AppStateEffects {
     withLatestFrom(
       this.store.select(selectors.selectSinglePhunk),
       this.store.select(selectors.selectWalletAddress),
+      this.store.select(selectors.selectActiveEventType)
     ),
-    tap(([newData, singlePhunk, address]) => {
-      const userMatches = this.checkUserEvent(newData, address!);
-      const hashIdMatches = this.checkHashIdEvent(newData, singlePhunk!);
-      if (userMatches || hashIdMatches) this.store.dispatch(actions.refreshSinglePhunk());
-      if (userMatches) this.store.dispatch(actions.fetchOwnedPhunks());
+    tap(([newData, singlePhunk, address, activeEventType]) => {
+      console.log('dbEventTriggered', {newData, singlePhunk, address, activeEventType});
+      this.store.dispatch(actions.refreshSinglePhunk());
+      this.store.dispatch(actions.fetchOwnedPhunks());
       this.store.dispatch(actions.fetchMarketData());
+      this.store.dispatch(actions.setEventType({ eventType: activeEventType }));
     }),
   ), { dispatch: false });
 
   fetchEvents$ = createEffect(() => this.actions$.pipe(
-    ofType(actions.fetchEvents),
+    ofType(actions.setEventType),
+    // tap((action) => console.log('fetchEvents', action)),
     switchMap((action) => this.dataSvc.fetchEvents(6, action.eventType)),
     map((events) => actions.setEvents({ events })),
   ));
@@ -233,6 +236,7 @@ export class AppStateEffects {
     ofType(actions.fetchOwnedPhunks),
     withLatestFrom(this.store.select(selectors.selectWalletAddress)),
     filter(([action, address]) => !!address),
+    tap(([action, address]) => console.log('fetchOwnedPhunks', {action, address})),
     switchMap(([action, address]) => this.dataSvc.fetchOwned(address)),
     map((phunks) => actions.setOwnedPhunks({ ownedPhunks: phunks })),
   ));
@@ -255,32 +259,4 @@ export class AppStateEffects {
     if (!singlePhunk) return false;
     return newData.hashId === singlePhunk.hashId;
   }
-
-  // txStatus: TxStatuses = {
-  //   pending: {
-  //     title: 'Transaction Pending',
-  //     message: null,
-  //     active: false
-  //   },
-  //   submitted: {
-  //     title: 'Transaction Submitted',
-  //     message: null,
-  //     active: false
-  //   },
-  //   escrow: {
-  //     title: 'Transaction Submitted',
-  //     message: null,
-  //     active: false
-  //   },
-  //   complete: {
-  //     title: 'Transaction Complete',
-  //     message: null,
-  //     active: false
-  //   },
-  //   error: {
-  //     title: 'Transaction Error',
-  //     message: null,
-  //     active: false
-  //   }
-  // };
 }

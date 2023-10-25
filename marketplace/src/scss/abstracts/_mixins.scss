@@ -56,7 +56,7 @@
 
 @mixin max-width() {
   width: 100%;
-  max-width: 120rem;
+  max-width: var(--max-width);
   padding: 0 3rem;
   margin: 0 auto;
 
