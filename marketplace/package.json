@@ -1,5 +1,5 @@
 {
-  "name": "punk-market",
+  "name": "ether-phunks-market",
   "version": "2.1.0",
   "scripts": {
     "ng": "ng",
@@ -8,7 +8,7 @@
     "build:goerli": "ng build --configuration goerli",
     "build:mainnet": "ng build --configuration mainnet",
     "test": "ng test",
-    "run-built": "http-server dist/punk-market -p 8000",
+    "run-built": "http-server dist/ether-phunks-market -p 8000",
     "translate": "ng extract-i18n --output-path src/locale",
     "translate:json": "ng extract-i18n --output-path src/locale --format=json"
   },

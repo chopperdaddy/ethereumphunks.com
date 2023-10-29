@@ -205,3 +205,18 @@ export const clickEvent = createAction(
   '[App State] Click Event',
   props<{ event: MouseEvent }>()
 );
+
+export const addCooldown = createAction(
+  '[App State] Add Cooldown',
+  props<{ cooldown: AppState['cooldowns'][0] }>()
+);
+
+export const removeCooldown = createAction(
+  '[App State] Remove Cooldown',
+  props<{ phunkId: number }>()
+);
+
+export const newBlock = createAction(
+  '[App State] New Block',
+  props<{ blockNumber: number }>()
+);

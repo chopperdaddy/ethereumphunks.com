@@ -10,6 +10,7 @@ import { PhunkImageComponent } from '@/components/phunk-image/phunk-image.compon
 import { WalletAddressDirective } from '@/directives/wallet-address.directive';
 
 import * as selectors from '@/state/selectors/app-state.selector';
+import * as actions from '@/state/actions/app-state.action';
 
 import { environment } from 'src/environments/environment';
 
@@ -77,12 +78,14 @@ export class TxModalComponent {
   };
 
   transactions$ = this.store.select(selectors.selectTransactions).pipe(
-    map((txns: Transaction[]) => {
-      return [...txns].sort((a, b) => b.id - a.id)
-    })
+    map((txns: Transaction[]) => [...txns].sort((a, b) => b.id - a.id))
   );
 
   constructor(
     private store: Store<GlobalState>
   ) {}
+
+  dismiss(txn: Transaction) {
+    this.store.dispatch(actions.removeTransaction({ txId: txn.id }));
+  }
 }

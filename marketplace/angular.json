@@ -3,7 +3,7 @@
   "version": 1,
   "newProjectRoot": "projects",
   "projects": {
-    "punk-market": {
+    "ether-phunks-market": {
       "projectType": "application",
       "schematics": {
         "@schematics/angular:component": {
@@ -21,7 +21,7 @@
           "builder": "@angular-devkit/build-angular:browser",
           "options": {
             "optimization": true,
-            "outputPath": "dist/punk-market",
+            "outputPath": "dist/ether-phunks-market",
             "index": "src/index.html",
             "main": "src/main.ts",
             "polyfills": "src/polyfills.ts",
@@ -124,16 +124,16 @@
           "builder": "@angular-devkit/build-angular:dev-server",
           "configurations": {
             "dev-goerli": {
-              "browserTarget": "punk-market:build:dev-goerli"
+              "browserTarget": "ether-phunks-market:build:dev-goerli"
             },
             "dev-mainnet": {
-              "browserTarget": "punk-market:build:dev-mainnet"
+              "browserTarget": "ether-phunks-market:build:dev-mainnet"
             },
             "goerli": {
-              "browserTarget": "punk-market:build:goerli"
+              "browserTarget": "ether-phunks-market:build:goerli"
             },
             "mainnet": {
-              "browserTarget": "punk-market:build:mainnet"
+              "browserTarget": "ether-phunks-market:build:mainnet"
             }
           },
           "defaultConfiguration": "development"
@@ -141,7 +141,7 @@
         "extract-i18n": {
           "builder": "@angular-devkit/build-angular:extract-i18n",
           "options": {
-            "browserTarget": "punk-market:build"
+            "browserTarget": "ether-phunks-market:build"
           }
         }
       }

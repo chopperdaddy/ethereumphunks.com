@@ -33,8 +33,15 @@ export interface AppState {
   // activeFilters: any;
   activeEventType: EventType;
 
+  blockNumber: number;
   transactions: Transaction[];
+  cooldowns: Cooldown[]
 };
+
+export interface Cooldown {
+  phunkId: number;
+  startBlock: number;
+}
 
 export interface Transaction {
   id: number;

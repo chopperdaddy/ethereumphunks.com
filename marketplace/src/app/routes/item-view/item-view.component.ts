@@ -1,4 +1,4 @@
-import { AfterViewInit, Component, ElementRef, OnDestroy, TemplateRef, ViewChild } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, OnDestroy, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, ActivatedRoute, RouterModule } from '@angular/router';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
@@ -9,6 +9,7 @@ import { LazyLoadImageModule } from 'ng-lazyload-image';
 import { PhunkBillboardComponent } from '@/components/phunk-billboard/phunk-billboard.component';
 import { TxHistoryComponent } from '@/components/tx-history/tx-history.component';
 import { PhunkImageComponent } from '@/components/phunk-image/phunk-image.component';
+import { BreadcrumbsComponent } from '@/components/breadcrumbs/breadcrumbs.component';
 
 import { WalletAddressDirective } from '@/directives/wallet-address.directive';
 
@@ -24,14 +25,13 @@ import { ThemeService } from '@/services/theme.service';
 import { Phunk } from '@/models/graph';
 import { GlobalState } from '@/models/global-state';
 
-import { Subject, tap } from 'rxjs';
+import { Subject, filter, map, switchMap, takeUntil, tap, withLatestFrom } from 'rxjs';
 import { TransactionReceipt } from 'viem';
 
 import { environment } from 'src/environments/environment';
 
 import * as actions from '@/state/actions/app-state.action';
 import * as selectors from '@/state/selectors/app-state.selector';
-import { BreadcrumbsComponent } from '@/components/breadcrumbs/breadcrumbs.component';
 
 interface TxStatus {
   title: string;
@@ -75,7 +75,6 @@ interface TxStatuses {
 
 export class ItemViewComponent implements AfterViewInit, OnDestroy {
 
-  @ViewChild('modal') modal!: ElementRef;
   @ViewChild('bidPriceInput') bidPriceInput!: ElementRef<HTMLInputElement>;
   @ViewChild('sellPriceInput') sellPriceInput!: ElementRef<HTMLInputElement>;
   @ViewChild('transferAddressInput') transferAddressInput!: ElementRef<HTMLInputElement>;
@@ -96,11 +95,17 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
   acceptbidActive: boolean = false;
   // transferAddress = new FormControl<string | null>('');
 
-  coolDownTimerActive: boolean = false;
-
   objectValues = Object.values;
 
   refreshPhunk$ = new Subject<void>();
+
+  isCooling$ = this.store.select(selectors.selectCooldowns).pipe(
+    filter((cooldowns) => !!cooldowns),
+    switchMap((cooldowns) => this.singlePhunk$.pipe(
+      filter((phunk) => !!phunk),
+      map((phunk) => cooldowns.filter((cooldown) => cooldown?.phunkId === phunk?.phunkId)?.length > 0),
+    )),
+  );
 
   walletAddress$ = this.store.select(selectors.selectWalletAddress);
   singlePhunk$ = this.store.select(selectors.selectSinglePhunk);
@@ -115,13 +120,14 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
     public dataSvc: DataService,
     public web3Svc: Web3Service,
     public themeSvc: ThemeService,
-  ) {
+  ) {}
+
+  ngAfterViewInit(): void {
     this.route.params.pipe(
       tap((params: any) => this.store.dispatch(actions.fetchSinglePhunk({ phunkId: params.tokenId }))),
+      takeUntil(this.destroy$),
     ).subscribe();
   }
-
-  ngAfterViewInit(): void {}
 
   ngOnDestroy(): void {
     this.store.dispatch(actions.clearSinglePhunk());
@@ -179,6 +185,8 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
   }
 
   async submitListing(phunk: Phunk): Promise<void> {
+    const phunkId = phunk.phunkId;
+
     try {
       if (!phunk.hashId) throw new Error('Invalid hashId');
       if (!this.listPrice.value) return;
@@ -203,7 +211,7 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
           id: Date.now(),
           type: 'wallet',
           function: 'offerPhunkForSale',
-          phunkId: phunk.phunkId,
+          phunkId,
         }
       }));
 
@@ -214,7 +222,7 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
           id: Date.now(),
           type: 'pending',
           function: 'offerPhunkForSale',
-          phunkId: phunk.phunkId,
+          phunkId,
           hash,
         }
       }));
@@ -226,14 +234,14 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
           id: Date.now(),
           type: 'complete',
           function: 'offerPhunkForSale',
-          phunkId: phunk.phunkId,
+          phunkId,
           hash: receipt.transactionHash,
         }
       }));
 
       this.listPrice.setValue(0);
-      this.coolDownTimerActive = true;
-      await this.web3Svc.cooldownTimer();
+
+      this.store.dispatch(actions.addCooldown({ cooldown: { phunkId, startBlock: Number(receipt.blockNumber) }}));
     } catch (err) {
       console.log(err);
 
@@ -242,16 +250,16 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
           id: Date.now(),
           type: 'error',
           function: 'offerPhunkForSale',
-          phunkId: phunk.phunkId,
+          phunkId,
           detail: err,
         }
       }));
     }
-
-    this.coolDownTimerActive = false;
   }
 
   async sendToEscrow(phunk: Phunk): Promise<void> {
+    const phunkId = phunk.phunkId;
+
     try {
       if (!phunk.hashId) throw new Error('Invalid hashId');
 
@@ -261,7 +269,7 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
           id: Date.now(),
           type: 'wallet',
           function: 'sendToEscrow',
-          phunkId: phunk.phunkId,
+          phunkId,
         }
       }));
 
@@ -273,7 +281,7 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
           id: Date.now(),
           type: 'pending',
           function: 'sendToEscrow',
-          phunkId: phunk.phunkId,
+          phunkId,
           hash,
         }
       }));
@@ -285,13 +293,12 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
           id: Date.now(),
           type: 'complete',
           function: 'sendToEscrow',
-          phunkId: phunk.phunkId,
+          phunkId,
           hash: receipt.transactionHash,
         }
       }));
 
-      this.coolDownTimerActive = true;
-      await this.web3Svc.cooldownTimer();
+      this.store.dispatch(actions.addCooldown({ cooldown: { phunkId, startBlock: Number(receipt.blockNumber) }}));
     } catch (err) {
       console.log(err);
       // this.setErrorTransactionMessage(err);
@@ -300,16 +307,16 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
           id: Date.now(),
           type: 'error',
           function: 'sendToEscrow',
-          phunkId: phunk.phunkId,
+          phunkId,
           detail: err,
         }
       }));
     }
-
-    this.coolDownTimerActive = false;
   }
 
   async phunkNoLongerForSale(phunk: Phunk): Promise<void> {
+    const phunkId = phunk.phunkId;
+
     try {
       if (!phunk.hashId) throw new Error('Invalid hashId');
       const tokenId = phunk.hashId;
@@ -320,7 +327,7 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
           id: Date.now(),
           type: 'wallet',
           function: 'phunkNoLongerForSale',
-          phunkId: phunk.phunkId,
+          phunkId,
         }
       }));
 
@@ -331,7 +338,7 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
           id: Date.now(),
           type: 'pending',
           function: 'phunkNoLongerForSale',
-          phunkId: phunk.phunkId,
+          phunkId,
           hash,
         }
       }));
@@ -343,13 +350,12 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
           id: Date.now(),
           type: 'complete',
           function: 'phunkNoLongerForSale',
-          phunkId: phunk.phunkId,
+          phunkId,
           hash: receipt.transactionHash,
         }
       }));
 
-      this.coolDownTimerActive = true;
-      await this.web3Svc.cooldownTimer();
+      this.store.dispatch(actions.addCooldown({ cooldown: { phunkId, startBlock: Number(receipt.blockNumber) }}));
     } catch (err) {
       console.log(err);
       // this.setErrorTransactionMessage(err);
@@ -358,15 +364,16 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
           id: Date.now(),
           type: 'error',
           function: 'phunkNoLongerForSale',
-          phunkId: phunk.phunkId,
+          phunkId,
           detail: err,
         }
       }));
     }
-    this.coolDownTimerActive = false;
   }
 
   async withdrawBidForPhunk(phunk: Phunk): Promise<void> {
+    const phunkId = phunk.phunkId;
+
     try {
       if (!phunk.hashId) throw new Error('Invalid hashId');
 
@@ -378,7 +385,7 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
           id: Date.now(),
           type: 'wallet',
           function: 'withdrawBidForPhunk',
-          phunkId: phunk.phunkId,
+          phunkId,
         }
       }));
 
@@ -389,7 +396,7 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
           id: Date.now(),
           type: 'pending',
           function: 'withdrawBidForPhunk',
-          phunkId: phunk.phunkId,
+          phunkId,
           hash,
         }
       }));
@@ -401,13 +408,12 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
           id: Date.now(),
           type: 'complete',
           function: 'withdrawBidForPhunk',
-          phunkId: phunk.phunkId,
+          phunkId,
           hash: receipt.transactionHash,
         }
       }));
 
-      this.coolDownTimerActive = true;
-      await this.web3Svc.cooldownTimer();
+      this.store.dispatch(actions.addCooldown({ cooldown: { phunkId, startBlock: Number(receipt.blockNumber) }}));
     } catch (err) {
       console.log(err);
       // this.setErrorTransactionMessage(err);
@@ -416,16 +422,16 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
           id: Date.now(),
           type: 'error',
           function: 'withdrawBidForPhunk',
-          phunkId: phunk.phunkId,
+          phunkId,
           detail: err,
         }
       }));
     }
-
-    this.coolDownTimerActive = false;
   }
 
   async acceptBidForPhunk(phunk: Phunk): Promise<void> {
+    const phunkId = phunk.phunkId;
+
     try {
       if (!phunk.hashId) throw new Error('Invalid hashId');
 
@@ -439,7 +445,7 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
           id: Date.now(),
           type: 'wallet',
           function: 'acceptBidForPhunk',
-          phunkId: phunk.phunkId,
+          phunkId,
         }
       }));
 
@@ -449,7 +455,7 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
           id: Date.now(),
           type: 'pending',
           function: 'acceptBidForPhunk',
-          phunkId: phunk.phunkId,
+          phunkId,
           hash,
         }
       }));
@@ -461,13 +467,12 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
           id: Date.now(),
           type: 'complete',
           function: 'acceptBidForPhunk',
-          phunkId: phunk.phunkId,
+          phunkId,
           hash: receipt.transactionHash,
         }
       }));
 
-      this.coolDownTimerActive = true;
-      await this.web3Svc.cooldownTimer();
+      this.store.dispatch(actions.addCooldown({ cooldown: { phunkId, startBlock: Number(receipt.blockNumber) }}));
     } catch (err) {
       console.log(err);
       // this.setErrorTransactionMessage(err);
@@ -476,13 +481,254 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
           id: Date.now(),
           type: 'error',
           function: 'acceptBidForPhunk',
-          phunkId: phunk.phunkId,
+          phunkId,
           detail: err,
         }
       }));
     }
+  }
 
-    this.coolDownTimerActive = false;
+  async buyPhunk(phunk: Phunk): Promise<void> {
+    const phunkId = phunk.phunkId;
+
+    try {
+      if (!phunk.hashId) throw new Error('Invalid hashId');
+
+      const tokenId = phunk.hashId;
+      const value = phunk.listing?.minValue;
+
+      // this.initTransactionMessage();
+      this.store.dispatch(actions.upsertTransaction({
+        transaction: {
+          id: Date.now(),
+          type: 'wallet',
+          function: 'buyPhunk',
+          phunkId,
+        }
+      }));
+
+      const hash = await this.web3Svc.buyPhunk(tokenId, value!);
+      // this.setTransactionMessage(hash!);
+      this.store.dispatch(actions.upsertTransaction({
+        transaction: {
+          id: Date.now(),
+          type: 'pending',
+          function: 'buyPhunk',
+          phunkId,
+          hash,
+        }
+      }));
+
+      const receipt = await this.pollReceipt(hash!);
+      // this.setTransactionCompleteMessage(receipt);
+      this.store.dispatch(actions.upsertTransaction({
+        transaction: {
+          id: Date.now(),
+          type: 'complete',
+          function: 'buyPhunk',
+          phunkId,
+          hash: receipt.transactionHash,
+        }
+      }));
+
+      this.store.dispatch(actions.addCooldown({ cooldown: { phunkId, startBlock: Number(receipt.blockNumber) }}));
+    } catch (err) {
+      console.log(err);
+      // this.setErrorTransactionMessage(err);
+      this.store.dispatch(actions.upsertTransaction({
+        transaction: {
+          id: Date.now(),
+          type: 'error',
+          function: 'buyPhunk',
+          phunkId,
+          detail: err,
+        }
+      }));
+    }
+  }
+
+  async submitBid(phunk: Phunk): Promise<void> {
+    const phunkId = phunk.phunkId;
+
+    try {
+      if (!phunk.hashId) throw new Error('Invalid hashId');
+      if (!this.bidPrice.value) return;
+
+      const tokenId = phunk.hashId;
+      const value = this.bidPrice.value;
+
+      // this.closeBid();
+      // this.initTransactionMessage();
+      this.store.dispatch(actions.upsertTransaction({
+        transaction: {
+          id: Date.now(),
+          type: 'wallet',
+          function: 'enterBidForPhunk',
+          phunkId,
+        }
+      }));
+
+      const hash = await this.web3Svc.enterBidForPhunk(tokenId, value);
+      // this.setTransactionMessage(hash!);
+      this.store.dispatch(actions.upsertTransaction({
+        transaction: {
+          id: Date.now(),
+          type: 'pending',
+          function: 'enterBidForPhunk',
+          phunkId,
+          hash,
+        }
+      }));
+
+      const receipt = await this.pollReceipt(hash!);
+      // this.setTransactionCompleteMessage(receipt);
+      this.store.dispatch(actions.upsertTransaction({
+        transaction: {
+          id: Date.now(),
+          type: 'complete',
+          function: 'enterBidForPhunk',
+          phunkId,
+          hash: receipt.transactionHash,
+        }
+      }));
+
+      this.store.dispatch(actions.addCooldown({ cooldown: { phunkId, startBlock: Number(receipt.blockNumber) }}));
+    } catch (err) {
+      console.log(err);
+      // this.setErrorTransactionMessage(err);
+      this.store.dispatch(actions.upsertTransaction({
+        transaction: {
+          id: Date.now(),
+          type: 'error',
+          function: 'enterBidForPhunk',
+          phunkId,
+          detail: err,
+        }
+      }));
+    }
+  }
+
+  async transferPhunk(data: Phunk, address?: string): Promise<void> {
+    const phunkId = data.phunkId;
+
+    try {
+
+      const hashId = data.hashId;
+      if (!hashId) throw new Error('Invalid hashId');
+
+      let toAddress: string | null = address || this.transferAddress.value;
+      toAddress = await this.web3Svc.verifyAddressOrEns(toAddress);
+      if (!toAddress) throw new Error('Invalid address');
+
+      this.closeTransfer();
+      // this.initTransactionMessage();
+      this.store.dispatch(actions.upsertTransaction({
+        transaction: {
+          id: Date.now(),
+          type: 'wallet',
+          function: 'transferPhunk',
+          phunkId,
+        }
+      }));
+
+      const hash = await this.web3Svc.transferPhunk(hashId, toAddress);
+      // this.setTransactionMessage(hash!);
+      this.store.dispatch(actions.upsertTransaction({
+        transaction: {
+          id: Date.now(),
+          type: 'pending',
+          function: 'transferPhunk',
+          phunkId,
+          hash,
+        }
+      }));
+
+      const receipt = await this.pollReceipt(hash!);
+      // this.setTransactionCompleteMessage(receipt);
+      this.store.dispatch(actions.upsertTransaction({
+        transaction: {
+          id: Date.now(),
+          type: 'complete',
+          function: 'transferPhunk',
+          phunkId,
+          hash: receipt.transactionHash,
+        }
+      }));
+
+      this.store.dispatch(actions.addCooldown({ cooldown: { phunkId, startBlock: Number(receipt.blockNumber) }}));
+    } catch (err) {
+      // this.setErrorTransactionMessage(err);
+      console.log(err);
+      this.store.dispatch(actions.upsertTransaction({
+        transaction: {
+          id: Date.now(),
+          type: 'error',
+          function: 'transferPhunk',
+          phunkId,
+          detail: err,
+        }
+      }));
+    }
+  }
+
+  async withdrawPhunk(phunk: Phunk): Promise<void> {
+    const phunkId = phunk.phunkId;
+
+    try {
+      if (!phunk.hashId) throw new Error('Invalid hashId');
+
+      const tokenId = phunk.hashId;
+
+      // this.initTransactionMessage();
+      this.store.dispatch(actions.upsertTransaction({
+        transaction: {
+          id: Date.now(),
+          type: 'wallet',
+          function: 'withdrawPhunk',
+          phunkId,
+        }
+      }));
+
+      const hash = await this.web3Svc.withdrawPhunk(tokenId);
+      if (!hash) throw new Error('Could not proccess transaction');
+
+      // this.setTransactionMessage(hash!);
+      this.store.dispatch(actions.upsertTransaction({
+        transaction: {
+          id: Date.now(),
+          type: 'pending',
+          function: 'withdrawPhunk',
+          phunkId,
+          hash,
+        }
+      }));
+
+      const receipt = await this.pollReceipt(hash!);
+      // this.setTransactionCompleteMessage(receipt);
+      this.store.dispatch(actions.upsertTransaction({
+        transaction: {
+          id: Date.now(),
+          type: 'complete',
+          function: 'withdrawPhunk',
+          phunkId,
+          hash: receipt.transactionHash,
+        }
+      }));
+
+      this.store.dispatch(actions.addCooldown({ cooldown: { phunkId, startBlock: Number(receipt.blockNumber) }}));
+    } catch (err) {
+      console.log(err);
+      // this.setErrorTransactionMessage(err);
+      this.store.dispatch(actions.upsertTransaction({
+        transaction: {
+          id: Date.now(),
+          type: 'error',
+          function: 'withdrawPhunk',
+          phunkId,
+          detail: err,
+        }
+      }));
+    }
   }
 
   pollReceipt(hash: string): Promise<TransactionReceipt> {
@@ -501,262 +747,6 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
         }
       }
     });
-  }
-
-  async buyPhunk(phunk: Phunk): Promise<void> {
-    try {
-      if (!phunk.hashId) throw new Error('Invalid hashId');
-
-      const tokenId = phunk.hashId;
-      const value = phunk.listing?.minValue;
-
-      // this.initTransactionMessage();
-      this.store.dispatch(actions.upsertTransaction({
-        transaction: {
-          id: Date.now(),
-          type: 'wallet',
-          function: 'buyPhunk',
-          phunkId: phunk.phunkId,
-        }
-      }));
-
-      const hash = await this.web3Svc.buyPhunk(tokenId, value!);
-      // this.setTransactionMessage(hash!);
-      this.store.dispatch(actions.upsertTransaction({
-        transaction: {
-          id: Date.now(),
-          type: 'pending',
-          function: 'buyPhunk',
-          phunkId: phunk.phunkId,
-          hash,
-        }
-      }));
-
-      const receipt = await this.pollReceipt(hash!);
-      // this.setTransactionCompleteMessage(receipt);
-      this.store.dispatch(actions.upsertTransaction({
-        transaction: {
-          id: Date.now(),
-          type: 'complete',
-          function: 'buyPhunk',
-          phunkId: phunk.phunkId,
-          hash: receipt.transactionHash,
-        }
-      }));
-
-      this.coolDownTimerActive = true;
-      await this.web3Svc.cooldownTimer();
-    } catch (err) {
-      console.log(err);
-      // this.setErrorTransactionMessage(err);
-      this.store.dispatch(actions.upsertTransaction({
-        transaction: {
-          id: Date.now(),
-          type: 'error',
-          function: 'buyPhunk',
-          phunkId: phunk.phunkId,
-          detail: err,
-        }
-      }));
-    }
-
-    this.coolDownTimerActive = false;
-  }
-
-  async submitBid(phunk: Phunk): Promise<void> {
-    try {
-      if (!phunk.hashId) throw new Error('Invalid hashId');
-      if (!this.bidPrice.value) return;
-
-      const tokenId = phunk.hashId;
-      const value = this.bidPrice.value;
-
-      // this.closeBid();
-      // this.initTransactionMessage();
-      this.store.dispatch(actions.upsertTransaction({
-        transaction: {
-          id: Date.now(),
-          type: 'wallet',
-          function: 'enterBidForPhunk',
-          phunkId: phunk.phunkId,
-        }
-      }));
-
-      const hash = await this.web3Svc.enterBidForPhunk(tokenId, value);
-      // this.setTransactionMessage(hash!);
-      this.store.dispatch(actions.upsertTransaction({
-        transaction: {
-          id: Date.now(),
-          type: 'pending',
-          function: 'enterBidForPhunk',
-          phunkId: phunk.phunkId,
-          hash,
-        }
-      }));
-
-      const receipt = await this.pollReceipt(hash!);
-      // this.setTransactionCompleteMessage(receipt);
-      this.store.dispatch(actions.upsertTransaction({
-        transaction: {
-          id: Date.now(),
-          type: 'complete',
-          function: 'enterBidForPhunk',
-          phunkId: phunk.phunkId,
-          hash: receipt.transactionHash,
-        }
-      }));
-
-      this.coolDownTimerActive = true;
-      await this.web3Svc.cooldownTimer();
-    } catch (err) {
-      console.log(err);
-      // this.setErrorTransactionMessage(err);
-      this.store.dispatch(actions.upsertTransaction({
-        transaction: {
-          id: Date.now(),
-          type: 'error',
-          function: 'enterBidForPhunk',
-          phunkId: phunk.phunkId,
-          detail: err,
-        }
-      }));
-    }
-
-    this.coolDownTimerActive = false;
-  }
-
-  async transferPhunk(data: Phunk, address?: string): Promise<void> {
-    console.log('transferPhunk', data);
-    try {
-
-      const hashId = data.hashId;
-      if (!hashId) throw new Error('Invalid hashId');
-
-      let toAddress: string | null = address || this.transferAddress.value;
-      toAddress = await this.web3Svc.verifyAddressOrEns(toAddress);
-      if (!toAddress) throw new Error('Invalid address');
-
-      this.closeTransfer();
-      // this.initTransactionMessage();
-      this.store.dispatch(actions.upsertTransaction({
-        transaction: {
-          id: Date.now(),
-          type: 'wallet',
-          function: 'transferPhunk',
-          phunkId: data.phunkId,
-        }
-      }));
-
-      const hash = await this.web3Svc.transferPhunk(hashId, toAddress);
-      // this.setTransactionMessage(hash!);
-      this.store.dispatch(actions.upsertTransaction({
-        transaction: {
-          id: Date.now(),
-          type: 'pending',
-          function: 'transferPhunk',
-          phunkId: data.phunkId,
-          hash,
-        }
-      }));
-
-      const receipt = await this.pollReceipt(hash!);
-      // this.setTransactionCompleteMessage(receipt);
-      this.store.dispatch(actions.upsertTransaction({
-        transaction: {
-          id: Date.now(),
-          type: 'complete',
-          function: 'transferPhunk',
-          phunkId: data.phunkId,
-          hash: receipt.transactionHash,
-        }
-      }));
-
-      this.coolDownTimerActive = true;
-      await this.web3Svc.cooldownTimer();
-    } catch (err) {
-      // this.setErrorTransactionMessage(err);
-      console.log(err);
-      this.store.dispatch(actions.upsertTransaction({
-        transaction: {
-          id: Date.now(),
-          type: 'error',
-          function: 'transferPhunk',
-          phunkId: data.phunkId,
-          detail: err,
-        }
-      }));
-    }
-
-    this.coolDownTimerActive = false;
-  }
-
-  async withdrawPhunk(phunk: Phunk): Promise<void> {
-    try {
-      if (!phunk.hashId) throw new Error('Invalid hashId');
-
-      const tokenId = phunk.hashId;
-
-      // this.initTransactionMessage();
-      this.store.dispatch(actions.upsertTransaction({
-        transaction: {
-          id: Date.now(),
-          type: 'wallet',
-          function: 'withdrawPhunk',
-          phunkId: phunk.phunkId,
-        }
-      }));
-
-      const hash = await this.web3Svc.withdrawPhunk(tokenId);
-      if (!hash) throw new Error('Could not proccess transaction');
-
-      // this.setTransactionMessage(hash!);
-      this.store.dispatch(actions.upsertTransaction({
-        transaction: {
-          id: Date.now(),
-          type: 'pending',
-          function: 'withdrawPhunk',
-          phunkId: phunk.phunkId,
-          hash,
-        }
-      }));
-
-      const receipt = await this.pollReceipt(hash!);
-      // this.setTransactionCompleteMessage(receipt);
-      this.store.dispatch(actions.upsertTransaction({
-        transaction: {
-          id: Date.now(),
-          type: 'complete',
-          function: 'withdrawPhunk',
-          phunkId: phunk.phunkId,
-          hash: receipt.transactionHash,
-        }
-      }));
-
-      this.coolDownTimerActive = true;
-      await this.web3Svc.cooldownTimer();
-    } catch (err) {
-      console.log(err);
-      // this.setErrorTransactionMessage(err);
-      this.store.dispatch(actions.upsertTransaction({
-        transaction: {
-          id: Date.now(),
-          type: 'error',
-          function: 'withdrawPhunk',
-          phunkId: phunk.phunkId,
-          detail: err,
-        }
-      }));
-    }
-
-    this.coolDownTimerActive = false;
-  }
-
-  async addFlashbotsNetwork(): Promise<void> {
-    try {
-      return await this.web3Svc.addFlashbotsNetwork();
-    } catch (err) {
-      console.log(err);
-    }
   }
 
   getItemQueryParams(item: any): any {

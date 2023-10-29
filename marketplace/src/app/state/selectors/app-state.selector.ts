@@ -108,3 +108,8 @@ export const selectIsMobile = createSelector(
   selectAppState,
   (appState: AppState) => appState.isMobile
 );
+
+export const selectCooldowns = createSelector(
+  selectAppState,
+  (appState: AppState) => appState.cooldowns
+);

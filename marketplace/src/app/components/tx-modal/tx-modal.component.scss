@@ -35,12 +35,8 @@
   width: 100%;
   max-height: 100%;
   max-width: 40rem;
-  padding: 1rem;
 
   pointer-events: auto;
-
-  background-color: rgba(var(--background), 1);
-  box-shadow: 0 4rem 12rem 0 rgba(var(--highlight), .2);
 
   overflow-y: scroll;
   scrollbar-width: none;
@@ -53,11 +49,33 @@
   }
 
   .txn-item {
+    position: relative;
 
     display: grid;
     grid-template-columns: 4rem 1fr;
     grid-gap: 1rem;
-    padding: 1rem;
+    padding: 2rem 2rem 2rem 1rem;
+
+    background-color: rgba(var(--background), 1);
+    box-shadow: 0 4rem 12rem 0 rgba(var(--highlight), .2);
+
+    .dismiss {
+      position: absolute;
+      z-index: 1;
+      top: 1rem;
+      right: 0;
+
+      width: 2rem;
+      height: 2rem;
+
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      font-family: $secondary-font-stack;
+      font-size: 1.2rem;
+      font-weight: normal;
+    }
 
     app-phunk-image {
       width: 4rem;
@@ -107,20 +125,51 @@
       app-phunk-image {
         background-color: rgba(var(--bid-color), 1);
       }
+
+      .txn-info {
+        h4 {
+          color: rgba(var(--bid-color), 1);
+        }
+      }
     }
     &.sale {
       app-phunk-image {
         background-color: rgba(var(--sale-color), 1);
+      }
+
+      .txn-info {
+        h4 {
+          color: rgba(var(--sale-color), 1);
+        }
       }
     }
     &.transfer {
       app-phunk-image {
         background-color: rgba(var(--transferred-color), 1);
       }
+
+      .txn-info {
+        h4 {
+          color: rgba(var(--transferred-color), 1);
+        }
+      }
     }
     &.escrow {
       app-phunk-image {
         background-color: rgba(var(--escrow-color), 1);
+      }
+
+      .txn-info {
+        h4 {
+          color: rgba(var(--escrow-color), 1);
+        }
+      }
+    }
+    &.complete {
+      opacity: .35;
+
+      &:hover {
+        opacity: 1;
       }
     }
   }

@@ -1,6 +1,6 @@
 // Possible edg cases
 // - Non EtherPhunk is sent to contract
-// - User escrows, lists & removes from escrow -- Listing is still valid
+// - User escrows, lists & removes from escrow -- Listing is still valid (solved)
 // -
 
 // SPDX-License-Identifier: MIT License

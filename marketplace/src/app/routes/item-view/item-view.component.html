@@ -3,7 +3,6 @@
 />
 
 <div class="view-item-wrapper">
-
   <app-breadcrumbs
     [phunk]="(singlePhunk$ | async)"
   />
@@ -65,7 +64,9 @@
             </ng-template>
           </div>
 
-          <div class="actions-wrapper">
+          <div
+            class="actions-wrapper"
+            [class.cooldown]="isCooling$ | async">
             <ng-container *ngIf="(walletAddress$ | async) as address; else notConnected">
               <ng-container *ngIf="phunk.owner as owner">
 
@@ -107,6 +108,7 @@
 
                     <ng-template #sendToEscrowActions>
                       <div class="form-wrapper">
+                        <ng-template [ngTemplateOutlet]="cooldown" *ngIf="isCooling$ | async"></ng-template>
                         <p i18n>Your EtherPhunk must be held in escrow in order to be listed.</p>
                         <button
                           i18n
@@ -163,23 +165,25 @@
                   </button>
                 </ng-container>
 
-                <!-- Bid button -->
-                <button
-                  i18n
+                <!-- Bid -->
+                <ng-container
                   *ngIf="
                     (owner | lowercase) !== (address | lowercase) &&
                     (phunk.prevOwner | lowercase) !== (address | lowercase)
-                  "
-                  [class.active]="bidActive"
-                  class="sell"
-                  (click)="bidOnPhunk()">
+                  ">
+                  <button
+                    i18n
+                    [class.active]="bidActive"
+                    class="sell"
+                    (click)="bidOnPhunk()">
 
-                  Place Bid
-                </button>
+                    Place Bid
+                  </button>
 
-                <!-- Bid Actions -->
-                <ng-container *ngIf="bidActive">
-                  <ng-container *ngTemplateOutlet="bidForm; context:{ $implicit: phunk }" />
+                  <!-- Bid Actions -->
+                  <ng-container *ngIf="bidActive">
+                    <ng-container *ngTemplateOutlet="bidForm; context:{ $implicit: phunk }" />
+                  </ng-container>
                 </ng-container>
 
                 <!-- Withdraw Bid button -->
@@ -247,7 +251,7 @@
 <!-- Transfer Form -->
 <ng-template #transferForm let-phunk>
   <form class="form-wrapper">
-    <ng-template [ngTemplateOutlet]="cooldown" *ngIf="coolDownTimerActive"></ng-template>
+    <ng-template [ngTemplateOutlet]="cooldown" *ngIf="isCooling$ | async"></ng-template>
     <div class="form-group">
       <label i18n for="transfer-address">Transfer to address</label>
       <input
@@ -271,7 +275,7 @@
 <!-- Bid Form -->
 <ng-template #bidForm let-phunk>
   <form class="form-wrapper">
-    <ng-template [ngTemplateOutlet]="cooldown" *ngIf="coolDownTimerActive"></ng-template>
+    <ng-template [ngTemplateOutlet]="cooldown" *ngIf="isCooling$ | async"></ng-template>
     <div class="form-group">
       <label i18n for="bid-price">Bid Price (Ξ)</label>
       <input #bidPriceInput type="number" id="bid-price" [formControl]="bidPrice" placeholder="0" />
@@ -287,7 +291,7 @@
 <!-- Sell Form -->
 <ng-template #sellForm let-phunk>
   <form class="form-wrapper">
-    <ng-template [ngTemplateOutlet]="cooldown" *ngIf="coolDownTimerActive"></ng-template>
+    <ng-template [ngTemplateOutlet]="cooldown" *ngIf="isCooling$ | async"></ng-template>
     <div class="form-group">
       <label i18n for="list-price">Asking Price in ETH (Ξ)</label>
       <input #sellPriceInput type="number" id="list-price" [min]="0" [formControl]="listPrice" />

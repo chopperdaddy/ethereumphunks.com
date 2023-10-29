@@ -1,13 +1,15 @@
 import { AppState } from '@/models/global-state';
 import { Action, ActionReducer, createReducer, on } from '@ngrx/store';
 
+import { Theme } from '@/models/theme';
+
 import * as actions from '../actions/app-state.action';
 
 export const initialState: AppState = {
   connected: false,
   walletAddress: '',
   hasWithdrawal: false,
-  theme: 'initial',
+  theme: localStorage.getItem('EtherPhunks_theme') as Theme || 'initial',
 
   isMobile: false,
   menuActive: false,
@@ -30,7 +32,9 @@ export const initialState: AppState = {
 
   activeEventType: 'All',
 
+  blockNumber: -1,
   transactions: [],
+  cooldowns: JSON.parse(localStorage.getItem('EtherPhunks_cooldowns') || '[]'),
 };
 
 export const appStateReducer: ActionReducer<AppState, Action> = createReducer(
@@ -304,5 +308,29 @@ export const appStateReducer: ActionReducer<AppState, Action> = createReducer(
     };
     // console.log('setIsMobile', setIsMobile);
     return setIsMobile
+  }),
+  on(actions.addCooldown, (state, { cooldown }) => {
+    const setCooldowns = {
+      ...state,
+      cooldowns: [cooldown, ...state.cooldowns]
+    };
+    // console.log('setCooldowns', setCooldowns);
+    return setCooldowns
+  }),
+  on(actions.removeCooldown, (state, { phunkId }) => {
+    const setCooldowns = {
+      ...state,
+      cooldowns: state.cooldowns.filter(cooldown => cooldown.phunkId !== phunkId)
+    };
+    // console.log('setCooldowns', setCooldowns);
+    return setCooldowns
+  }),
+  on(actions.newBlock, (state, { blockNumber }) => {
+    const setBlockNumber = {
+      ...state,
+      blockNumber
+    };
+    // console.log('setBlockNumber', setBlockNumber);
+    return setBlockNumber
   }),
 );

@@ -17,7 +17,7 @@ import { Web3Modal } from '@web3modal/html';
 import { jsonRpcProvider } from '@wagmi/core/providers/jsonRpc';
 import { EthereumClient, w3mConnectors } from '@web3modal/ethereum';
 
-import { setConnected, setHasWithdrawal, setWalletAddress } from '@/state/actions/app-state.action';
+import * as actions from '@/state/actions/app-state.action';
 
 import { GlobalState } from '@/models/global-state';
 
@@ -29,6 +29,8 @@ const projectId = '9455b1a68e7f81eee6e1090c12edbf00';
 })
 
 export class Web3Service {
+
+  maxCooldown = 10;
 
   config!: Config<PublicClient<FallbackTransport, Chain>, WebSocketPublicClient<FallbackTransport, Chain>>;
   connectors: any[] = [];
@@ -97,22 +99,12 @@ export class Web3Service {
         return of(err);
       }),
     ).subscribe();
-  }
 
-  async cooldownTimer(cooldown: number = 5): Promise<void> {
-    return new Promise<void>((resolve) => {
-      let endBlock = 0;
-      const unwatch = watchBlockNumber({
-        chainId: environment.chainId,
-        listen: true,
-      }, (block) => {
-        console.log('block', block);
-        if (!endBlock) endBlock = Number(block) + cooldown;
-        if (Number(block) >= endBlock) {
-          unwatch();
-          resolve();
-        }
-      });
+    watchBlockNumber({
+      chainId: environment.chainId,
+      listen: true,
+    }, (block) => {
+      this.store.dispatch(actions.newBlock({ blockNumber: Number(block) }));
     });
   }
 
@@ -129,8 +121,8 @@ export class Web3Service {
     if (!address) return;
     address = address.toLowerCase();
 
-    this.store.dispatch(setWalletAddress({ walletAddress: address }));
-    this.store.dispatch(setConnected({ connected: true }));
+    this.store.dispatch(actions.setWalletAddress({ walletAddress: address }));
+    this.store.dispatch(actions.setConnected({ connected: true }));
 
     if (this.checkNetwork() !== environment.chainId) {
       await switchNetwork({ chainId: environment.chainId });
@@ -140,8 +132,8 @@ export class Web3Service {
   async disconnectWeb3(): Promise<void> {
     if (getAccount().isConnected) {
       await disconnect();
-      this.store.dispatch(setWalletAddress({ walletAddress: '' }));
-      this.store.dispatch(setConnected({ connected: getAccount().isConnected }));
+      this.store.dispatch(actions.setWalletAddress({ walletAddress: '' }));
+      this.store.dispatch(actions.setConnected({ connected: getAccount().isConnected }));
     }
   }
 

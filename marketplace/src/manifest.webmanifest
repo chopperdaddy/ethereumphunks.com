@@ -1,8 +1,8 @@
 {
-  "name": "punk-market",
-  "short_name": "punk-market",
-  "theme_color": "#1976d2",
-  "background_color": "#fafafa",
+  "name": "EtherPhunks Market",
+  "short_name": "EtherPhunks",
+  "theme_color": "#C3FF00",
+  "background_color": "#000000",
   "display": "standalone",
   "scope": "./",
   "start_url": "./",

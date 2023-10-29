@@ -9,7 +9,6 @@ import { Actions, createEffect, ofType } from '@ngrx/effects';
 
 import { Web3Service } from '@/services/web3.service';
 import { DataService } from '@/services/data.service';
-import { TransactionService } from '@/services/transaction.service';
 
 import { Attribute, Phunk } from '@/models/graph';
 import { GlobalState } from '@/models/global-state';
@@ -33,11 +32,13 @@ export class AppStateEffects {
     withLatestFrom(
       this.store.select(getRouterSelectors().selectRouteParam('marketType')),
       this.store.select(getRouterSelectors().selectQueryParams),
+      this.store.select(getRouterSelectors().selectRouteParams),
     ),
-    tap(([action, marketType, queryParams]) => {
+    tap(([action, marketType, queryParams, routeParams]) => {
       if (!marketType) {
         this.store.dispatch(actions.clearActiveTraitFilters());
         this.store.dispatch(actions.clearActiveMarketRouteData());
+        // const phunkId = routeParams['tokenId'];
       }
     }),
     filter(([action, marketType, queryParams]) => !!marketType),
@@ -312,13 +313,28 @@ export class AppStateEffects {
     // )
   ), { dispatch: false });
 
+  onNewBlock$ = createEffect(() => this.actions$.pipe(
+    ofType(actions.newBlock),
+    withLatestFrom(this.store.select(selectors.selectCooldowns)),
+    tap(([action, cooldowns]) => {
+      console.log('newBlock', {action, cooldowns});
+      const currentBlock = action.blockNumber;
+      for (const cooldown of cooldowns) {
+        const cooldownEnd = cooldown.startBlock + this.web3Svc.maxCooldown;
+        if (currentBlock >= cooldownEnd) {
+          this.store.dispatch(actions.removeCooldown({ phunkId: cooldown.phunkId }));
+        }
+      }
+      localStorage.setItem('EtherPhunks_cooldowns', JSON.stringify(cooldowns));
+    })
+  ), { dispatch: false });
+
   constructor(
     private store: Store<GlobalState>,
     private actions$: Actions,
     private web3Svc: Web3Service,
     private dataSvc: DataService,
     private location: Location,
-    private txSvc: TransactionService,
     private themeSvc: ThemeService
   ) {}
 
