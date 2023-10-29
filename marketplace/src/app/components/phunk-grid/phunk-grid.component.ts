@@ -5,6 +5,7 @@ import { RouterModule } from '@angular/router';
 import { Store } from '@ngrx/store';
 import { NgxPaginationModule } from 'ngx-pagination';
 import { LazyLoadImageModule } from 'ng-lazyload-image';
+import { IntersectionObserverModule } from '@ng-web-apis/intersection-observer';
 
 import { ViewType } from '@/models/view-types';
 import { Phunk } from '@/models/graph';
@@ -16,7 +17,6 @@ import { DataService } from '@/services/data.service';
 import { TokenIdParsePipe } from '@/pipes/token-id-parse.pipe';
 import { WeiToEthPipe } from '@/pipes/wei-to-eth.pipe';
 import { FormatCashPipe } from '@/pipes/format-cash.pipe';
-import { FilterPipe } from '@/pipes/market-filter.pipe';
 import { SortPipe } from '@/pipes/sort.pipe';
 import { PropertiesPipe } from '@/pipes/properties';
 
@@ -34,11 +34,11 @@ import { filter, map } from 'rxjs';
     RouterModule,
     LazyLoadImageModule,
     NgxPaginationModule,
+    IntersectionObserverModule,
 
     TokenIdParsePipe,
     WeiToEthPipe,
     FormatCashPipe,
-    FilterPipe,
     SortPipe,
     PropertiesPipe
   ],
@@ -54,7 +54,7 @@ export class PhunkGridComponent implements OnChanges {
 
   @Input() phunkData: Phunk[] = [];
   @Input() marketType!: MarketTypes;
-  @Input() viewType: ViewType = 'medium';
+  @Input() viewType: ViewType = 'market';
   @Input() limit: number = 110;
   @Input() sort!: Sorts;
   @Input() currentPage: number = 1;
@@ -80,22 +80,27 @@ export class PhunkGridComponent implements OnChanges {
     public dataSvc: DataService,
   ) {}
 
-  identify(index: number, item: any) {
-    return item.id;
+  identify(index: number, item: Phunk) {
+    return item.phunkId;
   }
 
   ngOnChanges(changes: SimpleChanges): void {
 
     if (changes.selected && !changes.selected.firstChange) {
       this.phunkCheck?.forEach((checkbox) => {
-        checkbox.nativeElement.checked = this.selected.includes(checkbox.nativeElement.dataset.hashId);
+        const hashId = checkbox.nativeElement.dataset.hashId;
+        if (!hashId) return;
+
+        checkbox.nativeElement.checked = this.selected.includes(hashId);
       });
     }
 
     if (changes.selectAll) {
       this.phunkCheck?.forEach((checkbox) => {
         checkbox.nativeElement.checked = this.selectAll;
-        this.selectPhunk(checkbox.nativeElement.dataset.hashId, true, !this.selectAll);
+        const hashId = checkbox.nativeElement.dataset.hashId;
+        if (!hashId) return;
+        this.selectPhunk(hashId, true, !this.selectAll);
       });
     }
   }
@@ -117,5 +122,30 @@ export class PhunkGridComponent implements OnChanges {
 
     this.selected = [...this.selected];
     this.selectedChange.emit(this.selected);
+  }
+
+  scrollingDown: boolean = false;
+  prevIndex: number | null = null;
+
+  onIntersection($event: IntersectionObserverEntry[]): void {
+    if (this.viewType !== 'market') return;
+    if (this.limit >= this.phunkData.length) return;
+
+    $event.forEach((entry) => {
+      if (entry.isIntersecting) {
+        const target = entry.target as HTMLElement;
+        const index = Number(target.dataset.index);
+
+        // If prevIndex hasn't been set yet, initialize it
+        if (this.prevIndex === null) {
+          this.prevIndex = index;
+          return;
+        }
+
+        if (index > this.limit - 24) {
+          this.limit += 24;
+        }
+      }
+    });
   }
 }

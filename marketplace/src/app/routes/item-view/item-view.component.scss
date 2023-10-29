@@ -123,12 +123,39 @@ app-phunk-billboard {
     }
 
     .form-wrapper {
+      position: relative;
       padding: 1rem;
       margin: 0 0 1rem;
       background-color: rgba(var(--highlight), 1);
       color: rgba(var(--background), 1);
       width: 100%;
       max-width: 46rem;
+
+      .cooldown-wrapper {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        background-color: rgba(var(--highlight), .25);
+        backdrop-filter: blur(.5rem);
+
+        p {
+          font-family: $secondary-font-stack;
+          font-weight: normal;
+          font-size: 1.2rem;
+          text-align: right;
+          max-width: 12rem;
+
+          padding: 0 2rem 0 0;
+          margin: 0;
+        }
+      }
 
       p {
         font-size: 1.4rem;

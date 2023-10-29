@@ -1,6 +1,6 @@
 import { Phunk } from './graph';
 import { MarketTypes, Sorts } from './pipes';
-import { ModalState } from './transaction';
+import { Theme } from './theme';
 
 export interface GlobalState {
   appState: AppState;
@@ -10,6 +10,10 @@ export interface AppState {
   walletAddress: string;
   connected: boolean;
   hasWithdrawal: boolean;
+  theme: Theme;
+
+  isMobile: boolean;
+  menuActive: boolean;
 
   events: any[] | null;
   allPhunks: Phunk[] | null;
@@ -28,7 +32,20 @@ export interface AppState {
   activeSort: Sorts;
   // activeFilters: any;
   activeEventType: EventType;
-}
+
+  transactions: Transaction[];
+};
+
+export interface Transaction {
+  id: number;
+  type: 'wallet' | 'pending' | 'complete' | 'error';
+  function: TxFunction;
+  phunkId: number;
+  hash?: string | null;
+  detail?: any;
+};
+
+export type TxFunction = 'sendToEscrow' | 'phunkNoLongerForSale' | 'offerPhunkForSale' | 'withdrawBidForPhunk' | 'acceptBidForPhunk' | 'buyPhunk' | 'enterBidForPhunk' | 'transferPhunk' | 'withdrawPhunk';
 
 export interface TraitFilter { [key: string]: string };
 

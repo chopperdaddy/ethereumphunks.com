@@ -7,6 +7,10 @@ export const initialState: AppState = {
   connected: false,
   walletAddress: '',
   hasWithdrawal: false,
+  theme: 'initial',
+
+  isMobile: false,
+  menuActive: false,
 
   events: null,
   allPhunks: null,
@@ -25,6 +29,8 @@ export const initialState: AppState = {
   activeSort: 'id',
 
   activeEventType: 'All',
+
+  transactions: [],
 };
 
 export const appStateReducer: ActionReducer<AppState, Action> = createReducer(
@@ -236,5 +242,67 @@ export const appStateReducer: ActionReducer<AppState, Action> = createReducer(
     };
     // console.log('setActiveSort', setActiveSort);
     return setActiveSort
+  }),
+  on(actions.setMenuActive, (state, { menuActive }) => {
+    const setMenuActive = {
+      ...state,
+      menuActive
+    };
+    // console.log('setMenuActive', setMenuActive);
+    return setMenuActive
+  }),
+  on(actions.setTheme, (state, { theme }) => {
+    const setTheme = {
+      ...state,
+      theme
+    };
+    // console.log('setTheme', setTheme);
+    return setTheme
+  }),
+  on(actions.addTransaction, (state, { transaction }) => {
+    const addTransaction = {
+      ...state,
+      transactions: [transaction, ...state.transactions]
+    };
+    // console.log('addTransaction', addTransaction);
+    return addTransaction
+  }),
+  on(actions.removeTransaction, (state, { txId }) => {
+    const removeTransaction = {
+      ...state,
+      transactions: state.transactions.filter(tx => tx.id !== txId)
+    };
+    // console.log('removeTransaction', removeTransaction);
+    return removeTransaction
+  }),
+  on(actions.upsertTransaction, (state, { transaction }) => {
+
+    const txns = [...state.transactions];
+    const index = txns.findIndex(tx => tx.phunkId === transaction.phunkId);
+    if (index > -1) txns.splice(index, 1, transaction);
+    else txns.push(transaction);
+
+    const upsertTransaction = {
+      ...state,
+      transactions: txns
+    };
+    // console.log('upsertTransaction', upsertTransaction);
+    return upsertTransaction
+  }),
+  on(actions.clearTransactions, (state) => {
+    const clearTransactions = {
+      ...state,
+      transactions: []
+    };
+    // console.log('clearTransactions', clearTransactions);
+    return clearTransactions
+  }),
+  on(actions.setIsMobile, (state, { isMobile }) => {
+    const setIsMobile = {
+      ...state,
+      isMobile
+    };
+    // console.log('setIsMobile', setIsMobile);
+    return setIsMobile
   }),
 );

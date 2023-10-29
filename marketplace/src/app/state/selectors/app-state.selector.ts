@@ -88,3 +88,23 @@ export const selectSelectedPhunks = createSelector(
   selectAppState,
   (appState: AppState) => appState.selectedPhunks
 );
+
+export const selectMenuActive = createSelector(
+  selectAppState,
+  (appState: AppState) => appState.menuActive
+);
+
+export const selectTheme = createSelector(
+  selectAppState,
+  (appState: AppState) => appState.theme
+);
+
+export const selectTransactions = createSelector(
+  selectAppState,
+  (appState: AppState) => appState.transactions
+);
+
+export const selectIsMobile = createSelector(
+  selectAppState,
+  (appState: AppState) => appState.isMobile
+);

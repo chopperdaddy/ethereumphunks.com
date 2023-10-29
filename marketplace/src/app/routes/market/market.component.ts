@@ -3,6 +3,8 @@ import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 
+import { Store } from '@ngrx/store';
+import { IntersectionObserverModule } from '@ng-web-apis/intersection-observer';
 import { NgxPaginationModule } from 'ngx-pagination';
 import { LazyLoadImageModule } from 'ng-lazyload-image';
 import { NgSelectModule } from '@ng-select/ng-select';
@@ -13,16 +15,17 @@ import { MarketFiltersComponent } from '@/components/market-filters/market-filte
 import { WalletAddressDirective } from '@/directives/wallet-address.directive';
 
 import { Sorts } from '@/models/pipes';
+import { TokenIdParsePipe } from '@/pipes/token-id-parse.pipe';
 
-import { BehaviorSubject, firstValueFrom } from 'rxjs';
-import { environment } from 'src/environments/environment';
-import { Store } from '@ngrx/store';
 import { GlobalState } from '@/models/global-state';
 import { Phunk } from '@/models/graph';
+
 import { DataService } from '@/services/data.service';
-import { ModalComponent } from '@/components/modal/modal.component';
 import { Web3Service } from '@/services/web3.service';
-import { TokenIdParsePipe } from '@/pipes/token-id-parse.pipe';
+
+import { environment } from 'src/environments/environment';
+
+import { BehaviorSubject, firstValueFrom } from 'rxjs';
 
 @Component({
   selector: 'app-phunk-grid-view',
@@ -34,6 +37,7 @@ import { TokenIdParsePipe } from '@/pipes/token-id-parse.pipe';
     NgxPaginationModule,
     NgSelectModule,
     FormsModule,
+    IntersectionObserverModule,
 
     WalletAddressDirective,
 
@@ -41,13 +45,14 @@ import { TokenIdParsePipe } from '@/pipes/token-id-parse.pipe';
 
     PhunkGridComponent,
     MarketFiltersComponent,
-    ModalComponent,
   ],
   templateUrl: './market.component.html',
   styleUrls: ['./market.component.scss']
 })
 
 export class MarketComponent {
+
+  env = environment;
 
   escrowAddress = environment.phunksMarketAddress;
 

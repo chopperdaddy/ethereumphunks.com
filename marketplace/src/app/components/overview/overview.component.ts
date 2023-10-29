@@ -11,7 +11,6 @@ import { TimeagoModule } from 'ngx-timeago';
 import { WalletAddressDirective } from '@/directives/wallet-address.directive';
 
 import { DataService } from '@/services/data.service';
-import { StateService } from '@/services/state.service';
 
 import { TokenIdParsePipe } from '@/pipes/token-id-parse.pipe';
 import { WeiToEthPipe } from '@/pipes/wei-to-eth.pipe';
@@ -77,8 +76,7 @@ export class TxOverviewComponent {
 
   constructor(
     private store: Store<GlobalState>,
-    public dataSvc: DataService,
-    public stateSvc: StateService
+    public dataSvc: DataService
   ) {}
 
   trackByFn(i: number, item: any): string {

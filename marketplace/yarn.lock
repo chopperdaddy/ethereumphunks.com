@@ -233,6 +233,13 @@
   dependencies:
     tslib "^2.3.0"
 
+"@angular/service-worker@^16.1.3":
+  version "16.2.11"
+  resolved "https://registry.yarnpkg.com/@angular/service-worker/-/service-worker-16.2.11.tgz#5971779b0f3002f75417434348e8265b2c52c19f"
+  integrity sha512-fsfnQq/NbAI4sxz1eSs7o1scB0ezawjj6rwV6uaqPNMvHq8fphauGTkACiIF6SBhD3p54lRzEH5whG6aei1Ofg==
+  dependencies:
+    tslib "^2.3.0"
+
 "@apollo/client@^3.7.16":
   version "3.7.16"
   resolved "https://registry.yarnpkg.com/@apollo/client/-/client-3.7.16.tgz#418cb23566a6d52e9e22d34484167149269efd40"
@@ -1590,6 +1597,20 @@
   dependencies:
     tslib "^2.3.1"
 
+"@ng-web-apis/common@^3.0.5":
+  version "3.0.5"
+  resolved "https://registry.yarnpkg.com/@ng-web-apis/common/-/common-3.0.5.tgz#e9504babbeea93b2363f8c9282c85f0b35ab1e10"
+  integrity sha512-rCaOxTKNQ0w0SFeH1Zdw+D8s2igE1QKRdVKDgAeZ7i4utQlSJWHP3de4k4lVEFM1cRiJh3Oq6QX2IOuLrgxEdw==
+  dependencies:
+    tslib "^2.2.0"
+
+"@ng-web-apis/intersection-observer@^3.1.5":
+  version "3.1.5"
+  resolved "https://registry.yarnpkg.com/@ng-web-apis/intersection-observer/-/intersection-observer-3.1.5.tgz#f2cdb5702b953e8998a2f8b226ffd1177fce1525"
+  integrity sha512-+79rkKa7Ce1h6qcnDxvNITIjMjnVSaHZ1TlR5y57cOWhh2kyX5bBwgBx+lTa702o27oO3HOYrS3YnJidDiiPsQ==
+  dependencies:
+    tslib "^2.2.0"
+
 "@ngrx/effects@^16.3.0":
   version "16.3.0"
   resolved "https://registry.yarnpkg.com/@ngrx/effects/-/effects-16.3.0.tgz#ebc3508d9e41b9f7dfab6b28585a6e2461b7cdfa"
@@ -2064,6 +2085,11 @@
   dependencies:
     "@tufjs/canonical-json" "1.0.0"
     minimatch "^9.0.0"
+
+"@types/animejs@^3.1.10":
+  version "3.1.10"
+  resolved "https://registry.yarnpkg.com/@types/animejs/-/animejs-3.1.10.tgz#7135ba22d77976f2a00ad8a6e0441fd7ae551581"
+  integrity sha512-nCCSfdw7Ut/XwGSmkfh3nQJXKTnGe5wAhXoTBjMoGkBszbS7RYCxjggmZCAVf8mZJI4LEDTwQ7R6r7krFqPBFA==
 
 "@types/body-parser@*":
   version "1.19.2"
@@ -3234,6 +3260,11 @@ ajv@^6.12.5:
     fast-json-stable-stringify "^2.0.0"
     json-schema-traverse "^0.4.1"
     uri-js "^4.2.2"
+
+animejs@^3.2.1:
+  version "3.2.1"
+  resolved "https://registry.yarnpkg.com/animejs/-/animejs-3.2.1.tgz#de9fe2e792f44a777a7fdf6ae160e26604b0cdda"
+  integrity sha512-sWno3ugFryK5nhiDm/2BKeFCpZv7vzerWUcUPyAZLDhMek3+S/p418ldZJbJXo5ZUOpfm2kP2XRO4NJcULMy9A==
 
 ansi-colors@4.1.3:
   version "4.1.3"
@@ -7838,6 +7869,11 @@ tslib@^2.0.0, tslib@^2.1.0, tslib@^2.3.0, tslib@^2.3.1, tslib@^2.4.0:
   version "2.6.0"
   resolved "https://registry.yarnpkg.com/tslib/-/tslib-2.6.0.tgz#b295854684dbda164e181d259a22cd779dcd7bc3"
   integrity sha512-7At1WUettjcSRHXCyYtTselblcHl9PJFFVKiCAy/bY97+BPZXSQ2wbq0P9s8tK2G7dFQfNnlJnPAiArVBVBsfA==
+
+tslib@^2.2.0:
+  version "2.6.2"
+  resolved "https://registry.yarnpkg.com/tslib/-/tslib-2.6.2.tgz#703ac29425e7b37cd6fd456e92404d46d1f3e4ae"
+  integrity sha512-AEYxH93jGFPn/a2iVAwW87VuUIkR1FVUKB77NwMF7nBTDkDrrT/Hpt/IrCJ0QXhW27jTBDcf5ZY7w6RiqTMw2Q==
 
 tuf-js@^1.1.7:
   version "1.1.7"

@@ -14,6 +14,7 @@
 
   .inner {
     position: relative;
+    z-index: 10;
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -45,36 +46,37 @@
         display: flex;
         align-items: center;
 
-        a {
-          color: rgba(var(--header-text), 1);
-          text-decoration: none;
-          margin-left: 2rem;
-
+        button {
           app-wallet-address {
+            font-family: $secondary-font-stack;
             font-size: 1.4rem;
             font-weight: 400;
           }
-        }
 
-        .withdraw {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          margin-left: 2rem;
+          .arrow {
+            display: flex;
+            align-items: center;
+            justify-content: center;
 
-          font-family: $secondary-font-stack;
-          font-weight: 400;
-          font-size: 1.4rem;
-          // color: rgba(var(--dark-text), 1);
-          text-decoration: none;
+            width: 2rem;
+            height: 2rem;
 
-          svg {
-            width: 1rem;
-            height: 1.2rem;
-            margin-right: 1rem;
+            margin-left: .5rem;
 
-            path {
-              fill: rgba(var(--highlight), 1);
+            svg {
+              width: 1.3rem;
+              height: 1.3rem;
+              path {
+                fill: rgba(var(--highlight), 1);
+              }
+            }
+          }
+
+          &.active {
+            .arrow {
+              svg {
+                transform: rotate(180deg);
+              }
             }
           }
         }
@@ -130,19 +132,19 @@
       padding: 0 1.5rem;
 
       .logo {
-        // overflow: hidden;
-        // width: 3rem;
+        overflow: hidden;
+        width: 3rem;
 
-        // svg {
-        //   overflow: visible;
-        //   width: 20rem;
+        svg {
+          overflow: visible;
+          width: 20rem;
 
-        //   path {
-        //     &#wordmark {
-        //       // display: none;
-        //     }
-        //   }
-        // }
+          path {
+            &#wordmark {
+              // display: none;
+            }
+          }
+        }
       }
 
       .user-tools {

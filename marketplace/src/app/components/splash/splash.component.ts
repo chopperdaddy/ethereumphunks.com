@@ -18,17 +18,17 @@ import { PhunkImageComponent } from '../phunk-image/phunk-image.component';
 })
 export class SplashComponent implements OnInit {
 
-  tokenIds: string[] = [];
+  tokenIds: number[] = [];
 
   ngOnInit(): void {
     this.tokenIds = this.getRandomNumbers();
   }
 
-  getRandomNumbers(): string[] {
-    const numbers: Set<string> = new Set();
+  getRandomNumbers(): number[] {
+    const numbers: Set<number> = new Set();
     while (numbers.size < 7) {
       const random = Math.floor(Math.random() * 10000);
-      numbers.add(`${random}`);
+      numbers.add(random);
     }
     return [...numbers];
   }

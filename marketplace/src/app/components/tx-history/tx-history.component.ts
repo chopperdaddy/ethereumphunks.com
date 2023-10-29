@@ -54,7 +54,7 @@ export class TxHistoryComponent implements OnChanges, OnDestroy {
   ) {}
 
   ngOnChanges(changes: SimpleChanges): void {
-    console.log('TxHistoryComponent', changes);
+    // console.log('TxHistoryComponent', changes);
     this.store.dispatch(fetchTxHistory({ hashId: changes.hashId.currentValue }));
   }
 

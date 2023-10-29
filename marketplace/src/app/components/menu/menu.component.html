@@ -1,0 +1,65 @@
+<div
+  #menuInner
+  class="menu-inner"
+  [style]="{ 'opacity': '0' }"
+  waIntersectionObserver waIntersectionThreshold="0.5">
+
+  <!-- {{ (ownedPhunks$ | async) | json }} -->
+  <ng-container *ngIf="(ownedPhunks$ | async) as owned">
+    <ng-container *ngIf="owned.length">
+      <section *ngIf="address$ | async as address">
+        <div class="inner">
+
+          <div class="left">
+            <h3 i18n>
+              Owned ({{ owned.length | number }})
+              <a
+                class="highlight"
+                [routerLink]="['/', 'owned']"
+                [href]="'/owned'"
+                [queryParams]="{ address }">
+
+                view all.
+              </a>
+            </h3>
+
+            <app-phunk-grid
+              *ngIf="menuActive$ | async"
+              [phunkData]="owned || []"
+              [viewType]="'menu'"
+              [limit]="48"
+              [marketType]="'owned'"
+              [sort]="'price-low'"
+            />
+          </div>
+
+          <div class="right">
+            <div class="actions">
+              <button (click)="disconnect()">Disconnect</button>
+              <button (click)="withdraw()">Withdraw Funds</button>
+            </div>
+
+            <div class="stats">
+              <div class="stat">
+                <span class="label">Owned</span>
+                <span class="value">{{ stats.owned }}</span>
+              </div>
+
+              <div class="stat">
+                <span class="label">Escrowed</span>
+                <span class="value">{{ stats.escrowed }}</span>
+              </div>
+
+              <div class="stat">
+                <span class="label">Listed</span>
+                <span class="value">{{ stats.listed }}</span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </section>
+    </ng-container>
+  </ng-container>
+
+</div>

@@ -54,6 +54,11 @@ p {
     text-decoration: underline;
   }
 
+  strong {
+    font-weight: normal;
+    color: rgba(var(--highlight), 1);
+  }
+
   &:last-child {
     margin-bottom: 0;
   }

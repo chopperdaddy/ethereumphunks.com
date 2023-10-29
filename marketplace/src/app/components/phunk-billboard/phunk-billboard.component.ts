@@ -27,6 +27,6 @@ import { Phunk } from '@/models/graph';
 
 export class PhunkBillboardComponent {
 
-  @Input() data!: Phunk | null;
+  @Input() phunk!: Phunk | null;
 
 }

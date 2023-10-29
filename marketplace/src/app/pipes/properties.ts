@@ -15,7 +15,10 @@ export class PropertiesPipe implements PipeTransform {
     if (!activeTraitFilters) return value;
 
     if (traitCount || traitCount === 0) {
-      value = value.filter((res) => (res.attributes?.length - 2) === traitCount);
+      value = value.filter((res) => {
+        if (!res.attributes) return false;
+        return (res.attributes?.length - 2) === traitCount;
+      });
     }
 
     const filtersLength = Object.keys(activeTraitFilters).length;

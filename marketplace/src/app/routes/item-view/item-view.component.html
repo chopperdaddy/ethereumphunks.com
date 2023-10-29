@@ -1,11 +1,11 @@
 <app-phunk-billboard
-  [data]="(singlePhunk$ | async)"
+  [phunk]="(singlePhunk$ | async)"
 />
 
 <div class="view-item-wrapper">
 
   <app-breadcrumbs
-    [data]="(singlePhunk$ | async)"
+    [phunk]="(singlePhunk$ | async)"
   />
 
   <div class="inner">
@@ -15,9 +15,10 @@
 
       <div class="title-wrapper">
         <div class="title-color">
-          <h1 i18n>EtherPhunk {{ phunk.id }}</h1>
+          <h1 i18n>EtherPhunk {{ phunk.phunkId }}</h1>
+          <div class="hash-id"><app-wallet-address [address]="phunk.hashId"></app-wallet-address></div>
         </div>
-        <h2 i18n>One of {{ phunk.attributes[0].v | traitCount }}
+        <h2 i18n *ngIf="phunk.attributes">One of {{ phunk.attributes[0].v | traitCount }}
           <a
             class="highlight"
             [routerLink]="['/', 'all']"
@@ -135,7 +136,7 @@
                     i18n
                     class="transfer"
                     [class.active]="transferActive"
-                    (click)="transferPhunk()">
+                    (click)="transferPhunkAction()">
 
                     Transfer
                   </button>
@@ -200,7 +201,7 @@
                     (phunk.prevOwner | lowercase) === (address | lowercase)
                   "
                   class="sell"
-                  (click)="acceptBid()">
+                  (click)="acceptBidForPhunk(phunk)">
 
                   Accept Top Bid
                 </button>
@@ -216,7 +217,7 @@
         <div class="right">
           <div class="accessories-wrapper">
             <h2 i18n>Attributes</h2>
-            <div class="accessories" *ngIf="phunk.attributes.length">
+            <div class="accessories" *ngIf="phunk.attributes?.length">
               <ng-container *ngFor="let item of phunk.attributes; let i = index">
                 <div class="accessory" *ngIf="i > 1">
                   <a
@@ -243,11 +244,14 @@
   </div>
 </div>
 
+<!-- Transfer Form -->
 <ng-template #transferForm let-phunk>
-  <div class="form-wrapper">
+  <form class="form-wrapper">
+    <ng-template [ngTemplateOutlet]="cooldown" *ngIf="coolDownTimerActive"></ng-template>
     <div class="form-group">
       <label i18n for="transfer-address">Transfer to address</label>
       <input
+        #transferAddressInput
         type="text"
         id="transfer-address"
         [formControl]="transferAddress"
@@ -258,36 +262,35 @@
     </div>
 
     <div class="form-actions">
-      <button i18n class="cancel" (click)="closeTransfer()">Cancel</button>
-      <button i18n
-        class="submit"
-        (click)="submitTransfer(phunk)">
-
-        Submit
-      </button>
+      <button i18n type="reset" class="cancel" (click)="closeTransfer()">Cancel</button>
+      <button i18n type="submit" class="submit" (click)="transferPhunk(phunk)">Submit</button>
     </div>
-  </div>
+  </form>
 </ng-template>
 
+<!-- Bid Form -->
 <ng-template #bidForm let-phunk>
-  <div class="form-wrapper">
+  <form class="form-wrapper">
+    <ng-template [ngTemplateOutlet]="cooldown" *ngIf="coolDownTimerActive"></ng-template>
     <div class="form-group">
       <label i18n for="bid-price">Bid Price (Ξ)</label>
-      <input type="number" id="bid-price" [formControl]="bidPrice" placeholder="0" />
+      <input #bidPriceInput type="number" id="bid-price" [formControl]="bidPrice" placeholder="0" />
     </div>
 
     <div class="form-actions">
-      <button i18n class="cancel" (click)="closeBid()">Cancel</button>
-      <button i18n class="submit" (click)="submitBid(phunk)">Submit</button>
+      <button i18n type="reset" class="cancel" (click)="closeBid()">Cancel</button>
+      <button i18n type="submit" class="submit" (click)="submitBid(phunk)">Submit</button>
     </div>
-  </div>
+  </form>
 </ng-template>
 
+<!-- Sell Form -->
 <ng-template #sellForm let-phunk>
-  <div class="form-wrapper">
+  <form class="form-wrapper">
+    <ng-template [ngTemplateOutlet]="cooldown" *ngIf="coolDownTimerActive"></ng-template>
     <div class="form-group">
       <label i18n for="list-price">Asking Price in ETH (Ξ)</label>
-      <input type="number" id="list-price" [min]="0" [formControl]="listPrice" />
+      <input #sellPriceInput type="number" id="list-price" [min]="0" [formControl]="listPrice" />
     </div>
 
     <div class="form-group" [class.disabled]="!phunk.isEscrowed">
@@ -303,43 +306,11 @@
     </div>
 
     <div class="form-actions" [class.disabled]="!phunk.isEscrowed">
-      <button i18n class="cancel" (click)="closeListing()">Cancel</button>
-      <button i18n class="submit" (click)="submitListing(phunk)">Offer EtherPhunk</button>
+      <button i18n type="reset" class="cancel" (click)="closeListing()">Cancel</button>
+      <button i18n type="submit" class="submit" (click)="submitListing(phunk)">Offer EtherPhunk</button>
     </div>
-  </div>
+  </form>
 </ng-template>
-
-<ng-container *ngIf="txModalActive as active">
-
-  <app-modal
-    [class]="txModalActive ? 'transaction' : ''"
-    [class.active]="active"
-    class="sidebar"
-    (closeModalEvent)="txModalActive = false">
-
-    <ng-container *ngIf="(singlePhunk$ | async) as phunk;">
-
-      <ng-container *ngIf="txModalActive">
-
-        <ng-container *ngFor="let status of objectValues(txStatus); let i = index">
-          <ng-container *ngIf="status.active">
-
-            <h3>
-              <img
-                src="/assets/loader-{{ themeSvc.theme$ | async }}.gif"
-                width="20" height="20"
-                *ngIf="i === 0 || i === 1"
-              />
-              {{ status.title }}
-            </h3>
-
-            <span class="p-wrapper" [innerHTML]="status.message"></span>
-          </ng-container>
-        </ng-container>
-      </ng-container>
-    </ng-container>
-  </app-modal>
-</ng-container>
 
 <ng-template #detailsPlaceholder>
   <div class="details-wrapper">
@@ -363,5 +334,12 @@
         </div>
       </div>
     </div>
+  </div>
+</ng-template>
+
+<ng-template #cooldown>
+  <div class="cooldown-wrapper">
+    <p>6 Block cooldown period</p>
+    <img src="/assets/loader-phunk.gif" width="30" height="30" alt="">
   </div>
 </ng-template>

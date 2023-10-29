@@ -9,9 +9,10 @@ import { Actions, createEffect, ofType } from '@ngrx/effects';
 
 import { Web3Service } from '@/services/web3.service';
 import { DataService } from '@/services/data.service';
+import { TransactionService } from '@/services/transaction.service';
 
-import { GlobalState } from '@/models/global-state';
 import { Attribute, Phunk } from '@/models/graph';
+import { GlobalState } from '@/models/global-state';
 import { MarketTypes } from '@/models/pipes';
 
 import { filter, forkJoin, from, map, mergeMap, switchMap, tap, withLatestFrom } from 'rxjs';
@@ -20,13 +21,15 @@ import { environment } from 'src/environments/environment';
 
 import * as actions from '@/state/actions/app-state.action';
 import * as selectors from '@/state/selectors/app-state.selector';
-import { TransactionService } from '@/services/transaction.service';
+
+import { ThemeService } from '@/services/theme.service';
 
 @Injectable()
 export class AppStateEffects {
 
   setMarketTypeFromRoute$ = createEffect(() => this.actions$.pipe(
     ofType(ROUTER_NAVIGATION),
+    tap((action) => this.store.dispatch(actions.setMenuActive({ menuActive: false }))),
     withLatestFrom(
       this.store.select(getRouterSelectors().selectRouteParam('marketType')),
       this.store.select(getRouterSelectors().selectQueryParams),
@@ -56,6 +59,7 @@ export class AppStateEffects {
       this.store.select(selectors.selectMarketType),
     ),
     switchMap(([action, address, marketType]) => {
+      console.log('setMarketType', {action, address, marketType});
       if (address) return this.dataSvc.fetchOwned(address);
 
       if (action.type === '[App State] DB Event Triggered') {
@@ -131,15 +135,23 @@ export class AppStateEffects {
     }),
   ), { dispatch: false });
 
+  // FIXME: Type change
   fetchAllPhunks$ = createEffect(() => this.actions$.pipe(
     ofType(actions.fetchAllPhunks),
     switchMap(() => this.dataSvc.getAttributes()),
-    map((attributes) => Object.keys(attributes).map(
-      (k) => ({
-        id: k,
-        attributes: (attributes as any)[k],
-      })
-    )),
+    map((attributes) => {
+      return Object.keys(attributes).map((k) => {
+        return {
+          hashId: '',
+          phunkId: Number(k),
+          createdAt: new Date(),
+          owner: '',
+          prevOwner: '',
+
+          attributes: (attributes as any)[k] as Attribute[],
+        };
+      });
+    }),
     map((phunks) => actions.setAllPhunks({ allPhunks: phunks })),
   ));
 
@@ -147,19 +159,17 @@ export class AppStateEffects {
     ofType(actions.fetchMarketData),
     switchMap(() => this.dataSvc.fetchMarketData()),
     map(([listings, bids]) => {
-      // console.log('fetchMarketData', listings, bids);
-
       const merged: any = {};
 
       for (const listing of listings) merged[listing.hashId] = {
         ...merged[listing.hashId],
-        id: listing['phunks' + this.dataSvc.prefix].phunkId,
+        phunkId: listing[`phunks${this.dataSvc.prefix}`].phunkId,
         hashId: listing.hashId,
         listing,
       };
       for (const bid of bids) merged[bid.hashId] = {
         ...merged[bid.hashId],
-        id: bid['phunks' + this.dataSvc.prefix].phunkId,
+        phunkId: bid[`phunks${this.dataSvc.prefix}`].phunkId,
         hashId: bid.hashId,
         bid,
       };
@@ -188,14 +198,17 @@ export class AppStateEffects {
     // delay(1000),
     switchMap((action) => this.dataSvc.fetchSinglePhunk(action.phunkId)),
     // tap((res) => console.log('fetchSinglePhunk', res)),
-    map((phunk: any) => ({
-      id: phunk?.phunkId,
-      hashId: phunk?.hashId,
-      owner: phunk?.owner,
-      prevOwner: phunk?.prevOwner,
-      isEscrowed: phunk?.owner === environment.phunksMarketAddress,
-      attributes: [],
-    })),
+    map((phunk: Phunk) => {
+      return {
+        phunkId: phunk.phunkId,
+        createdAt: phunk.createdAt,
+        hashId: phunk.hashId,
+        owner: phunk.owner,
+        prevOwner: phunk.prevOwner,
+        isEscrowed: phunk.owner === environment.phunksMarketAddress,
+        attributes: [],
+      };
+    }),
     switchMap((res: Phunk) => forkJoin([
       this.dataSvc.addAttributes([res]),
       from(Promise.all([
@@ -207,7 +220,7 @@ export class AppStateEffects {
       ...res,
       listing,
       bid,
-      attributes: [ ...res.attributes ].sort((a: Attribute, b: Attribute) => {
+      attributes: [ ...(res.attributes || []) ].sort((a: Attribute, b: Attribute) => {
         if (a.k === "Sex") return -1;
         if (b.k === "Sex") return 1;
         return 0;
@@ -221,7 +234,7 @@ export class AppStateEffects {
     withLatestFrom(this.store.select(selectors.selectSinglePhunk)),
     // tap(([action, phunk]) => console.log('refreshSinglePhunk', action, phunk)),
     filter(([action, phunk]) => !!phunk),
-    map(([action, phunk]) => actions.fetchSinglePhunk({ phunkId: `${phunk!.id}` })),
+    map(([action, phunk]) => actions.fetchSinglePhunk({ phunkId: `${phunk!.hashId}` })),
   ));
 
   checkHasWithdrawal$ = createEffect(() => this.actions$.pipe(
@@ -236,10 +249,68 @@ export class AppStateEffects {
     ofType(actions.fetchOwnedPhunks),
     withLatestFrom(this.store.select(selectors.selectWalletAddress)),
     filter(([action, address]) => !!address),
-    tap(([action, address]) => console.log('fetchOwnedPhunks', {action, address})),
     switchMap(([action, address]) => this.dataSvc.fetchOwned(address)),
     map((phunks) => actions.setOwnedPhunks({ ownedPhunks: phunks })),
   ));
+
+  menuActive$ = createEffect(() => this.actions$.pipe(
+    ofType(actions.setMenuActive),
+    withLatestFrom(this.store.select(selectors.selectTheme)),
+    tap(([action, theme]) => {
+      const menuActive = action.menuActive;
+      document.documentElement.style.setProperty(
+        '--header-text',
+        menuActive ? '255, 255, 255' : (this.themeSvc.themeStyles as any)[theme]['--header-text']
+      );
+    }),
+  ), { dispatch: false });
+
+  onSetTheme$ = createEffect(() => this.actions$.pipe(
+    ofType(actions.setTheme),
+    withLatestFrom(this.store.select(selectors.selectMenuActive)),
+    tap(([action, menuActive]) => {
+      let theme = action.theme;
+      if (theme === 'initial') {
+        theme = this.themeSvc.getInitialTheme();
+        this.store.dispatch(actions.setTheme({ theme }));
+        return;
+      }
+      this.themeSvc.setThemeStyles(theme);
+
+      document.documentElement.style.setProperty(
+        '--header-text',
+        menuActive ? '255, 255, 255' : (this.themeSvc.themeStyles as any)[theme]['--header-text']
+      );
+    }),
+  ), { dispatch: false });
+
+  onClickExternal$ = createEffect(() => this.actions$.pipe(
+    ofType(),
+    // merge(
+    //   this.stateSvc.keyDownEscape$,
+    //   this.stateSvc.documentClick$,
+    //   fromEvent<MouseEvent>(this.modal.nativeElement, 'mousedown'),
+    //   fromEvent<MouseEvent>(this.modal.nativeElement, 'mouseup')
+    // ).pipe(
+    //   filter(() => !(this.el.nativeElement as HTMLElement).classList.contains('sidebar')),
+    //   tap(($event) => {
+
+    //     const modal = this.modal.nativeElement as HTMLElement;
+    //     const target = $event?.target as HTMLElement;
+
+    //     if ($event instanceof KeyboardEvent || (!mouseDownInsideModal && !modal.contains(target))) {
+    //       this.closeModal();
+    //     }
+
+    //     if ($event.type === 'mousedown' && modal.contains(target)) {
+    //       mouseDownInsideModal = true;
+    //     } else if ($event.type === 'mouseup') {
+    //       mouseDownInsideModal = false;
+    //     }
+    //   }),
+    //   takeUntil(this.destroy$)
+    // )
+  ), { dispatch: false });
 
   constructor(
     private store: Store<GlobalState>,
@@ -248,6 +319,7 @@ export class AppStateEffects {
     private dataSvc: DataService,
     private location: Location,
     private txSvc: TransactionService,
+    private themeSvc: ThemeService
   ) {}
 
   checkUserEvent(newData: any, address: string): boolean {

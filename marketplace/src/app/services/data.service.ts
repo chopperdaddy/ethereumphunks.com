@@ -8,11 +8,11 @@ import { Web3Service } from '@/services/web3.service';
 import { filterData } from '@/constants/filterData';
 
 import { EventType, GlobalState } from '@/models/global-state';
-import { Bid, Event, Listing, Phunk, State } from '@/models/graph';
+import { Bid, Event, Listing, Phunk } from '@/models/graph';
 
 import { createClient } from '@supabase/supabase-js'
-import { Observable, of, BehaviorSubject, from, forkJoin, merge, timer, interval, zip, Subject } from 'rxjs';
-import { auditTime, debounceTime, distinctUntilChanged, map, mergeMap, sampleTime, share, startWith, switchMap, takeLast, tap, throttleTime, windowTime } from 'rxjs/operators';
+import { Observable, of, BehaviorSubject, from, forkJoin, merge, Subject } from 'rxjs';
+import { debounceTime, map, switchMap, tap, throttleTime } from 'rxjs/operators';
 
 import { environment } from 'src/environments/environment';
 
@@ -34,9 +34,6 @@ export class DataService {
   escrowAddress = environment.phunksMarketAddress;
 
   private attributesData!: any;
-
-  private statesData = new BehaviorSubject<State[]>([]);
-  statesData$ = this.statesData.asObservable();
 
   private eventsData = new BehaviorSubject<Event[]>([]);
   eventsData$ = this.eventsData.asObservable();
@@ -99,7 +96,7 @@ export class DataService {
       map((res: any) => {
         return phunks.map((item: Phunk) => ({
           ...item,
-          attributes: res[item.id]
+          attributes: res[item.phunkId]
         }));
       })
     );
@@ -113,18 +110,22 @@ export class DataService {
     address = address.toLowerCase();
     const request = supabase
       .from('phunks' + this.prefix)
-      .select('*')
+      .select(`*, listings${this.prefix}(hashId, minValue, toAddress)`)
       .or(`owner.eq.${address},and(owner.eq.${environment.phunksMarketAddress},prevOwner.eq.${address})`);
 
     return from(request).pipe(
       map((res) => res.data as any[]),
-      map((res: any) => res.map((item: any) => ({
-        id: item.phunkId,
-        hashId: item.hashId,
-        owner: item.owner,
-        prevOwner: item.prevOwner,
-        attributes: [],
-      }))),
+      map((res: any) => res.map((item: any) => {
+        return {
+          phunkId: item.phunkId,
+          hashId: item.hashId,
+          owner: item.owner,
+          prevOwner: item.prevOwner,
+          isEscrowed: item.owner === environment.phunksMarketAddress && item.prevOwner === address,
+          listing: item['listings' + this.prefix] ? item['listings' + this.prefix] : null,
+          attributes: [],
+        };
+      })),
       switchMap((punks: Phunk[]) => this.addAttributes(punks)),
     );
   }
@@ -133,7 +134,7 @@ export class DataService {
   // MARKET DATA ///////////////////////////////////////////////////////////////////////////////////////////////////////
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  fetchMarketData(): Observable<[Listing[], Bid[]]> {
+  fetchMarketData(): Observable<[any[], any[]]> { // bid[] listing[]
     const listingsQuery = supabase
       .from('listings' + this.prefix)
       .select(`*, phunks${this.prefix}(phunkId)`);
@@ -146,39 +147,6 @@ export class DataService {
       from(listingsQuery).pipe(map((res) => res.data || [] as any[])),
       from(bidsQuery).pipe(map((res) => res.data || [] as any[])),
     ]);
-  }
-
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  // STATES ////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-  watchStates(): Observable<State[]> {
-    return of([]);
-
-    // const nowTimestamp = () => Math.floor(Date.now() / 1000);
-    // let statesData: State[] = [];
-
-    // return this.http.get<State[]>(`${environment.staticUrl}/_states.json`).pipe(
-    //   switchMap((res: State[]) => {
-    //     statesData = res;
-    //     this.statesData.next(res);
-    //     return this.apollo.watchQuery({
-    //       query: WATCH_STATES_DATA,
-    //       variables: {
-    //         first: 1000,
-    //         lastTimestamp: (Number(res[0]?.timestamp) + 1) || 0,
-    //         nowTimestamp: nowTimestamp(),
-    //       },
-    //       pollInterval: 5000,
-    //     }).valueChanges;
-    //   }),
-    //   map((res: any) => {
-    //     const merged = [ ...statesData, ...res.data.states ];
-    //     merged.sort((a: any, b: any) => Number(b.timestamp) - Number(a.timestamp));
-    //     this.statesData.next(merged);
-    //     return merged;
-    //   })
-    // );
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

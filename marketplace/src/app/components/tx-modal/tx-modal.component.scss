@@ -1,0 +1,127 @@
+@import 'abstracts/variables';
+@import 'abstracts/mixins';
+
+:host {
+  position: fixed;
+  top: calc(var(--header-height) + 2rem);
+  left: 50%;
+
+  z-index: 980;
+
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-end;
+
+  width: 100%;
+  max-width: var(--max-width);
+  padding: 0 3rem;
+
+  font-family: $secondary-font-stack;
+  pointer-events: none;
+
+  transform: translateX(-50%);
+
+  @media (max-width: $mobile) {
+    top: calc((var(--header-height) / 1.5) + 2rem);
+    left: 0;
+    padding: 0 1rem;
+
+    transform: translateX(0);
+  }
+}
+
+.txns {
+
+  width: 100%;
+  max-height: 100%;
+  max-width: 40rem;
+  padding: 1rem;
+
+  pointer-events: auto;
+
+  background-color: rgba(var(--background), 1);
+  box-shadow: 0 4rem 12rem 0 rgba(var(--highlight), .2);
+
+  overflow-y: scroll;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+
+  backdrop-filter: blur(1rem);
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+
+  .txn-item {
+
+    display: grid;
+    grid-template-columns: 4rem 1fr;
+    grid-gap: 1rem;
+    padding: 1rem;
+
+    app-phunk-image {
+      width: 4rem;
+      height: 4rem;
+    }
+
+    .txn-info {
+      h4 {
+        font-size: 1.2rem;
+        font-weight: normal;
+
+        padding: 0 0 .5rem 0;
+        margin: 0;
+      }
+
+      p {
+        font-size: 1rem;
+        color: rgba(var(--text-color), .75);
+        font-weight: normal;
+
+        padding: 0;
+        margin: 0;
+
+        strong {
+          font-weight: normal;
+          color: rgba(var(--highlight), 1);
+        }
+      }
+
+      a {
+        display: inline-flex;
+        align-items: center;
+
+        font-size: 1.2rem;
+        color: rgba(var(--highlight), 1);
+
+        svg {
+          margin-left: .5rem;
+          path {
+            fill: rgba(var(--highlight), 1);
+          }
+        }
+      }
+    }
+
+    &.bid {
+      app-phunk-image {
+        background-color: rgba(var(--bid-color), 1);
+      }
+    }
+    &.sale {
+      app-phunk-image {
+        background-color: rgba(var(--sale-color), 1);
+      }
+    }
+    &.transfer {
+      app-phunk-image {
+        background-color: rgba(var(--transferred-color), 1);
+      }
+    }
+    &.escrow {
+      app-phunk-image {
+        background-color: rgba(var(--escrow-color), 1);
+      }
+    }
+  }
+}

@@ -5,37 +5,24 @@
     [class.selectable]="selectable"
     [class]="viewType">
 
-    <ng-container *ngFor="let item of phunkData |
+    <ng-container *ngFor="let phunk of phunkData |
       properties : (activeTraitFilters$ | async) : traitCount |
       sort: (activeSort$ | async);
       trackBy: identify;
-      index as i">
+      let i = index">
 
       <ng-container *ngIf="i < limit">
-        <ng-container *ngTemplateOutlet="phunkItem; context:{ $implicit: item, idx: i }"></ng-container>
+        <ng-container *ngTemplateOutlet="phunkItem; context:{ $implicit: phunk, index: i }"></ng-container>
       </ng-container>
     </ng-container>
   </div>
 
-  <ng-template #phunkItem let-item>
+  <ng-template #phunkItem let-phunk let-i="index">
     <div
       class="item"
-      [class.selected]="selected.includes(item.hashId)">
-
-      <ng-container *ngIf="viewType !== 'compact'">
-        <ng-container *ngIf="item.listing?.source as source">
-          <a
-            [href]="item.listing?.source?.url"
-            target="_blank"
-            class="listing-source">
-            <img
-              [src]="source.icon"
-              width="20"
-              height="20"
-            />
-          </a>
-        </ng-container>
-      </ng-container>
+      [class.selected]="selected.includes(phunk.hashId)"
+      [attr.data-index]="i"
+      (waIntersectionObservee)="onIntersection($event)">
 
       <div
         *ngIf="selectable"
@@ -44,30 +31,36 @@
         <input
           #phunkCheck
           type="checkbox"
-          [id]="'checkbox-' + item.id"
-          [checked]="selected.includes(item.hashId)"
-          [attr.data-hash-id]="item.hashId"
-          (change)="selectPhunk(item.hashId)"
+          [id]="'checkbox-' + phunk.phunkId"
+          [checked]="selected.includes(phunk.hashId)"
+          [attr.data-hash-id]="phunk.hashId"
+          (change)="selectPhunk(phunk.hashId)"
         />
 
-        <label [for]="'checkbox-' + item.id">
+        <label [for]="'checkbox-' + phunk.phunkId">
           <div class="check"></div>
         </label>
       </div>
 
       <a
         class="item-link"
-        [routerLink]="['/', 'details', item.id]"
-        [href]="'/details/' + item.id">
+        [routerLink]="['/', 'details', phunk.phunkId]"
+        [href]="'/details/' + phunk.phunkId">
 
         <div
           class="image-wrapper"
-          [class.listing]="marketType === 'listings' && item?.listing"
-          [class.bid]="marketType === 'bids' && item?.bid"
-          [class.in-escrow]="item.owner === escrowAddress">
+          [class.in-escrow]="phunk.owner === escrowAddress"
+          [class.listing]="(marketType === 'listings' || marketType === 'owned') && phunk.listing"
+          [class.bid]="marketType === 'bids' && phunk.bid">
+
+          <!-- <img
+            [src]="'assets/loadingphunk.png'"
+            width="50"
+            height="50"
+          /> -->
 
           <img
-            [lazyLoad]="dataSvc.staticUrl + '/images/phunk' + (item.id | tokenIdParse) + '.svg'"
+            [lazyLoad]="dataSvc.staticUrl + '/images/phunk' + (phunk.phunkId | tokenIdParse) + '.svg'"
             [defaultImage]="'assets/loadingphunk.png'"
             width="50"
             height="50"
@@ -76,12 +69,12 @@
 
         <div
           class="labels-wrapper"
-          *ngIf="viewType !== 'compact'">
+          *ngIf="viewType === 'market'">
 
-          <div class="label">#{{ item.id }}</div>
+          <div class="label">#{{ phunk.phunkId }}</div>
 
-          <ng-container *ngIf="marketType === 'listings'">
-            <ng-container *ngIf="item.listing as listing">
+          <ng-container *ngIf="marketType === 'listings' || marketType === 'owned'">
+            <ng-container *ngIf="phunk.listing as listing">
               <p i18n>
                 {{ (listing.minValue | weiToEth) | formatCash }}Ξ<br />
                 ${{ ((listing.minValue | weiToEth) * ((dataSvc.usd$ | async) || 0)) | formatCash }}
@@ -90,7 +83,7 @@
           </ng-container>
 
           <ng-container *ngIf="marketType === 'bids'">
-            <ng-container *ngIf="item.bid as bid">
+            <ng-container *ngIf="phunk.bid as bid">
               <p i18n>
                 {{ (bid.value | weiToEth) | formatCash }}Ξ<br />
                 ${{ ((bid.value | weiToEth) * ((dataSvc.usd$ | async) || 0)) | formatCash }}
@@ -122,7 +115,7 @@
 
         <div
           class="labels-wrapper"
-          *ngIf="viewType !== 'compact'">
+          *ngIf="viewType === 'market'">
 
           <div class="label">#0000</div>
           <div class="label">Loading...<br />&nbsp;</div>

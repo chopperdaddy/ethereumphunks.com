@@ -36,7 +36,7 @@ export class SortPipe implements PipeTransform {
     }
 
     if (args[0] === 'id') {
-      sorted = value.sort((a: Phunk, b: Phunk) => Number(a.id) - Number(b.id));
+      sorted = value.sort((a: Phunk, b: Phunk) => a.phunkId - b.phunkId);
     }
 
     return sorted;

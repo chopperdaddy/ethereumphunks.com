@@ -19,7 +19,7 @@ import { firstValueFrom, from, map, switchMap, tap } from 'rxjs';
 })
 export class PhunkImageComponent implements OnChanges {
 
-  @Input() tokenId!: string;
+  @Input() tokenId!: number;
   @Input() color: boolean = true;
 
   phunkImgSrc!: string;
@@ -27,7 +27,7 @@ export class PhunkImageComponent implements OnChanges {
   constructor(private http: HttpClient) {}
 
   ngOnChanges(): void {
-    const tokenId = this.formatNumber(this.tokenId);
+    const tokenId = this.formatNumber(this.tokenId.toString());
     const url = `${environment.staticUrl}/images/phunk${tokenId}.svg`;
 
     firstValueFrom(

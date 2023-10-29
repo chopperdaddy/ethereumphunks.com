@@ -1,7 +1,8 @@
-import { Component, OnInit } from '@angular/core';
+import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
 import { FormControl, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { IntersectionObserverModule } from '@ng-web-apis/intersection-observer';
 
 import { Store } from '@ngrx/store';
 import { TimeagoModule } from 'ngx-timeago';
@@ -15,10 +16,8 @@ import { WeiToEthPipe } from '@/pipes/wei-to-eth.pipe';
 
 import { DataService } from '@/services/data.service';
 import { Web3Service } from '@/services/web3.service';
-import { StateService } from '@/services/state.service';
 import { ThemeService } from '@/services/theme.service';
 
-import { FilterPipe } from '@/pipes/market-filter.pipe';
 import { CalcPipe } from '@/pipes/calculate.pipe';
 import { TokenIdParsePipe } from '@/pipes/token-id-parse.pipe';
 
@@ -33,13 +32,13 @@ import { GlobalState } from '@/models/global-state';
     FormsModule,
     ReactiveFormsModule,
     LazyLoadImageModule,
+    IntersectionObserverModule,
 
     SplashComponent,
     PhunkGridComponent,
     TxOverviewComponent,
 
     WeiToEthPipe,
-    FilterPipe,
     CalcPipe,
     TokenIdParsePipe
   ],
@@ -48,7 +47,7 @@ import { GlobalState } from '@/models/global-state';
   styleUrls: ['./index.component.scss']
 })
 
-export class IndexComponent implements OnInit {
+export class IndexComponent {
 
   phunkBoxLoading: boolean = false;
   phunkBoxError: boolean = false;
@@ -65,18 +64,16 @@ export class IndexComponent implements OnInit {
 
   listings$ = this.store.select(state => state.appState.listings);
   bids$ = this.store.select(state => state.appState.bids);
-  ownedPhunks$ = this.store.select(state => state.appState.ownedPhunks);
+  theme$ = this.store.select(state => state.appState.theme);
+  isMobile$ = this.store.select(state => state.appState.isMobile);
 
   constructor(
     private store: Store<GlobalState>,
     public themeSvc: ThemeService,
-    public stateSvc: StateService,
     public dataSvc: DataService,
     public web3Svc: Web3Service,
     private router: Router
   ) {}
-
-  ngOnInit(): void {}
 
   async onSubmit($event: any): Promise<void> {
     try {
@@ -111,5 +108,4 @@ export class IndexComponent implements OnInit {
       this.phunkBoxError = true;
     }
   }
-
 }

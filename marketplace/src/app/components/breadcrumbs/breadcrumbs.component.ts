@@ -24,7 +24,7 @@ import { TokenIdParsePipe } from '@/pipes/token-id-parse.pipe';
 })
 export class BreadcrumbsComponent {
 
-  @Input() data!: Phunk | null;
+  @Input() phunk!: Phunk | null;
 
   @ViewChild('pfp') pfp!: ElementRef;
   @ViewChild('tokenImage') tokenImage!: ElementRef;
@@ -142,16 +142,17 @@ export class BreadcrumbsComponent {
   }
 
   async getPunkImage(): Promise<string | undefined> {
-    if (!this.data) return;
-    const imgUrl = this.dataSvc.staticUrl + '/images/phunk' + this.tokenIdParsePipe.transform(this.data.id) + '.svg';
+    if (!this.phunk) return;
+    const imgUrl = this.dataSvc.staticUrl + '/images/phunk' + this.tokenIdParsePipe.transform(this.phunk.phunkId) + '.svg';
     const svg = await firstValueFrom(this.http.get(imgUrl, { responseType: 'text' }));
     return svg;
   }
 
   downloadCanvas(): void {
-    const link = document.createElement('a');
+    if (!this.phunk) return;
 
-    if (window.innerWidth > 800) link.download = 'EthereumPhunk#' + this.data?.id + '.png';
+    const link = document.createElement('a');
+    if (window.innerWidth > 800) link.download = 'EthereumPhunk#' + this.phunk.phunkId + '.png';
 
     link.target = '_blank';
     link.href = this.pfp.nativeElement.toDataURL('image/png;base64');

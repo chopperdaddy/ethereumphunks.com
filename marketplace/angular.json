@@ -30,7 +30,8 @@
             "assets": [
               "src/favicon.ico",
               "src/assets",
-              "src/_static"
+              "src/_static",
+              "src/manifest.webmanifest"
             ],
             "stylePreprocessorOptions": {
               "includePaths": [
@@ -41,7 +42,9 @@
               "./node_modules/@ng-select/ng-select/scss/default.theme.scss",
               "src/scss/main.scss"
             ],
-            "scripts": []
+            "scripts": [],
+            "serviceWorker": true,
+            "ngswConfigPath": "ngsw-config.json"
           },
           "configurations": {
             "dev-goerli": {

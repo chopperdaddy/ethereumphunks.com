@@ -20,7 +20,6 @@
     width: 100%;
 
     .selector {
-
       input {
         display: none;
 
@@ -59,27 +58,6 @@
       }
     }
 
-    .listing-source {
-      position: absolute;
-      top: .5rem;
-      left: .5rem;
-      z-index: 1;
-
-      background-color: rgba(var(--background), 1);
-      width: 2.5rem;
-      height: 2.5rem;
-
-      display: flex;
-      align-items: center;
-      justify-content: center;
-
-      img {
-        width: 1.8rem;
-        height: 1.8rem;
-        object-fit: contain;
-      }
-    }
-
     .image-wrapper {
       img {
         background-color: rgba(var(--base-color), 1);
@@ -87,6 +65,12 @@
         width: 100%;
         height: auto;
         image-rendering: pixelated;
+      }
+
+      &.in-escrow {
+        img {
+          background-color: rgba(var(--escrow-color), 1);
+        }
       }
 
       &.listing {
@@ -98,12 +82,6 @@
       &.bid {
         img {
           background-color: rgba(var(--bid-color), 1);
-        }
-      }
-
-      &.in-escrow {
-        img {
-          background-color: rgba(var(--escrow-color), 1);
         }
       }
     }
@@ -142,6 +120,10 @@
 
   &.compact {
     grid-template-columns: repeat(22, calc(100% / 22));
+  }
+
+  &.menu {
+    grid-template-columns: repeat(16, calc(100% / 16));
   }
 
   @media (max-width: $mobile) {

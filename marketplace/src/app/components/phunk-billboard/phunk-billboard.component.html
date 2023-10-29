@@ -1,9 +1,9 @@
 <div
   class="billboard-wrapper"
-  *ngIf="data; else placeholder">
+  *ngIf="phunk; else placeholder">
 
   <div class="image-wrapper">
-    <app-phunk-image [tokenId]="data.id" />
+    <app-phunk-image [tokenId]="phunk.phunkId" />
   </div>
 </div>
 

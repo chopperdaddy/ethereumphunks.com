@@ -6,20 +6,20 @@ import { Store } from '@ngrx/store';
 
 import { HeaderComponent } from './components/header/header.component';
 import { FooterComponent } from './components/footer/footer.component';
-import { ModalComponent } from './components/modal/modal.component';
 
-import { StateService } from './services/state.service';
 import { Web3Service } from './services/web3.service';
 import { DataService } from './services/data.service';
 import { ThemeService } from './services/theme.service';
 
-import { filter, observeOn, scan, tap } from 'rxjs/operators';
+import { debounceTime, filter, observeOn, scan, tap } from 'rxjs/operators';
 import { asyncScheduler, fromEvent, Observable } from 'rxjs';
 
 import { GlobalState } from './models/global-state';
 
 import * as actions from './state/actions/app-state.action';
 import * as selectors from './state/selectors/app-state.selector';
+import { MenuComponent } from './components/menu/menu.component';
+import { TxModalComponent } from './components/tx-modal/tx-modal.component';
 
 @Component({
   standalone: true,
@@ -27,9 +27,10 @@ import * as selectors from './state/selectors/app-state.selector';
     CommonModule,
     RouterModule,
 
-    ModalComponent,
+    MenuComponent,
     HeaderComponent,
     FooterComponent,
+    TxModalComponent
   ],
   selector: 'app-root',
   templateUrl: './app.component.html',
@@ -45,7 +46,6 @@ export class AppComponent {
     private store: Store<GlobalState>,
     public dataSvc: DataService,
     public web3Svc: Web3Service,
-    public stateSvc: StateService,
     public themeSvc: ThemeService,
     private router: Router
   ) {
@@ -53,15 +53,7 @@ export class AppComponent {
     this.store.dispatch(actions.setEventType({ eventType: 'All' }));
     this.store.dispatch(actions.fetchMarketData());
     this.store.dispatch(actions.fetchAllPhunks());
-
-    const mode = localStorage.getItem('mode');
-    const defaultMode = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-
-    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
-      this.themeSvc.setTheme(e.matches ? 'dark' : 'light');
-    });
-
-    this.themeSvc.setTheme(mode || defaultMode);
+    this.store.dispatch(actions.setTheme({ theme: 'initial' }));
 
     this.router.events.pipe(
       ////////////////////////
@@ -89,23 +81,21 @@ export class AppComponent {
       })
     ).subscribe();
 
-    fromEvent(this.document, 'mouseup').pipe(
-      tap(($event: Event) => {
-        $event.stopPropagation();
-        this.stateSvc.setDocumentClick($event as MouseEvent);
-      })
-    ).subscribe();
+    // fromEvent(this.document, 'mouseup').pipe(
+    //   tap(($event: Event) => {
+    //     $event.stopPropagation();
+    //     this.stateSvc.setDocumentClick($event as MouseEvent);
+    //   })
+    // ).subscribe();
 
     fromEvent(window, 'resize').pipe(
-      // throttleTime(500),
-      tap(() => {
-        this.stateSvc.setIsMobile(window.innerWidth < 801);
-      })
+      debounceTime(500),
+      tap(() => this.store.dispatch(actions.setIsMobile({ isMobile: window.innerWidth < 801 })))
     ).subscribe();
   }
 
-  @HostListener('document:keydown.escape', ['$event'])
-  keydownHandler($event: KeyboardEvent) {
-    this.stateSvc.setKeydownEscape($event);
-  }
+  // @HostListener('document:keydown.escape', ['$event'])
+  // keydownHandler($event: KeyboardEvent) {
+  //   this.stateSvc.setKeydownEscape($event);
+  // }
 }

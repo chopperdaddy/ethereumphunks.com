@@ -29,6 +29,7 @@ import { appStateReducer } from '@/state/reducers/app-state.reducer';
 import { AppStateEffects } from '@/state/effects/app-state.effect';
 
 import { TokenIdParsePipe } from '@/pipes/token-id-parse.pipe';
+import { provideServiceWorker } from '@angular/service-worker';
 
 if (environment.production) enableProdMode();
 
@@ -40,26 +41,26 @@ bootstrapApplication(AppComponent, {
     { provide: TokenIdParsePipe, useClass: TokenIdParsePipe },
     { provide: DEFAULT_CONFIG, useValue: { name: 'cryptophunksCE' } },
     { provide: RouteReuseStrategy, useClass: CustomReuseStrategy },
-
     provideStore({
-      appState: appStateReducer,
-      router: routerReducer
+        appState: appStateReducer,
+        router: routerReducer
     }),
     provideEffects([
-      AppStateEffects,
+        AppStateEffects,
     ]),
     provideStoreDevtools({
-      maxAge: 25,
-      logOnly: !isDevMode(),
-      trace: true,
+        maxAge: 25,
+        logOnly: !isDevMode(),
+        trace: true,
+        // serialize: false
     }),
-
     provideAnimations(),
     provideRouterStore(),
-
-    importProvidersFrom(
-      HttpClientModule
-    ),
-    provideRouter(routes, withHashLocation())
-  ]
+    importProvidersFrom(HttpClientModule),
+    provideRouter(routes, withHashLocation()),
+    provideServiceWorker('ngsw-worker.js', {
+        enabled: !isDevMode(),
+        registrationStrategy: 'registerWhenStable:30000'
+    })
+]
 });

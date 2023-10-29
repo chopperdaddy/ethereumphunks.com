@@ -3,7 +3,7 @@ import { Phunk } from '@/models/graph';
 import { createAction, props } from '@ngrx/store';
 
 import { MarketTypes, Sorts } from '@/models/pipes';
-import { AppState, EventType, GlobalState, TxFilterItem } from '@/models/global-state';
+import { AppState, EventType, GlobalState, Transaction, TxFilterItem } from '@/models/global-state';
 
 import { RealtimePostgresChangesPayload } from '@supabase/supabase-js';
 import { TX, ModalState, TxType } from '@/models/transaction';
@@ -161,4 +161,47 @@ export const sendTransaction = createAction(
 export const setSelectedPhunks = createAction(
   '[Market] Set Selected Phunks',
   props<{ selectedPhunks: Phunk[] }>()
+);
+
+export const setMenuActive = createAction(
+  '[App State] Set Menu Active',
+  props<{ menuActive: AppState['menuActive'] }>()
+);
+
+export const setTheme = createAction(
+  '[App State] Set Theme',
+  props<{ theme: AppState['theme'] }>()
+);
+
+export const addTransaction = createAction(
+  '[App State] Add Transaction',
+  props<{ transaction: Transaction }>()
+);
+
+export const removeTransaction = createAction(
+  '[App State] Remove Transaction',
+  props<{ txId: Transaction['id'] }>()
+);
+
+export const clearTransactions = createAction(
+  '[App State] Clear Transactions',
+);
+
+export const upsertTransaction = createAction(
+  '[App State] Upsert Transaction',
+  props<{ transaction: Transaction }>()
+);
+
+export const setIsMobile = createAction(
+  '[App State] Set Is Mobile',
+  props<{ isMobile: boolean }>()
+);
+
+export const keyDownEscape = createAction(
+  '[App State] Keydown Escape'
+);
+
+export const clickEvent = createAction(
+  '[App State] Click Event',
+  props<{ event: MouseEvent }>()
 );

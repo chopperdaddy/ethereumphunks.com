@@ -1,6 +1,6 @@
 import { Phunk } from './graph';
 
-export type TxType = 'sendToEscrow' | 'phunkNoLongerForSale' | 'offerPhunkForSale' | 'withdrawBidForPhunk' | 'acceptBidForPhunk' | 'buyPhunk' | 'enterBidForPhunk' | 'submitTransfer' | 'withdrawPhunk';
+export type TxType = 'sendToEscrow' | 'phunkNoLongerForSale' | 'offerPhunkForSale' | 'withdrawBidForPhunk' | 'acceptBidForPhunk' | 'buyPhunk' | 'enterBidForPhunk' | 'transferPhunk' | 'withdrawPhunk';
 
 export type ModalType = 'transaction' | 'complete' | 'sell' | 'bid' | 'transfer' | 'acceptBid' | 'error' | null;
 

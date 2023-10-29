@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 
 import { createClient } from '@supabase/supabase-js';
-import { Transaction, zeroAddress } from 'viem';
+import { Transaction, formatEther, parseEther, parseUnits, zeroAddress } from 'viem';
 
 import {
   Phunk,
@@ -49,7 +49,7 @@ export class SupabaseService {
   ): Promise<void> {
     const response: ListingResponse = await supabase
       .from('bids' + this.suffix)
-      .insert({
+      .upsert({
         createdAt,
         hashId: phunkId,
         value: value.toString(),
@@ -186,7 +186,7 @@ export class SupabaseService {
         blockTimestamp: createdAt,
         type,
         phunkId,
-        value: value ? Number(value) : null,
+        value: value.toString(),
         hashId: hashId.toLowerCase(),
         from: from.toLowerCase(),
         to: (to || zeroAddress).toLowerCase(),

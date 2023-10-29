@@ -3,6 +3,23 @@
 
 :host {
   display: block;
+
+  margin-top: var(--billboard-height);
+}
+
+app-splash {
+  position: fixed;
+  z-index: -1;
+  top: 0;
+  left: 0;
+}
+
+.sections-wrapper {
+  position: relative;
+  z-index: 1;
+
+  padding-top: 6rem;
+  background-color: rgba(var(--background), 1);
 }
 
 section {
