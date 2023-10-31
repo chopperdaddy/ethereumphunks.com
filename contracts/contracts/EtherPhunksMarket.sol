@@ -6,11 +6,11 @@
 // SPDX-License-Identifier: MIT License
 pragma solidity 0.8.17;
 
-import "./EthscriptionsEscrower.sol";
-// import "solady/src/utils/ERC1967FactoryConstants.sol";
 import "@solidstate/contracts/security/reentrancy_guard/ReentrancyGuard.sol";
+import "@solidstate/contracts/utils/Multicall.sol";
+import "./EthscriptionsEscrower.sol";
 
-contract EtherPhunksMarket is ReentrancyGuard, EthscriptionsEscrower {
+contract EtherPhunksMarket is ReentrancyGuard, Multicall, EthscriptionsEscrower {
 
     struct Offer {
         bool isForSale;

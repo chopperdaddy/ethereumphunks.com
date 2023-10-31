@@ -53,7 +53,7 @@ export class SupabaseService {
         createdAt,
         hashId: phunkId,
         value: value.toString(),
-        fromAddress,
+        fromAddress: fromAddress.toLowerCase(),
         txHash: txn.hash.toLowerCase(),
       });
 
@@ -78,7 +78,7 @@ export class SupabaseService {
         listed: true,
         minValue: minValue.toString(),
         listedBy: txn.from.toLowerCase(),
-        toAddress,
+        toAddres: toAddress.toLowerCase(),
       });
 
     const { error } = response;
@@ -96,9 +96,7 @@ export class SupabaseService {
     Logger.log('Removed listing', phunkId);
   }
 
-  async updateListing() {
-
-  }
+  async updateListing() {}
 
   ////////////////////////////////////////////////////////////////////////////////
   // Checks //////////////////////////////////////////////////////////////////////
