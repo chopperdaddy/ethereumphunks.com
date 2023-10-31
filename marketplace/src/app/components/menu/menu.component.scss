@@ -1,0 +1,139 @@
+@import 'abstracts/variables';
+@import 'abstracts/mixins';
+
+:host {
+  display: block;
+
+  position: fixed;
+  z-index: 990;
+  top: 0;
+  left: 0;
+
+  width: 100%;
+  height: var(--billboard-height);
+  transform: translateY(-100%);
+
+  background-color: rgba(var(--bid-color), .75);
+  padding-top: var(--header-height);
+
+  font-family: $secondary-font-stack;
+  color: rgba(var(--white), 1);
+
+  overflow-y: scroll;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+
+  backdrop-filter: blur(1rem);
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+
+  @media (max-width: $mobile) {
+    padding-top: (var(--header-height) / 1.5);
+  }
+}
+
+.inner {
+  position: relative;
+  display: grid;
+  grid-template-columns: calc(70% - 6rem) 30%;
+  column-gap: 6rem;
+  row-gap: 1rem;
+
+  grid-template-areas: 'none wallet-info'
+                       'none user-actions'
+                       'owned owned-stats'
+                       'bids bids-stats';
+
+  .wallet-info {
+    grid-area: wallet-info;
+  }
+
+  .user-actions {
+    grid-area: user-actions;
+
+    padding-top: 1rem;
+    border-top: .2rem solid rgba(var(--white), .1);
+
+    button {
+      width: 100%;
+      margin-bottom: .5rem;
+
+      font-size: 1.2rem;
+      font-weight: normal;
+      font-family: $secondary-font-stack;
+
+      background-color: rgba(var(--background), 1);
+
+      &:last-child {
+        margin-bottom: 0;
+      }
+    }
+  }
+
+  section {
+    padding-bottom: 3rem;
+
+    &.owned {
+      grid-area: owned;
+    }
+
+    &.bids {
+      grid-area: bids;
+    }
+
+    &:last-child {
+      padding-bottom: 0;
+    }
+  }
+
+  .stats {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    width: 100%;
+
+    &.owned-stats {
+      grid-area: owned-stats;
+    }
+
+    &.bids-stats {
+      grid-area: bids-stats;
+    }
+
+    .stat {
+      display: flex;
+      flex-direction: column;
+      padding-right: 1rem;
+
+      .label {
+        font-size: 1.2rem;
+      }
+
+      .value {
+        padding-right: .5rem;
+        font-size: 3rem;
+      }
+    }
+  }
+
+  @media (max-width: $mobile) {
+    grid-template-columns: 100%;
+    grid-gap: 0;
+    grid-template-areas: 'right' 'left';
+
+    .right {
+      padding-top: 0;
+      padding-bottom: 2rem;
+    }
+  }
+}
+
+h3 {
+  font-size: 1.5rem;
+  font-weight: normal;
+  padding-bottom: 1rem;
+
+  a {}
+}

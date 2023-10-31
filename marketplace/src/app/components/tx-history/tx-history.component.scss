@@ -1,0 +1,156 @@
+.transaction-history {
+
+  h2 {
+    font-size: 2.4rem;
+    padding-bottom: 2rem;
+  }
+
+  .transaction-wrapper {
+    width: 100%;
+    overflow-y: scroll;
+  }
+
+  table, tr, th, td {
+    padding: 0;
+    margin: 0;
+    border-collapse: collapse;
+    border: none;
+  }
+
+  table {
+    width: 100%;
+    max-width: 100%;
+    font-size: 1.6rem;
+
+    thead {
+      // border-top: 1px solid rgba(128, 128, 128, .2);
+      tr {
+        th {
+          text-align: left;
+          padding: 1rem 1.5rem;
+        }
+      }
+    }
+
+    tbody {
+      width: 100%;
+
+      tr {
+        margin-bottom: .1rem;
+        border-bottom: .1rem solid rgba(var(--background), 1);
+
+        td {
+          .cell-inner {
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+
+            width: 100%;
+            height: 100%;
+            min-height: 4rem;
+
+            padding: 1rem 1.5rem;
+
+            text-align: left;
+            color: rgba(var(--text-color), 1);
+
+            a {
+              color: rgba(var(--highlight), 1);
+              font-weight: 700;
+              text-decoration: none;
+
+              max-width: 18rem;
+              white-space: nowrap;
+              overflow: hidden;
+              text-overflow: ellipsis;
+
+              app-wallet-address {
+
+              }
+            }
+
+            &.type-label {
+              font-size: 1.4rem;
+              font-weight: 600;
+            }
+
+            &.value {
+              font-weight: 600;
+
+              .usd {
+                padding: 0 0 0 .5rem;
+                font-size: 1.2rem;
+                font-weight: 500;
+
+                opacity: .5;
+              }
+            }
+          }
+        }
+
+        &.transfer {
+          td {
+            background-color: rgba(var(--transferred-color), .5);
+
+            .cell-inner {
+              &.type-label {
+                border-left: .3rem solid rgba(var(--transferred-color), 1);
+              }
+            }
+          }
+        }
+
+        &.bidwithdrawn,
+        &.bidentered {
+          td {
+            background-color: rgba(var(--bid-color), .5);
+
+            .cell-inner {
+              &.type-label {
+                border-left: .3rem solid rgba(var(--bid-color), 1);
+              }
+            }
+          }
+        }
+
+        &.created {
+          td {
+            background-color: rgba(var(--claimed-color), .5);
+
+            .cell-inner {
+              &.type-label {
+                border-left: .3rem solid rgba(var(--claimed-color), 1);
+              }
+            }
+          }
+        }
+
+        &.sale {
+          td {
+            background-color: rgba(var(--sale-color), .5);
+
+            .cell-inner {
+              &.type-label {
+                border-left: .3rem solid rgba(var(--sale-color), 1);
+              }
+            }
+          }
+        }
+
+        &.offered,
+        &.offerwithdrawn {
+          td {
+            background-color: rgba(var(--listed-color), .5);
+
+            .cell-inner {
+              &.type-label {
+                border-left: .3rem solid rgba(var(--listed-color), 1);
+              }
+            }
+          }
+        }
+      }
+    }
+
+  }
+}

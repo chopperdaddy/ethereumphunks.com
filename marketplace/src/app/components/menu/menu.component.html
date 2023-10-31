@@ -1,0 +1,81 @@
+<div
+  #menuInner
+  class="menu-inner"
+  [style]="{ 'opacity': '0' }"
+  waIntersectionObserver waIntersectionThreshold="0.5">
+
+  <ng-container>
+    <div class="inner" *ngIf="address$ | async as address">
+
+      <div class="wallet-info">
+        <app-wallet-address [address]="address" [ens]="false" />
+      </div>
+
+      <div class="user-actions">
+        <button (click)="disconnect()">Disconnect</button>
+        <button (click)="withdraw()">Withdraw Funds</button>
+      </div>
+
+      <section
+        class="owned"
+        *ngIf="(ownedPhunks$ | async) as owned">
+
+        <app-phunk-grid
+          *ngIf="menuActive$ | async"
+          [phunkData]="owned || []"
+          [viewType]="'menu'"
+          [limit]="48"
+          [marketType]="'owned'"
+          [sort]="'price-low'"
+        />
+      </section>
+
+      <section
+        class="bids"
+        *ngIf="(userOpenBids$ | async) as bids">
+
+        <app-phunk-grid
+          [phunkData]="bids || []"
+          [viewType]="'menu'"
+          [limit]="48"
+          [marketType]="'bids'"
+        />
+      </section>
+
+      <div class="stats owned-stats">
+        <div class="stat">
+          <span class="label">Owned</span>
+          <span class="value">{{ stats.owned }}</span>
+        </div>
+
+        <div class="stat">
+          <span class="label">Escrowed</span>
+          <span class="value">{{ stats.escrowed }}</span>
+        </div>
+
+        <div class="stat">
+          <span class="label">Listed</span>
+          <span class="value">{{ stats.listed }}</span>
+        </div>
+      </div>
+
+      <div class="stats bids-stats">
+        <div class="stat">
+          <span class="label">Open Bids</span>
+          <span class="value">{{ stats.bids }}</span>
+        </div>
+
+        <div class="stat">
+          <span class="label">Value (eth)</span>
+          <span class="value">{{ stats.bidsValue | number }}</span>
+        </div>
+
+        <!-- <div class="stat">
+          <span class="label">Won</span>
+          <span class="value">{{ stats.won }}</span>
+        </div> -->
+      </div>
+
+    </div>
+  </ng-container>
+</div>

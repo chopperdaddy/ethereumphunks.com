@@ -1,0 +1,13 @@
+// -----------------------------------------------------------------------------
+// This file contains all @font-face declarations, if any.
+// -----------------------------------------------------------------------------
+
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap');
+
+@font-face {
+  font-family: 'Retro Computer';
+  src: url('/assets/fonts/retro-computer.woff2') format('woff2'),
+       url('/assets/fonts/retro-computer.woff') format('woff');
+  font-weight: normal;
+  font-style: normal;
+}

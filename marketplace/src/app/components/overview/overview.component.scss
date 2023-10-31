@@ -1,0 +1,185 @@
+@import 'abstracts/variables';
+@import 'abstracts/mixins';
+
+:host {
+  display: block;
+}
+
+h2 {
+  font-size: 2.4rem;
+  font-weight: 700;
+}
+
+section {
+
+  padding-bottom: 6rem;
+
+  h2 {
+    padding-bottom: 2rem;
+  }
+
+  .events-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    padding-bottom: 2rem;
+
+    h2 {
+      padding: 0;
+    }
+
+    ng-select {
+      width: 100%;
+      max-width: 20rem;
+    }
+  }
+
+  .events-items,
+  .sales-items {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    column-gap: 4rem;
+    row-gap: 3rem;
+  }
+
+  .event-item,
+  .sale-item {
+    position: relative;
+
+    text-decoration: none;
+    color: rgba(var(--text-color), 1);
+
+    .index {
+      position: absolute;
+      top: 0;
+      left: 0;
+
+      padding: 0 .5rem;
+
+      text-align: left;
+      font-size: 3.6rem;
+      line-height: 1;
+      font-weight: 700;
+      color: rgba(var(--white), 1);
+    }
+
+    .image-wrapper {
+
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      width: 100%;
+
+      img {
+        width: 100%;
+        image-rendering: pixelated;
+      }
+
+      &.placeholder {
+        background-color: rgba(var(--base-color), 1);
+      }
+    }
+
+    .labels-wrapper {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+
+      padding: 1rem 0 0;
+
+      .token-id {
+        font-weight: 700;
+        color: rgba(var(--highlight), 1);
+
+        padding-bottom: .5rem;
+      }
+
+      .label {}
+
+      .date {
+        font-size: 1.4rem;
+        font-weight: 600;
+        color: rgba(var(--text-color), .65);
+
+        padding-top: .5rem;
+      }
+    }
+
+    &.created {
+      .image-wrapper {
+        background-color: rgba(var(--base-color), 1);
+      }
+    }
+
+    &.transfer {
+      .image-wrapper {
+        background-color: rgba(var(--transferred-color), 1);
+      }
+    }
+
+    &.sale,
+    &.phunkbought {
+      .image-wrapper {
+        background-color: rgba(var(--sale-color), 1);
+      }
+    }
+
+    &.offered,
+    &.phunkoffered {
+      .image-wrapper {
+        background-color: rgba(var(--listed-color), 1);
+      }
+    }
+
+    &.phunkofferwithdrawn {
+      .image-wrapper {
+        background-color: rgba(var(--listed-color), 1);
+      }
+    }
+
+    &.phunkbidentered,
+    &.phunkbidwithdrawn {
+      .image-wrapper {
+        background-color: rgba(var(--bid-color), 1);
+      }
+    }
+  }
+
+  &.sales-wrapper,
+  &.events-wrapper {}
+
+  @media (max-width: $mobile) {
+
+    .events-header {
+      flex-direction: column;
+      align-items: flex-start;
+      justify-content: flex-start;
+
+      h2 {
+        padding-bottom: 1rem;
+      }
+
+      ng-select {
+        max-width: 100%;
+        font-size: 1.4rem;
+      }
+    }
+
+    .events-items,
+    .sales-items {
+      display: flex;
+      overflow-y: scroll;
+      padding-bottom: 2rem;
+    }
+
+    .event-item,
+    .sale-item {
+      min-width: 12rem;
+    }
+
+    &.events-wrapper {
+      padding-bottom: 0;
+    }
+  }
+}

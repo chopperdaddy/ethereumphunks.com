@@ -1,0 +1,69 @@
+/**
+ * Basic typography style for copy text
+ */
+
+// Usage: @extend %h1; etc.
+%h1 {}
+
+%h2 {}
+
+%h3 {}
+
+%h4 {}
+
+%h5 {}
+
+
+h1, h2, h3, h4 {
+  padding: 0;
+  margin: 0;
+  line-height: 1;
+  font-size: 1.6rem;
+}
+
+.highlight {
+  font-weight: 700;
+  color: rgba(var(--highlight), 1);
+  text-decoration: none;
+}
+
+.error {
+  color: rgba(var(--highlight), 1);
+  font-weight: 700;
+}
+
+.bold {
+  font-weight: 700;
+}
+
+p {
+  padding: 0;
+  margin: 1.5rem 0;
+
+  &.intro {
+    font-size: 1.8rem;
+    line-height: 1.5;
+  }
+
+  &.center {
+    text-align: center;
+  }
+
+  a {
+    color: rgba(var(--highlight), 1);
+    text-decoration: underline;
+  }
+
+  strong {
+    font-weight: normal;
+    color: rgba(var(--highlight), 1);
+  }
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
+input {
+  font-size: 1.6rem;
+}

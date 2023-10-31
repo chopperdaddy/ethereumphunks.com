@@ -1,0 +1,36 @@
+@import 'abstracts/variables';
+
+:host {
+  display: block;
+
+  .inner {
+    font-size: 1.2rem;
+    text-align: center;
+    padding: 2rem 0 4rem;
+
+    .social-links {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding-bottom: 1rem;
+
+      a {
+        padding: 0 1rem;
+        svg {
+          width: 2.4rem;
+          height: auto;
+
+          path {
+            fill: rgba(var(--text-color), .65);
+          }
+        }
+      }
+    }
+  }
+
+  @media (max-width: $mobile) {
+    .inner {
+      padding: 2rem;
+    }
+  }
+}
