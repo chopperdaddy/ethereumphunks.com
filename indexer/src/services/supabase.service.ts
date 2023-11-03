@@ -196,6 +196,7 @@ export class SupabaseService {
 
     const { error } = response;
     if (error) Logger.error(error.message, txn.hash.toLowerCase());
+    Logger.log('Event created', txn.hash.toLowerCase());
   }
 
   async addSha(phunkId: string, sha: string): Promise<Sha> {
@@ -288,5 +289,4 @@ export class SupabaseService {
     if (error) throw error;
     if (data?.length) return data;
   }
-
 }

@@ -316,7 +316,6 @@ export class ProcessingService {
   ): Promise<void> {
 
     try {
-
       const { eventName } = decoded;
       const { args } = decoded as any;
 
@@ -326,8 +325,6 @@ export class ProcessingService {
         args.id ||
         args.phunkId ||
         args.potentialEthscriptionId;
-
-      // console.log({ txn, decoded });
 
       const phunkExists = await this.sbSvc.checkEthPhunkExistsByHashId(phunkId);
       if (!phunkExists) return;

@@ -3,6 +3,8 @@ dist
 node_modules
 .env
 
+lastBlock-*.txt
+
 ca-certificate.crt
 
 # Logs
