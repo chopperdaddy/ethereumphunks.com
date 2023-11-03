@@ -75,11 +75,11 @@ contract EtherPhunksMarket is ReentrancyGuard, Multicall, EthscriptionsEscrower 
         _invalidateListing(phunkId);
     }
 
-    /* Allows an EtherPhunk owner to offer it for sale */
-    function offerPhunkForSale(
+    // This internal function does the actual work without reentrancy checks.
+    function _offerPhunkForSale(
         bytes32 phunkId,
         uint minSalePriceInWei
-    ) public nonReentrant {
+    ) internal {
         require(
             !userEthscriptionDefinitelyNotStored(msg.sender, phunkId),
             "Sender is not depositor"
@@ -95,6 +95,14 @@ contract EtherPhunksMarket is ReentrancyGuard, Multicall, EthscriptionsEscrower 
         emit PhunkOffered(phunkId, minSalePriceInWei, address(0x0));
     }
 
+    /* Allows an EtherPhunk owner to offer it for sale */
+    function offerPhunkForSale(
+        bytes32 phunkId,
+        uint minSalePriceInWei
+    ) public nonReentrant {
+        _offerPhunkForSale(phunkId, minSalePriceInWei);
+    }
+
     /* Allows an EtherPhunk owner to offer multiple for sale */
     function batchOfferPhunkForSale(
         bytes32[] memory phunkIds,
@@ -106,7 +114,7 @@ contract EtherPhunksMarket is ReentrancyGuard, Multicall, EthscriptionsEscrower 
         );
 
         for (uint i = 0; i < phunkIds.length; i++) {
-            offerPhunkForSale(phunkIds[i], minSalePricesInWei[i]);
+            _offerPhunkForSale(phunkIds[i], minSalePricesInWei[i]);
         }
     }
 
