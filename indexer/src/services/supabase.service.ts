@@ -78,7 +78,7 @@ export class SupabaseService {
         listed: true,
         minValue: minValue.toString(),
         listedBy: txn.from.toLowerCase(),
-        toAddres: toAddress.toLowerCase(),
+        toAddress: toAddress.toLowerCase(),
       });
 
     const { error } = response;
