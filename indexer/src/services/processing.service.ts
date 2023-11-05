@@ -112,6 +112,7 @@ export class ProcessingService {
           hash
         );
         i = i - 1;
+        await this.delay(1000);
       }
     }
   }
@@ -420,5 +421,9 @@ export class ProcessingService {
     const possibleEthPhunk = cleanedString.startsWith('data:image/svg+xml,');
 
     return { possibleEthPhunk, cleanedString };
+  }
+
+  async delay(ms: number): Promise<void> {
+    return new Promise(resolve => setTimeout(resolve, ms));
   }
 }
