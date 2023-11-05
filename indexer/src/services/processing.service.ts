@@ -108,8 +108,7 @@ export class ProcessingService {
 
       } catch (error) {
         Logger.error(
-          error.shortMessage || error,
-          'processTransactions()',
+          error.shortMessage || error.message || error,
           hash
         );
         i = i - 1;
@@ -314,134 +313,98 @@ export class ProcessingService {
     decoded: DecodeEventLogReturnType,
     log: Log
   ): Promise<void> {
+    const { eventName } = decoded;
+    const { args } = decoded as any;
 
-    try {
-      const { eventName } = decoded;
-      const { args } = decoded as any;
+    if (!eventName || !args) return;
 
-      if (!eventName || !args) return;
+    const phunkId =
+      args.id ||
+      args.phunkId ||
+      args.potentialEthscriptionId;
 
-      const phunkId =
-        args.id ||
-        args.phunkId ||
-        args.potentialEthscriptionId;
+    const phunkExists = await this.sbSvc.checkEthPhunkExistsByHashId(phunkId);
+    if (!phunkExists) return;
 
-      const phunkExists = await this.sbSvc.checkEthPhunkExistsByHashId(phunkId);
-      if (!phunkExists) return;
+    if (eventName === 'PhunkBought') {
+      const { phunkId, fromAddress, toAddress, value } = args;
+      await this.sbSvc.removeListing(createdAt, phunkId);
+      await this.sbSvc.addEvent(
+        txn,
+        fromAddress,
+        toAddress,
+        phunkId,
+        phunkExists.phunkId,
+        eventName,
+        createdAt,
+        value,
+        log.logIndex
+      );
+    }
 
-      if (eventName === 'PhunkBought') {
-        const { phunkId, fromAddress, toAddress, value } = args;
-        await this.sbSvc.removeListing(createdAt, phunkId);
-        await this.sbSvc.addEvent(
-          txn,
-          fromAddress,
-          toAddress,
-          phunkId,
-          phunkExists.phunkId,
-          eventName,
-          createdAt,
-          value,
-          log.logIndex
-        );
-      }
+    if (eventName === 'PhunkBidEntered') {
+      const { phunkId, fromAddress, value } = args;
+      await this.sbSvc.createBid(txn, createdAt, phunkId, fromAddress, value);
+      await this.sbSvc.addEvent(
+        txn,
+        txn.from,
+        null,
+        phunkId,
+        phunkExists.phunkId,
+        eventName,
+        createdAt,
+        value,
+        log.logIndex
+      );
+    }
 
-      if (eventName === 'PhunkBidEntered') {
-        const { phunkId, fromAddress, value } = args;
-        await this.sbSvc.createBid(txn, createdAt, phunkId, fromAddress, value);
-        await this.sbSvc.addEvent(
-          txn,
-          txn.from,
-          null,
-          phunkId,
-          phunkExists.phunkId,
-          eventName,
-          createdAt,
-          value,
-          log.logIndex
-        );
-      }
+    if (eventName === 'PhunkBidWithdrawn') {
+      const { phunkId } = args;
+      await this.sbSvc.removeBid(createdAt, phunkId);
+      await this.sbSvc.addEvent(
+        txn,
+        txn.from,
+        null,
+        phunkId,
+        phunkExists.phunkId,
+        eventName,
+        createdAt,
+        BigInt(0),
+        log.logIndex
+      );
+    }
 
-      if (eventName === 'PhunkBidWithdrawn') {
-        const { phunkId } = args;
-        await this.sbSvc.removeBid(createdAt, phunkId);
-        await this.sbSvc.addEvent(
-          txn,
-          txn.from,
-          null,
-          phunkId,
-          phunkExists.phunkId,
-          eventName,
-          createdAt,
-          BigInt(0),
-          log.logIndex
-        );
-      }
+    if (eventName === 'PhunkNoLongerForSale') {
+      const { phunkId } = args;
+      console.log(args);
+      await this.sbSvc.removeListing(createdAt, phunkId);
+      await this.sbSvc.addEvent(
+        txn,
+        txn.from,
+        null,
+        phunkId,
+        phunkExists.phunkId,
+        eventName,
+        createdAt,
+        BigInt(0),
+        log.logIndex
+      );
+    }
 
-      if (eventName === 'PhunkNoLongerForSale') {
-        const { phunkId } = args;
-        console.log(args);
-        await this.sbSvc.removeListing(createdAt, phunkId);
-        await this.sbSvc.addEvent(
-          txn,
-          txn.from,
-          null,
-          phunkId,
-          phunkExists.phunkId,
-          eventName,
-          createdAt,
-          BigInt(0),
-          log.logIndex
-        );
-      }
-
-      if (eventName === 'PhunkOffered') {
-        const { phunkId, toAddress, minValue } = args;
-        await this.sbSvc.createListing(txn, createdAt, phunkId, toAddress, minValue);
-        await this.sbSvc.addEvent(
-          txn,
-          txn.from,
-          toAddress,
-          phunkId,
-          phunkExists.phunkId,
-          eventName,
-          createdAt,
-          minValue,
-          log.logIndex
-        );
-      }
-
-      // if (eventName === 'PotentialEthscriptionDeposited') {
-      //   await this.sbSvc.addEvent(
-      //     txn,
-      //     txn.from,
-      //     txn.to,
-      //     phunkId,
-      //     phunkExists.phunkId,
-      //     'PhunkDeposited',
-      //     createdAt,
-      //     BigInt(0),
-      //     log.logIndex
-      //   );
-      // }
-
-      // if (eventName === 'PotentialEthscriptionWithdrawn') {
-      //   if (args.previousOwner !== phunkExists.prevOwner) return;
-
-      //   await this.sbSvc.addEvent(
-      //     txn,
-      //     txn.from,
-      //     txn.to,
-      //     phunkId,
-      //     phunkExists.phunkId,
-      //     'PhunkWithdrawn',
-      //     createdAt,
-      //     BigInt(0),
-      //     log.logIndex
-      //   );
-
-      // }
-    } catch (error) {
-      console.log(error);
+    if (eventName === 'PhunkOffered') {
+      const { phunkId, toAddress, minValue } = args;
+      await this.sbSvc.createListing(txn, createdAt, phunkId, toAddress, minValue);
+      await this.sbSvc.addEvent(
+        txn,
+        txn.from,
+        toAddress,
+        phunkId,
+        phunkExists.phunkId,
+        eventName,
+        createdAt,
+        minValue,
+        log.logIndex
+      );
     }
   }
 
