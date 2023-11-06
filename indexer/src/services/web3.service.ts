@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 
-import { FormattedTransaction, createPublicClient, http } from 'viem';
+import { FormattedTransaction, GetBlockReturnType, createPublicClient, http } from 'viem';
 import { goerli, mainnet } from 'viem/chains';
 
 import punkDataABI from '../abi/PunkData.json';
@@ -47,9 +47,9 @@ export class Web3Service {
     return receipt;
   }
 
-  async getBlockNumber(): Promise<number> {
-    const blockNumber = await this.client.getBlockNumber();
-    return Number(blockNumber);
+  async getBlock(n?: number): Promise<GetBlockReturnType> {
+    if (n) return await this.client.getBlock({ blockNumber: BigInt(n) });
+    return await this.client.getBlock();
   }
 
   ///////////////////////////////////////////////////////////////////////////////
