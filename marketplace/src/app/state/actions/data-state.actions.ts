@@ -1,9 +1,10 @@
 import { EventType } from '@/models/global-state';
 import { createAction, props } from '@ngrx/store';
 
-import { Phunk } from '@/models/graph';
+import { Phunk } from '@/models/db';
 
 import { RealtimePostgresChangesPayload } from '@supabase/supabase-js';
+import { DataState } from '@/models/data.state';
 
 export const resetDataState = createAction(
   '[Data State] Reset Data State'
@@ -85,7 +86,7 @@ export const dbEventTriggered = createAction(
 
 export const setActiveMarketRouteData = createAction(
   '[Data State] Set Active Market Route Data',
-  props<{ activeMarketRouteData: Phunk[] }>()
+  props<{ activeMarketRouteData: DataState['activeMarketRouteData'] }>()
 );
 
 export const clearActiveMarketRouteData = createAction(
@@ -103,10 +104,10 @@ export const setBids = createAction(
 );
 
 export const fetchUserOpenBids = createAction(
-  '[App State] Fetch User Open Bids'
+  '[Data State] Fetch User Open Bids'
 );
 
 export const setUserOpenBids = createAction(
-  '[App State] Set User Open Bids',
+  '[Data State] Set User Open Bids',
   props<{ userOpenBids: Phunk[] }>()
 );

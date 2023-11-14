@@ -3,7 +3,7 @@ import { Pipe, PipeTransform } from '@angular/core';
 import { formatEther } from 'viem';
 
 import { Calcs } from '@/models/pipes';
-import { Phunk } from '@/models/graph';
+import { Phunk } from '@/models/db';
 
 @Pipe({
   standalone: true,

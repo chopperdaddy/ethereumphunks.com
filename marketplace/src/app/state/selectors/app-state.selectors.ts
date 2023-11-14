@@ -34,9 +34,9 @@ export const selectActiveSort = createSelector(
 //   (appState: AppState) => appState.activeFilters
 // );
 
-export const selectActiveEventType = createSelector(
+export const selectactiveEventTypeFilter = createSelector(
   selectAppState,
-  (appState: AppState) => appState.activeEventType
+  (appState: AppState) => appState.activeEventTypeFilter
 );
 
 export const selectActiveTraitFilters = createSelector(
@@ -72,4 +72,9 @@ export const selectIsMobile = createSelector(
 export const selectCooldowns = createSelector(
   selectAppState,
   (appState: AppState) => appState.cooldowns
+);
+
+export const selectBlockNumber = createSelector(
+  selectAppState,
+  (appState: AppState) => appState.blockNumber
 );

@@ -1,30 +1,38 @@
 <div
   #menuInner
-  class="menu-inner"
+  class="inner"
   [style]="{ 'opacity': '0' }"
   waIntersectionObserver waIntersectionThreshold="0.5">
 
-  <ng-container>
-    <div class="inner" *ngIf="address$ | async as address">
+  <ng-container *ngIf="address$ | async as address">
+    <!-- <div class="wallet-info">
+      <app-wallet-address [address]="address" [ens]="false" />
+    </div> -->
 
-      <div class="wallet-info">
-        <app-wallet-address [address]="address" [ens]="false" />
-      </div>
-
-      <div class="user-actions">
-        <button (click)="disconnect()">Disconnect</button>
-        <button (click)="withdraw()">Withdraw Funds</button>
-      </div>
-
+    <div class="sections">
       <section
         class="owned"
-        *ngIf="(ownedPhunks$ | async) as owned">
+        *ngIf="(listedPhunks$ | async) as listed">
+
+        <p i18n>You own <span class="highlight">{{ stats.owned | number }}</span> EtherPhunks,
+          <a
+            class="highlight"
+            [routerLink]="['/', 'owned']"
+            [href]="'/owned'"
+            [queryParams]="{ address }">
+
+            view all.
+          </a>
+        </p>
+
+        <p i18n>You have <span class="highlight">{{ stats.listed | number }}</span> EtherPhunks listed for sale.</p>
 
         <app-phunk-grid
           *ngIf="menuActive$ | async"
-          [phunkData]="owned || []"
-          [viewType]="'menu'"
-          [limit]="48"
+          [phunkData]="listed || []"
+          [viewType]="(isMobile$ | async) ? 'menu' : 'market'"
+          [showLabels]="false"
+          [limit]="24"
           [marketType]="'owned'"
           [sort]="'price-low'"
         />
@@ -34,48 +42,37 @@
         class="bids"
         *ngIf="(userOpenBids$ | async) as bids">
 
+        <p i18n>You have <span class="highlight">{{ stats.bids | number }}</span> open bids</p>
+
         <app-phunk-grid
           [phunkData]="bids || []"
-          [viewType]="'menu'"
-          [limit]="48"
+          [viewType]="(isMobile$ | async) ? 'menu' : 'market'"
+          [showLabels]="false"
+          [limit]="24"
           [marketType]="'bids'"
         />
       </section>
+    </div>
 
-      <div class="stats owned-stats">
-        <div class="stat">
-          <span class="label">Owned</span>
-          <span class="value">{{ stats.owned }}</span>
-        </div>
+    <div class="user-actions">
+      <button (click)="disconnect()">Disconnect</button>
+      <button (click)="withdraw()">Withdraw Funds</button>
+    </div>
 
-        <div class="stat">
-          <span class="label">Escrowed</span>
-          <span class="value">{{ stats.escrowed }}</span>
-        </div>
+    <div
+      class="notifications-wrapper"
+      *ngIf="(transactions$ | async) as txns">
 
-        <div class="stat">
-          <span class="label">Listed</span>
-          <span class="value">{{ stats.listed }}</span>
-        </div>
+      <h3>Activity</h3>
+
+      <div class="notifications" *ngIf="txns.length else none">
+        <ng-container *ngFor="let txn of txns">
+          <app-notif [txn]="txn" [dismissible]="false" />
+        </ng-container>
       </div>
-
-      <div class="stats bids-stats">
-        <div class="stat">
-          <span class="label">Open Bids</span>
-          <span class="value">{{ stats.bids }}</span>
-        </div>
-
-        <div class="stat">
-          <span class="label">Value (eth)</span>
-          <span class="value">{{ stats.bidsValue | number }}</span>
-        </div>
-
-        <!-- <div class="stat">
-          <span class="label">Won</span>
-          <span class="value">{{ stats.won }}</span>
-        </div> -->
-      </div>
-
+      <ng-template #none>
+        <p class="no-activity">No recent activity.</p>
+      </ng-template>
     </div>
   </ng-container>
 </div>

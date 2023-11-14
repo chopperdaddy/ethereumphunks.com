@@ -60,10 +60,33 @@
           }
 
           &.menu {
+            position: relative;
+
+            .notif {
+              position: absolute;
+              top: -.5rem;
+              right: -.5rem;
+
+              display: flex;
+              align-items: center;
+              justify-content: center;
+
+              background-color: rgba(var(--pink), 1);
+              color: rgba(var(--white), 1);
+
+              width: 2rem;
+              height: 2rem;
+
+              font-family: $secondary-font-stack;
+              font-size: 1.2rem;
+              font-weight: normal;
+              text-align: center;
+            }
+
             app-wallet-address {
               font-family: $secondary-font-stack;
               font-size: 1.4rem;
-              font-weight: 400;
+              font-weight: normal;
             }
 
             .arrow {
@@ -80,7 +103,7 @@
                 width: 1.3rem;
                 height: 1.3rem;
                 path {
-                  fill: rgba(var(--header-text), 1);
+                  fill: rgba(var(--header-highlight), 1);
                 }
               }
             }

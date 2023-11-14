@@ -84,7 +84,7 @@ export class TxOverviewComponent {
   }
 
   setActiveTxFilter(filter: TxFilterItem): void {
-    this.store.dispatch(appStateActions.setEventType({ eventType: filter.value }));
+    this.store.dispatch(appStateActions.setEventTypeFilter({ eventTypeFilter: filter.value }));
     // console.log('setActiveTxFilter', filter);
     // this.activeTxFilter.next(filter);
   }

@@ -20,10 +20,10 @@ export const initialState: AppState = {
   marketType: 'all',
   activeSort: 'id',
 
-  activeEventType: 'All',
+  activeEventTypeFilter: 'All',
 
   blockNumber: -1,
-  transactions: [],
+  transactions: JSON.parse(localStorage.getItem('EtherPhunks_transactions') || '[]'),
   cooldowns: JSON.parse(localStorage.getItem('EtherPhunks_cooldowns') || '[]'),
 };
 
@@ -57,10 +57,10 @@ export const appStateReducer: ActionReducer<AppState, Action> = createReducer(
     // console.log('setHasWithdrawal', setHasWithdrawal);
     return setHasWithdrawal
   }),
-  on(actions.setEventType, (state, { eventType }) => {
+  on(actions.setEventTypeFilter, (state, { eventTypeFilter }) => {
     const setActiveFilters = {
       ...state,
-      activeFilters: eventType,
+      activeFilters: eventTypeFilter,
     };
     // console.log('setActiveFilters', setActiveFilters);
     return setActiveFilters
@@ -140,24 +140,15 @@ export const appStateReducer: ActionReducer<AppState, Action> = createReducer(
     // console.log('setTheme', setTheme);
     return setTheme
   }),
-  on(actions.addTransaction, (state, { transaction }) => {
-    const addTransaction = {
-      ...state,
-      transactions: [transaction, ...state.transactions]
-    };
-    // console.log('addTransaction', addTransaction);
-    return addTransaction
-  }),
   on(actions.removeTransaction, (state, { txId }) => {
     const removeTransaction = {
       ...state,
-      transactions: state.transactions.filter(tx => tx.id !== txId)
+      transactions: state.transactions.map(tx => tx.id === txId ? { ...tx, dismissed: true } : tx)
     };
     // console.log('removeTransaction', removeTransaction);
     return removeTransaction
   }),
   on(actions.upsertTransaction, (state, { transaction }) => {
-
     const txns = [...state.transactions];
     const index = txns.findIndex(tx => tx.phunkId === transaction.phunkId);
     if (index > -1) txns.splice(index, 1, transaction);

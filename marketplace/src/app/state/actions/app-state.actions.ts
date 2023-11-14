@@ -1,4 +1,4 @@
-import { Phunk } from '@/models/graph';
+import { Phunk } from '@/models/db';
 
 import { createAction, props } from '@ngrx/store';
 
@@ -28,9 +28,9 @@ export const resetAppState = createAction(
   '[App State] Reset App State'
 );
 
-export const setEventType = createAction(
+export const setEventTypeFilter = createAction(
   '[Data State] Set Event Type',
-  props<{ eventType: EventType }>()
+  props<{ eventTypeFilter: EventType }>()
 );
 
 export const setMarketType = createAction(
@@ -72,16 +72,6 @@ export const setTheme = createAction(
   props<{ theme: AppState['theme'] }>()
 );
 
-export const addTransaction = createAction(
-  '[App State] Add Transaction',
-  props<{ transaction: Transaction }>()
-);
-
-export const removeTransaction = createAction(
-  '[App State] Remove Transaction',
-  props<{ txId: Transaction['id'] }>()
-);
-
 export const clearTransactions = createAction(
   '[App State] Clear Transactions',
 );
@@ -89,6 +79,11 @@ export const clearTransactions = createAction(
 export const upsertTransaction = createAction(
   '[App State] Upsert Transaction',
   props<{ transaction: Transaction }>()
+);
+
+export const removeTransaction = createAction(
+  '[App State] Remove Transaction',
+  props<{ txId: Transaction['id'] }>()
 );
 
 export const setIsMobile = createAction(
@@ -118,4 +113,9 @@ export const removeCooldown = createAction(
 export const newBlock = createAction(
   '[App State] New Block',
   props<{ blockNumber: number }>()
+);
+
+export const mouseUp = createAction(
+  '[App State] Mouse Up',
+  props<{ event: MouseEvent }>()
 );

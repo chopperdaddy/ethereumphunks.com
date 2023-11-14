@@ -8,7 +8,7 @@ import { Store } from '@ngrx/store';
 import { TimeagoModule } from 'ngx-timeago';
 import { LazyLoadImageModule } from 'ng-lazyload-image';
 
-import { PhunkGridComponent } from '@/components/phunk-grid/phunk-grid.component';
+import { PhunkGridComponent } from '@/components/shared/phunk-grid/phunk-grid.component';
 import { TxOverviewComponent } from '@/components/overview/overview.component';
 import { SplashComponent } from '@/components/splash/splash.component';
 
@@ -22,6 +22,8 @@ import { CalcPipe } from '@/pipes/calculate.pipe';
 import { TokenIdParsePipe } from '@/pipes/token-id-parse.pipe';
 
 import { GlobalState } from '@/models/global-state';
+
+import * as dataStateActions from '@/state/actions/data-state.actions';
 
 import * as appStateSelectors from '@/state/selectors/app-state.selectors';
 import * as dataStateSelectors from '@/state/selectors/data-state.selectors';
@@ -65,6 +67,7 @@ export class IndexComponent {
   allPhunks$ = this.store.select(dataStateSelectors.selectAllPhunks);
   // marketData$ = this.store.select(state => state.appState.marketData);
 
+  ownedPhunks$ = this.store.select(dataStateSelectors.selectOwnedPhunks);
   listings$ = this.store.select(dataStateSelectors.selectListings);
   bids$ = this.store.select(dataStateSelectors.selectBids);
   theme$ = this.store.select(appStateSelectors.selectTheme);
@@ -76,7 +79,10 @@ export class IndexComponent {
     public dataSvc: DataService,
     public web3Svc: Web3Service,
     private router: Router
-  ) {}
+  ) {
+    this.store.dispatch(dataStateActions.fetchMarketData());
+    this.store.dispatch(dataStateActions.fetchAllPhunks());
+  }
 
   async onSubmit($event: any): Promise<void> {
     try {

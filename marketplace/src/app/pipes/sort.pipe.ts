@@ -1,7 +1,7 @@
 import { Pipe, PipeTransform } from '@angular/core';
 
 import { MarketTypes, Sorts } from '@/models/pipes';
-import { Phunk } from '@/models/graph';
+import { Phunk } from '@/models/db';
 
 @Pipe({
   standalone: true,

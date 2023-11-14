@@ -1,5 +1,5 @@
 import { DataState } from './data.state';
-import { Phunk } from './graph';
+import { Phunk } from './db';
 import { MarketTypes, Sorts } from './pipes';
 import { Theme } from './theme';
 
@@ -23,7 +23,7 @@ export interface AppState {
   marketType: MarketTypes;
   activeSort: Sorts;
   // activeFilters: any;
-  activeEventType: EventType;
+  activeEventTypeFilter: EventType;
 
   blockNumber: number;
   transactions: Transaction[];
@@ -37,14 +37,18 @@ export interface Cooldown {
 
 export interface Transaction {
   id: number;
-  type: 'wallet' | 'pending' | 'complete' | 'error';
+  type: 'wallet' | 'pending' | 'complete' | 'error' | 'event';
   function: TxFunction;
   phunkId: number;
+
+  isNotification?: boolean;
+  dismissed?: boolean;
+
   hash?: string | null;
   detail?: any;
 };
 
-export type TxFunction = 'sendToEscrow' | 'phunkNoLongerForSale' | 'offerPhunkForSale' | 'withdrawBidForPhunk' | 'acceptBidForPhunk' | 'buyPhunk' | 'enterBidForPhunk' | 'transferPhunk' | 'withdrawPhunk';
+export type TxFunction = 'sendToEscrow' | 'phunkNoLongerForSale' | 'offerPhunkForSale' | 'withdrawBidForPhunk' | 'acceptBidForPhunk' | 'buyPhunk' | 'enterBidForPhunk' | 'transferPhunk' | 'withdrawPhunk' | 'purchased';
 
 export interface TraitFilter { [key: string]: string };
 

@@ -1,4 +1,4 @@
-import { Phunk } from './graph';
+import { Phunk } from './db';
 
 export type TxType = 'sendToEscrow' | 'phunkNoLongerForSale' | 'offerPhunkForSale' | 'withdrawBidForPhunk' | 'acceptBidForPhunk' | 'buyPhunk' | 'enterBidForPhunk' | 'transferPhunk' | 'withdrawPhunk';
 

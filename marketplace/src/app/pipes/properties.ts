@@ -1,5 +1,5 @@
 import { Pipe, PipeTransform } from '@angular/core';
-import { Phunk } from '@/models/graph';
+import { Phunk } from '@/models/db';
 import { TraitFilter } from '@/models/global-state';
 
 @Pipe({

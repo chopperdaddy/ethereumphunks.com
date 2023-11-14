@@ -33,7 +33,7 @@ export interface Bid {
 export interface Event {
   blockHash: string
   blockNumber: number | null
-  blockTimestamp: string | null
+  blockTimestamp: Date | null
   from: string
   hashId: string
   id: number

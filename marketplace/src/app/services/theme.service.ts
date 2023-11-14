@@ -1,8 +1,7 @@
-import { Theme, ThemeProperties, ThemeStyles } from '@/models/theme';
 import { DOCUMENT } from '@angular/common';
 import { Inject, Injectable } from '@angular/core';
 
-import { BehaviorSubject } from 'rxjs';
+import { Theme, ThemeProperties, ThemeStyles } from '@/models/theme';
 
 @Injectable({
   providedIn: 'root'
@@ -18,8 +17,12 @@ export class ThemeService {
       '--dark-text': '255, 255, 255',
       '--highlight': '195, 255, 0',
       '--button-color': '255, 4, 180',
-      '--header-text': '0, 0, 0',
-      '--header-highlight': '255, 4, 180'
+
+      '--header-text': '255, 4, 180',
+      '--header-highlight': '195, 255, 0',
+
+      '--header-text-active': '0, 0, 0',
+      '--header-highlight-active': '255, 4, 180'
     },
     light: {
       label: 'Light',
@@ -28,8 +31,12 @@ export class ThemeService {
       '--dark-text': '0, 0, 0',
       '--highlight': '195, 255, 0',
       '--button-color': '0, 0, 0',
+
       '--header-text': '0, 0, 0',
-      '--header-highlight': '255, 4, 180'
+      '--header-highlight': '255, 4, 180',
+
+      '--header-text-active': '0, 0, 0',
+      '--header-highlight-active': '255, 4, 180'
     }
   }
 
@@ -49,7 +56,6 @@ export class ThemeService {
         themeStyles[property as keyof ThemeProperties]
       );
     });
-
     this.document.body.dataset['theme'] = theme;
     localStorage.setItem('EtherPhunks_theme', theme);
   }

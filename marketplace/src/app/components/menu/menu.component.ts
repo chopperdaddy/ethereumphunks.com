@@ -5,12 +5,14 @@ import { RouterModule } from '@angular/router';
 import { Store } from '@ngrx/store';
 import { IntersectionObserverModule } from '@ng-web-apis/intersection-observer';
 
-import { Phunk } from '@/models/graph';
-import { GlobalState } from '@/models/global-state';
+import { Phunk } from '@/models/db';
+import { GlobalState, Transaction } from '@/models/global-state';
 
 import { Web3Service } from '@/services/web3.service';
 
-import { PhunkGridComponent } from '@/components/phunk-grid/phunk-grid.component';
+import { PhunkGridComponent } from '@/components/shared/phunk-grid/phunk-grid.component';
+import { TxModalComponent } from '@/components/tx-modal/tx-modal.component';
+import { NotifComponent } from '@/components/shared/notif/notif.component';
 
 import { WalletAddressDirective } from '@/directives/wallet-address.directive';
 
@@ -22,7 +24,7 @@ import * as dataStateSelectors from '@/state/selectors/data-state.selectors';
 
 import anime from 'animejs';
 
-import { tap } from 'rxjs';
+import { map, tap } from 'rxjs';
 
 @Component({
   selector: 'app-menu',
@@ -33,6 +35,8 @@ import { tap } from 'rxjs';
     RouterModule,
 
     PhunkGridComponent,
+    NotifComponent,
+    TxModalComponent,
 
     WalletAddressDirective
   ],
@@ -43,20 +47,31 @@ export class MenuComponent implements AfterViewInit {
 
   @ViewChild('menuInner') menuInner!: ElementRef;
 
+  address$ = this.store.select(appStateSelectors.selectWalletAddress);
+  menuActive$ = this.store.select(appStateSelectors.selectMenuActive);
+
+  listedPhunks$ = this.store.select(dataStateSelectors.selectOwnedPhunks).pipe(
+    tap((owned: Phunk[] | null) => this.createOwnedStats(owned)),
+    map((res) => res?.filter((phunk: Phunk) => phunk.listing)),
+  );
+
+  userOpenBids$ = this.store.select(dataStateSelectors.selectUserOpenBids).pipe(
+    tap((bids: Phunk[] | null) => this.createBidStats(bids))
+  );
+
+  transactions$ = this.store.select(appStateSelectors.selectTransactions).pipe(
+    map((txns: Transaction[]) => [...txns].sort((a, b) => b.id - a.id))
+  );
+
+  isMobile$ = this.store.select(appStateSelectors.selectIsMobile);
+
   stats: any = {
     owned: 0,
     escrowed: 0,
     listed: 0,
   };
 
-  address$ = this.store.select(appStateSelectors.selectWalletAddress);
-  menuActive$ = this.store.select(appStateSelectors.selectMenuActive);
-  ownedPhunks$ = this.store.select(dataStateSelectors.selectOwnedPhunks).pipe(
-    tap((owned: Phunk[] | null) => this.createOwnedStats(owned))
-  );
-  userOpenBids$ = this.store.select(dataStateSelectors.selectUserOpenBids).pipe(
-    tap((bids: Phunk[] | null) => this.createBidStats(bids))
-  );
+  menuTimeline!: anime.AnimeTimelineInstance;
 
   constructor(
     private store: Store<GlobalState>,
@@ -67,7 +82,9 @@ export class MenuComponent implements AfterViewInit {
   }
 
   ngAfterViewInit(): void {
+
     this.menuActive$.pipe(
+      tap((active: boolean) => console.log(`Menu active: ${active}`)),
       tap((active: boolean) => {
         anime.timeline({
           easing: 'cubicBezier(0.785, 0.135, 0.15, 0.86)',
@@ -150,5 +167,4 @@ export class MenuComponent implements AfterViewInit {
   async withdraw(): Promise<void> {
     await this.web3Svc.withdraw();
   }
-
 }

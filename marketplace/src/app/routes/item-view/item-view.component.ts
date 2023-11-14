@@ -8,7 +8,7 @@ import { LazyLoadImageModule } from 'ng-lazyload-image';
 
 import { PhunkBillboardComponent } from '@/components/phunk-billboard/phunk-billboard.component';
 import { TxHistoryComponent } from '@/components/tx-history/tx-history.component';
-import { PhunkImageComponent } from '@/components/phunk-image/phunk-image.component';
+import { PhunkImageComponent } from '@/components/shared/phunk-image/phunk-image.component';
 import { BreadcrumbsComponent } from '@/components/breadcrumbs/breadcrumbs.component';
 
 import { WalletAddressDirective } from '@/directives/wallet-address.directive';
@@ -22,7 +22,7 @@ import { DataService } from '@/services/data.service';
 import { Web3Service } from '@/services/web3.service';
 import { ThemeService } from '@/services/theme.service';
 
-import { Phunk } from '@/models/graph';
+import { Phunk } from '@/models/db';
 import { GlobalState } from '@/models/global-state';
 
 import { Subject, filter, map, switchMap, takeUntil, tap, withLatestFrom } from 'rxjs';
@@ -107,6 +107,14 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
     switchMap((cooldowns) => this.singlePhunk$.pipe(
       filter((phunk) => !!phunk),
       map((phunk) => cooldowns.filter((cooldown) => cooldown?.phunkId === phunk?.phunkId)?.length > 0),
+    )),
+  );
+
+  hasPendingTx$ = this.store.select(appStateSelectors.selectTransactions).pipe(
+    filter((transactions) => !!transactions),
+    switchMap((transactions) => this.singlePhunk$.pipe(
+      filter((phunk) => !!phunk),
+      map((phunk) => transactions.filter((tx) => tx?.phunkId === phunk?.phunkId && tx.type === 'pending')?.length > 0),
     )),
   );
 

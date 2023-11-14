@@ -5,7 +5,7 @@ import { RouterModule } from '@angular/router';
 
 import { DataService } from '@/services/data.service';
 
-import { Phunk } from '@/models/graph';
+import { Phunk } from '@/models/db';
 
 import { firstValueFrom, tap } from 'rxjs';
 import { HttpClient } from '@angular/common/http';

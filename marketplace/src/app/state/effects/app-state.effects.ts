@@ -3,7 +3,7 @@ import { HttpParams } from '@angular/common/http';
 import { Location } from '@angular/common';
 
 import { Store } from '@ngrx/store';
-import { ROUTER_NAVIGATION, getRouterSelectors } from '@ngrx/router-store';
+import { ROUTER_NAVIGATED, ROUTER_NAVIGATION, getRouterSelectors } from '@ngrx/router-store';
 
 import { Actions, createEffect, ofType } from '@ngrx/effects';
 
@@ -11,11 +11,12 @@ import { Web3Service } from '@/services/web3.service';
 import { DataService } from '@/services/data.service';
 import { ThemeService } from '@/services/theme.service';
 
-import { Phunk } from '@/models/graph';
-import { GlobalState } from '@/models/global-state';
+import { Phunk } from '@/models/db';
 import { MarketTypes } from '@/models/pipes';
+import { DataState } from '@/models/data.state';
+import { Cooldown, GlobalState } from '@/models/global-state';
 
-import { filter, from, map, mergeMap, switchMap, tap, withLatestFrom } from 'rxjs';
+import { EMPTY, concatMap, delay, distinctUntilChanged, filter, from, map, mergeMap, of, switchMap, tap, withLatestFrom } from 'rxjs';
 
 import * as appStateActions from '@/state/actions/app-state.actions';
 import * as appStateSelectors from '@/state/selectors/app-state.selectors';
@@ -28,46 +29,58 @@ export class AppStateEffects {
 
   setMarketTypeFromRoute$ = createEffect(() => this.actions$.pipe(
     ofType(ROUTER_NAVIGATION),
-    tap((action) => this.store.dispatch(appStateActions.setMenuActive({ menuActive: false }))),
+    tap((_) => this.store.dispatch(appStateActions.setMenuActive({ menuActive: false }))),
     withLatestFrom(
-      this.store.select(getRouterSelectors().selectRouteParam('marketType')),
       this.store.select(getRouterSelectors().selectQueryParams),
       this.store.select(getRouterSelectors().selectRouteParams),
     ),
-    tap(([action, marketType, queryParams, routeParams]) => {
+    tap(([_, queryParams, routeParams]) => {
+      const marketType = routeParams['marketType'];
       if (!marketType) {
         this.store.dispatch(appStateActions.clearActiveTraitFilters());
         this.store.dispatch(dataStateActions.clearActiveMarketRouteData());
-        // const phunkId = routeParams['tokenId'];
       }
     }),
-    filter(([action, marketType, queryParams]) => !!marketType),
-    mergeMap(([action, marketType, queryParams]) => {
+    filter(([_, queryParams, routeParams]) => !!routeParams['marketType']),
+    mergeMap(([_, queryParams, routeParams]) => {
       queryParams = { ...queryParams };
       if (queryParams.address) delete queryParams.address;
       return [
-        appStateActions.setMarketType({ marketType: marketType as MarketTypes }),
+        appStateActions.setMarketType({ marketType: routeParams['marketType'] as MarketTypes }),
         appStateActions.setActiveTraitFilters({ activeTraitFilters: queryParams }),
       ];
     }),
   ));
 
   onMarketTypeChanged$ = createEffect(() => this.actions$.pipe(
-    ofType(appStateActions.setMarketType, dataStateActions.dbEventTriggered),
-    // tap((action) => console.log('setMarketType', action)),
-    withLatestFrom(
-      this.store.select(getRouterSelectors().selectQueryParam('address')),
-      this.store.select(appStateSelectors.selectMarketType),
-    ),
-    switchMap(([action, address, marketType]) => {
-      console.log('setMarketType', {action, address, marketType});
-      if (address) return this.dataSvc.fetchOwned(address);
+    ofType(appStateActions.setMarketType),
+    distinctUntilChanged(),
+    withLatestFrom(this.store.select(getRouterSelectors().selectQueryParam('address'))),
+    switchMap(([action, queryAddress]) => {
+
+      const marketType = action.marketType;
+      if (!marketType) return from([]);
+
+      if (queryAddress) {
+        return this.store.select(appStateSelectors.selectWalletAddress).pipe(
+          switchMap((res) => {
+            if (res && res === queryAddress?.toLowerCase()) {
+              return this.store.select(dataStateSelectors.selectOwnedPhunks);
+            } else {
+              return this.dataSvc.fetchOwned(queryAddress);
+            }
+          })
+        );
+      }
+
+      console.log('marketType', marketType);
+
       if (marketType === 'all') return this.store.select(dataStateSelectors.selectAllPhunks);
       if (marketType === 'listings') return this.store.select(dataStateSelectors.selectListings);
       if (marketType === 'bids') return this.store.select(dataStateSelectors.selectBids);
       return this.store.select(dataStateSelectors.selectMarketData);
     }),
-    map((phunks) => dataStateActions.setActiveMarketRouteData({ activeMarketRouteData: phunks || [] })),
+    map((data: DataState['activeMarketRouteData']) => dataStateActions.setActiveMarketRouteData({ activeMarketRouteData: data })),
   ));
 
   addressChanged$ = createEffect(() => this.actions$.pipe(
@@ -108,13 +121,17 @@ export class AppStateEffects {
   )));
 
   menuActive$ = createEffect(() => this.actions$.pipe(
-    ofType(appStateActions.setMenuActive),
-    withLatestFrom(this.store.select(appStateSelectors.selectTheme)),
-    tap(([action, theme]) => {
-      const menuActive = action.menuActive;
+    ofType(appStateActions.setMenuActive, appStateActions.setTheme),
+    withLatestFrom(
+      this.store.select(appStateSelectors.selectMenuActive),
+      this.store.select(appStateSelectors.selectTheme)
+    ),
+    tap(([_, menuActive, theme]) => {
+      const activeTheme = (this.themeSvc.themeStyles as any)[theme];
+      if (!document.documentElement.style.getPropertyValue('--header-text')) return;
       document.documentElement.style.setProperty(
         '--header-text',
-        menuActive ? '255, 255, 255' : (this.themeSvc.themeStyles as any)[theme]['--header-text']
+        menuActive ? activeTheme['--header-text-active'] : activeTheme['--header-text']
       );
     }),
   ), { dispatch: false });
@@ -166,20 +183,42 @@ export class AppStateEffects {
     // )
   ), { dispatch: false });
 
-  onNewBlock$ = createEffect(() => this.actions$.pipe(
+  onNewBlockCheckCooldown$ = createEffect(() => this.actions$.pipe(
     ofType(appStateActions.newBlock),
     withLatestFrom(this.store.select(appStateSelectors.selectCooldowns)),
-    tap(([action, cooldowns]) => {
-      // console.log('newBlock', {action, cooldowns});
-      const currentBlock = action.blockNumber;
-      for (const cooldown of cooldowns) {
-        const cooldownEnd = cooldown.startBlock + this.web3Svc.maxCooldown;
-        if (currentBlock >= cooldownEnd) {
-          this.store.dispatch(appStateActions.removeCooldown({ phunkId: cooldown.phunkId }));
-        }
+    tap(([action, cooldowns]) => this.setCooldowns(action, cooldowns)),
+  ), { dispatch: false });
+
+  onTransactionEvent$ = createEffect(() => this.actions$.pipe(
+    ofType(
+      appStateActions.upsertTransaction,
+      appStateActions.removeTransaction
+    ),
+    withLatestFrom(this.store.select(appStateSelectors.selectTransactions)),
+    tap(([_, transactions]) => localStorage.setItem('EtherPhunks_transactions', JSON.stringify(transactions))),
+    concatMap(([action]) =>
+    action.type === '[App State] Upsert Transaction' && action.transaction.type === 'complete' ?
+      of(action).pipe(
+        delay(5000),
+        tap(() => {
+          this.store.dispatch(appStateActions.removeTransaction({ txId: action.transaction.id }));
+        })
+      ) :
+      EMPTY
+    )
+  ), { dispatch: false });
+
+  onMouseUp$ = createEffect(() => this.actions$.pipe(
+    ofType(appStateActions.mouseUp),
+    withLatestFrom(this.store.select(appStateSelectors.selectMenuActive)),
+    tap(([action, menuActive]) => {
+      const menu = document.querySelector('app-menu') as HTMLElement;
+      const header = document.querySelector('app-header') as HTMLElement;
+      const target = action.event.target as HTMLElement;
+      if (!menu.contains(target) && !header.contains(target) && menuActive) {
+        this.store.dispatch(appStateActions.setMenuActive({ menuActive: false }));
       }
-      localStorage.setItem('EtherPhunks_cooldowns', JSON.stringify(cooldowns));
-    })
+    }),
   ), { dispatch: false });
 
   constructor(
@@ -199,5 +238,16 @@ export class AppStateEffects {
   checkHashIdEvent(newData: any, singlePhunk: Phunk): boolean {
     if (!singlePhunk) return false;
     return newData.hashId === singlePhunk.hashId;
+  }
+
+  setCooldowns(action: any, cooldowns: Cooldown[]) {
+    const currentBlock = action.blockNumber;
+    for (const cooldown of cooldowns) {
+      const cooldownEnd = cooldown.startBlock + this.web3Svc.maxCooldown;
+      if (currentBlock >= cooldownEnd) {
+        this.store.dispatch(appStateActions.removeCooldown({ phunkId: cooldown.phunkId }));
+      }
+    }
+    localStorage.setItem('EtherPhunks_cooldowns', JSON.stringify(cooldowns));
   }
 }

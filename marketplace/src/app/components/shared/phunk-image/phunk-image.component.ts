@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, Input, OnChanges, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component, Input, OnChanges, OnInit, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
 import { HttpClient } from '@angular/common/http';
@@ -26,7 +26,7 @@ export class PhunkImageComponent implements OnChanges {
 
   constructor(private http: HttpClient) {}
 
-  ngOnChanges(): void {
+  ngOnChanges(changes: SimpleChanges): void {
     const tokenId = this.formatNumber(this.tokenId.toString());
     const url = `${environment.staticUrl}/images/phunk${tokenId}.svg`;
 

@@ -39,7 +39,7 @@
     </div>
   </section>
 
-  <!-- <ng-container *ngIf="(ownedPhunks$ | async) as ownedData">
+  <ng-container *ngIf="(ownedPhunks$ | async) as ownedData">
     <ng-container *ngIf="ownedData.length">
       <section *ngIf="(walletAddress$ | async) as address">
         <div class="inner">
@@ -61,14 +61,14 @@
           <app-phunk-grid
             [phunkData]="ownedData || []"
             [viewType]="'compact'"
-            [limit]="(stateSvc.isMobile$ | async) ? 100 : 110"
+            [limit]="(isMobile$ | async) ? 100 : 110"
             [marketType]="'owned'"
             [sort]="'price-low'"
           />
         </div>
       </section>
     </ng-container>
-  </ng-container> -->
+  </ng-container>
 
   <section>
     <div class="inner">

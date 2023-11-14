@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 
 import { HttpClient } from '@angular/common/http';
 
-import { PhunkImageComponent } from '../phunk-image/phunk-image.component';
+import { PhunkImageComponent } from '../shared/phunk-image/phunk-image.component';
 
 @Component({
   selector: 'app-splash',

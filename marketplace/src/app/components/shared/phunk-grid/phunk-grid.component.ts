@@ -8,7 +8,7 @@ import { LazyLoadImageModule } from 'ng-lazyload-image';
 import { IntersectionObserverModule } from '@ng-web-apis/intersection-observer';
 
 import { ViewType } from '@/models/view-types';
-import { Phunk } from '@/models/graph';
+import { Phunk } from '@/models/db';
 import { MarketTypes, Sorts } from '@/models/pipes';
 import { GlobalState } from '@/models/global-state';
 
@@ -58,6 +58,8 @@ export class PhunkGridComponent implements OnChanges {
   @Input() limit: number = 110;
   @Input() sort!: Sorts;
   @Input() currentPage: number = 1;
+  @Input() showLabels: boolean = true;
+  @Input() observe: boolean = false;
 
   @Input() selectable: boolean = false;
   @Input() selectAll: boolean = false;
@@ -128,7 +130,7 @@ export class PhunkGridComponent implements OnChanges {
   prevIndex: number | null = null;
 
   onIntersection($event: IntersectionObserverEntry[]): void {
-    if (this.viewType !== 'market') return;
+    if (!this.observe) return;
     if (this.limit >= this.phunkData.length) return;
 
     $event.forEach((entry) => {

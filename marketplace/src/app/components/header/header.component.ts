@@ -8,7 +8,7 @@ import { MenuComponent } from '@/components/menu/menu.component';
 
 import { Web3Service } from '@/services/web3.service';
 
-import { Subject, firstValueFrom, tap, withLatestFrom } from 'rxjs';
+import { Subject, firstValueFrom, map, tap, withLatestFrom } from 'rxjs';
 
 import { WalletAddressDirective } from '@/directives/wallet-address.directive';
 import { FormatCashPipe } from '@/pipes/format-cash.pipe';
@@ -48,6 +48,9 @@ export class HeaderComponent {
   hasWithdrawal$ = this.store.select(appStateSelectors.selectHasWithdrawal);
   menuActive$ = this.store.select(appStateSelectors.selectMenuActive);
   theme$ = this.store.select(appStateSelectors.selectTheme);
+  notifications$ = this.store.select(appStateSelectors.selectTransactions).pipe(
+    map((res) => res.filter((tx) => !tx.dismissed && tx.isNotification).length),
+  );
 
   toggleTheme$ = new Subject<void>();
   toggleMenu$ = new Subject<void>();

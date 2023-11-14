@@ -71,6 +71,7 @@
           class="actions"
           [class.disabled]="!selectedHashIds.length">
 
+          <button (click)="batchAction('list')">List</button>
           <button (click)="batchAction('transfer')">Transfer</button>
           <button (click)="batchAction('escrow')">Escrow</button>
           <button (click)="batchAction('withdraw')">Withdraw</button>
@@ -88,6 +89,7 @@
     <app-phunk-grid
       [phunkData]="phunkData"
       [currentPage]="currentPage"
+      [observe]="true"
       [selectable]="
         selectMutipleActive &&
         marketType === 'owned' &&
@@ -98,6 +100,42 @@
     />
   </ng-container>
 </div>
+
+<app-modal [class.active]="isListingBulk">
+  <form [formGroup]="bulkListingForm">
+    <div class="top-bar">
+      <h2 i18n>Bulk List <span class="highlight">{{ bulkListingForm.value.listingPhunks?.length }}</span> Phunks</h2>
+    </div>
+
+    <div class="selected-wrapper">
+      <ng-container formArrayName="listingPhunks">
+        <div
+          *ngFor="let phunk of selectedPhunksFormArray?.controls; let i = index"
+          [formGroupName]="i">
+
+          <div class="selected">
+            <img
+              [lazyLoad]="dataSvc.staticUrl + '/images/phunk' + (phunk.value.phunkId | tokenIdParse) + '.svg'"
+              [defaultImage]="'assets/loadingphunk.png'"
+              width="50"
+              height="50"
+            />
+
+            <div class="form-item">
+              <label [for]="phunk.value.phunkId">List Price</label>
+              <input type="number" [id]="phunk.value.phunkId" placeholder="ETH" formControlName="listPrice">
+            </div>
+          </div>
+        </div>
+      </ng-container>
+    </div>
+
+    <div class="form-actions">
+      <button type="reset" (click)="isListingBulk = false">Cancel</button>
+      <button type="submit" (click)="submitBatchListing()">List All</button>
+    </div>
+  </form>
+</app-modal>
 
 <ng-template #prevIcon>
   <svg height="13" viewBox="0 0 8 13" width="8" xmlns="http://www.w3.org/2000/svg"><path d="m5.203125 10.40625v2.5664062h2.6015625v-2.5664062zm-2.6015625-2.6015625v2.6015625h2.6015625v-2.6015625zm-2.6015625-2.6015625v2.6015625h2.6015625v-2.6015625zm2.6015625-2.6015625v2.6015625h2.6015625v-2.6015625zm2.6015625-2.6015625v2.6015625h2.6015625v-2.6015625z" fill="rgba(var(--text-color), 1)"/></svg>

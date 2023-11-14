@@ -10,12 +10,15 @@
 
     <div class="connect-menu">
       <ng-container *ngIf="(connected$ | async); else connectButton">
+
         <button
           #menuButton
           class="menu"
           [class.active]="menuActive$ | async"
           *ngIf="(walletAddress$ | async) as address"
           (click)="toggleMenu$.next()">
+
+          <div class="notif" *ngIf="(notifications$ | async) as notifs">{{ notifs | number }}</div>
 
           <app-wallet-address [address]="address"></app-wallet-address>
 

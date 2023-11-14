@@ -7,6 +7,8 @@ export interface ThemeProperties {
   '--button-color': string;
   '--header-text': string;
   '--header-highlight': string;
+  '--header-text-active': string;
+  '--header-highlight-active': string;
 };
 
 export interface ThemeStyles {

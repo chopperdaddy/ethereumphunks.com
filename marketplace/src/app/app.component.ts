@@ -1,11 +1,15 @@
-import { Component, HostListener, Inject } from '@angular/core';
+import { Component, Inject } from '@angular/core';
 import { CommonModule, DOCUMENT } from '@angular/common';
 import { NavigationEnd, NavigationStart, Router, RouterModule } from '@angular/router';
 
 import { Store } from '@ngrx/store';
 
+import { GlobalState } from '@/models/global-state';
+
 import { HeaderComponent } from '@/components/header/header.component';
 import { FooterComponent } from '@/components/footer/footer.component';
+import { MenuComponent } from '@/components/menu/menu.component';
+import { TxModalComponent } from '@/components/tx-modal/tx-modal.component';
 
 import { Web3Service } from '@/services/web3.service';
 import { DataService } from '@/services/data.service';
@@ -14,14 +18,8 @@ import { ThemeService } from '@/services/theme.service';
 import { debounceTime, filter, observeOn, scan, tap } from 'rxjs/operators';
 import { asyncScheduler, fromEvent, Observable } from 'rxjs';
 
-import { GlobalState } from '@/models/global-state';
-
 import * as appStateActions from '@/state/actions/app-state.actions';
-
 import * as dataStateActions from '@/state/actions/data-state.actions';
-
-import { MenuComponent } from '@/components/menu/menu.component';
-import { TxModalComponent } from '@/components/tx-modal/tx-modal.component';
 
 @Component({
   standalone: true,
@@ -52,15 +50,10 @@ export class AppComponent {
     private router: Router
   ) {
 
-    this.store.dispatch(appStateActions.setEventType({ eventType: 'All' }));
+    this.store.dispatch(appStateActions.setEventTypeFilter({ eventTypeFilter: 'All' }));
     this.store.dispatch(appStateActions.setTheme({ theme: 'initial' }));
 
-    this.store.dispatch(dataStateActions.fetchMarketData());
-    this.store.dispatch(dataStateActions.fetchAllPhunks());
-
-    setTimeout(() => {
-      this.store.dispatch(appStateActions.setMenuActive({ menuActive: true }));
-    }, 0);
+    // setTimeout(() => this.store.dispatch(appStateActions.setMenuActive({ menuActive: true })), 0);
 
     this.router.events.pipe(
       ////////////////////////
@@ -88,12 +81,12 @@ export class AppComponent {
       })
     ).subscribe();
 
-    // fromEvent(this.document, 'mouseup').pipe(
-    //   tap(($event: Event) => {
-    //     $event.stopPropagation();
-    //     this.stateSvc.setDocumentClick($event as MouseEvent);
-    //   })
-    // ).subscribe();
+    fromEvent(this.document, 'mouseup').pipe(
+      tap(($event: Event) => {
+        $event.stopPropagation();
+        this.store.dispatch(appStateActions.mouseUp({ event: $event as MouseEvent }));
+      })
+    ).subscribe();
 
     fromEvent(window, 'resize').pipe(
       debounceTime(500),

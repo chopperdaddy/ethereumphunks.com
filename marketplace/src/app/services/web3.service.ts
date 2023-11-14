@@ -8,7 +8,7 @@ import { Observable, catchError, filter, of, tap } from 'rxjs';
 
 import EtherPhunksMarketAbi from '@/abi/EtherPhunksMarket.json';
 
-import { FallbackTransport, TransactionReceipt, createWalletClient, custom, decodeFunctionData, formatEther, isAddress, parseEther } from 'viem';
+import { FallbackTransport, TransactionReceipt, WatchBlockNumberReturnType, createWalletClient, custom, decodeFunctionData, formatEther, isAddress, parseEther } from 'viem';
 import { mainnet, goerli } from 'viem/chains';
 
 import { Chain, Config, PublicClient, WebSocketPublicClient, configureChains, createConfig, disconnect, getAccount, getNetwork, getPublicClient, getWalletClient, switchNetwork, watchAccount, watchBlockNumber } from '@wagmi/core';
@@ -30,7 +30,7 @@ const projectId = '9455b1a68e7f81eee6e1090c12edbf00';
 
 export class Web3Service {
 
-  maxCooldown = 10;
+  maxCooldown = 2;
 
   config!: Config<PublicClient<FallbackTransport, Chain>, WebSocketPublicClient<FallbackTransport, Chain>>;
   connectors: any[] = [];
@@ -90,7 +90,6 @@ export class Web3Service {
   createListeners(): void {
     this.connectedState = new Observable((observer) => watchAccount((account) => observer.next(account)));
     this.connectedState.pipe(
-      // tap((account: GetAccountResult<PublicClient>) => console.log(account)),
       tap((account) => { if (account.isDisconnected) this.disconnectWeb3(); }),
       filter((account) => account.isConnected),
       tap((account) => this.connectWeb3(account.address as string)),
@@ -99,12 +98,16 @@ export class Web3Service {
         return of(err);
       }),
     ).subscribe();
+  }
 
-    watchBlockNumber({
-      chainId: environment.chainId,
-      listen: true,
-    }, (block) => {
-      this.store.dispatch(appStateActions.newBlock({ blockNumber: Number(block) }));
+  blockWatcher!: WatchBlockNumberReturnType | undefined;
+  startBlockWatcher(): void {
+    if (this.blockWatcher) return;
+    this.blockWatcher = getPublicClient().watchBlockNumber({
+      emitOnBegin: true,
+      onBlockNumber: (blockNumber) => {
+        this.store.dispatch(appStateActions.newBlock({ blockNumber: Number(blockNumber) }));
+      }
     });
   }
 
@@ -123,6 +126,8 @@ export class Web3Service {
 
     this.store.dispatch(appStateActions.setWalletAddress({ walletAddress: address }));
     this.store.dispatch(appStateActions.setConnected({ connected: true }));
+
+    this.startBlockWatcher();
 
     if (this.checkNetwork() !== environment.chainId) {
       await switchNetwork({ chainId: environment.chainId });
@@ -234,6 +239,12 @@ export class Web3Service {
       );
     }
     return this.marketContractInteraction('offerPhunkForSale', [tokenId, weiValue]);
+  }
+
+  async batchOfferPhunkForSale(hashIds: string[], listPrices: number[]): Promise<string | undefined> {
+    const weiValues = listPrices.map((price) => BigInt(price * 1e18));
+    console.log('batchOfferPhunkForSale', hashIds, listPrices, weiValues);
+    return this.marketContractInteraction('batchOfferPhunkForSale', [hashIds, weiValues]);
   }
 
   async phunkNoLongerForSale(tokenId: string): Promise<string | undefined> {

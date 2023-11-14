@@ -5,14 +5,12 @@ import { Store } from '@ngrx/store';
 
 import { GlobalState, Transaction } from '@/models/global-state';
 
-import { PhunkImageComponent } from '@/components/phunk-image/phunk-image.component';
+import { PhunkImageComponent } from '@/components/shared/phunk-image/phunk-image.component';
+import { NotifComponent } from '../shared/notif/notif.component';
 
 import { WalletAddressDirective } from '@/directives/wallet-address.directive';
 
 import * as appStateSelectors from '@/state/selectors/app-state.selectors';
-import * as appStateActions from '@/state/actions/app-state.actions';
-
-import { environment } from 'src/environments/environment';
 
 import { map } from 'rxjs';
 
@@ -26,56 +24,13 @@ export type TxFunction = 'sendToEscrow' | 'phunkNoLongerForSale' | 'offerPhunkFo
     RouterModule,
 
     PhunkImageComponent,
+    NotifComponent,
     WalletAddressDirective
   ],
   templateUrl: './tx-modal.component.html',
   styleUrls: ['./tx-modal.component.scss']
 })
 export class TxModalComponent {
-
-  env = environment;
-
-  titles: any = {
-    sendToEscrow: 'Send to Escrow',
-    phunkNoLongerForSale: 'Delist EtherPhunk',
-    offerPhunkForSale: 'Offer EtherPhunk For Sale',
-    withdrawBidForPhunk: 'Withdraw Bid For EtherPhunk',
-    acceptBidForPhunk: 'Accept Bid For EtherPhunk',
-    buyPhunk: 'Buy EtherPhunk',
-    enterBidForPhunk: 'Enter Bid For EtherPhunk',
-    transferPhunk: 'Transfer EtherPhunk',
-    withdrawPhunk: 'Withdraw EtherPhunk from Escrow'
-  };
-
-  classes: any = {
-    sendToEscrow: 'escrow',
-    phunkNoLongerForSale: 'sale',
-    offerPhunkForSale: 'sale',
-    withdrawBidForPhunk: 'bid',
-    acceptBidForPhunk: 'bid',
-    buyPhunk: 'sale',
-    enterBidForPhunk: 'bid',
-    transferPhunk: 'transfer',
-    withdrawPhunk: 'escrow'
-  };
-
-  transactionTypes: any = {
-    wallet: {
-      message: '<strong>Please submit</strong> the transaction using your connected Ethereum wallet.'
-    },
-    pending: {
-      title: {},
-      message: 'Your transaction is <strong>being processed</strong> on the Ethereum network.'
-    },
-    complete: {
-      title: {},
-      message: 'Your transaction is <strong>complete</strong>.'
-    },
-    error: {
-      title: {},
-      message: 'There was an <strong>error</strong> with your transaction.'
-    }
-  };
 
   transactions$ = this.store.select(appStateSelectors.selectTransactions).pipe(
     map((txns: Transaction[]) => [...txns].sort((a, b) => b.id - a.id))
@@ -85,7 +40,7 @@ export class TxModalComponent {
     private store: Store<GlobalState>
   ) {}
 
-  dismiss(txn: Transaction) {
-    this.store.dispatch(appStateActions.removeTransaction({ txId: txn.id }));
+  trackByFn(index: number, item: Transaction) {
+    return item.id;
   }
 }

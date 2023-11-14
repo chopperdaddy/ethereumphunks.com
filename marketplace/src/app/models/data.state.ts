@@ -1,4 +1,4 @@
-import { Phunk } from './graph';
+import { Phunk } from './db';
 
 export interface DataState {
 

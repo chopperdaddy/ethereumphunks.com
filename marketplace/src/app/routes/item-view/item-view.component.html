@@ -13,10 +13,8 @@
       *ngIf="(singlePhunk$ | async) as phunk; else detailsPlaceholder">
 
       <div class="title-wrapper">
-        <div class="title-color">
-          <h1 i18n>EtherPhunk {{ phunk.phunkId }}</h1>
-          <div class="hash-id"><app-wallet-address [address]="phunk.hashId"></app-wallet-address></div>
-        </div>
+        <h1 i18n>EtherPhunk {{ phunk.phunkId }}</h1>
+        <!-- <div class="hash-id"><app-wallet-address [address]="phunk.hashId"></app-wallet-address></div> -->
         <h2 i18n *ngIf="phunk.attributes">One of {{ phunk.attributes[0].v | traitCount }}
           <a
             class="highlight"
@@ -66,7 +64,9 @@
 
           <div
             class="actions-wrapper"
-            [class.cooldown]="isCooling$ | async">
+            [class.cooldown]="isCooling$ | async"
+            [class.pending]="hasPendingTx$ | async">
+
             <ng-container *ngIf="(walletAddress$ | async) as address; else notConnected">
               <ng-container *ngIf="phunk.owner as owner">
 

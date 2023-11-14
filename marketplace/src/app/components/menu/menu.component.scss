@@ -2,7 +2,8 @@
 @import 'abstracts/mixins';
 
 :host {
-  display: block;
+  display: flex;
+  justify-content: center;
 
   position: fixed;
   z-index: 990;
@@ -19,18 +20,18 @@
   font-family: $secondary-font-stack;
   color: rgba(var(--white), 1);
 
-  overflow-y: scroll;
-  scrollbar-width: none;
-  -webkit-overflow-scrolling: touch;
-
   backdrop-filter: blur(1rem);
 
-  &::-webkit-scrollbar {
-    display: none;
-  }
-
   @media (max-width: $mobile) {
-    padding-top: (var(--header-height) / 1.5);
+    height: 100%;
+
+    overflow-y: scroll;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+
+    &::-webkit-scrollbar {
+      display: none;
+    }
   }
 }
 
@@ -38,13 +39,14 @@
   position: relative;
   display: grid;
   grid-template-columns: calc(70% - 6rem) 30%;
+  grid-template-rows: 1fr auto;
   column-gap: 6rem;
   row-gap: 1rem;
 
-  grid-template-areas: 'none wallet-info'
-                       'none user-actions'
-                       'owned owned-stats'
-                       'bids bids-stats';
+  height: 100%;
+
+  grid-template-areas: 'sections user-actions'
+                       'sections notifications';
 
   .wallet-info {
     grid-area: wallet-info;
@@ -53,8 +55,8 @@
   .user-actions {
     grid-area: user-actions;
 
-    padding-top: 1rem;
-    border-top: .2rem solid rgba(var(--white), .1);
+    // padding-top: 1rem;
+    // border-top: .2rem solid rgba(var(--white), .1);
 
     button {
       width: 100%;
@@ -72,19 +74,63 @@
     }
   }
 
-  section {
-    padding-bottom: 3rem;
+  .notifications-wrapper {
+    grid-area: notifications;
+    padding-top: 1rem;
 
-    &.owned {
-      grid-area: owned;
+    overflow-y: scroll;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+
+    &::-webkit-scrollbar {
+      display: none;
     }
 
-    &.bids {
-      grid-area: bids;
+    h3 {}
+
+    .no-activity {
+      padding: 0;
+      margin: 0;
+      font-size: 1.2rem;
     }
 
-    &:last-child {
-      padding-bottom: 0;
+    .notifications {}
+  }
+
+  .sections {
+    grid-area: sections;
+
+    overflow-y: scroll;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+
+    &::-webkit-scrollbar {
+      display: none;
+    }
+
+    section {
+      padding-top: 1rem;
+      padding-bottom: 3rem;
+
+      p {
+        font-size: 1.4rem;
+        font-weight: normal;
+
+        padding-bottom: 1rem;
+        margin: 0;
+      }
+
+      &.owned {
+        grid-area: owned;
+      }
+
+      &.bids {
+        grid-area: bids;
+      }
+
+      &:last-child {
+        padding-bottom: 0;
+      }
     }
   }
 
@@ -120,18 +166,24 @@
 
   @media (max-width: $mobile) {
     grid-template-columns: 100%;
+    grid-template-rows: auto;
+    grid-template-areas: 'user-actions'
+                         'notifications'
+                         'sections';
     grid-gap: 0;
-    grid-template-areas: 'right' 'left';
 
-    .right {
-      padding-top: 0;
-      padding-bottom: 2rem;
+    .notifications-wrapper {
+      height: 30rem;
+    }
+
+    .sections {
+      overflow-y: auto;
     }
   }
 }
 
 h3 {
-  font-size: 1.5rem;
+  font-size: 1.4rem;
   font-weight: normal;
   padding-bottom: 1rem;
 

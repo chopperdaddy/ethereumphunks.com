@@ -8,11 +8,11 @@ import { Web3Service } from '@/services/web3.service';
 import { filterData } from '@/constants/filterData';
 
 import { EventType, GlobalState } from '@/models/global-state';
-import { Bid, Event, Listing, Phunk } from '@/models/graph';
+import { Bid, Event, Listing, Phunk } from '@/models/db';
 
 import { createClient } from '@supabase/supabase-js'
-import { Observable, of, BehaviorSubject, from, forkJoin, merge, Subject } from 'rxjs';
-import { debounceTime, map, switchMap, tap, throttleTime } from 'rxjs/operators';
+import { Observable, of, BehaviorSubject, from, forkJoin } from 'rxjs';
+import { map, switchMap, tap } from 'rxjs/operators';
 
 import { environment } from 'src/environments/environment';
 
@@ -56,28 +56,21 @@ export class DataService {
     private web3Svc: Web3Service
   ) {
     // this.fetchUSDPrice();
-    const sharedSource$ = new Subject<any>();
 
     supabase
       .channel('any')
       .on(
         'postgres_changes',
         { event: '*', schema: 'public' },
-        (payload) => sharedSource$.next(payload),
+        (payload) => {
+          if (!payload) return;
+          const isEvent = payload?.table === 'events' + this.prefix;
+          if (isEvent) this.store.dispatch(dataStateActions.dbEventTriggered({ payload }));
+        },
       ).subscribe();
 
-    const throttled$ = sharedSource$.pipe(throttleTime(2000));
-    const debounced$ = sharedSource$.pipe(debounceTime(3000));
-
-    merge(throttled$, debounced$).pipe(
-      tap((payload: any) => {
-        if (!payload) return;
-        const { table } = payload;
-        if (table === 'events' + this.prefix) {
-          this.store.dispatch(dataStateActions.dbEventTriggered({ payload }));
-        }
-      })
-    ).subscribe();
+    // const throttled$ = sharedSource$.pipe(throttleTime(2000));
+    // const debounced$ = sharedSource$.pipe(debounceTime(3000));
   }
 
   getFloor(): number {
@@ -115,7 +108,7 @@ export class DataService {
 
     return from(request).pipe(
       map((res) => res.data as any[]),
-      map((res: any) => res.map((item: any) => {
+      map((res: any) => res?.map((item: any) => {
         return {
           phunkId: item.phunkId,
           hashId: item.hashId,
@@ -126,7 +119,7 @@ export class DataService {
           attributes: [],
         };
       })),
-      switchMap((punks: Phunk[]) => this.addAttributes(punks)),
+      switchMap((phunks: Phunk[]) => this.addAttributes(phunks)),
     );
   }
 
@@ -153,8 +146,22 @@ export class DataService {
           attributes: [],
         };
       })),
-      switchMap((punks: Phunk[]) => this.addAttributes(punks)),
+      switchMap((phunks: Phunk[]) => this.addAttributes(phunks)),
+      tap((res) => console.log('fetchUserOpenBids', res)),
     );
+  }
+
+  fetchMissedEvents(address: string, lastBlock: number): Observable<Event[]> {
+    address = address.toLowerCase();
+
+    const request = supabase
+      .from('events' + this.prefix)
+      .select('*')
+      .gt('blockNumber', lastBlock)
+      .or(`from.eq.${address},to.eq.${address}`)
+      .eq('type', 'PhunkBought');
+
+    return from(request).pipe(map(res => res.data as any[]));
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -289,7 +296,7 @@ export class DataService {
     );
   }
 
-  phunksCanWithdraw(hashIds: Phunk['hashId'][]): Observable<any> {
+  phunksAreInEscrow(hashIds: Phunk['hashId'][]): Observable<any> {
     return this.walletAddress$.pipe(
       switchMap((address) => {
         const query = supabase
