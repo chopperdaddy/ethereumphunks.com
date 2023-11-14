@@ -6258,10 +6258,10 @@ ng-lazyload-image@^9.1.0:
   dependencies:
     tslib "^2.3.0"
 
-ngforage@^9.0.0:
-  version "9.0.0"
-  resolved "https://registry.yarnpkg.com/ngforage/-/ngforage-9.0.0.tgz#6a955970376ad9c605defbc50faba73da6d29421"
-  integrity sha512-/M2gxOTEfwIBnGRuiY/QUZ/BDstmKpLSazcYTt1jjGGwioXknqlFs/7ybE6XK1VNYIzBmxC0dxRkWrhPtov4/w==
+ngforage@^10.0.0:
+  version "10.0.0"
+  resolved "https://registry.yarnpkg.com/ngforage/-/ngforage-10.0.0.tgz#2efd8585bf3654b0b0b25a42b6e4d05e1b178955"
+  integrity sha512-vo3HMUAyWnaRvfDx+n5l8Hqfj5tMGJ6WmC3YU9yDy8cG0Lo+sKYrfh/yJyBqFTe/VZyD+UQj52di/C8RJf4Vog==
   dependencies:
     tslib "^2.4.0"
 

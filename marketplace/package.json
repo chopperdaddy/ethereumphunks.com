@@ -45,7 +45,7 @@
     "graphql": "^16.7.1",
     "localforage": "^1.10.0",
     "ng-lazyload-image": "^9.1.0",
-    "ngforage": "^9.0.0",
+    "ngforage": "^10.0.0",
     "ngx-pagination": "^6.0.3",
     "ngx-timeago": "^3.0.0",
     "rxjs": "^7.4.0",
