@@ -36,7 +36,7 @@
     "@web3modal/ethereum": "^2.7.1",
     "@web3modal/html": "^2.7.1",
     "animejs": "^3.2.1",
-    "apollo-angular": "^5.0.0",
+    "apollo-angular": "^5.0.2",
     "chart.js": "^4.3.0",
     "chartjs-adapter-moment": "^1.0.1",
     "chartjs-plugin-crosshair": "^1.2.0",

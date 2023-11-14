@@ -3656,12 +3656,12 @@ anymatch@~3.1.2:
     normalize-path "^3.0.0"
     picomatch "^2.0.4"
 
-apollo-angular@^5.0.0:
-  version "5.0.0"
-  resolved "https://registry.yarnpkg.com/apollo-angular/-/apollo-angular-5.0.0.tgz#24ee1ba28561f22397e5099a099cbc0298d2b9fe"
-  integrity sha512-g98CvEGmRkrfBcXQS+HwIDuSsDnxqg/7RB+N/ICXbXfnnbBNIVzQ+xSaawz6kOo04Rx7jtLQAjda6/69fhHMDQ==
+apollo-angular@^5.0.2:
+  version "5.0.2"
+  resolved "https://registry.yarnpkg.com/apollo-angular/-/apollo-angular-5.0.2.tgz#a60797d935a1191149454c2925503de889476b55"
+  integrity sha512-U+ApPHhmdDirO95kovNJKt0Zd8kthOWALWY1t22zCI4LrT7tLZDDs0LJAzFXcvILN3FDkXWOE9R6Sa29jNOCIQ==
   dependencies:
-    tslib "^2.0.0"
+    tslib "^2.6.2"
 
 argparse@^1.0.7:
   version "1.0.10"
@@ -8750,7 +8750,7 @@ tslib@1.14.1, tslib@^1.9.0:
   resolved "https://registry.yarnpkg.com/tslib/-/tslib-1.14.1.tgz#cf2d38bdc34a134bcaf1091c41f6619e2f672d00"
   integrity sha512-Xni35NKzjgMrwevysHTCArtLDpPvye8zV/0E4EyYn43P7/7qvQwPh9BGkHewbMulVntbigmcT7rdX3BNo9wRJg==
 
-tslib@2.6.2, tslib@^2.2.0:
+tslib@2.6.2, tslib@^2.2.0, tslib@^2.6.2:
   version "2.6.2"
   resolved "https://registry.yarnpkg.com/tslib/-/tslib-2.6.2.tgz#703ac29425e7b37cd6fd456e92404d46d1f3e4ae"
   integrity sha512-AEYxH93jGFPn/a2iVAwW87VuUIkR1FVUKB77NwMF7nBTDkDrrT/Hpt/IrCJ0QXhW27jTBDcf5ZY7w6RiqTMw2Q==
