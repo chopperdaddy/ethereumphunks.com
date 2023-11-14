@@ -2,7 +2,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectQueue } from '@nestjs/bull';
 
-import { Queue } from 'bull';
+import Bull, { Queue } from 'bull';
 
 import dotenv from 'dotenv';
 dotenv.config();
@@ -11,24 +11,40 @@ const chain: 'mainnet' | 'goerli' = process.env.CHAIN_ID === '5' ? 'goerli' : 'm
 
 @Injectable()
 export class BlockService {
+
   constructor(
     @InjectQueue('blockProcessingQueue') private readonly queue: Queue
   ) {
-    this.queue.on('completed', (job) => {
-      this.saveBlockNumber(job.data.blockNum);
+    this.queue.on('completed', async (job) => {
+      await this.saveBlockNumber(job.data.blockNum);
     });
   }
 
-  async addBlockToQueue(blockNum: number) {
+  async addBlockToQueue(blockNum: number, timestamp: number) {
     const jobId = `block_${blockNum}__${chain}`;
+    const maxRetries = 10;
 
     const existingJob = await this.queue.getJob(jobId);
     if (existingJob) {
-      Logger.error(`Block ${blockNum} already in queue`);
+      Logger.error('❌', `Block ${blockNum} already in queue`);
       return;
     }
 
-    await this.queue.add('blockNumQueue', { blockNum }, { jobId });
+    await this.queue.add(
+      'blockNumQueue',
+      {
+        blockNum,
+        chain,
+        timestamp,
+        retryCount: 0,
+        maxRetries,
+      },
+      {
+        jobId,
+        removeOnComplete: true,
+        removeOnFail: true,
+      }
+    );
     Logger.log(`Added block ${blockNum} to queue`);
   }
 
@@ -59,11 +75,16 @@ export class BlockService {
     await this.queue.resume();
   }
 
+  async getJobCounts(): Promise<Bull.JobCounts> {
+    return await this.queue.getJobCounts();
+  }
+
   async clearQueue(): Promise<void> {
     await this.queue.clean(0, 'completed');
     await this.queue.clean(0, 'wait');
     await this.queue.clean(0, 'active');
     await this.queue.clean(0, 'delayed');
     await this.queue.clean(0, 'failed');
+    await this.queue.clean(0, 'paused');
   }
 }

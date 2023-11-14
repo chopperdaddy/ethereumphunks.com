@@ -1,21 +1,20 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { OnQueueActive, OnQueueCompleted, OnQueueError, OnQueueFailed, Process, Processor } from '@nestjs/bull';
+import { InjectQueue, OnQueueActive, OnQueueCompleted, OnQueueError, OnQueueEvent, OnQueueFailed, OnQueuePaused, OnQueueResumed, OnQueueWaiting, Process, Processor } from '@nestjs/bull';
 
 // import { UtilityService } from 'src/services/utility.service';
 import { ProcessingService } from 'src/services/processing.service';
 
-import { Job } from 'bull';
+import { Job, Queue } from 'bull';
+import { UtilityService } from 'src/utils/utility.service';
 
 @Injectable()
 @Processor('blockProcessingQueue')
 export class QueueService {
 
   @Process({ name: 'blockNumQueue', concurrency: 1 })
-  async handleBlockNumberQueue(job: Job) {
-    const { blockNum, chain, timestamp } = job.data;
-
-    Logger.debug(`Block Timestamp: ${timestamp}`, `Processing Block ${blockNum} (${chain})`);
-    await this.processSvc.processBlock(job.data.blockNum);
+  async handleBlockNumberQueue(job: Job<any>) {
+    const { blockNum } = job.data;
+    await this.processSvc.processBlock(blockNum);
   }
 
   @OnQueueCompleted({ name: 'blockNumQueue' })
@@ -24,22 +23,42 @@ export class QueueService {
   }
 
   @OnQueueFailed({ name: 'blockNumQueue' })
-  async onFailed(job: Job<any>) {
-    // Logger.debug(`Failed job ${job.id}`);
+  async onFailed(job: Job<any>, error: Error) {
+    Logger.error('❌', `Failed job ${job.id} with error ${error}`);
+    this.queue.pause();
+    await this.processSvc.retryBlock(job.data.blockNum);
+    this.queue.resume();
+  }
+
+  @OnQueuePaused()
+  async onPaused() {
+    Logger.warn('Queue paused');
+  }
+
+  @OnQueueResumed()
+  async onResumed() {
+    Logger.warn('Queue resumed');
+  }
+
+  @OnQueueWaiting()
+  async onWaiting(jobId: number | string) {
+    // Logger.debug(`Waiting job ${jobId}`);
   }
 
   @OnQueueError({ name: 'blockNumQueue' })
   async onError(error: Error) {
-    Logger.error(`Error ${error}`);
+    // Logger.error(`Error ${error}`);
   }
 
   @OnQueueActive({ name: 'blockNumQueue' })
   async onActive(job: Job<any>) {
+    // When a job is proccessing
     // Logger.debug(`Active job ${job.id}`);
   }
 
   constructor(
-    // private readonly utilSvc: UtilityService,
+    @InjectQueue('blockProcessingQueue') private readonly queue: Queue,
+    private readonly utilSvc: UtilityService,
     private readonly processSvc: ProcessingService
     // private readonly appSvc: AppService
   ) {}

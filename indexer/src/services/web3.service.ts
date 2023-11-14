@@ -48,8 +48,8 @@ export class Web3Service {
   }
 
   async getBlock(n?: number): Promise<GetBlockReturnType> {
-    if (n) return await this.client.getBlock({ blockNumber: BigInt(n) });
-    return await this.client.getBlock();
+    if (n) return await this.client.getBlock({ blockNumber: BigInt(n), includeTransactions: false });
+    return await this.client.getBlock({ includeTransactions: false });
   }
 
   ///////////////////////////////////////////////////////////////////////////////

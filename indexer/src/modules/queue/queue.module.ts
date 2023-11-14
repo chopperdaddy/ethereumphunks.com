@@ -5,10 +5,12 @@ import { BullModule } from '@nestjs/bull';
 
 import { BlockService } from './services/block.service';
 import { QueueService } from './services/queue.service';
-import { UtilityService } from 'src/services/utility.service';
+
+import { UtilityService } from 'src/utils/utility.service';
 import { ProcessingService } from 'src/services/processing.service';
 import { Web3Service } from 'src/services/web3.service';
 import { SupabaseService } from 'src/services/supabase.service';
+import { TimeService } from 'src/utils/time.service';
 
 @Module({
   imports: [
@@ -29,10 +31,12 @@ import { SupabaseService } from 'src/services/supabase.service';
     ProcessingService,
     Web3Service,
     SupabaseService,
-    UtilityService
+    UtilityService,
+    TimeService
   ],
   exports: [
-    BlockService
+    BlockService,
+    TimeService
   ],
 })
 export class QueueModule {}

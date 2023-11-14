@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 
-import { Web3Service } from './web3.service';
-import { SupabaseService } from './supabase.service';
+import { Web3Service } from '../services/web3.service';
+import { SupabaseService } from '../services/supabase.service';
 
 import { readFile, writeFile } from 'fs/promises';
 import path from 'path';

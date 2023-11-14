@@ -8,7 +8,7 @@ import { AppService } from './app.service';
 import { Web3Service } from './services/web3.service';
 import { SupabaseService } from './services/supabase.service';
 import { ProcessingService } from './services/processing.service';
-import { UtilityService } from './services/utility.service';
+import { UtilityService } from './utils/utility.service';
 
 @Module({
   imports: [QueueModule],

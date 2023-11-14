@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 
-import { Web3Service } from './web3.service';
-import { SupabaseService } from './supabase.service';
+import { Web3Service } from '../services/web3.service';
+import { SupabaseService } from '../services/supabase.service';
 
 import { esip1Abi, esip2Abi } from 'src/abi/EthscriptionsProtocol';
 
@@ -18,7 +18,6 @@ export class PlaygroundService {
     private readonly ethSvc: Web3Service,
     private readonly sbSvc: SupabaseService
   ) {
-
     this.fixTransfers();
   }
 
