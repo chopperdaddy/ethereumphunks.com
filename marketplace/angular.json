@@ -124,16 +124,16 @@
           "builder": "@angular-devkit/build-angular:dev-server",
           "configurations": {
             "dev-goerli": {
-              "browserTarget": "ether-phunks-market:build:dev-goerli"
+              "buildTarget": "ether-phunks-market:build:dev-goerli"
             },
             "dev-mainnet": {
-              "browserTarget": "ether-phunks-market:build:dev-mainnet"
+              "buildTarget": "ether-phunks-market:build:dev-mainnet"
             },
             "goerli": {
-              "browserTarget": "ether-phunks-market:build:goerli"
+              "buildTarget": "ether-phunks-market:build:goerli"
             },
             "mainnet": {
-              "browserTarget": "ether-phunks-market:build:mainnet"
+              "buildTarget": "ether-phunks-market:build:mainnet"
             }
           },
           "defaultConfiguration": "development"
@@ -141,7 +141,7 @@
         "extract-i18n": {
           "builder": "@angular-devkit/build-angular:extract-i18n",
           "options": {
-            "browserTarget": "ether-phunks-market:build"
+            "buildTarget": "ether-phunks-market:build"
           }
         }
       }
