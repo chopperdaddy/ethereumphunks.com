@@ -1590,10 +1590,10 @@
     "@motionone/dom" "^10.16.2"
     tslib "^2.3.1"
 
-"@ng-select/ng-select@^10.0.3":
-  version "10.0.4"
-  resolved "https://registry.yarnpkg.com/@ng-select/ng-select/-/ng-select-10.0.4.tgz#46ab5e7bfcf6473868d1584cf5d7f63291346217"
-  integrity sha512-Vc/JIgcFkSgf47cX7+pQQo9HYhDktfqrY7o/ZPGMvu63P7E9d1MibVipqmcLbgms6Ac9lu621CDZPGHdxag7hA==
+"@ng-select/ng-select@^12.0.4":
+  version "12.0.4"
+  resolved "https://registry.yarnpkg.com/@ng-select/ng-select/-/ng-select-12.0.4.tgz#0313c11dff33335b9b6a8ba2b2a85cc3e7082d36"
+  integrity sha512-bcvYLCdmKtJBZRLFLfnKauPqVlJJDecMzU4pZ360h1V8EsE4BCHoabNJQptqOESigcxBY1bpAe0i6aKu6JgL5Q==
   dependencies:
     tslib "^2.3.1"
 
