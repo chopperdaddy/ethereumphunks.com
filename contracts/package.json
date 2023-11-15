@@ -2,8 +2,10 @@
   "scripts": {
     "compile": "npx hardhat compile",
     "test": "hardhat test",
-    "deploy": "npx hardhat run --network goerli scripts/deploy.ts",
-    "verify": "npx hardhat verify --network goerli 0x3364De7C4B470CA4D26cA621581754eEED080d25",
+    "deploy:market": "npx hardhat run --network goerli scripts/deploy-market.ts",
+    "deploy:donate": "npx hardhat run --network goerli scripts/deploy-donate.ts",
+    "verify:market": "npx hardhat verify --network goerli <address> 0x51A83198deC9EfF470492AE5765aE907dB94F769",
+    "verify:donate": "npx hardhat verify --network goerli <address> 0x51A83198deC9EfF470492AE5765aE907dB94F769",
     "clean": "npx hardhat clean"
   },
   "devDependencies": {
@@ -29,7 +31,7 @@
     "typescript": ">=4.5.0"
   },
   "dependencies": {
-    "@openzeppelin/contracts": "^4.9.3",
+    "@openzeppelin/contracts": "^5.0.0",
     "crypto-js": "^4.1.1",
     "dotenv": "^16.3.1",
     "merkletreejs": "^0.3.10",

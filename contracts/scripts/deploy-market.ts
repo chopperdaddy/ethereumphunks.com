@@ -1,15 +1,16 @@
 import hre from 'hardhat';
 
-import { getMerkleRoot } from './merkle';
-import { encodeBytes32String } from 'ethers';
+const contractName = 'EtherPhunksMarket';
 
 async function deploy() {
   const [signer] = await hre.ethers.getSigners();
   console.log('Deploying contracts with the account:', signer.address);
-  const deploy = await hre.ethers.deployContract('EtherPhunksMarket');
 
-  await deploy.waitForDeployment();
-  console.log('EtherPhunks deployed to:', deploy.target);
+  const ContractFactory = await hre.ethers.getContractFactory(contractName);
+  const contract = await ContractFactory.deploy(signer.address);
+
+  await contract.waitForDeployment();
+  console.log('Contract deployed to:', contract.target);
 }
 
 // We recommend this pattern to be able to use async/await everywhere

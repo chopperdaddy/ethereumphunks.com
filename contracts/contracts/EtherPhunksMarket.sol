@@ -1,16 +1,15 @@
-// Possible edg cases
-// - Non EtherPhunk is sent to contract
-// - User escrows, lists & removes from escrow -- Listing is still valid (solved)
-// -
-
 // SPDX-License-Identifier: MIT License
-pragma solidity 0.8.17;
+pragma solidity 0.8.20;
 
 import "@solidstate/contracts/security/reentrancy_guard/ReentrancyGuard.sol";
 import "@solidstate/contracts/utils/Multicall.sol";
+
+import "@openzeppelin/contracts/utils/Pausable.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
+
 import "./EthscriptionsEscrower.sol";
 
-contract EtherPhunksMarket is ReentrancyGuard, Multicall, EthscriptionsEscrower {
+contract EtherPhunksMarket is Pausable, Ownable, ReentrancyGuard, Multicall, EthscriptionsEscrower {
 
     struct Offer {
         bool isForSale;
@@ -57,15 +56,22 @@ contract EtherPhunksMarket is ReentrancyGuard, Multicall, EthscriptionsEscrower 
         address indexed fromAddress,
         address indexed toAddress
     );
-    event PhunkNoLongerForSale(bytes32 indexed phunkId);
+    event PhunkNoLongerForSale(
+      bytes32 indexed phunkId
+    );
 
-    // Event for bulk deposit -- Stupid & pointless
-    // event BulkPotentialEthscriptionsDeposited(
-    //     address indexed owner,
-    //     bytes32[] potentialEthscriptionIds
-    // );
+    // Constructor to set the initial owner
+    constructor(address initialOwner) Ownable(initialOwner) {}
 
-    /* Allows the owner of a EtherPhunk to stop offering it for sale */
+    function pause() public onlyOwner {
+        _pause();
+    }
+
+    function unpause() public onlyOwner {
+        _unpause();
+    }
+
+    // Allows the owner of a EtherPhunk to stop offering it for sale
     function phunkNoLongerForSale(bytes32 phunkId) public nonReentrant {
         require(
             !userEthscriptionDefinitelyNotStored(msg.sender, phunkId),
@@ -75,27 +81,7 @@ contract EtherPhunksMarket is ReentrancyGuard, Multicall, EthscriptionsEscrower 
         _invalidateListing(phunkId);
     }
 
-    // This internal function does the actual work without reentrancy checks.
-    function _offerPhunkForSale(
-        bytes32 phunkId,
-        uint minSalePriceInWei
-    ) internal {
-        require(
-            !userEthscriptionDefinitelyNotStored(msg.sender, phunkId),
-            "Sender is not depositor"
-        );
-
-        phunksOfferedForSale[phunkId] = Offer(
-            true,
-            phunkId,
-            msg.sender,
-            minSalePriceInWei,
-            address(0x0)
-        );
-        emit PhunkOffered(phunkId, minSalePriceInWei, address(0x0));
-    }
-
-    /* Allows an EtherPhunk owner to offer it for sale */
+    // Allows an EtherPhunk owner to offer it for sale
     function offerPhunkForSale(
         bytes32 phunkId,
         uint minSalePriceInWei
@@ -103,7 +89,7 @@ contract EtherPhunksMarket is ReentrancyGuard, Multicall, EthscriptionsEscrower 
         _offerPhunkForSale(phunkId, minSalePriceInWei);
     }
 
-    /* Allows an EtherPhunk owner to offer multiple for sale */
+    // Allows an EtherPhunk owner to offer multiple for sale
     function batchOfferPhunkForSale(
         bytes32[] memory phunkIds,
         uint[] memory minSalePricesInWei
@@ -118,7 +104,7 @@ contract EtherPhunksMarket is ReentrancyGuard, Multicall, EthscriptionsEscrower 
         }
     }
 
-    /* Allows an EtherPhunk owner to offer it for sale to a specific address */
+    // Allows an EtherPhunk owner to offer it for sale to a specific address
     function offerPhunkForSaleToAddress(
         bytes32 phunkId,
         uint minSalePriceInWei,
@@ -139,8 +125,8 @@ contract EtherPhunksMarket is ReentrancyGuard, Multicall, EthscriptionsEscrower 
         emit PhunkOffered(phunkId, minSalePriceInWei, toAddress);
     }
 
-    /* Allows users to buy an EtherPhunk offered for sale */
-    function buyPhunk(bytes32 phunkId) public payable nonReentrant {
+    // Allows users to buy an EtherPhunk offered for sale
+    function buyPhunk(bytes32 phunkId) public payable whenNotPaused nonReentrant {
         // Get the offer (listing)
         Offer memory offer = phunksOfferedForSale[phunkId];
 
@@ -183,8 +169,8 @@ contract EtherPhunksMarket is ReentrancyGuard, Multicall, EthscriptionsEscrower 
         }
     }
 
-    /* Allows users to enter bids for any EtherPhunk */
-    function enterBidForPhunk(bytes32 phunkId) public payable nonReentrant {
+    // Allows users to enter bids for any EtherPhunk
+    function enterBidForPhunk(bytes32 phunkId) public payable whenNotPaused nonReentrant {
         // if (phunksContract.ownerOf(phunkId) == msg.sender) revert("you already own this phunk");
         if (msg.value == 0) revert("cannot enter bid of zero");
         Bid memory existing = phunkBids[phunkId];
@@ -197,11 +183,11 @@ contract EtherPhunksMarket is ReentrancyGuard, Multicall, EthscriptionsEscrower 
         emit PhunkBidEntered(phunkId, msg.value, msg.sender);
     }
 
-    /* Allows EtherPhunk owners to accept bids for their Phunks */
+    // Allows EtherPhunk owners to accept bids for their Phunks
     function acceptBidForPhunk(
         bytes32 phunkId,
         uint minPrice
-    ) public nonReentrant {
+    ) public whenNotPaused nonReentrant {
         address seller = msg.sender;
 
         require(
@@ -233,7 +219,7 @@ contract EtherPhunksMarket is ReentrancyGuard, Multicall, EthscriptionsEscrower 
         phunkBids[phunkId] = Bid(false, phunkId, address(0x0), 0);
     }
 
-    /* Allows bidders to withdraw their bids */
+    // Allows bidders to withdraw their bids
     function withdrawBidForPhunk(bytes32 phunkId) public nonReentrant {
         Bid memory bid = phunkBids[phunkId];
         if (bid.bidder != msg.sender)
@@ -246,19 +232,7 @@ contract EtherPhunksMarket is ReentrancyGuard, Multicall, EthscriptionsEscrower 
         payable(msg.sender).transfer(amount);
     }
 
-    /* Invalidate a listing by phunkId */
-    function _invalidateListing(bytes32 phunkId) internal {
-        phunksOfferedForSale[phunkId] = Offer(
-            false,
-            phunkId,
-            msg.sender,
-            0,
-            address(0x0)
-        );
-        emit PhunkNoLongerForSale(phunkId);
-    }
-
-    /* Allows users to retrieve ETH from sales */
+    // Allows users to retrieve ETH from sales
     function withdraw() public nonReentrant {
         if (pendingWithdrawals[msg.sender] == 0)
             revert("no pending withdrawals");
@@ -269,7 +243,7 @@ contract EtherPhunksMarket is ReentrancyGuard, Multicall, EthscriptionsEscrower 
         payable(msg.sender).transfer(amount);
     }
 
-    /* Allows EtherPhunk owners to withdraw their Phunks from escrow */
+    // Allows EtherPhunk owners to withdraw their Phunks from escrow
     function withdrawPhunk(bytes32 phunkId) public {
         require(
             !userEthscriptionDefinitelyNotStored(msg.sender, phunkId),
@@ -317,6 +291,38 @@ contract EtherPhunksMarket is ReentrancyGuard, Multicall, EthscriptionsEscrower 
 
         // Probably dont need this pointless event
         // emit BulkPotentialEthscriptionsDeposited(previousOwner, ids);
+    }
+
+    // This internal function does the actual work without reentrancy checks.
+    function _offerPhunkForSale(
+        bytes32 phunkId,
+        uint minSalePriceInWei
+    ) internal {
+        require(
+            !userEthscriptionDefinitelyNotStored(msg.sender, phunkId),
+            "Sender is not depositor"
+        );
+
+        phunksOfferedForSale[phunkId] = Offer(
+            true,
+            phunkId,
+            msg.sender,
+            minSalePriceInWei,
+            address(0x0)
+        );
+        emit PhunkOffered(phunkId, minSalePriceInWei, address(0x0));
+    }
+
+    // Invalidate a listing by phunkId
+    function _invalidateListing(bytes32 phunkId) internal {
+        phunksOfferedForSale[phunkId] = Offer(
+            false,
+            phunkId,
+            msg.sender,
+            0,
+            address(0x0)
+        );
+        emit PhunkNoLongerForSale(phunkId);
     }
 
     // Helper function to slice bytes
