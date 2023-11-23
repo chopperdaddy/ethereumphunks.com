@@ -1,0 +1,7 @@
+{
+  "type": "module",
+  "dependencies": {
+    "@openzeppelin/merkle-tree": "^1.0.5",
+    "solady": "^0.0.144"
+  }
+}
