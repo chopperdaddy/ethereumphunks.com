@@ -4,6 +4,10 @@ import { ProcessingService } from './services/processing.service';
 import { BlockService } from './modules/queue/services/block.service';
 import { UtilityService } from './utils/utility.service';
 
+import { StandardMerkleTree } from '@openzeppelin/merkle-tree';
+
+// import * as MerkleTree from './abi/tree.json'
+
 import dotenv from 'dotenv';
 dotenv.config();
 
@@ -46,5 +50,21 @@ export class AppService {
       await this.utilSvc.delay(30000);
       this.startIndexer();
     }
+  }
+
+  getMerkleProofs(leaf: string): any {
+    return '';
+    // const tree = StandardMerkleTree.load(MerkleTree as any);
+    // const root = tree.root;
+    // let proof = tree.getProof([leaf]);
+
+    // console.log(root);
+    // return leaf + proof.map(p => p.substring(2)).join('');
+  }
+
+  getMerkleRoot(): string {
+    return '';
+    // const tree = StandardMerkleTree.load(MerkleTree as any);
+    // return tree.root
   }
 }

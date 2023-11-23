@@ -4,6 +4,9 @@ import { FormattedTransaction, GetBlockReturnType, createPublicClient, http } fr
 import { goerli, mainnet } from 'viem/chains';
 
 import punkDataABI from '../abi/PunkData.json';
+import { etherPhunksMarketAbi } from '../abi/EtherPhunksMarket';
+
+import { StandardMerkleTree } from '@openzeppelin/merkle-tree';
 
 import dotenv from 'dotenv';
 dotenv.config();
@@ -50,6 +53,20 @@ export class Web3Service {
   async getBlock(n?: number): Promise<GetBlockReturnType> {
     if (n) return await this.client.getBlock({ blockNumber: BigInt(n), includeTransactions: false });
     return await this.client.getBlock({ includeTransactions: false });
+  }
+
+  ///////////////////////////////////////////////////////////////////////////////
+  // EtherPhunks smart contract interactions ////////////////////////////////////
+  ///////////////////////////////////////////////////////////////////////////////
+
+  async getPoints(address: `0x${string}`): Promise<number> {
+    const points = await this.client.readContract({
+      address: this.marketAddress as `0x${string}`,
+      abi: etherPhunksMarketAbi,
+      functionName: 'points',
+      args: [`${address}`],
+    });
+    return points as number;
   }
 
   ///////////////////////////////////////////////////////////////////////////////

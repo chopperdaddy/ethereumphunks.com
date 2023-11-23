@@ -73,14 +73,14 @@ export class ProcessingService {
   async retryBlock(blockNum: number): Promise<void> {
     try {
       Logger.debug(`Retrying block ${blockNum} (${this.web3Svc.chain})`);
-      await this.utilSvc.delay(10000);
+      await this.utilSvc.delay(5000);
       // Get the transactions from the block
       const { txns, createdAt } = await this.web3Svc.getBlockTransactions(blockNum);
       await this.processTransactions(txns, createdAt);
     } catch (error) {
       console.log(error);
       // Pause for 10 seconds
-      await this.utilSvc.delay(10000);
+      await this.utilSvc.delay(5000);
       // Retry the block
       return this.retryBlock(blockNum);
     }
@@ -121,7 +121,14 @@ export class ProcessingService {
           transaction as Transaction,
           createdAt
         );
-        continue;
+        // continue;
+
+        /**
+         * NOTE: In some instances, we're seeing these transfers
+         * coming from the smart contract. These are not valid EOA
+         * transfers, so we should NOT "continue" but rather proceed
+         * with marketplace transfers
+         */
       }
 
       const possibleBatchTransfer = transaction.input.substring(2).length % SEGMENT_SIZE === 0;
@@ -243,6 +250,8 @@ export class ProcessingService {
     const transferrerIsOwner = ethPhunk.owner.toLowerCase() === from.toLowerCase();
 
     const samePrevOwner = (ethPhunk.prevOwner && prevOwner) ? ethPhunk.prevOwner.toLowerCase() === prevOwner.toLowerCase() : true;
+
+    console.log({isMatchedHashId, transferrerIsOwner, samePrevOwner});
 
     if (!isMatchedHashId || !transferrerIsOwner || !samePrevOwner) return;
 
@@ -381,6 +390,8 @@ export class ProcessingService {
       args.phunkId ||
       args.potentialEthscriptionId;
 
+    if (!phunkId) return;
+
     const phunkExists = await this.sbSvc.checkEthPhunkExistsByHashId(phunkId);
     if (!phunkExists) return;
 
@@ -398,6 +409,8 @@ export class ProcessingService {
         value,
         log.logIndex
       );
+
+      this.distributePoints(fromAddress);
     }
 
     if (eventName === 'PhunkBidEntered') {
@@ -477,5 +490,15 @@ export class ProcessingService {
     // Check if the string starts with 'data:' and etherphunks svg
     const possibleEthPhunk = cleanedString.startsWith('data:image/svg+xml,');
     return { possibleEthPhunk, cleanedString };
+  }
+
+  async distributePoints(fromAddress: `0x${string}`): Promise<void> {
+    try {
+      const points = await this.web3Svc.getPoints(fromAddress);
+      await this.sbSvc.updateUserPoints(fromAddress, Number(points));
+      Logger.log(`Updated user points to ${points}`, fromAddress);
+    } catch (error) {
+      console.log(error);
+    }
   }
 }

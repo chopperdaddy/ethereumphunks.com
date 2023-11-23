@@ -2,6 +2,17 @@ export const etherPhunksMarketAbi = [
   {
     inputs: [
       {
+        internalType: 'address',
+        name: 'initialOwner',
+        type: 'address',
+      },
+    ],
+    stateMutability: 'nonpayable',
+    type: 'constructor',
+  },
+  {
+    inputs: [
+      {
         internalType: 'uint256',
         name: 'additionalBlocksNeeded',
         type: 'uint256',
@@ -10,10 +21,90 @@ export const etherPhunksMarketAbi = [
     name: 'AdditionalCooldownRequired',
     type: 'error',
   },
-  { inputs: [], name: 'EthscriptionAlreadyReceivedFromSender', type: 'error' },
-  { inputs: [], name: 'EthscriptionNotDeposited', type: 'error' },
-  { inputs: [], name: 'InvalidEthscriptionLength', type: 'error' },
-  { inputs: [], name: 'ReentrancyGuard__ReentrantCall', type: 'error' },
+  {
+    inputs: [],
+    name: 'EnforcedPause',
+    type: 'error',
+  },
+  {
+    inputs: [],
+    name: 'EthscriptionAlreadyReceivedFromSender',
+    type: 'error',
+  },
+  {
+    inputs: [],
+    name: 'EthscriptionNotDeposited',
+    type: 'error',
+  },
+  {
+    inputs: [],
+    name: 'ExpectedPause',
+    type: 'error',
+  },
+  {
+    inputs: [],
+    name: 'InvalidEthscriptionLength',
+    type: 'error',
+  },
+  {
+    inputs: [
+      {
+        internalType: 'address',
+        name: 'owner',
+        type: 'address',
+      },
+    ],
+    name: 'OwnableInvalidOwner',
+    type: 'error',
+  },
+  {
+    inputs: [
+      {
+        internalType: 'address',
+        name: 'account',
+        type: 'address',
+      },
+    ],
+    name: 'OwnableUnauthorizedAccount',
+    type: 'error',
+  },
+  {
+    inputs: [],
+    name: 'ReentrancyGuard__ReentrantCall',
+    type: 'error',
+  },
+  {
+    anonymous: false,
+    inputs: [
+      {
+        indexed: true,
+        internalType: 'address',
+        name: 'previousOwner',
+        type: 'address',
+      },
+      {
+        indexed: true,
+        internalType: 'address',
+        name: 'newOwner',
+        type: 'address',
+      },
+    ],
+    name: 'OwnershipTransferred',
+    type: 'event',
+  },
+  {
+    anonymous: false,
+    inputs: [
+      {
+        indexed: false,
+        internalType: 'address',
+        name: 'account',
+        type: 'address',
+      },
+    ],
+    name: 'Paused',
+    type: 'event',
+  },
   {
     anonymous: false,
     inputs: [
@@ -175,6 +266,19 @@ export const etherPhunksMarketAbi = [
     anonymous: false,
     inputs: [
       {
+        indexed: false,
+        internalType: 'address',
+        name: 'account',
+        type: 'address',
+      },
+    ],
+    name: 'Unpaused',
+    type: 'event',
+  },
+  {
+    anonymous: false,
+    inputs: [
+      {
         indexed: true,
         internalType: 'address',
         name: 'previousOwner',
@@ -186,23 +290,45 @@ export const etherPhunksMarketAbi = [
         name: 'recipient',
         type: 'address',
       },
-      { indexed: true, internalType: 'bytes32', name: 'id', type: 'bytes32' },
+      {
+        indexed: true,
+        internalType: 'bytes32',
+        name: 'id',
+        type: 'bytes32',
+      },
     ],
     name: 'ethscriptions_protocol_TransferEthscriptionForPreviousOwner',
     type: 'event',
   },
-  { stateMutability: 'nonpayable', type: 'fallback' },
+  {
+    stateMutability: 'nonpayable',
+    type: 'fallback',
+  },
   {
     inputs: [],
     name: 'ETHSCRIPTION_TRANSFER_COOLDOWN_BLOCKS',
-    outputs: [{ internalType: 'uint256', name: '', type: 'uint256' }],
+    outputs: [
+      {
+        internalType: 'uint256',
+        name: '',
+        type: 'uint256',
+      },
+    ],
     stateMutability: 'view',
     type: 'function',
   },
   {
     inputs: [
-      { internalType: 'bytes32', name: 'phunkId', type: 'bytes32' },
-      { internalType: 'uint256', name: 'minPrice', type: 'uint256' },
+      {
+        internalType: 'bytes32',
+        name: 'phunkId',
+        type: 'bytes32',
+      },
+      {
+        internalType: 'uint256',
+        name: 'minPrice',
+        type: 'uint256',
+      },
     ],
     name: 'acceptBidForPhunk',
     outputs: [],
@@ -211,23 +337,93 @@ export const etherPhunksMarketAbi = [
   },
   {
     inputs: [
-      { internalType: 'address', name: 'previousOwner', type: 'address' },
-      { internalType: 'bytes32', name: 'ethscriptionId', type: 'bytes32' },
+      {
+        internalType: 'bytes32[]',
+        name: 'phunkIds',
+        type: 'bytes32[]',
+      },
+      {
+        internalType: 'uint256[]',
+        name: 'minSalePricesInWei',
+        type: 'uint256[]',
+      },
+    ],
+    name: 'batchOfferPhunkForSale',
+    outputs: [],
+    stateMutability: 'nonpayable',
+    type: 'function',
+  },
+  {
+    inputs: [
+      {
+        internalType: 'address',
+        name: 'previousOwner',
+        type: 'address',
+      },
+      {
+        internalType: 'bytes32',
+        name: 'ethscriptionId',
+        type: 'bytes32',
+      },
     ],
     name: 'blocksRemainingUntilValidTransfer',
-    outputs: [{ internalType: 'uint256', name: '', type: 'uint256' }],
+    outputs: [
+      {
+        internalType: 'uint256',
+        name: '',
+        type: 'uint256',
+      },
+    ],
     stateMutability: 'view',
     type: 'function',
   },
   {
-    inputs: [{ internalType: 'bytes32', name: 'phunkId', type: 'bytes32' }],
+    inputs: [
+      {
+        internalType: 'bytes32',
+        name: 'phunkId',
+        type: 'bytes32',
+      },
+    ],
     name: 'buyPhunk',
     outputs: [],
     stateMutability: 'payable',
     type: 'function',
   },
   {
-    inputs: [{ internalType: 'bytes32', name: 'phunkId', type: 'bytes32' }],
+    inputs: [
+      {
+        internalType: 'uint256',
+        name: 'newMultiplier',
+        type: 'uint256',
+      },
+    ],
+    name: 'changeMultiplier',
+    outputs: [],
+    stateMutability: 'nonpayable',
+    type: 'function',
+  },
+  {
+    inputs: [
+      {
+        internalType: 'uint256',
+        name: 'newPointsPer',
+        type: 'uint256',
+      },
+    ],
+    name: 'changePointsPer',
+    outputs: [],
+    stateMutability: 'nonpayable',
+    type: 'function',
+  },
+  {
+    inputs: [
+      {
+        internalType: 'bytes32',
+        name: 'phunkId',
+        type: 'bytes32',
+      },
+    ],
     name: 'enterBidForPhunk',
     outputs: [],
     stateMutability: 'payable',
@@ -235,8 +431,48 @@ export const etherPhunksMarketAbi = [
   },
   {
     inputs: [
-      { internalType: 'bytes32', name: 'phunkId', type: 'bytes32' },
-      { internalType: 'uint256', name: 'minSalePriceInWei', type: 'uint256' },
+      {
+        internalType: 'bytes[]',
+        name: 'data',
+        type: 'bytes[]',
+      },
+    ],
+    name: 'multicall',
+    outputs: [
+      {
+        internalType: 'bytes[]',
+        name: 'results',
+        type: 'bytes[]',
+      },
+    ],
+    stateMutability: 'nonpayable',
+    type: 'function',
+  },
+  {
+    inputs: [],
+    name: 'multiplier',
+    outputs: [
+      {
+        internalType: 'uint256',
+        name: '',
+        type: 'uint256',
+      },
+    ],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [
+      {
+        internalType: 'bytes32',
+        name: 'phunkId',
+        type: 'bytes32',
+      },
+      {
+        internalType: 'uint256',
+        name: 'minSalePriceInWei',
+        type: 'uint256',
+      },
     ],
     name: 'offerPhunkForSale',
     outputs: [],
@@ -245,9 +481,21 @@ export const etherPhunksMarketAbi = [
   },
   {
     inputs: [
-      { internalType: 'bytes32', name: 'phunkId', type: 'bytes32' },
-      { internalType: 'uint256', name: 'minSalePriceInWei', type: 'uint256' },
-      { internalType: 'address', name: 'toAddress', type: 'address' },
+      {
+        internalType: 'bytes32',
+        name: 'phunkId',
+        type: 'bytes32',
+      },
+      {
+        internalType: 'uint256',
+        name: 'minSalePriceInWei',
+        type: 'uint256',
+      },
+      {
+        internalType: 'address',
+        name: 'toAddress',
+        type: 'address',
+      },
     ],
     name: 'offerPhunkForSaleToAddress',
     outputs: [],
@@ -255,61 +503,247 @@ export const etherPhunksMarketAbi = [
     type: 'function',
   },
   {
-    inputs: [{ internalType: 'address', name: '', type: 'address' }],
-    name: 'pendingWithdrawals',
-    outputs: [{ internalType: 'uint256', name: '', type: 'uint256' }],
-    stateMutability: 'view',
-    type: 'function',
-  },
-  {
-    inputs: [{ internalType: 'bytes32', name: '', type: 'bytes32' }],
-    name: 'phunkBids',
+    inputs: [],
+    name: 'owner',
     outputs: [
-      { internalType: 'bool', name: 'hasBid', type: 'bool' },
-      { internalType: 'bytes32', name: 'phunkId', type: 'bytes32' },
-      { internalType: 'address', name: 'bidder', type: 'address' },
-      { internalType: 'uint256', name: 'value', type: 'uint256' },
+      {
+        internalType: 'address',
+        name: '',
+        type: 'address',
+      },
     ],
     stateMutability: 'view',
     type: 'function',
   },
   {
-    inputs: [{ internalType: 'bytes32', name: 'phunkId', type: 'bytes32' }],
+    inputs: [],
+    name: 'pause',
+    outputs: [],
+    stateMutability: 'nonpayable',
+    type: 'function',
+  },
+  {
+    inputs: [],
+    name: 'paused',
+    outputs: [
+      {
+        internalType: 'bool',
+        name: '',
+        type: 'bool',
+      },
+    ],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [
+      {
+        internalType: 'address',
+        name: '',
+        type: 'address',
+      },
+    ],
+    name: 'pendingWithdrawals',
+    outputs: [
+      {
+        internalType: 'uint256',
+        name: '',
+        type: 'uint256',
+      },
+    ],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [
+      {
+        internalType: 'bytes32',
+        name: '',
+        type: 'bytes32',
+      },
+    ],
+    name: 'phunkBids',
+    outputs: [
+      {
+        internalType: 'bool',
+        name: 'hasBid',
+        type: 'bool',
+      },
+      {
+        internalType: 'bytes32',
+        name: 'phunkId',
+        type: 'bytes32',
+      },
+      {
+        internalType: 'address',
+        name: 'bidder',
+        type: 'address',
+      },
+      {
+        internalType: 'uint256',
+        name: 'value',
+        type: 'uint256',
+      },
+    ],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [
+      {
+        internalType: 'bytes32',
+        name: 'phunkId',
+        type: 'bytes32',
+      },
+    ],
     name: 'phunkNoLongerForSale',
     outputs: [],
     stateMutability: 'nonpayable',
     type: 'function',
   },
   {
-    inputs: [{ internalType: 'bytes32', name: '', type: 'bytes32' }],
+    inputs: [
+      {
+        internalType: 'bytes32',
+        name: '',
+        type: 'bytes32',
+      },
+    ],
     name: 'phunksOfferedForSale',
     outputs: [
-      { internalType: 'bool', name: 'isForSale', type: 'bool' },
-      { internalType: 'bytes32', name: 'phunkId', type: 'bytes32' },
-      { internalType: 'address', name: 'seller', type: 'address' },
-      { internalType: 'uint256', name: 'minValue', type: 'uint256' },
-      { internalType: 'address', name: 'onlySellTo', type: 'address' },
+      {
+        internalType: 'bool',
+        name: 'isForSale',
+        type: 'bool',
+      },
+      {
+        internalType: 'bytes32',
+        name: 'phunkId',
+        type: 'bytes32',
+      },
+      {
+        internalType: 'address',
+        name: 'seller',
+        type: 'address',
+      },
+      {
+        internalType: 'uint256',
+        name: 'minValue',
+        type: 'uint256',
+      },
+      {
+        internalType: 'address',
+        name: 'onlySellTo',
+        type: 'address',
+      },
     ],
     stateMutability: 'view',
     type: 'function',
   },
   {
     inputs: [
-      { internalType: 'address', name: 'owner', type: 'address' },
-      { internalType: 'bytes32', name: 'ethscriptionId', type: 'bytes32' },
+      {
+        internalType: 'address',
+        name: '',
+        type: 'address',
+      },
+    ],
+    name: 'points',
+    outputs: [
+      {
+        internalType: 'uint256',
+        name: '',
+        type: 'uint256',
+      },
+    ],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [],
+    name: 'pointsPer',
+    outputs: [
+      {
+        internalType: 'uint256',
+        name: '',
+        type: 'uint256',
+      },
+    ],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [],
+    name: 'renounceOwnership',
+    outputs: [],
+    stateMutability: 'nonpayable',
+    type: 'function',
+  },
+  {
+    inputs: [
+      {
+        internalType: 'address',
+        name: 'newOwner',
+        type: 'address',
+      },
+    ],
+    name: 'transferOwnership',
+    outputs: [],
+    stateMutability: 'nonpayable',
+    type: 'function',
+  },
+  {
+    inputs: [],
+    name: 'unpause',
+    outputs: [],
+    stateMutability: 'nonpayable',
+    type: 'function',
+  },
+  {
+    inputs: [
+      {
+        internalType: 'address',
+        name: 'owner',
+        type: 'address',
+      },
+      {
+        internalType: 'bytes32',
+        name: 'ethscriptionId',
+        type: 'bytes32',
+      },
     ],
     name: 'userEthscriptionDefinitelyNotStored',
-    outputs: [{ internalType: 'bool', name: '', type: 'bool' }],
+    outputs: [
+      {
+        internalType: 'bool',
+        name: '',
+        type: 'bool',
+      },
+    ],
     stateMutability: 'view',
     type: 'function',
   },
   {
     inputs: [
-      { internalType: 'address', name: 'owner', type: 'address' },
-      { internalType: 'bytes32', name: 'ethscriptionId', type: 'bytes32' },
+      {
+        internalType: 'address',
+        name: 'owner',
+        type: 'address',
+      },
+      {
+        internalType: 'bytes32',
+        name: 'ethscriptionId',
+        type: 'bytes32',
+      },
     ],
     name: 'userEthscriptionPossiblyStored',
-    outputs: [{ internalType: 'bool', name: '', type: 'bool' }],
+    outputs: [
+      {
+        internalType: 'bool',
+        name: '',
+        type: 'bool',
+      },
+    ],
     stateMutability: 'view',
     type: 'function',
   },
@@ -322,7 +756,11 @@ export const etherPhunksMarketAbi = [
   },
   {
     inputs: [
-      { internalType: 'bytes32[]', name: 'phunkIds', type: 'bytes32[]' },
+      {
+        internalType: 'bytes32[]',
+        name: 'phunkIds',
+        type: 'bytes32[]',
+      },
     ],
     name: 'withdrawBatchPhunks',
     outputs: [],
@@ -330,14 +768,26 @@ export const etherPhunksMarketAbi = [
     type: 'function',
   },
   {
-    inputs: [{ internalType: 'bytes32', name: 'phunkId', type: 'bytes32' }],
+    inputs: [
+      {
+        internalType: 'bytes32',
+        name: 'phunkId',
+        type: 'bytes32',
+      },
+    ],
     name: 'withdrawBidForPhunk',
     outputs: [],
     stateMutability: 'nonpayable',
     type: 'function',
   },
   {
-    inputs: [{ internalType: 'bytes32', name: 'phunkId', type: 'bytes32' }],
+    inputs: [
+      {
+        internalType: 'bytes32',
+        name: 'phunkId',
+        type: 'bytes32',
+      },
+    ],
     name: 'withdrawPhunk',
     outputs: [],
     stateMutability: 'nonpayable',
