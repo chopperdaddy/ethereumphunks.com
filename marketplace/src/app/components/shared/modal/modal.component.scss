@@ -1,3 +1,6 @@
+@import 'abstracts/variables';
+@import 'abstracts/mixins';
+
 :host {
   display: block;
 
@@ -9,8 +12,7 @@
   width: 100%;
   height: 100%;
 
-  background-color: rgba(var(--pink), 0.15);
-  backdrop-filter: blur(1rem);
+  background-color: rgba(var(--black), 0.35);
 
   opacity: 0;
   visibility: hidden;
@@ -25,28 +27,41 @@
 
 .inner {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
 
+  width: 100%;
+  height: 100%;
+
   padding-top: calc(var(--header-height) + 2rem);
+
+  @media (max-width: $mobile) {
+    padding: 0;
+    padding-top: var(--header-height);
+  }
 }
 
 .modal {
   width: 100%;
   max-width: 60rem;
-  height: 100vh;
+  height: 100%;
   max-height: 60rem;
 
   padding: 3rem;
 
-  // overflow-y: scroll;
-  // scrollbar-width: none;
-  // -webkit-overflow-scrolling: touch;
+  overflow-y: scroll;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
 
-  // &::-webkit-scrollbar {
-  //   display: none;
-  // }
+  &::-webkit-scrollbar {
+    display: none;
+  }
 
   background-color: rgba(var(--background), 1);
   box-shadow: 0 0 5rem rgba(0, 0, 0, 0.5);
+
+  @media (max-width: $mobile) {
+    max-width: 100%;
+    max-height: 100%;
+  }
 }

@@ -1,9 +1,17 @@
-<ng-container *ngIf="(transactions$ | async) as txns">
-  <div class="txns" *ngIf="txns.length">
+@if ((transactions$ | async); as txns) {
 
-    <ng-container *ngFor="let txn of txns; trackBy:trackByFn">
-      <app-notif *ngIf="!txn.dismissed" [txn]="txn" />
-    </ng-container>
+  @if (txns.length) {
+<div class="txns">
+
+    @for (txn of txns; track trackByFn($index, txn)) {
+  
+      @if (!txn.dismissed) {
+<app-notif [txn]="txn" />
+}
+    
+}
 
   </div>
-</ng-container>
+}
+
+}

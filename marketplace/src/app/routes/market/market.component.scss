@@ -40,6 +40,21 @@
 .toolbar-wrapper {
   margin-bottom: 2rem;
 
+  button {
+    height: 3.6rem;
+    margin-left: 2rem;
+
+    &.all-none {
+      margin-left: .5rem;
+      background: none;
+      border: .3rem solid rgba(var(--button-color), 1);
+
+      &.all {
+        background-color: rgba(var(--button-color), 1);
+      }
+    }
+  }
+
   .toolbar {
     display: flex;
     align-items: center;
@@ -50,21 +65,6 @@
     .right {
       display: flex;
       align-items: center;
-
-      button {
-        height: 3.6rem;
-        margin-left: 2rem;
-
-        &.all-none {
-          margin-left: .5rem;
-          background: none;
-          border: .3rem solid rgba(var(--button-color), 1);
-
-          &.all {
-            background-color: rgba(var(--button-color), 1);
-          }
-        }
-      }
     }
   }
 
@@ -72,10 +72,21 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
+    padding-top: 1rem;
 
     .selected-label {}
 
     .actions {
+      button {
+        margin-left: .5rem;
+        font-size: 1.4rem;
+
+        &.disabled {
+          opacity: .5;
+          pointer-events: none;
+        }
+      }
+
       &.disabled {
         opacity: .5;
         pointer-events: none;
@@ -134,117 +145,10 @@
   margin-bottom: 2rem;
 }
 
-.grid-wrapper {
-  width: 100%;
-  display: grid;
-  align-content: start;
-  grid-template-columns: repeat(12, calc(100% / 12));
-
-  .item-link {
-    text-decoration: none;
-  }
-
-  .item {
-    position: relative;
-    width: 100%;
-
-    .listing-source {
-      position: absolute;
-      top: .5rem;
-      left: .5rem;
-      z-index: 1;
-
-      background-color: rgba(var(--background), 1);
-      width: 2.5rem;
-      height: 2.5rem;
-
-      display: flex;
-      align-items: center;
-      justify-content: center;
-
-      img {
-        width: 1.8rem;
-        height: 1.8rem;
-        object-fit: contain;
-      }
-    }
-
-    .image-wrapper {
-      img {
-        background-color: rgba(var(--base-color), 1);
-        display: block;
-        width: 100%;
-        height: auto;
-        image-rendering: pixelated;
-      }
-
-      &.listing {
-        img {
-          background-color: rgba(var(--listed-color), 1);
-        }
-      }
-
-      &.bid {
-        img {
-          background-color: rgba(var(--bid-color), 1);
-        }
-      }
-
-      &.in-escrow {
-        img {
-          background-color: rgba(var(--escrow-color), 1);
-        }
-      }
-    }
-
-    .labels-wrapper {
-      padding: 1rem 0 2rem;
-
-      .label {
-        font-size: 1.4rem;
-        color: rgba(var(--dark-text), 1);
-        text-align: center;
-        font-weight: 700;
-      }
-
-      p {
-        padding: 0;
-        margin: 0;
-        font-size: 1.4rem;
-        color: rgba(var(--text-color), 1);
-        text-align: center;
-      }
-    }
-  }
-
-  &.compact {
-    grid-template-columns: repeat(22, calc(100% / 22));
-  }
-
-  @media (max-width: $mobile) {
-    grid-template-columns: repeat(4, calc(100% / 4));
-
-    &.compact {
-      grid-template-columns: repeat(10, calc(100% / 10));
-      column-gap: 0;
-    }
-  }
-}
-
-.tx-phunks {
-  border: 1px solid red;
-  display: grid;
-  grid-template-columns: repeat(4, calc(100% / 4));
-
-  .phunk-item {
-    display: flex;
-    align-items: center;
-    border: 1px solid red;
-
-    img {
-      display: block;
-    }
-  }
+.grid-area-wrapper {
+  // display: grid;
+  // grid-template-columns: repeat(2, calc(100% / 2));
+  // grid-gap: 2rem;
 }
 
 form {
@@ -262,7 +166,7 @@ form {
   .selected-wrapper {
     display: grid;
     align-content: start;
-    grid-template-columns: repeat(2, calc(100% / 2));
+    grid-template-columns: repeat(2, calc((100% / 2) - (1rem / 2)));
     grid-gap: 1rem;
 
     overflow-y: scroll;
@@ -309,5 +213,22 @@ form {
 
   .form-actions {
     height: auto;
+  }
+}
+
+
+.tx-phunks {
+  border: 1px solid red;
+  display: grid;
+  grid-template-columns: repeat(4, calc(100% / 4));
+
+  .phunk-item {
+    display: flex;
+    align-items: center;
+    border: 1px solid red;
+
+    img {
+      display: block;
+    }
   }
 }

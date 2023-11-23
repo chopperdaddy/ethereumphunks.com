@@ -36,7 +36,7 @@ export class DataStateEffects {
     //     startWith(action)
     //   )
     // ),
-    tap((action) => console.log('dbEventTriggered', action)),
+    // tap((action) => console.log('dbEventTriggered', action)),
     withLatestFrom(this.store.select(appStateSelectors.selectWalletAddress)),
     map(([action]) => action.payload.new as Event),
     filter((newData) => !!newData),

@@ -1,13 +1,14 @@
+@if (phunk) {
 <div
   class="billboard-wrapper"
-  *ngIf="phunk; else placeholder">
+ >
 
   <div class="image-wrapper">
     <app-phunk-image [tokenId]="phunk.phunkId" />
   </div>
 </div>
+} @else {
 
-<ng-template #placeholder>
   <div class="image-wrapper">
     <img
       #tokenImage
@@ -16,4 +17,6 @@
       height="312"
     />
   </div>
-</ng-template>
+
+}
+

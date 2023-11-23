@@ -1,46 +1,63 @@
-<ng-container *ngIf="(marketType$ | async) as marketType">
-  <div
-    *ngIf="phunkData; else placeholder"
-    class="grid-wrapper"
-    [class.selectable]="selectable"
-    [class]="viewType">
+@if ((mktType$ | async); as mktType) {
+  @if (phunkData) {
+    <div class="grid-wrapper" [class.selectable]="selectable" [class]="viewType">
 
-    <ng-container *ngFor="let phunk of phunkData |
-      properties : (activeTraitFilters$ | async) : traitCount |
-      sort: (activeSort$ | async);
-      trackBy: identify;
-      let i = index">
+      @for (
+        phunk of phunkData |
+        properties : (activeTraitFilters$ | async) : traitCount |
+        sort: (activeSort$ | async); track phunk.phunkId; let i = $index
+      ) {
+        @if (i < limit) {
+          <ng-container *ngTemplateOutlet="phunkItem; context:{ $implicit: phunk, index: i }"></ng-container>
+        }
+      }
+    </div>
+  } @else {
+    <div class="grid-wrapper" [class]="viewType">
 
-      <ng-container *ngIf="i < limit">
-        <ng-container *ngTemplateOutlet="phunkItem; context:{ $implicit: phunk, index: i }"></ng-container>
-      </ng-container>
-    </ng-container>
-  </div>
+      @for (i of limitArr; track i) {
+        <div class="item-link">
+          <div class="item">
+
+            <div class="image-wrapper">
+              <img [src]="'assets/loadingphunk.png'" width="50" height="50" />
+            </div>
+
+            @if (viewType === 'market') {
+              <div class="labels-wrapper">
+                <div class="label">#0000</div>
+                <div class="label">Loading...<br />&nbsp;</div>
+              </div>
+            }
+          </div>
+        </div>
+      }
+    </div>
+  }
 
   <ng-template #phunkItem let-phunk let-i="index">
     <div
       class="item"
-      [class.selected]="selected.includes(phunk.hashId)"
-      [attr.data-index]="i"
-      (waIntersectionObservee)="onIntersection($event)">
+      (waIntersectionObservee)="onIntersection($event)"
+      [class.selected]="selected[phunk.hashId]"
+      [attr.data-index]="i">
 
-      <div
-        *ngIf="selectable"
-        class="selector">
+      @if (selectable) {
+        <div class="selector">
+          <input
+            #phunkCheck
+            type="checkbox"
+            [id]="'checkbox-' + phunk.phunkId"
+            [checked]="selected[phunk.hashId]"
+            [attr.data-hash-id]="phunk.hashId"
+            (change)="selectPhunk(phunk)"
+          />
 
-        <input
-          #phunkCheck
-          type="checkbox"
-          [id]="'checkbox-' + phunk.phunkId"
-          [checked]="selected.includes(phunk.hashId)"
-          [attr.data-hash-id]="phunk.hashId"
-          (change)="selectPhunk(phunk.hashId)"
-        />
-
-        <label [for]="'checkbox-' + phunk.phunkId">
-          <div class="check"></div>
-        </label>
-      </div>
+          <label [for]="'checkbox-' + phunk.phunkId">
+            <div class="check"></div>
+          </label>
+        </div>
+      }
 
       <a
         class="item-link"
@@ -50,14 +67,8 @@
         <div
           class="image-wrapper"
           [class.in-escrow]="phunk.owner === escrowAddress"
-          [class.listing]="(marketType === 'listings' || marketType === 'owned') && phunk.listing"
-          [class.bid]="marketType === 'bids' && phunk.bid">
-
-          <!-- <img
-            [src]="'assets/loadingphunk.png'"
-            width="50"
-            height="50"
-          /> -->
+          [class.listing]="(mktType === 'listings' || mktType === 'owned') && phunk.listing"
+          [class.bid]="mktType === 'bids' && phunk.bid">
 
           <img
             [lazyLoad]="dataSvc.staticUrl + '/images/phunk' + (phunk.phunkId | tokenIdParse) + '.svg'"
@@ -67,64 +78,35 @@
           />
         </div>
 
-        <div
-          class="labels-wrapper"
-          *ngIf="showLabels && viewType === 'market'">
+        @if (showLabels && viewType === 'market') {
+          <div class="labels-wrapper">
+            <div class="label">#{{ phunk.phunkId }}</div>
 
-          <div class="label">#{{ phunk.phunkId }}</div>
+            @if (mktType === 'listings' || mktType === 'owned') {
+              @if (phunk.listing; as listing) {
+                <p i18n>
+                  {{ (listing.minValue | weiToEth) | formatCash }}Ξ<br />
+                  <!-- @if ((dataSvc.usd$ | async); as usd) {
+                    ${{ ((listing.minValue | weiToEth) * usd) | formatCash }}
+                  } -->
+                </p>
+              }
+            }
 
-          <ng-container *ngIf="marketType === 'listings' || marketType === 'owned'">
-            <ng-container *ngIf="phunk.listing as listing">
-              <p i18n>
-                {{ (listing.minValue | weiToEth) | formatCash }}Ξ<br />
-                <ng-container *ngIf="(dataSvc.usd$ | async) as usd">
-                  ${{ ((listing.minValue | weiToEth) * usd) | formatCash }}
-                </ng-container>
-              </p>
-            </ng-container>
-          </ng-container>
-
-          <ng-container *ngIf="marketType === 'bids'">
-            <ng-container *ngIf="phunk.bid as bid">
-              <p i18n>
-                {{ (bid.value | weiToEth) | formatCash }}Ξ<br />
-                <ng-container *ngIf="(dataSvc.usd$ | async) as usd">
-                  ${{ ((bid.value | weiToEth) * usd) | formatCash }}
-                </ng-container>
-              </p>
-            </ng-container>
-          </ng-container>
-        </div>
+            @if (mktType === 'bids') {
+              @if (phunk.bid; as bid) {
+                <p i18n>
+                  {{ (bid.value | weiToEth) | formatCash }}Ξ<br />
+                  <!-- @if ((dataSvc.usd$ | async); as usd) {
+                    ${{ ((bid.value | weiToEth) * usd) | formatCash }}
+                  } -->
+                </p>
+              }
+            }
+          </div>
+        }
       </a>
 
     </div>
   </ng-template>
-</ng-container>
-
-<ng-template #placeholder>
-  <div
-    class="grid-wrapper"
-    [class]="viewType">
-
-    <div class="item-link" *ngFor="let i of limitArr">
-      <div class="item">
-
-        <div class="image-wrapper">
-          <img
-            [src]="'assets/loadingphunk.png'"
-            width="50"
-            height="50"
-          />
-        </div>
-
-        <div
-          class="labels-wrapper"
-          *ngIf="viewType === 'market'">
-
-          <div class="label">#0000</div>
-          <div class="label">Loading...<br />&nbsp;</div>
-        </div>
-      </div>
-    </div>
-  </div>
-</ng-template>
+}

@@ -24,7 +24,7 @@ import { environment } from 'src/environments/environment';
 
 import * as appStateSelectors from '@/state/selectors/app-state.selectors';
 
-import { filter, map } from 'rxjs';
+import { distinctUntilChanged, filter, map, tap } from 'rxjs';
 
 @Component({
   selector: 'app-phunk-grid',
@@ -52,8 +52,8 @@ export class PhunkGridComponent implements OnChanges {
 
   escrowAddress = environment.phunksMarketAddress;
 
-  @Input() phunkData: Phunk[] = [];
   @Input() marketType!: MarketTypes;
+  @Input() phunkData: Phunk[] = [];
   @Input() viewType: ViewType = 'market';
   @Input() limit: number = 110;
   @Input() sort!: Sorts;
@@ -64,17 +64,18 @@ export class PhunkGridComponent implements OnChanges {
   @Input() selectable: boolean = false;
   @Input() selectAll: boolean = false;
 
-  @Output() selectedChange: EventEmitter<Phunk['hashId'][]> = new EventEmitter<Phunk['hashId'][]>();
-  @Input() selected: Phunk['hashId'][] = [];
+  @Output() selectedChange = new EventEmitter<{ [string: Phunk['hashId']]: Phunk }>();
+  @Input() selected: { [string: Phunk['hashId']]: Phunk } = {};
 
   traitCount!: number;
   limitArr = Array.from({length: this.limit}, (_, i) => i);
 
   activeTraitFilters$ = this.store.select(appStateSelectors.selectActiveTraitFilters);
   activeSort$ = this.store.select(appStateSelectors.selectActiveSort);
-  marketType$ = this.store.select(appStateSelectors.selectMarketType).pipe(
+  mktType$ = this.store.select(appStateSelectors.selectMarketType).pipe(
     filter((type) => !!type),
-    map((type) => this.marketType || type || 'all' as MarketTypes)
+    distinctUntilChanged(),
+    map((type) => this.marketType || type || 'all' as MarketTypes),
   );
 
   constructor(
@@ -82,47 +83,50 @@ export class PhunkGridComponent implements OnChanges {
     public dataSvc: DataService,
   ) {}
 
-  identify(index: number, item: Phunk) {
-    return item.phunkId;
-  }
-
   ngOnChanges(changes: SimpleChanges): void {
-
     if (changes.selected && !changes.selected.firstChange) {
       this.phunkCheck?.forEach((checkbox) => {
         const hashId = checkbox.nativeElement.dataset.hashId;
         if (!hashId) return;
-
-        checkbox.nativeElement.checked = this.selected.includes(hashId);
+        checkbox.nativeElement.checked = !!this.selected[hashId];
       });
     }
 
     if (changes.selectAll) {
       this.phunkCheck?.forEach((checkbox) => {
         checkbox.nativeElement.checked = this.selectAll;
+
         const hashId = checkbox.nativeElement.dataset.hashId;
         if (!hashId) return;
-        this.selectPhunk(hashId, true, !this.selectAll);
+
+        const phunk = this.phunkData.find((phunk) => phunk.hashId === hashId);
+        if (!phunk) return;
+        this.selectPhunk(phunk, true, !this.selectAll);
       });
     }
   }
 
-  selectPhunk(hashId: Phunk['hashId'], upsert: boolean = false, remove: boolean = false) {
+  selectPhunk(phunk: Phunk, upsert: boolean = false, remove: boolean = false) {
     if (remove) {
-      this.selected = this.selected.filter(item => item !== hashId);
-      this.selected = [...this.selected];
+      const selected = { ...this.selected };
+      delete selected[phunk.hashId];
+      this.selected = selected;
       this.selectedChange.emit(this.selected);
       return;
     }
 
     if (upsert) {
-      if (!this.selected.includes(hashId)) this.selected.push(hashId);
+      if (!this.selected[phunk.hashId]) this.selected[phunk.hashId] = phunk;
     } else {
-      if (this.selected.includes(hashId)) this.selected = this.selected.filter(item => item !== hashId);
-      else this.selected.push(hashId);
+      if (this.selected[phunk.hashId]) {
+        const selected = { ...this.selected };
+        delete selected[phunk.hashId];
+        this.selected = selected;
+      } else {
+        this.selected[phunk.hashId] = phunk;
+      }
     }
 
-    this.selected = [...this.selected];
     this.selectedChange.emit(this.selected);
   }
 

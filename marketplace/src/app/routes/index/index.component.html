@@ -3,7 +3,7 @@
 <div class="sections-wrapper" waIntersectionObserver waIntersectionThreshold="0.5">
   <section class="overview">
     <div class="inner">
-      <app-overview></app-overview>
+      <app-overview />
     </div>
   </section>
 
@@ -24,163 +24,121 @@
             [class.disabled]="phunkBoxLoading"
           />
 
-          <img
-            src="/assets/loader-{{ theme$ | async }}.gif"
-            width="20" height="20"
-            *ngIf="phunkBoxLoading"
-          />
+          @if (phunkBoxLoading) {
+            <img src="/assets/loader-{{ theme$ | async }}.gif" width="20" height="20" />
+          }
         </div>
-        <ng-container *ngIf="phunkBoxError">
+
+        @if (phunkBoxError) {
           <p class="highlight">Invalid Address or EtherPhunk ID</p>
-        </ng-container>
+        }
         <button i18n type="submit">Go</button>
       </form>
 
     </div>
   </section>
 
-  <ng-container *ngIf="(ownedPhunks$ | async) as ownedData">
-    <ng-container *ngIf="ownedData.length">
-      <section *ngIf="(walletAddress$ | async) as address">
-        <div class="inner">
-          <h3 i18n>Owned</h3>
+  @defer {
+    @if ((ownedPhunks$ | async); as ownedData) {
+      @if (ownedData.length) {
+        @if ((walletAddress$ | async); as address) {
+          <section>
+            <div class="inner">
+              <h3 i18n>Owned</h3>
 
+              <div class="section-stats-wrapper">
+                <p i18n>Showing owned EtherPhunks,
+                  <a
+                    class="highlight"
+                    [routerLink]="['/', 'owned']"
+                    [href]="'/owned'"
+                    [queryParams]="{ address }">
+
+                    ({{ ownedData.length | number }}) view all.
+                  </a>
+                </p>
+              </div>
+
+              <app-phunk-grid
+                [phunkData]="ownedData || []"
+                [viewType]="'compact'"
+                [limit]="(isMobile$ | async) ? 100 : 110"
+                [marketType]="'owned'"
+                [sort]="'price-low'"
+              />
+            </div>
+          </section>
+        }
+      }
+    }
+
+    <section>
+      <div class="inner">
+        <h3 i18n>For Sale</h3>
+
+        @if (listings$ | async; as listings) {
           <div class="section-stats-wrapper">
-            <p i18n>Showing owned EtherPhunks,
-              <a
-                class="highlight"
-                [routerLink]="['/', 'owned']"
-                [href]="'/owned'"
-                [queryParams]="{ address }">
+            @if ((listings | calc : 'lowestListingPrice'); as ethPrice) {
+              <p i18n>The lowest price EtherPhunk currently for sale is <span class="bold">Ξ{{ ethPrice | number : '1.2-2' }} ({{ (ethPrice * ((dataSvc.usd$ | async) || 0)) | currency }} USD)</span>.</p>
+            }
 
-                ({{ ownedData.length | number }}) view all.
-              </a>
-            </p>
+            <p i18n>Showing lowest price offers, <a class="highlight" [routerLink]="['/listings']" [href]="'/listings'">({{ listings.length | number }}) view all.</a></p>
+          </div>
+        }
+
+        <app-phunk-grid
+          [phunkData]="(listings$ | async) || []"
+          [viewType]="'compact'"
+          [limit]="(isMobile$ | async) ? 100 : 110"
+          [marketType]="'listings'"
+          [sort]="'price-low'"
+        />
+      </div>
+    </section>
+
+    <section>
+      <div class="inner">
+        <h3 i18n>Bids</h3>
+
+        @if ((bids$ | async); as bids) {
+          <div class="section-stats-wrapper">
+            @if ((bids | calc : 'averageBidPrice'); as ethPrice) {
+              <p i18n>The average currently open bid is<span class="bold">Ξ{{ ethPrice | number : '1.2-2' }} ({{ (ethPrice * ((dataSvc.usd$ | async) || 0)) | currency }} USD)</span>.</p>
+            }
+            @if ((bids | calc : 'totalBidsValue'); as ethPrice) {
+              <p i18n>Total value of all current bids is<span class="bold">Ξ{{ ethPrice | number : '1.2-2' }} ({{ (ethPrice * ((dataSvc.usd$ | async) || 0)) | currency }} USD)</span>.</p>
+            }
+            <p i18n>Showing top bids,<a class="highlight" [routerLink]="['/bids']" [href]="'/bids'">({{ bids.length | number }}) view all.</a></p>
+          </div>
+        }
+
+        <app-phunk-grid
+          [phunkData]="(bids$ | async) || []"
+          [viewType]="'compact'"
+          [limit]="(isMobile$ | async) ? 100 : 110"
+          [marketType]="'bids'"
+          [sort]="'price-high'"
+        />
+      </div>
+    </section>
+
+    @if ((allPhunks$ | async); as allPhunks) {
+      <section>
+        <div class="inner">
+          <h3 i18n>All</h3>
+          <div class="section-stats-wrapper">
+            <p i18n><a class="highlight" [routerLink]="['/all']" [href]="'/all'">View all 10,000 EtherPhunks.</a></p>
           </div>
 
           <app-phunk-grid
-            [phunkData]="ownedData || []"
+            [phunkData]="allPhunks"
             [viewType]="'compact'"
             [limit]="(isMobile$ | async) ? 100 : 110"
-            [marketType]="'owned'"
-            [sort]="'price-low'"
+            [marketType]="'all'"
+            [sort]="'id'"
           />
         </div>
       </section>
-    </ng-container>
-  </ng-container>
-
-  <section>
-    <div class="inner">
-      <h3 i18n>For Sale</h3>
-
-      <div
-        class="section-stats-wrapper"
-        *ngIf="listings$ | async as listings">
-        <p
-          i18n
-          *ngIf="(listings | calc : 'lowestListingPrice') as ethPrice">
-
-          The lowest price EtherPhunk currently for sale is
-          <span class="bold">Ξ{{ ethPrice | number : '1.2-2' }} ({{ (ethPrice * ((dataSvc.usd$ | async) || 0)) | currency }} USD)</span>.
-        </p>
-
-        <p i18n>Showing lowest price offers,
-          <a
-            class="highlight"
-            [routerLink]="['/listings']"
-            [href]="'/listings'">
-
-            ({{ listings.length | number }}) view all.
-          </a>
-        </p>
-      </div>
-
-      <app-phunk-grid
-        [phunkData]="(listings$ | async) || []"
-        [viewType]="'compact'"
-        [limit]="(isMobile$ | async) ? 100 : 110"
-        [marketType]="'listings'"
-        [sort]="'price-low'"
-      />
-    </div>
-  </section>
-
-  <section>
-    <div class="inner">
-      <h3 i18n>Bids</h3>
-
-      <div
-        class="section-stats-wrapper"
-        *ngIf="(bids$ | async) as bids">
-
-        <p
-          i18n
-          *ngIf="(bids | calc : 'averageBidPrice') as ethPrice">
-
-          The average currently open bid is
-          <span class="bold">
-            Ξ{{ ethPrice | number : '1.2-2' }}
-            ({{ (ethPrice * ((dataSvc.usd$ | async) || 0)) | currency }} USD)
-          </span>.
-        </p>
-
-        <p
-          i18n
-          *ngIf="(bids | calc : 'totalBidsValue') as ethPrice">
-
-          Total value of all current bids is
-          <span class="bold">
-            Ξ{{ ethPrice | number : '1.2-2' }}
-            ({{ (ethPrice * ((dataSvc.usd$ | async) || 0)) | currency }} USD)
-          </span>.
-        </p>
-
-        <p i18n>Showing top bids,
-          <a
-            class="highlight"
-            [routerLink]="['/bids']"
-            [href]="'/bids'">
-
-            ({{ bids.length | number }}) view all.
-          </a>
-        </p>
-      </div>
-
-      <app-phunk-grid
-        [phunkData]="(bids$ | async) || []"
-        [viewType]="'compact'"
-        [limit]="(isMobile$ | async) ? 100 : 110"
-        [marketType]="'bids'"
-        [sort]="'price-high'"
-      />
-    </div>
-  </section>
-
-  <section *ngIf="(allPhunks$ | async) as allPhunks">
-    <div class="inner">
-      <h3 i18n>All</h3>
-
-      <div class="section-stats-wrapper">
-
-        <p i18n>
-          <a
-            class="highlight"
-            [routerLink]="['/all']"
-            [href]="'/all'">
-
-            View all 10,000 EtherPhunks.
-          </a>
-        </p>
-      </div>
-
-      <app-phunk-grid
-        [phunkData]="allPhunks"
-        [viewType]="'compact'"
-        [limit]="(isMobile$ | async) ? 100 : 110"
-        [marketType]="'all'"
-        [sort]="'id'"
-      />
-    </div>
-  </section>
+    }
+  }
 </div>

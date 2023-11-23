@@ -22,23 +22,29 @@ export class PhunkImageComponent implements OnChanges {
   @Input() tokenId!: number;
   @Input() color: boolean = true;
 
-  phunkImgSrc!: string;
+  phunkImgSrc!: string | null;
 
   constructor(private http: HttpClient) {}
 
   ngOnChanges(changes: SimpleChanges): void {
+    if (changes.tokenId && changes.tokenId.currentValue !== changes.tokenId.previousValue) {
+      this.phunkImgSrc = null;
+    }
+
     const tokenId = this.formatNumber(this.tokenId.toString());
     const url = `${environment.staticUrl}/images/phunk${tokenId}.svg`;
 
     firstValueFrom(
       this.http.get(url, { responseType: 'text' }).pipe(
-        // tap(data => console.log(data)),
         switchMap(data => from(svgson.parse(data))),
         map(data => this.color ? data : this.stripColors(data)),
         map(data => this.convertToBase64(data))
       )
     ).then(svg => {
       this.phunkImgSrc = svg;
+    }).catch(err => {
+      console.log(err);
+      this.phunkImgSrc = null;
     });
   }
 
@@ -91,5 +97,4 @@ export class PhunkImageComponent implements OnChanges {
     if (!num) return null;
     return String(num).padStart(4, '0');
   }
-
 }

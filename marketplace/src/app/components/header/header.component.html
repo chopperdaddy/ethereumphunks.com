@@ -1,57 +1,61 @@
-<div
-  #menuInner
-  class="inner">
+<div #menuInner class="inner">
 
   <a [routerLink]="['/']" class="logo">
-    <ng-template [ngTemplateOutlet]="logo"></ng-template>
+    <ng-template [ngTemplateOutlet]="logo" />
   </a>
 
   <div class="user-tools">
 
-    <div class="connect-menu">
-      <ng-container *ngIf="(connected$ | async); else connectButton">
+    <div class="theme-switcher">
+      <button [class]="theme$ | async" (click)="toggleTheme$.next()">
 
+        <ng-template [ngTemplateOutlet]="themSwitcher" />
+      </button>
+    </div>
+
+    <div class="connect-menu">
+      @if ((connected$ | async)) {
+
+
+      @if ((walletAddress$ | async); as address) {
         <button
           #menuButton
           class="menu"
           [class.active]="menuActive$ | async"
-          *ngIf="(walletAddress$ | async) as address"
           (click)="toggleMenu$.next()">
 
-          <div class="notif" *ngIf="(notifications$ | async) as notifs">{{ notifs | number }}</div>
+          @if ((notifications$ | async); as notifs) {
+            <div class="notif">{{ notifs | number }}</div>
+          }
 
-          <app-wallet-address [address]="address"></app-wallet-address>
+          <app-wallet-address [address]="address" />
 
           <div class="arrow">
-            <ng-template [ngTemplateOutlet]="menuIcon"></ng-template>
+            <ng-template [ngTemplateOutlet]="menuIcon" />
           </div>
         </button>
-      </ng-container>
+
+        <button class="points">{{ (userPoints$ | async) | number }} points</button>
+      }
+
+      } @else {
+
+      <button class="connect" (click)="web3Svc.connect()">
+
+        Connect
+      </button>
+
+      }
 
       <!-- <button
         *ngIf="hasWithdrawal$ | async"
         (click)="web3Svc.withdraw()"
         class="withdraw">
 
-        <ng-template [ngTemplateOutlet]="withdrawIcon"></ng-template>
+        <ng-template [ngTemplateOutlet]="withdrawIcon" />
         Withdraw funds
       </button> -->
 
-      <ng-template #connectButton>
-        <button
-          class="connect"
-          (click)="web3Svc.connect()">
-
-          Connect
-        </button>
-      </ng-template>
-    </div>
-
-    <div class="theme-switcher">
-      <button [class]="theme$ | async" (click)="toggleTheme$.next()">
-
-        <ng-template [ngTemplateOutlet]="themSwitcher"></ng-template>
-      </button>
     </div>
   </div>
 </div>

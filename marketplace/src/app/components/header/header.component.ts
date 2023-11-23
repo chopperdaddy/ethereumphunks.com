@@ -46,6 +46,7 @@ export class HeaderComponent {
   connected$ = this.store.select(appStateSelectors.selectConnected);
   walletAddress$ = this.store.select(appStateSelectors.selectWalletAddress);
   hasWithdrawal$ = this.store.select(appStateSelectors.selectHasWithdrawal);
+  userPoints$ = this.store.select(appStateSelectors.selectUserPoints);
   menuActive$ = this.store.select(appStateSelectors.selectMenuActive);
   theme$ = this.store.select(appStateSelectors.selectTheme);
   notifications$ = this.store.select(appStateSelectors.selectTransactions).pipe(

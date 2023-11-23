@@ -1,9 +1,9 @@
-<div class="breadcrumb" *ngIf="phunk; else placehodler">
+@if (phunk) {
+<div class="breadcrumb">
   <div class="inner">
 
-    <div
-      class="pfp-options-wrapper"
-      *ngIf="pfpOptionsActive">
+    @if (pfpOptionsActive) {
+    <div class="pfp-options-wrapper">
 
       <div class="pfp-options">
         <div class="shape-select">
@@ -24,13 +24,11 @@
 
       <button i18n class="download-pfp" (click)="downloadCanvas()">Download</button>
     </div>
+    }
 
     <div class="crumbs-wrapper">
       <div class="crumbs">
-        <a
-          i18n
-          href="/"
-          [routerLink]="['/']">
+        <a i18n href="/" [routerLink]="['/']">
 
           Ethereum Phunks
         </a>
@@ -39,9 +37,7 @@
       </div>
 
       <div class="save-pfp">
-        <button
-          i18n
-          (click)="togglePfpOptions()">
+        <button i18n (click)="togglePfpOptions()">
 
           {{ pfpOptionsActive ? 'Cancel' : 'Download' }}
         </button>
@@ -49,34 +45,27 @@
     </div>
   </div>
 </div>
+} @else {
 
-<ng-template #placehodler>
-  <div class="breadcrumb">
-    <div class="inner">
+<div class="breadcrumb">
+  <div class="inner">
 
-      <div class="crumbs-wrapper">
-        <div class="crumbs">
-          <a
-            i18n
-            href="/"
-            [routerLink]="['/']">
+    <div class="crumbs-wrapper">
+      <div class="crumbs">
+        <a i18n href="/" [routerLink]="['/']">
 
-            Ethereum Phunks
-          </a>
-          <span class="divider">/</span>
-          <span class="number">0000</span>
-        </div>
-
-        <div class="save-pfp"></div>
+          Ethereum Phunks
+        </a>
+        <span class="divider">/</span>
+        <span class="number">0000</span>
       </div>
+
+      <div class="save-pfp"></div>
     </div>
   </div>
-</ng-template>
+</div>
 
-<canvas
-  #pfp
-  id="pfp"
-  width="480"
-  height="480"
-  style="display: none;">
+}
+
+<canvas #pfp id="pfp" width="480" height="480" style="display: none;">
 </canvas>

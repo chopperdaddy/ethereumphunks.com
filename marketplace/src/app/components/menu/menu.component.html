@@ -1,78 +1,70 @@
-<div
-  #menuInner
-  class="inner"
-  [style]="{ 'opacity': '0' }"
-  waIntersectionObserver waIntersectionThreshold="0.5">
+<div #menuInner class="inner" [style]="{ 'opacity': '0' }" waIntersectionObserver waIntersectionThreshold="0.5">
 
-  <ng-container *ngIf="address$ | async as address">
+  @if (address$ | async; as address) {
+
     <!-- <div class="wallet-info">
-      <app-wallet-address [address]="address" [ens]="false" />
-    </div> -->
+        <app-wallet-address [address]="address" [ens]="false" />
+      </div> -->
 
-    <div class="sections">
-      <section
-        class="owned"
-        *ngIf="(listedPhunks$ | async) as listed">
+    <div class="sections-wrapper">
+      @if ((listedPhunks$ | async); as listed) {
+        <section class="owned">
+          <p i18n>You own <span class="highlight">{{ stats.owned | number }}</span> EtherPhunks, <a class="highlight" [routerLink]="['/', 'owned']" [href]="'/owned'" [queryParams]="{ address }">view all.</a></p>
 
-        <p i18n>You own <span class="highlight">{{ stats.owned | number }}</span> EtherPhunks,
-          <a
-            class="highlight"
-            [routerLink]="['/', 'owned']"
-            [href]="'/owned'"
-            [queryParams]="{ address }">
+          <p i18n>You have <span class="highlight">{{ stats.listed | number }}</span> EtherPhunks listed for sale.</p>
 
-            view all.
-          </a>
-        </p>
+          @if (menuActive$ | async) {
+            <app-phunk-grid
+              [phunkData]="listed || []"
+              [viewType]="(isMobile$ | async) ? 'menu' : 'market'"
+              [showLabels]="false"
+              [limit]="24"
+              [marketType]="'owned'"
+              [sort]="'price-low'"
+            />
+          }
+        </section>
+      }
 
-        <p i18n>You have <span class="highlight">{{ stats.listed | number }}</span> EtherPhunks listed for sale.</p>
+      @if ((userOpenBids$ | async); as bids) {
+        <section class="bids">
+          <p i18n>You have <span class="highlight">{{ stats.bids | number }}</span> open bids</p>
 
-        <app-phunk-grid
-          *ngIf="menuActive$ | async"
-          [phunkData]="listed || []"
-          [viewType]="(isMobile$ | async) ? 'menu' : 'market'"
-          [showLabels]="false"
-          [limit]="24"
-          [marketType]="'owned'"
-          [sort]="'price-low'"
-        />
-      </section>
-
-      <section
-        class="bids"
-        *ngIf="(userOpenBids$ | async) as bids">
-
-        <p i18n>You have <span class="highlight">{{ stats.bids | number }}</span> open bids</p>
-
-        <app-phunk-grid
-          [phunkData]="bids || []"
-          [viewType]="(isMobile$ | async) ? 'menu' : 'market'"
-          [showLabels]="false"
-          [limit]="24"
-          [marketType]="'bids'"
-        />
-      </section>
+          <app-phunk-grid
+            [phunkData]="bids || []"
+            [viewType]="(isMobile$ | async) ? 'menu' : 'market'"
+            [showLabels]="false"
+            [limit]="24"
+            [marketType]="'bids'"
+          />
+        </section>
+      }
     </div>
 
-    <div class="user-actions">
-      <button (click)="disconnect()">Disconnect</button>
-      <button (click)="withdraw()">Withdraw Funds</button>
-    </div>
+    <div class="user-wrapper">
+      <div class="user-actions">
+        <button
+          (click)="withdraw()"
+          [class.active]="hasWithdrawal$ | async">
 
-    <div
-      class="notifications-wrapper"
-      *ngIf="(transactions$ | async) as txns">
-
-      <h3>Activity</h3>
-
-      <div class="notifications" *ngIf="txns.length else none">
-        <ng-container *ngFor="let txn of txns">
-          <app-notif [txn]="txn" [dismissible]="false" />
-        </ng-container>
+          <span>Withdraw Funds</span>
+          <span>({{ (hasWithdrawal$ | async) | weiToEth }} ETH)</span>
+        </button>
+        <button (click)="disconnect()">Disconnect</button>
       </div>
-      <ng-template #none>
-        <p class="no-activity">No recent activity.</p>
-      </ng-template>
+
+      @if ((transactions$ | async); as txns) {
+        <div class="notifications-wrapper">
+          <h3>Activity</h3>
+          <div class="notifications">
+            @if (txns.length) {
+              @for (txn of txns; track txn) { <app-notif [txn]="txn" [dismissible]="false" /> }
+            } @else {
+              <p class="no-activity">No recent activity.</p>
+            }
+          </div>
+        </div>
+      }
     </div>
-  </ng-container>
+  }
 </div>

@@ -55,8 +55,6 @@
             // height: 4rem;
             font-size: 1.4rem;
             font-weight: 400;
-
-            margin-left: 2rem;
           }
 
           &.menu {
@@ -109,6 +107,15 @@
             }
           }
 
+          &.points {
+            font-family: $secondary-font-stack;
+            // height: 4rem;
+            font-size: 1.4rem;
+            font-weight: 400;
+
+            margin-left: 2rem;
+          }
+
           &.active {
             .arrow {
               svg {
@@ -120,7 +127,7 @@
       }
 
       .theme-switcher {
-        padding-left: 2rem;
+        padding-right: 2rem;
 
         button {
           display: flex;

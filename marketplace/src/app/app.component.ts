@@ -3,6 +3,7 @@ import { CommonModule, DOCUMENT } from '@angular/common';
 import { NavigationEnd, NavigationStart, Router, RouterModule } from '@angular/router';
 
 import { Store } from '@ngrx/store';
+import { LazyLoadImageModule } from 'ng-lazyload-image';
 
 import { GlobalState } from '@/models/global-state';
 
@@ -26,6 +27,7 @@ import * as dataStateActions from '@/state/actions/data-state.actions';
   imports: [
     CommonModule,
     RouterModule,
+    LazyLoadImageModule,
 
     MenuComponent,
     HeaderComponent,
@@ -39,8 +41,6 @@ import * as dataStateActions from '@/state/actions/data-state.actions';
 
 export class AppComponent {
 
-  isMarketplace$!: Observable<any>;
-
   constructor(
     @Inject(DOCUMENT) private document: Document,
     private store: Store<GlobalState>,
@@ -49,6 +49,9 @@ export class AppComponent {
     public themeSvc: ThemeService,
     private router: Router
   ) {
+
+    this.store.dispatch(dataStateActions.fetchMarketData());
+    this.store.dispatch(dataStateActions.fetchAllPhunks());
 
     this.store.dispatch(appStateActions.setEventTypeFilter({ eventTypeFilter: 'All' }));
     this.store.dispatch(appStateActions.setTheme({ theme: 'initial' }));
@@ -90,8 +93,14 @@ export class AppComponent {
 
     fromEvent(window, 'resize').pipe(
       debounceTime(500),
-      tap(() => this.store.dispatch(appStateActions.setIsMobile({ isMobile: window.innerWidth < 801 })))
+      tap(() => this.setIsMobile())
     ).subscribe();
+
+    this.setIsMobile();
+  }
+
+  setIsMobile(): void {
+    this.store.dispatch(appStateActions.setIsMobile({ isMobile: window.innerWidth < 801 }))
   }
 
   // @HostListener('document:keydown.escape', ['$event'])

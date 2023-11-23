@@ -8,7 +8,8 @@ import * as actions from '../actions/app-state.actions';
 export const initialState: AppState = {
   connected: false,
   walletAddress: '',
-  hasWithdrawal: false,
+  hasWithdrawal: 0,
+  userPoints: 0,
   theme: localStorage.getItem('EtherPhunks_theme') as Theme || 'initial',
 
   isMobile: false,
@@ -23,7 +24,7 @@ export const initialState: AppState = {
   activeEventTypeFilter: 'All',
 
   blockNumber: -1,
-  transactions: JSON.parse(localStorage.getItem('EtherPhunks_transactions') || '[]'),
+  transactions: [],
   cooldowns: JSON.parse(localStorage.getItem('EtherPhunks_cooldowns') || '[]'),
 };
 
@@ -56,6 +57,14 @@ export const appStateReducer: ActionReducer<AppState, Action> = createReducer(
     };
     // console.log('setHasWithdrawal', setHasWithdrawal);
     return setHasWithdrawal
+  }),
+  on(actions.setUserPoints, (state, { userPoints }) => {
+    const setUserPoints = {
+      ...state,
+      userPoints,
+    };
+    // console.log('setUserPoints', setUserPoints);
+    return setUserPoints
   }),
   on(actions.setEventTypeFilter, (state, { eventTypeFilter }) => {
     const setActiveFilters = {
@@ -168,6 +177,14 @@ export const appStateReducer: ActionReducer<AppState, Action> = createReducer(
     };
     // console.log('clearTransactions', clearTransactions);
     return clearTransactions
+  }),
+  on(actions.setTransactions, (state, { transactions }) => {
+    const setTransactions = {
+      ...state,
+      transactions
+    };
+    // console.log('setTransactions', setTransactions);
+    return setTransactions
   }),
   on(actions.setIsMobile, (state, { isMobile }) => {
     const setIsMobile = {

@@ -8,7 +8,7 @@ import { Observable, catchError, filter, of, tap } from 'rxjs';
 
 import EtherPhunksMarketAbi from '@/abi/EtherPhunksMarket.json';
 
-import { FallbackTransport, TransactionReceipt, WatchBlockNumberReturnType, createWalletClient, custom, decodeFunctionData, formatEther, isAddress, parseEther } from 'viem';
+import { FallbackTransport, TransactionReceipt, WatchBlockNumberReturnType, createWalletClient, custom, decodeFunctionData, formatEther, fromHex, isAddress, parseEther, toHex } from 'viem';
 import { mainnet, goerli } from 'viem/chains';
 
 import { Chain, Config, PublicClient, WebSocketPublicClient, configureChains, createConfig, disconnect, getAccount, getNetwork, getPublicClient, getWalletClient, switchNetwork, watchAccount, watchBlockNumber } from '@wagmi/core';
@@ -85,6 +85,33 @@ export class Web3Service {
     }, ethereumClient);
 
     this.createListeners();
+
+    const firstHalf = toHex('data:,{"p":"erc-20","op":"mint","tick":"nullvoid","id":"');
+    const secondHalf = toHex('","amt":"1000"}');
+
+    console.log({firstHalf, secondHalf})
+    const data = firstHalf.slice(2) + toHex('1').slice(2) + secondHalf.slice(2);
+    console.log(fromHex(('0x' + data) as `0x${string}`, 'string'));
+  }
+
+  async deployToken(): Promise<void> {
+    const walletClient = await getWalletClient();
+    const hash = await walletClient?.sendTransaction({
+      chain: getNetwork().chain,
+      account: getAccount().address as `0x${string}`,
+      to: getAccount().address as `0x${string}`,
+      value: BigInt(0),
+      data: toHex('data:,' + JSON.stringify({
+          p: 'erc-20',
+          op: 'mint',
+          tick: 'nullvoid',
+          id: '1',
+          amt: '1000',
+        })
+      ),
+    });
+
+    console.log(hash);
   }
 
   createListeners(): void {
@@ -142,7 +169,7 @@ export class Web3Service {
     }
   }
 
-  async checkHasWithdrawal(address: string): Promise<boolean> {
+  async checkHasWithdrawal(address: string): Promise<number> {
     const publicClient = getPublicClient();
     const pendingWithdrawals = await publicClient?.readContract({
       address: marketAddress as `0x${string}`,
@@ -150,7 +177,7 @@ export class Web3Service {
       functionName: 'pendingWithdrawals',
       args: [address],
     });
-    return !!pendingWithdrawals;
+    return Number(pendingWithdrawals);
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -287,6 +314,17 @@ export class Web3Service {
     const hash = await this.marketContractInteraction('withdraw', []);
     const receipt = await this.waitForTransaction(hash!);
     return await this.checkHasWithdrawal(receipt.from);
+  }
+
+  async getUserPoints(address: string): Promise<number> {
+    const publicClient = getPublicClient();
+    const points = await publicClient?.readContract({
+      address: marketAddress as `0x${string}`,
+      abi: EtherPhunksMarketAbi,
+      functionName: 'points',
+      args: [address],
+    });
+    return Number(points);
   }
 
   //////////////////////////////////

@@ -1,25 +1,29 @@
-<div
-  *ngIf="txn"
-  class="txn-item {{ classes[txn.function] }} {{ txn.type }}">
+@if (txn) {
+  <div class="txn-item {{ classes[txn.function] }} {{ txn.type }}">
 
-  <button class="dismiss" *ngIf="dismissible" (click)="dismiss(txn)">x</button>
+    @if (dismissible) {
+      <button class="dismiss" (click)="dismiss(txn)">x</button>
+    }
 
-  <a
-    [routerLink]="['/details', txn.phunkId]"
-    [href]="'/details/' + txn.phunkId">
+    <a [routerLink]="['/details', txn.phunkId]" [href]="'/details/' + txn.phunkId">
+      <app-phunk-image [color]="txn.type === 'event'" [tokenId]="txn.phunkId" />
+    </a>
 
-    <app-phunk-image [color]="txn.type === 'event'" [tokenId]="txn.phunkId" />
-  </a>
-  <div class="txn-info">
-    <h4>{{ titles[txn.function] }}</h4>
-    <p [innerHTML]="transactionTypes[txn.type].message?.replace('%phunkId%', txn.phunkId)"></p>
+    <div class="txn-info">
+      <h4>{{ titles[txn.function] }}</h4>
+      <p [innerHTML]="transactionTypes[txn.type].message?.replace('%phunkId%', txn.phunkId)"></p>
 
-    <div class="footer">
-      <a class="hash" *ngIf="txn.hash" [href]="env.explorerUrl + '/tx/' + txn.hash" target="_blank">
-        <app-wallet-address [address]="txn.hash"></app-wallet-address>
-        <svg height="9" viewBox="0 0 9 9" width="9" xmlns="http://www.w3.org/2000/svg"><path d="m3 0v1.5h-1.5v6h6v-1.5h1.5v3h-9v-9zm1.5 4.5v1.5h-1.5v-1.5zm1.5 0h-1.5v-1.5h1.5v-1.5h-1.5v-1.5h4.5v4.5h-1.5v-1.5h-1.5z" fill="#ff03b4" fill-rule="evenodd"/></svg>
-      </a>
-      <div class="timestamp" *ngIf="!dismissible">{{ txn.id | timeago : true }}</div>
+      <div class="footer">
+        @if (txn.hash) {
+          <a class="hash" [href]="env.explorerUrl + '/tx/' + txn.hash" target="_blank">
+            <app-wallet-address [address]="txn.hash"></app-wallet-address>
+            <svg height="9" viewBox="0 0 9 9" width="9" xmlns="http://www.w3.org/2000/svg"><path d="m3 0v1.5h-1.5v6h6v-1.5h1.5v3h-9v-9zm1.5 4.5v1.5h-1.5v-1.5zm1.5 0h-1.5v-1.5h1.5v-1.5h-1.5v-1.5h4.5v4.5h-1.5v-1.5h-1.5z" fill="#ff03b4" fill-rule="evenodd" /></svg>
+          </a>
+        }
+        @if (!dismissible) {
+          <div class="timestamp">{{ txn.id | timeago : true }}</div>
+        }
+      </div>
     </div>
   </div>
-</div>
+}

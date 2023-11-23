@@ -17,7 +17,7 @@
   background-color: rgba(var(--bid-color), .75);
   padding-top: var(--header-height);
 
-  font-family: $secondary-font-stack;
+  // font-family: $secondary-font-stack;
   color: rgba(var(--white), 1);
 
   backdrop-filter: blur(1rem);
@@ -39,65 +39,37 @@
   position: relative;
   display: grid;
   grid-template-columns: calc(70% - 6rem) 30%;
-  grid-template-rows: 1fr auto;
   column-gap: 6rem;
   row-gap: 1rem;
+  max-height: 100%;
 
-  height: 100%;
+  grid-template-areas: 'sections user-wrapper';
+  overflow: hidden;
+  padding-top: 3rem;
 
-  grid-template-areas: 'sections user-actions'
-                       'sections notifications';
+  &:before {
+    content: '';
+    position: absolute;
+    z-index: 1;
+    top: 0;
+    left: 3rem;
+
+    width: calc(100% - 6rem);
+    height: .3rem;
+    background-color: rgba(var(--white), .15);
+  }
+
+  h3 {
+    font-size: 1.6rem;
+    font-weight: 700;
+    padding-bottom: 1rem;
+  }
 
   .wallet-info {
     grid-area: wallet-info;
   }
 
-  .user-actions {
-    grid-area: user-actions;
-
-    // padding-top: 1rem;
-    // border-top: .2rem solid rgba(var(--white), .1);
-
-    button {
-      width: 100%;
-      margin-bottom: .5rem;
-
-      font-size: 1.2rem;
-      font-weight: normal;
-      font-family: $secondary-font-stack;
-
-      background-color: rgba(var(--background), 1);
-
-      &:last-child {
-        margin-bottom: 0;
-      }
-    }
-  }
-
-  .notifications-wrapper {
-    grid-area: notifications;
-    padding-top: 1rem;
-
-    overflow-y: scroll;
-    scrollbar-width: none;
-    -webkit-overflow-scrolling: touch;
-
-    &::-webkit-scrollbar {
-      display: none;
-    }
-
-    h3 {}
-
-    .no-activity {
-      padding: 0;
-      margin: 0;
-      font-size: 1.2rem;
-    }
-
-    .notifications {}
-  }
-
-  .sections {
+  .sections-wrapper {
     grid-area: sections;
 
     overflow-y: scroll;
@@ -113,10 +85,11 @@
       padding-bottom: 3rem;
 
       p {
-        font-size: 1.4rem;
-        font-weight: normal;
+        font-family: $primary-font-stack;
+        font-size: 1.6rem;
+        font-weight: 500;
 
-        padding-bottom: 1rem;
+        padding: 0 0 1rem;
         margin: 0;
       }
 
@@ -130,6 +103,67 @@
 
       &:last-child {
         padding-bottom: 0;
+      }
+    }
+  }
+
+  .user-wrapper {
+    grid-area: user-wrapper;
+
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: flex-start;
+    max-height: 100%;
+    overflow: hidden;
+
+    .user-actions {
+      button {
+        width: 100%;
+        margin-bottom: .5rem;
+
+        font-size: 1.2rem;
+        font-weight: normal;
+        font-family: $secondary-font-stack;
+
+        background-color: rgba(var(--background), 1);
+
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+
+        &:last-child {
+          margin-bottom: 0;
+        }
+      }
+    }
+
+    .notifications-wrapper {
+      padding-top: 1rem;
+      max-height: 100%;
+      overflow: hidden;
+
+      .no-activity {
+        padding: 0;
+        margin: 0;
+        font-size: 1.2rem;
+      }
+
+      .notifications {
+        padding-bottom: 3rem;
+        max-height: 100%;
+        overflow-y: auto;
+        scrollbar-width: none;
+        -webkit-overflow-scrolling: touch;
+
+        p {
+          font-family: $secondary-font-stack;
+          font-size: 1.2rem;
+        }
+
+        &::-webkit-scrollbar {
+          display: none;
+        }
       }
     }
   }
@@ -165,27 +199,12 @@
   }
 
   @media (max-width: $mobile) {
-    grid-template-columns: 100%;
-    grid-template-rows: auto;
-    grid-template-areas: 'user-actions'
-                         'notifications'
-                         'sections';
-    grid-gap: 0;
+    grid-template-columns: 1fr;
+    grid-template-areas: 'sections' 'user-wrapper';
 
-    .notifications-wrapper {
-      height: 30rem;
-    }
-
-    .sections {
-      overflow-y: auto;
+    .sections-wrapper {
+      overflow: auto;
+      height: auto;
     }
   }
-}
-
-h3 {
-  font-size: 1.4rem;
-  font-weight: normal;
-  padding-bottom: 1rem;
-
-  a {}
 }

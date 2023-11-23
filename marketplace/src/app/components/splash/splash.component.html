@@ -1,12 +1,16 @@
 
-<div class="images-wrapper" *ngIf="tokenIds?.length">
+@if (tokenIds.length) {
+<div class="images-wrapper">
+  @for (tokenId of tokenIds; track tokenId) {
   <div
     class="image-wrapper"
-    *ngFor="let tokenId of tokenIds">
+   >
 
     <app-phunk-image
       [tokenId]="tokenId"
       [color]="false"
     />
   </div>
+}
 </div>
+}

@@ -25,7 +25,7 @@ import { ThemeService } from '@/services/theme.service';
 import { Phunk } from '@/models/db';
 import { GlobalState } from '@/models/global-state';
 
-import { Subject, filter, map, switchMap, takeUntil, tap, withLatestFrom } from 'rxjs';
+import { Subject, filter, firstValueFrom, map, switchMap, takeUntil, tap, withLatestFrom } from 'rxjs';
 import { TransactionReceipt } from 'viem';
 
 import { environment } from 'src/environments/environment';
@@ -91,6 +91,8 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
 
   bidActive: boolean = false;
   bidPrice = new FormControl<number>(0);
+
+  withdrawActive: boolean = false;
 
   transferActive: boolean = false;
   transferAddress = new FormControl<string | null>('');
@@ -187,6 +189,11 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
     this.bidActive = false;
     this.bidPrice.setValue(0);
   }
+
+  // withdraw(): void {
+  //   this.closeAll();
+  //   this.withdrawActive = true;
+  // }
 
   closeAll(): void {
     this.closeAcceptBid();
@@ -762,5 +769,10 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
 
   getItemQueryParams(item: any): any {
     return { [item.k.replace(/ /g, '-').toLowerCase()]: item.v.replace(/ /g, '-').toLowerCase() };
+  }
+
+  async sendToAuction(hashId: string) {
+    const proof = await firstValueFrom(this.dataSvc.fetchProofs(hashId));
+    await this.web3Svc.transferPhunk(proof, environment.auctionAddress);
   }
 }

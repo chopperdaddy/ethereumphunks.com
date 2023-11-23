@@ -25,6 +25,7 @@ import * as dataStateSelectors from '@/state/selectors/data-state.selectors';
 import anime from 'animejs';
 
 import { map, tap } from 'rxjs';
+import { WeiToEthPipe } from '@/pipes/wei-to-eth.pipe';
 
 @Component({
   selector: 'app-menu',
@@ -37,6 +38,8 @@ import { map, tap } from 'rxjs';
     PhunkGridComponent,
     NotifComponent,
     TxModalComponent,
+
+    WeiToEthPipe,
 
     WalletAddressDirective
   ],
@@ -64,6 +67,7 @@ export class MenuComponent implements AfterViewInit {
   );
 
   isMobile$ = this.store.select(appStateSelectors.selectIsMobile);
+  hasWithdrawal$ = this.store.select(appStateSelectors.selectHasWithdrawal);
 
   stats: any = {
     owned: 0,

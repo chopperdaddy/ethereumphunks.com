@@ -11,7 +11,8 @@ export interface GlobalState {
 export interface AppState {
   walletAddress: string;
   connected: boolean;
-  hasWithdrawal: boolean;
+  hasWithdrawal: number;
+  userPoints: number;
   theme: Theme;
 
   isMobile: boolean;
@@ -27,7 +28,7 @@ export interface AppState {
 
   blockNumber: number;
   transactions: Transaction[];
-  cooldowns: Cooldown[]
+  cooldowns: Cooldown[];
 };
 
 export interface Cooldown {

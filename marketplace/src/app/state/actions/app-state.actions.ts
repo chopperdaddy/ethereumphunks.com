@@ -21,7 +21,7 @@ export const checkHasWithdrawal = createAction(
 
 export const setHasWithdrawal = createAction(
   '[App State] Has Withdrawal',
-  props<{ hasWithdrawal: boolean }>()
+  props<{ hasWithdrawal: number }>()
 );
 
 export const resetAppState = createAction(
@@ -86,6 +86,11 @@ export const removeTransaction = createAction(
   props<{ txId: Transaction['id'] }>()
 );
 
+export const setTransactions = createAction(
+  '[App State] Set Transactions',
+  props<{ transactions: Transaction[] }>()
+);
+
 export const setIsMobile = createAction(
   '[App State] Set Is Mobile',
   props<{ isMobile: boolean }>()
@@ -118,4 +123,13 @@ export const newBlock = createAction(
 export const mouseUp = createAction(
   '[App State] Mouse Up',
   props<{ event: MouseEvent }>()
+);
+
+export const fetchUserPoints = createAction(
+  '[App State] Fetch User Points'
+);
+
+export const setUserPoints = createAction(
+  '[App State] Set User Points',
+  props<{ userPoints: number }>()
 );

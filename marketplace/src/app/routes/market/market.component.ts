@@ -80,30 +80,39 @@ export class MarketComponent {
   activeSort$ = this.activeSort.asObservable();
   activeSortModel: any = this.sorts[0];
 
-  // selectedChange$ = new Subject<string[]>();
-
-  currentPage: number = 1;
   filtersVisible: boolean = false;
 
   transferModalActive: boolean = false;
 
+  selectedPhunksFormArray: FormArray = this.fb.array([]);
+
+  selected: { [string: Phunk['hashId']]: Phunk } = {};
+  deselected: Phunk[] = [];
+  selectedLength: number = Object.keys(this.selected).length;
+
   selectMutipleActive: boolean = false;
   selectAll: boolean = false;
   isListingBulk: boolean = false;
-  selectedHashIds: Phunk['hashId'][] = [];
-
-  txType!: 'Transferring' | 'Withdrawing';
-  validSelectedPhunks: Phunk[] = [];
 
   bulkListingForm = this.fb.group({
     listingPhunks: this.fb.array([])
   });
 
+  actionsState: {
+    canList: boolean,
+    canTransfer: boolean,
+    canWithdraw: boolean,
+    canEscrow: boolean,
+  } = {
+    canList: false,
+    canTransfer: false,
+    canWithdraw: false,
+    canEscrow: false,
+  }
+
   walletAddress$ = this.store.select(appStateSelectors.selectWalletAddress);
   marketType$ = this.store.select(appStateSelectors.selectMarketType);
   activeMarketRouteData$ = this.store.select(dataStateSelectors.selectActiveMarketRouteData);
-
-  selectedPhunksFormArray!: FormArray;
 
   constructor(
     private store: Store<GlobalState>,
@@ -117,10 +126,6 @@ export class MarketComponent {
     this.activeSort.next({ ...$event });
   }
 
-  pageChanged($event: any) {
-    this.currentPage = $event;
-  }
-
   setSelectMiltiple() {
     this.selectMutipleActive = !this.selectMutipleActive;
     this.selectAll = false;
@@ -128,11 +133,11 @@ export class MarketComponent {
 
   clearSelectedAndClose() {
     this.selectAll = false;
-    this.selectedHashIds = [];
+    this.selected = {};
   }
 
   async batchAction(type: 'transfer' | 'escrow' | 'withdraw' | 'list'): Promise<void> {
-    if (!this.selectedHashIds.length) return;
+    if (!Object.keys(this.selected).length) return;
 
     this.transferModalActive = true;
 
@@ -143,51 +148,59 @@ export class MarketComponent {
 
   async batchTransfer(toAddress: string): Promise<string | undefined> {
 
+    const selectedHashIds = Object.keys(this.selected);
     const canTransfer = await firstValueFrom(
-      this.dataSvc.phunksCanTransfer(this.selectedHashIds)
+      this.dataSvc.phunksCanTransfer(selectedHashIds)
     );
 
-    this.validSelectedPhunks = [ ...canTransfer ];
-    this.txType = 'Transferring';
+    const selected: { [string: Phunk['hashId']]: Phunk } = {};
+    canTransfer.forEach((phunk: Phunk) => selected[phunk.hashId] = phunk);
+    this.selected = selected;
 
-    const selected = [ ...canTransfer.map((phunk: Phunk) => phunk.hashId) ];
-    this.selectedHashIds = selected;
-
-    const hexString = selected.map(hashId => hashId?.substring(2)).join('');
+    const hexString = Object.keys(selected).map(hashId => hashId?.substring(2)).join('');
     const hex = `0x${hexString}`;
 
     return await this.web3Svc.transferPhunk(hex, toAddress);
   }
 
   async withdrawBatch(): Promise<string | undefined> {
+
+    const selectedHashIds = Object.keys(this.selected);
     const inEscrow = await firstValueFrom(
-      this.dataSvc.phunksAreInEscrow(this.selectedHashIds)
+      this.dataSvc.phunksAreInEscrow(selectedHashIds)
     );
 
-    this.validSelectedPhunks = [ ...inEscrow ];
-    this.txType = 'Withdrawing';
+    const selected: { [string: Phunk['hashId']]: Phunk } = {};
+    inEscrow.forEach((phunk: Phunk) => selected[phunk.hashId] = phunk);
+    this.selected = selected;
 
-    const selected = [ ...inEscrow.map((phunk: Phunk) => phunk.hashId) ];
-    this.selectedHashIds = selected;
-
-    return await this.web3Svc.withdrawBatch(selected);
+    return await this.web3Svc.withdrawBatch(Object.keys(selected));
   }
 
-  async createPhunksFormArray(): Promise<FormArray> {
+  async getSelectedEscrowed(): Promise<{ deselected: Phunk[], inEscrow: Phunk[]}> {
+    const selectedHashIds = Object.keys(this.selected);
     const inEscrow = await firstValueFrom(
-      this.dataSvc.phunksAreInEscrow(this.selectedHashIds)
+      this.dataSvc.phunksAreInEscrow(selectedHashIds)
     );
 
-    this.validSelectedPhunks = [ ...inEscrow ];
+    const deselected = selectedHashIds
+      .filter(hashId => !inEscrow.find((phunk: Phunk) => phunk.hashId === hashId))
+      .map(hashId => this.selected[hashId]);
 
-    const selected = [ ...inEscrow.map((phunk: Phunk) => phunk.hashId) ];
-    this.selectedHashIds = selected;
+    return { deselected, inEscrow };
+  }
 
-    return this.fb.array(inEscrow.map((phunk: Phunk) => this.fb.group({
-      phunkId: [phunk.phunkId],
-      hashId: [phunk.hashId],
-      listPrice: [''],
-    })));
+  selectedChange($event: any): void {
+    this.selectedLength = Object.keys(this.selected).length;
+
+    Object.values(this.selected).forEach((phunk: Phunk) => {
+      this.actionsState.canWithdraw = !!phunk.isEscrowed;
+      this.actionsState.canList = !!phunk.isEscrowed;
+      this.actionsState.canTransfer = !phunk.isEscrowed;
+      this.actionsState.canEscrow = !phunk.isEscrowed;
+    });
+
+    this.actionsState = { ...this.actionsState };
   }
 
   closeModal(): void {
@@ -196,7 +209,15 @@ export class MarketComponent {
 
   async listSelected(): Promise<void> {
     this.isListingBulk = true;
-    const formArray = await this.createPhunksFormArray();
+    const { inEscrow, deselected } = await this.getSelectedEscrowed();
+    this.deselected = deselected;
+
+    const formArray = this.fb.array(inEscrow.map((phunk: Phunk) => this.fb.group({
+      phunkId: [phunk.phunkId],
+      hashId: [phunk.hashId],
+      listPrice: [''],
+    }))) as FormArray;
+
     this.bulkListingForm.setControl('listingPhunks', formArray);
     this.selectedPhunksFormArray = this.bulkListingForm.get('listingPhunks') as FormArray;
   }

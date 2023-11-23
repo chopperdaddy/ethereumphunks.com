@@ -3,6 +3,7 @@
 
 :host {
   display: block;
+  font-family: $secondary-font-stack;
 }
 
 .txn-item {
@@ -11,11 +12,10 @@
   display: grid;
   grid-template-columns: 5rem 1fr;
   grid-gap: 1rem;
-  padding: 2rem 2rem 2rem 1rem;
+  padding: 1rem 2rem 1rem 1rem;
   margin-bottom: .5rem;
 
   background-color: rgba(var(--black), 1);
-  box-shadow: 0 4rem 12rem 0 rgba(var(--highlight), .2);
 
   .dismiss {
     position: absolute;
@@ -44,7 +44,7 @@
 
   .txn-info {
     h4 {
-      font-size: 1.2rem;
+      font-size: 1rem;
       font-weight: normal;
 
       padding: 0 0 .5rem 0;

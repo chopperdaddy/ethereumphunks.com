@@ -78,3 +78,8 @@ export const selectBlockNumber = createSelector(
   selectAppState,
   (appState: AppState) => appState.blockNumber
 );
+
+export const selectUserPoints = createSelector(
+  selectAppState,
+  (appState: AppState) => appState.userPoints
+);

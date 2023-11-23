@@ -326,4 +326,13 @@ export class DataService {
       tap((res) => this.usd.next(res)),
     ).subscribe();
   }
+
+  fetchProofs(hashId: string): Observable<any> {
+    return this.http.get(`http://localhost:3000/merkle-proofs`, {
+      params: {
+        leaf: hashId
+      },
+      responseType: 'text'
+    });
+  }
 }

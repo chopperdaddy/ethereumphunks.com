@@ -86,8 +86,11 @@ export class AppStateEffects {
   addressChanged$ = createEffect(() => this.actions$.pipe(
     ofType(appStateActions.setWalletAddress),
     tap((action) => {
-      // console.log('setWalletAddress', action);
+      const address = action.walletAddress;
+      const transactions = JSON.parse(localStorage.getItem(`EtherPhunks_transactions__${address}`) || '[]');
+      this.store.dispatch(appStateActions.setTransactions({ transactions }));
       this.store.dispatch(appStateActions.checkHasWithdrawal());
+      this.store.dispatch(appStateActions.fetchUserPoints());
       this.store.dispatch(dataStateActions.fetchOwnedPhunks());
     }),
   ), { dispatch: false });
@@ -119,6 +122,14 @@ export class AppStateEffects {
     switchMap(([action, address]) => from(this.web3Svc.checkHasWithdrawal(address))),
     map(has => appStateActions.setHasWithdrawal({ hasWithdrawal: has })
   )));
+
+  fetchUserPoints$ = createEffect(() => this.actions$.pipe(
+    ofType(appStateActions.fetchUserPoints),
+    withLatestFrom(this.store.select(appStateSelectors.selectWalletAddress)),
+    filter(([action, address]) => !!address),
+    switchMap(([action, address]) => from(this.web3Svc.getUserPoints(address))),
+    map((userPoints) => appStateActions.setUserPoints({ userPoints }))
+  ));
 
   menuActive$ = createEffect(() => this.actions$.pipe(
     ofType(appStateActions.setMenuActive, appStateActions.setTheme),
@@ -194,8 +205,11 @@ export class AppStateEffects {
       appStateActions.upsertTransaction,
       appStateActions.removeTransaction
     ),
-    withLatestFrom(this.store.select(appStateSelectors.selectTransactions)),
-    tap(([_, transactions]) => localStorage.setItem('EtherPhunks_transactions', JSON.stringify(transactions))),
+    withLatestFrom(
+      this.store.select(appStateSelectors.selectTransactions),
+      this.store.select(appStateSelectors.selectWalletAddress),
+    ),
+    tap(([_, transactions, address]) => localStorage.setItem(`EtherPhunks_transactions__${address}`, JSON.stringify(transactions))),
     concatMap(([action]) =>
     action.type === '[App State] Upsert Transaction' && action.transaction.type === 'complete' ?
       of(action).pipe(
@@ -215,7 +229,7 @@ export class AppStateEffects {
       const menu = document.querySelector('app-menu') as HTMLElement;
       const header = document.querySelector('app-header') as HTMLElement;
       const target = action.event.target as HTMLElement;
-      if (!menu.contains(target) && !header.contains(target) && menuActive) {
+      if (!menu?.contains(target) && !header.contains(target) && menuActive) {
         this.store.dispatch(appStateActions.setMenuActive({ menuActive: false }));
       }
     }),
