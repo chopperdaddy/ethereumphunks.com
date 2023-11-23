@@ -22,7 +22,12 @@ const config: HardhatUserConfig = {
     artifacts: './artifacts',
   },
   networks: {
-    hardhat: {},
+    ganache: {
+      url: "http://127.0.0.1:7545",
+      accounts: {
+        mnemonic: "supreme logic ivory monitor under now quantum next require office crater brain"
+      }
+    },
     goerli: {
       url: 'http://goerli-geth.dappnode:8545',
       chainId: 5,

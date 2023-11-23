@@ -1,4 +1,18 @@
-// SPDX-License-Identifier: MIT License
+//////// EtherPhunksMarket.sol /////////
+////////////////////////////////////////
+////////////////////////////////////////
+////////////▒▒▒▒//////▒▒▒▒//////////////
+////////////░░██//////░░██//////////////
+////////////////////////////////////////
+////////////////////////////////////////
+///////////////████/////////////////////
+////////////////////////////////////////
+/////////////////////██/////////////////
+///////////////██████///////////////////
+////////////////////////////////////////
+////////////////////////////////////////
+
+// SPDX-License-Identifier: PHUNKY
 pragma solidity 0.8.20;
 
 import "@solidstate/contracts/security/reentrancy_guard/ReentrancyGuard.sol";
@@ -7,9 +21,17 @@ import "@solidstate/contracts/utils/Multicall.sol";
 import "@openzeppelin/contracts/utils/Pausable.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
+import "./interfaces/IPoints.sol";
 import "./EthscriptionsEscrower.sol";
 
-contract EtherPhunksMarket is Pausable, Ownable, ReentrancyGuard, Multicall, EthscriptionsEscrower {
+contract EtherPhunksMarket is
+    Pausable,
+    Ownable,
+    ReentrancyGuard,
+    Multicall,
+    EthscriptionsEscrower
+{
+    address public pointsAddress;
 
     struct Offer {
         bool isForSale;
@@ -26,7 +48,8 @@ contract EtherPhunksMarket is Pausable, Ownable, ReentrancyGuard, Multicall, Eth
         uint value;
     }
 
-    // A record of phunks that are offered for sale at a specific minimum value, and perhaps to a specific person
+    // A record of phunks that are offered for sale at a specific
+    // minimum value, and perhaps to a specific person
     mapping(bytes32 => Offer) public phunksOfferedForSale;
 
     // A record of the highest phunk bid
@@ -60,15 +83,13 @@ contract EtherPhunksMarket is Pausable, Ownable, ReentrancyGuard, Multicall, Eth
       bytes32 indexed phunkId
     );
 
-    // Constructor to set the initial owner
-    constructor(address initialOwner) Ownable(initialOwner) {}
-
-    function pause() public onlyOwner {
-        _pause();
-    }
-
-    function unpause() public onlyOwner {
-        _unpause();
+    constructor(
+        address _initialOwner,
+        address _initialPointsAddress
+    )
+        Ownable(_initialOwner)
+    {
+        pointsAddress = _initialPointsAddress;
     }
 
     // Allows the owner of a EtherPhunk to stop offering it for sale
@@ -155,6 +176,9 @@ contract EtherPhunksMarket is Pausable, Ownable, ReentrancyGuard, Multicall, Eth
 
         pendingWithdrawals[seller] += msg.value;
 
+        // Add points to seller
+        _addPoints(seller, 100);
+
         // Transfer th ethscription
         _transferEthscription(seller, msg.sender, phunkId);
         emit PhunkBought(phunkId, msg.value, seller, msg.sender);
@@ -211,6 +235,8 @@ contract EtherPhunksMarket is Pausable, Ownable, ReentrancyGuard, Multicall, Eth
 
         uint amount = bid.value;
         pendingWithdrawals[seller] += amount;
+
+        _addPoints(seller, 100);
 
         // Transfer the ethscription
         _transferEthscription(seller, bidder, phunkId);
@@ -310,6 +336,7 @@ contract EtherPhunksMarket is Pausable, Ownable, ReentrancyGuard, Multicall, Eth
             minSalePriceInWei,
             address(0x0)
         );
+
         emit PhunkOffered(phunkId, minSalePriceInWei, address(0x0));
     }
 
@@ -324,6 +351,29 @@ contract EtherPhunksMarket is Pausable, Ownable, ReentrancyGuard, Multicall, Eth
         );
         emit PhunkNoLongerForSale(phunkId);
     }
+
+    function _addPoints(address phunk, uint256 amount) internal {
+        IPoints pointsContract = IPoints(pointsAddress);
+        pointsContract.addPoints(phunk, amount);
+    }
+
+    ////////////////////////
+    // Pausible functions //
+    ////////////////////////
+
+    // Pause the contract
+    function pause() public onlyOwner {
+        _pause();
+    }
+
+    // Unpause the contract
+    function unpause() public onlyOwner {
+        _unpause();
+    }
+
+    ////////////////////
+    // Util functions //
+    ////////////////////
 
     // Helper function to slice bytes
     function slice(bytes memory data, uint256 start, uint256 len) internal pure returns (bytes memory) {
