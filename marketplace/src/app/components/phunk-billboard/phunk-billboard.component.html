@@ -1,14 +1,10 @@
 @if (phunk) {
-<div
-  class="billboard-wrapper"
- >
-
-  <div class="image-wrapper">
-    <app-phunk-image [tokenId]="phunk.phunkId" />
+  <div class="billboard-wrapper">
+    <div class="image-wrapper">
+      <app-phunk-image [tokenId]="phunk.phunkId" />
+    </div>
   </div>
-</div>
 } @else {
-
   <div class="image-wrapper">
     <img
       #tokenImage
@@ -17,6 +13,4 @@
       height="312"
     />
   </div>
-
 }
-

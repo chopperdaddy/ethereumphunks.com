@@ -10,6 +10,7 @@ import { PhunkBillboardComponent } from '@/components/phunk-billboard/phunk-bill
 import { TxHistoryComponent } from '@/components/tx-history/tx-history.component';
 import { PhunkImageComponent } from '@/components/shared/phunk-image/phunk-image.component';
 import { BreadcrumbsComponent } from '@/components/breadcrumbs/breadcrumbs.component';
+import { AuctionComponent } from '@/components/auction/auction.component';
 
 import { WalletAddressDirective } from '@/directives/wallet-address.directive';
 
@@ -65,6 +66,7 @@ interface TxStatuses {
     WalletAddressDirective,
     PhunkImageComponent,
     BreadcrumbsComponent,
+    AuctionComponent,
 
     TokenIdParsePipe,
     TraitCountPipe,
@@ -83,7 +85,7 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
   @ViewChild('transferAddressInput') transferAddressInput!: ElementRef<HTMLInputElement>;
 
   explorerUrl = `https://${environment.chainId === 5 ? 'goerli.' : ''}etherscan.io`;
-  escrowAddress = environment.phunksMarketAddress;
+  escrowAddress = environment.marketAddress;
 
   sellActive: boolean = false;
   listPrice = new FormControl<number>(0);
@@ -773,6 +775,7 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
 
   async sendToAuction(hashId: string) {
     const proof = await firstValueFrom(this.dataSvc.fetchProofs(hashId));
+    console.log(proof);
     await this.web3Svc.transferPhunk(proof, environment.auctionAddress);
   }
 }

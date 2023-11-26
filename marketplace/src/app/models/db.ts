@@ -5,6 +5,19 @@ export interface Account {
   phunks?: Phunk[];
 }
 
+export interface Auction {
+  amount: string
+  auctionId: number
+  bidder: string | null
+  createdAt: Date
+  endTime: number
+  hashId: string
+  prevOwner: string | null
+  settled: boolean
+  startTime: number
+  bids: Bid[] | null
+}
+
 export interface Phunk {
   hashId: string
   phunkId: number
@@ -19,8 +32,10 @@ export interface Phunk {
 
   isEscrowed?: boolean;
   attributes?: Attribute[],
-  listing?: Listing | null;
-  bid?: Bid | null;
+  listing?: Listing | null
+  bid?: Bid | null
+
+  auction?: Auction | null
 }
 
 export interface Bid {

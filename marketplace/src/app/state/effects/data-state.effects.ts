@@ -14,7 +14,7 @@ import * as appStateSelectors from '@/state/selectors/app-state.selectors';
 import * as dataStateActions from '@/state/actions/data-state.actions';
 import * as dataStateSelectors from '@/state/selectors/data-state.selectors';
 
-import { asyncScheduler, catchError, filter, forkJoin, from, map, mergeMap, of, switchMap, tap, throttleTime, withLatestFrom } from 'rxjs';
+import { asyncScheduler, catchError, delay, filter, forkJoin, from, map, mergeMap, of, switchMap, tap, throttleTime, withLatestFrom } from 'rxjs';
 
 import { environment } from 'src/environments/environment';
 
@@ -80,7 +80,7 @@ export class DataStateEffects {
   fetchEvents$ = createEffect(() => this.actions$.pipe(
     ofType(appStateActions.setEventTypeFilter),
     // tap((action) => console.log('fetchEvents', action)),
-    switchMap((action) => this.dataSvc.fetchEvents(6, action.eventTypeFilter)),
+    switchMap((action) => this.dataSvc.fetchEvents(24, action.eventTypeFilter)),
     map((events) => dataStateActions.setEvents({ events })),
   ));
 
@@ -153,17 +153,11 @@ export class DataStateEffects {
     ofType(dataStateActions.fetchSinglePhunk),
     // delay(1000),
     switchMap((action) => this.dataSvc.fetchSinglePhunk(action.phunkId)),
-    // tap((res) => console.log('fetchSinglePhunk', res)),
     map((phunk: Phunk) => {
-      return {
-        phunkId: phunk.phunkId,
-        createdAt: phunk.createdAt,
-        hashId: phunk.hashId,
-        owner: phunk.owner,
-        prevOwner: phunk.prevOwner,
-        isEscrowed: phunk.owner === environment.phunksMarketAddress,
-        attributes: [],
-      };
+      const newPhunk = { ...phunk } as Phunk;
+      newPhunk.isEscrowed = phunk.owner === environment.marketAddress;
+      newPhunk.attributes = [];
+      return newPhunk;
     }),
     switchMap((res: Phunk) => forkJoin([
       this.dataSvc.addAttributes([res]),
@@ -182,6 +176,7 @@ export class DataStateEffects {
         return 0;
       }),
     })),
+    // tap((res) => console.log('fetchSinglePhunk', res)),
     map((phunk) => dataStateActions.setSinglePhunk({ phunk })),
   ));
 

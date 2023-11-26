@@ -26,6 +26,8 @@ import * as appStateSelectors from '@/state/selectors/app-state.selectors';
 
 import { distinctUntilChanged, filter, map, tap } from 'rxjs';
 
+let PAGE_SIZE = 36;
+
 @Component({
   selector: 'app-phunk-grid',
   standalone: true,
@@ -50,7 +52,7 @@ export class PhunkGridComponent implements OnChanges {
 
   @ViewChildren('phunkCheck') phunkCheck!: QueryList<ElementRef<HTMLInputElement>>;
 
-  escrowAddress = environment.phunksMarketAddress;
+  escrowAddress = environment.marketAddress;
 
   @Input() marketType!: MarketTypes;
   @Input() phunkData: Phunk[] = [];
@@ -148,8 +150,8 @@ export class PhunkGridComponent implements OnChanges {
           return;
         }
 
-        if (index > this.limit - 24) {
-          this.limit += 24;
+        if (index > this.limit - PAGE_SIZE) {
+          this.limit += PAGE_SIZE;
         }
       }
     });

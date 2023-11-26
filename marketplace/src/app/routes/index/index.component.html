@@ -1,41 +1,9 @@
 <app-splash />
 
-<div class="sections-wrapper" waIntersectionObserver waIntersectionThreshold="0.5">
+<div class="sections-wrapper">
+
   <section class="overview">
-    <div class="inner">
-      <app-overview />
-    </div>
-  </section>
-
-  <!-- Box -->
-  <section class="phunk-box">
-    <div class="inner">
-
-      <h3 i18n>EtherPhunk Search</h3>
-      <p i18n>Search a wallet address to view their EtherPhunk collection or</p>
-      <p>Enter an EtherPhunk ID to view a specific EtherPhunk</p>
-
-      <form [formGroup]="phunkBox" (ngSubmit)="onSubmit($event)">
-        <div class="input-wrapper">
-          <input
-            type="text"
-            placeholder="0x, ens or EtherPhunk ID"
-            formControlName="addressInput"
-            [class.disabled]="phunkBoxLoading"
-          />
-
-          @if (phunkBoxLoading) {
-            <img src="/assets/loader-{{ theme$ | async }}.gif" width="20" height="20" />
-          }
-        </div>
-
-        @if (phunkBoxError) {
-          <p class="highlight">Invalid Address or EtherPhunk ID</p>
-        }
-        <button i18n type="submit">Go</button>
-      </form>
-
-    </div>
+    <app-overview />
   </section>
 
   @defer {

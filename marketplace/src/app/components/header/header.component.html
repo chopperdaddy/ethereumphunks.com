@@ -4,11 +4,12 @@
     <ng-template [ngTemplateOutlet]="logo" />
   </a>
 
+  <app-search />
+
   <div class="user-tools">
 
     <div class="theme-switcher">
       <button [class]="theme$ | async" (click)="toggleTheme$.next()">
-
         <ng-template [ngTemplateOutlet]="themSwitcher" />
       </button>
     </div>
@@ -16,8 +17,15 @@
     <div class="connect-menu">
       @if ((connected$ | async)) {
 
+        @if ((walletAddress$ | async); as address) {
+          <app-wallet-address [address]="address" />
+        }
 
-      @if ((walletAddress$ | async); as address) {
+        <button class="points">
+          {{ (userPoints$ | async) | number }}
+          <ng-template [ngTemplateOutlet]="pointsIcon" />
+        </button>
+
         <button
           #menuButton
           class="menu"
@@ -28,34 +36,17 @@
             <div class="notif">{{ notifs | number }}</div>
           }
 
-          <app-wallet-address [address]="address" />
-
           <div class="arrow">
             <ng-template [ngTemplateOutlet]="menuIcon" />
           </div>
         </button>
-
-        <button class="points">{{ (userPoints$ | async) | number }} points</button>
-      }
-
       } @else {
-
-      <button class="connect" (click)="web3Svc.connect()">
-
-        Connect
-      </button>
-
+        <button
+          class="connect"
+          (click)="web3Svc.connect()">
+          Connect
+        </button>
       }
-
-      <!-- <button
-        *ngIf="hasWithdrawal$ | async"
-        (click)="web3Svc.withdraw()"
-        class="withdraw">
-
-        <ng-template [ngTemplateOutlet]="withdrawIcon" />
-        Withdraw funds
-      </button> -->
-
     </div>
   </div>
 </div>
@@ -74,4 +65,8 @@
 
 <ng-template #menuIcon>
   <svg height="6" viewBox="0 0 10 6" width="10" xmlns="http://www.w3.org/2000/svg"><path d="m6 4v2h-2v-2zm2-2v2h-2v-2zm-4 0v2h-2v-2zm6-2v2h-2v-2zm-8 0v2h-2v-2z" fill="#c3ff00" fill-rule="evenodd"/></svg>
+</ng-template>
+
+<ng-template #pointsIcon>
+  <svg height="7" viewBox="0 0 7 7" width="7" xmlns="http://www.w3.org/2000/svg"><path d="m6 0v.99994118l1 .00005882v1h-1l-.00005882-1h-.99994118v-1zm-3 1v-1h2v1zm3 1h1v2h-1zm-5 0h2v1h-1v1h-1zm-1 0h1v1h-1zm3 1v-1h2v1zm2 1h1v1h-1zm-2 1v-1h2v1zm-2-5h2v1h-1v1h-1zm0 5v-1h2v1zm0 0h1v2h-1z"/></svg>
 </ng-template>

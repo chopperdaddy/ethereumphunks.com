@@ -26,7 +26,7 @@ import { Web3Service } from '@/services/web3.service';
 
 import { environment } from 'src/environments/environment';
 
-import { BehaviorSubject, Subject, debounce, debounceTime, firstValueFrom, from, map, switchMap, tap, withLatestFrom } from 'rxjs';
+import { BehaviorSubject, firstValueFrom, map } from 'rxjs';
 
 import * as appStateSelectors from '@/state/selectors/app-state.selectors';
 import * as dataStateSelectors from '@/state/selectors/data-state.selectors';
@@ -42,7 +42,6 @@ import * as dataStateSelectors from '@/state/selectors/data-state.selectors';
     NgSelectModule,
     FormsModule,
     ReactiveFormsModule,
-    IntersectionObserverModule,
 
     PhunkGridComponent,
     MarketFiltersComponent,
@@ -60,7 +59,7 @@ export class MarketComponent {
 
   env = environment;
 
-  escrowAddress = environment.phunksMarketAddress;
+  escrowAddress = environment.marketAddress;
 
   marketTitles: any = {
     all: 'All EtherPhunks',
@@ -113,6 +112,9 @@ export class MarketComponent {
   walletAddress$ = this.store.select(appStateSelectors.selectWalletAddress);
   marketType$ = this.store.select(appStateSelectors.selectMarketType);
   activeMarketRouteData$ = this.store.select(dataStateSelectors.selectActiveMarketRouteData);
+  activeTraitFilters$ = this.store.select(appStateSelectors.selectActiveTraitFilters).pipe(
+    map((filters: any) => Object.keys(filters).length),
+  );
 
   constructor(
     private store: Store<GlobalState>,

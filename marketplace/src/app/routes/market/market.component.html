@@ -1,19 +1,19 @@
 @if ((marketType$ | async); as marketType) {
-  <div class="inner" waIntersectionObserver waIntersectionThreshold="0.5">
+  <div class="inner">
     @if ((activeMarketRouteData$ | async); as phunkData) {
 
       <div class="header-wrapper">
         <h1 i18n>{{ marketTitles[marketType] }}</h1>
-        @if ((route.queryParams | async)?.address; as address) {
-          @if (address) {
-            <h2>
-              by
-              <a [href]="env.explorerUrl + '/address/' + address" target="_blank">
-                <app-wallet-address [address]="address" class="highlight"></app-wallet-address>
-              </a>
-            </h2>
+          @if ((route.queryParams | async)?.address; as address) {
+            @if (address) {
+              <h2>
+                by
+                <a [href]="env.explorerUrl + '/address/' + address" target="_blank">
+                  <app-wallet-address [address]="address" class="highlight"></app-wallet-address>
+                </a>
+              </h2>
+            }
           }
-        }
         <h3>{{ phunkData.length | number }} Phunks Total</h3>
       </div>
 
@@ -22,9 +22,7 @@
           <div class="left"></div>
 
           <div class="right">
-
             <div class="sort-wrapper">
-
               <div class="label">Sort:</div>
               <ng-select
                 [(ngModel)]="activeSortModel"
@@ -35,7 +33,15 @@
               />
             </div>
 
-            <button (click)="filtersVisible = !filtersVisible">Filter by Attribute</button>
+            <button
+              class="filters-button"
+              (click)="filtersVisible = !filtersVisible">
+
+              @if ((activeTraitFilters$ | async); as filtersLength) {
+                <div class="count">{{ filtersLength }}</div>
+              }
+              Filter by Attribute
+            </button>
 
             @if (
               marketType === 'owned' &&

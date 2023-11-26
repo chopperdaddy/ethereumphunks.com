@@ -1,10 +1,8 @@
-@if ((events$ | async); as recent) {
 <section
-  class="events-wrapper"
- >
+  class="events-wrapper">
 
   <div class="events-header">
-    <h2>Recent Transactions</h2>
+    <h2>Recent Activity</h2>
 
     <ng-select
       [items]="txFilters"
@@ -18,111 +16,76 @@
   </div>
 
   <div class="events-items">
-    @for (event of recent; track trackByFn($index, event)) {
-  <a
-      [routerLink]="['/details', event.phunkId]"
-      [href]="'/details/' + event.phunkId"
-      class="event-item"
-      [class]="event.type | lowercase"
-     >
+    @for (event of ((events$ | async)); track trackByFn($index, event)) {
+      <a
+        [routerLink]="['/details', event.phunkId]"
+        [href]="'/details/' + event.phunkId"
+        class="event-item"
+        [class]="event.type | lowercase">
 
-      <div class="image-wrapper">
-        <img
-          [lazyLoad]="dataSvc.staticUrl + '/images/phunk' + (event.phunkId | tokenIdParse) + '.svg'"
-          [defaultImage]="'assets/loadingphunk.png'"
-          width="160"
-          height="160"
-        />
-      </div>
+        <div class="image-wrapper">
+          <img
+            [lazyLoad]="dataSvc.staticUrl + '/images/phunk' + (event.phunkId | tokenIdParse) + '.svg'"
+            [defaultImage]="'assets/loadingphunk.png'"
+            width="160"
+            height="160"
+          />
+        </div>
 
-      <div class="labels-wrapper">
+        <div class="labels-wrapper">
 
-        <div class="token-id">#{{ event.phunkId }}</div>
+          <div class="token-id">#{{ event.phunkId }}</div>
 
-        <div class="label">
-          <ng-container>
+          <div class="label">
+            <div>{{ labels[event.type] }}</div>
 
             @if (event.to && event.type === 'transfer') {
-
-              {{ labels[event.type] }}
               <app-wallet-address
                 [address]="event.to">
               </app-wallet-address>
-            
-}
+            }
 
-            @if (event.from && event.type === 'sale') {
-
+            <!-- @if (event.from && event.type === 'sale') {
               Bought for Ξ{{ event.value | weiToEth }}
               ({{ ((event.value | weiToEth) * (+event.usd || (dataSvc.usd$ | async) || 0)) | currency }})
-            
-}
+            } -->
+
+            <!-- @if (event.from && event.type === 'sale') {
+              Bought for Ξ{{ event.value | weiToEth }}
+              ({{ ((event.value | weiToEth) * (+event.usd || (dataSvc.usd$ | async) || 0)) | currency }})
+            } -->
+
+            @if (event.value !== '0') {
+              <span class="value">
+                Ξ{{ event.value | weiToEth }}
+                ({{ ((event.value | weiToEth) * (+event.usd || (dataSvc.usd$ | async) || 0)) | currency }})
+              </span>
+            }
 
             <!-- <ng-container *ngIf="event.value !== '0'">
               Ξ{{ event.value | weiToEth }}
               ({{ ((event.value | weiToEth) * (+event.usd || (dataSvc.usd$ | async) || 0)) | currency }})
             </ng-container> -->
-          </ng-container>
 
-          <div class="date">
-            {{ event.blockTimestamp | timeago : true }}
+            <div class="date">
+              {{ event.blockTimestamp | timeago : true }}
+            </div>
           </div>
         </div>
-      </div>
-    </a>
-}
+      </a>
+    } @empty {
+      @for (i of [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]; track i) {
+        <span class="event-item">
+          <div class="image-wrapper placeholder">
+            <img
+              [lazyLoad]="'assets/loadingphunk.png'"
+              [defaultImage]="'assets/loadingphunk.png'"
+              width="160"
+              height="160"
+            />
+          </div>
+        </span>
+      }
+    }
   </div>
 </section>
-} @else {
-
-  <section class="events-wrapper">
-    <h2>Recent Transactions</h2>
-    <div class="events-items">
-      @for (i of [1,1,1,1,1,1,]; track i) {
-  <div class="event-item">
-        <div class="image-wrapper placeholder">
-          <img
-            [lazyLoad]="'assets/loadingphunk.png'"
-            [defaultImage]="'assets/loadingphunk.png'"
-            width="160"
-            height="160"
-          />
-        </div>
-
-        <div class="labels-wrapper">
-          <div class="token-id">#0000</div>
-          <div class="label">Loading...<br />&nbsp;</div>
-          <div class="date">&nbsp;</div>
-        </div>
-      </div>
-}
-    </div>
-  </section>
-
-}
-
-<ng-template #topSalesPlaceholder>
-  <section class="sales-wrapper">
-    <h2>Largest Sales</h2>
-    <div class="sales-items">
-      @for (i of [1,1,1,1,1,1]; track i) {
-  <div class="sales-item">
-        <div class="image-wrapper placeholder">
-          <img
-            [lazyLoad]="'assets/loadingphunk.png'"
-            [defaultImage]="'assets/loadingphunk.png'"
-            width="160"
-            height="160"
-          />
-        </div>
-
-        <div class="labels-wrapper">
-          <div class="token-id">#0000</div>
-          <div class="label">Loading...<br />&nbsp;</div>
-        </div>
-      </div>
-}
-    </div>
-  </section>
-</ng-template>
-

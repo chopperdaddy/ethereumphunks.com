@@ -3,6 +3,7 @@ import { CommonModule, DOCUMENT } from '@angular/common';
 import { NavigationEnd, NavigationStart, Router, RouterModule } from '@angular/router';
 
 import { Store } from '@ngrx/store';
+import { IntersectionObserverModule } from '@ng-web-apis/intersection-observer';
 import { LazyLoadImageModule } from 'ng-lazyload-image';
 
 import { GlobalState } from '@/models/global-state';
@@ -28,6 +29,7 @@ import * as dataStateActions from '@/state/actions/data-state.actions';
     CommonModule,
     RouterModule,
     LazyLoadImageModule,
+    IntersectionObserverModule,
 
     MenuComponent,
     HeaderComponent,

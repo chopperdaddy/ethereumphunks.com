@@ -1,0 +1,93 @@
+<div class="bid-info">
+  <div class="bid-info-item">
+    <div class="label">Bids</div>
+    <div class="value">{{ auction.bids?.length || 0 }}</div>
+  </div>
+
+  <div class="bid-info-item current-bid">
+    <div class="label">
+      <ng-container *ngIf="auctionComplete; else current">Winning</ng-container>
+      <ng-template #current>Current</ng-template>
+    </div>
+    <div class="value"><span class="eth-symbol">Ξ</span>{{ ((auction.amount | weiToEth) || '0') | number }}</div>
+  </div>
+
+  <div class="bid-info-item time-remaining">
+    <div class="label">Time remaining</div>
+    <div class="value">
+      <app-timer
+        *ngIf="auction"
+        [endTime]="auction.endTime"
+        (event)="handleEvent($event)">
+      </app-timer>
+    </div>
+  </div>
+</div>
+
+<div
+  class="form-wrapper"
+  [class.complete-active]="auctionComplete">
+
+  <div class="connect">
+    <button
+      (click)="web3Svc.connect()">
+      Connect your wallet to interact with this auction
+    </button>
+  </div>
+
+  <div class="auction-closed">
+
+    <ng-container *ngIf="auction?.settled">
+      <p>This auction is closed</p>
+      <a [routerLink]="['/']">View current auction</a>
+    </ng-container>
+  </div>
+
+  <div class="form">
+    <div class="input-wrapper">
+      <input
+        type="number"
+        [formControl]="bidValue"
+        [placeholder]="auction.amount"
+      />
+
+      <div class="info">
+        <ng-template [ngTemplateOutlet]="questionMarkIcon"></ng-template>
+      </div>
+    </div>
+
+    <button
+      (click)="submitBid()"
+      type="submit">
+
+      Place Bid
+    </button>
+  </div>
+</div>
+
+<div
+  class="error"
+  [class.active]="errorMessage?.length">
+
+  <button (click)="closeError()">x</button>
+
+  {{ errorMessage }}
+</div>
+
+<div
+  class="transaction"
+  [class.active]="txHash">
+
+  <button (click)="closeTransaction()">x</button>
+
+  Your transaction is pending.<br /><a [href]="'https://etherscan.io/tx/' + txHash" target="_blank">View it on etherscan<svg height="12" viewBox="0 0 12 12" width="12" xmlns="http://www.w3.org/2000/svg"><path d="m4 0v2h-2v8h8v-2h2v4h-12v-12zm2 6v2h-2v-2zm2 0h-2v-2h2v-2h-2v-2h6v6h-2v-2h-2z" fill-rule="evenodd" fill="rgba(var(--text-color), .5)" /></svg></a>
+</div>
+
+<app-bid-history
+  *ngIf="auction"
+  [auction]="auction"
+/>
+
+<ng-template #questionMarkIcon>
+  <svg height="26" viewBox="0 0 26 26" width="26" xmlns="http://www.w3.org/2000/svg"><path d="m16 24v2h-6v-2zm4-2v2h-4v-2zm-10 0v2h-4v-2zm12-2v2h-2v-2zm-16 0v2h-2v-2zm18-4v4h-2v-4zm-20 0v4h-2v-4zm10 0v2h-2v-2zm12-6v6h-2v-6zm-24 0v6h-2v-6zm14 2v2h-4v-2zm-6-2v2h-2v-2zm8 0v2h-2v-2zm6-4v4h-2v-4zm-20 0v4h-2v-4zm12 2v2h-6v-2zm6-4v2h-2v-2zm-16 0v2h-2v-2zm4-2v2h-4v-2zm10 0v2h-4v-2zm-4-2v2h-6v-2z" fill-rule="evenodd" fill="rgba(var(--text-color), 1)" /></svg>
+</ng-template>

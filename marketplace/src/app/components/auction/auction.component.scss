@@ -1,0 +1,268 @@
+@import 'abstracts/variables';
+@import 'abstracts/mixins';
+
+:host {
+  display: block;
+
+  // position: absolute;
+  // z-index: 99;
+  // top: 0;
+  // right: 5rem;
+
+  width: 100%;
+  max-width: 48rem;
+  background-image: linear-gradient(rgba(var(--white), .1), rgba(var(--white), .1));
+  background-color: rgba(var(--background), 1);
+  // box-shadow: 0 5rem 10rem rgba(var(--background), .25);
+
+  // transform: translate(3.5rem, -18rem);
+
+  padding: 3rem 3.5rem;
+
+  @media (max-width: $mobile) {
+    // width: 100%;
+    padding: 2rem;
+    max-width: 100%;
+    position: static;
+    transform: translate(0, 0);
+  }
+}
+
+.bid-info {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  .bid-info-item {
+    padding-bottom: 2rem;
+
+    .label {
+      font-size: 1.4rem;
+      padding-bottom: .5rem;
+      color: rgba(var(--text-color), .5);
+      font-weight: 500;
+    }
+
+    .value {
+      font-family: $secondary-font-stack;
+      font-size: 2.6rem;
+
+      .eth-symbol {
+        font-weight: 900;
+        padding-right: .25rem;
+      }
+    }
+
+    &.time-remaining {
+      width: 100%;
+      max-width: 20rem;
+    }
+
+    &.current-bid {
+      width: 100%;
+      max-width: 11rem;
+    }
+  }
+
+  @media (max-width: $mobile) {
+
+    .bid-info-item {
+      .value {
+        font-size: 1.8rem;
+      }
+
+      &.time-remaining {
+        width: 100%;
+        max-width: 13rem;
+      }
+
+      &.current-bid {
+        width: 100%;
+        max-width: 9rem;
+      }
+    }
+  }
+}
+
+.form-wrapper {
+  position: relative;
+  padding: 3rem 0;
+
+  overflow: hidden;
+
+  .auction-closed,
+  .connect {
+    position: absolute;
+    z-index: 1;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+
+    p {
+      padding: 0;
+      margin: 0;
+      font-size: 1.4rem;
+      font-weight: 600;
+      color: rgba(var(--text-color), .5);
+    }
+
+    button,
+    a {
+      padding: 1rem;
+      color: rgba(var(--active-color), 1);
+      font-weight: 700;
+      text-decoration: none;
+    }
+  }
+
+  .connect {
+    z-index: 2;
+
+    button {
+      font-size: 1.4rem;
+    }
+  }
+
+  .form {
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    .input-wrapper {
+      position: relative;
+      width: calc(100% - 14rem);
+
+      input {
+        width: 100%;
+        height: 4.6rem;
+
+        padding: 0 1.5rem;
+        font-size: 1.8rem;
+        text-align: left;
+
+        background-color: rgba(var(--active-color), .2);
+      }
+
+      .info {
+        position: absolute;
+        z-index: 99;
+        top: 1rem;
+        right: 1rem;
+
+        svg {
+          display: block;
+        }
+      }
+    }
+
+    button[type="submit"] {
+      // border: 1px solid red;
+      justify-content: center;
+      width: 12rem;
+      height: 4.6rem;
+
+      background-color: rgba(var(--text-color), 1);
+      color: rgba(var(--background), 1);
+      padding: 0;
+
+      font-weight: 700;
+    }
+  }
+
+  &.light {
+    .auction-closed,
+    .connect {
+      background-image: url('/assets/pixel-overlay-light.svg');
+    }
+  }
+
+  &.dark {
+    .auction-closed,
+    .connect {
+      background-image: url('/assets/pixel-overlay-dark.svg');
+    }
+  }
+
+  &.connect-active,
+  &.complete-active {
+    .form {
+      filter: blur(2rem);
+    }
+  }
+
+  &.connect-active {
+    .connect {
+      opacity: 1;
+      visibility: visible;
+      pointer-events: all;
+    }
+  }
+
+  &.complete-active:not(.connect-active) {
+    .auction-closed {
+      opacity: 1;
+      visibility: visible;
+      pointer-events: all;
+    }
+  }
+}
+
+.error,
+.transaction {
+  position: relative;
+  z-index: 99;
+
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  padding: 2rem 0;
+
+  text-align: center;
+  font-size: 1.4rem;
+  color: rgba(var(--active-color), 1);
+  font-weight: 700;
+  line-height: 1.5;
+  word-break: break-all;
+
+  background-color: rgba(var(--background), .9);
+
+  button {
+    position: absolute;
+    top: -.5rem;
+    right: -1rem;
+
+    font-family: $secondary-font-stack;
+    font-weight: normal;
+    color: rgba(var(--text-color), 1);
+  }
+
+  a {
+    display: flex;
+    align-items: center;
+    padding: .5rem;
+
+    color: rgba(var(--active-color), 1);
+
+    svg {
+      margin-left: .5rem;
+    }
+  }
+
+  &.active {
+    display: flex;
+  }
+}

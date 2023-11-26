@@ -1,0 +1,16 @@
+<form [formGroup]="phunkBox" (ngSubmit)="onSubmit($event)">
+  <div class="input-wrapper">
+    <input
+      type="text"
+      [placeholder]="phunkBoxError ? 'Bad input. Try again' : 'Search: 0x, ens or EtherPhunk ID'"
+      formControlName="addressInput"
+      [class.error]="phunkBoxError"
+      [class.disabled]="phunkBoxLoading"
+    />
+
+    @if (phunkBoxLoading) {
+      <img src="/assets/loader-{{ theme$ | async }}.gif" width="20" height="20" />
+    }
+  </div>
+  <button i18n type="submit">Go</button>
+</form>

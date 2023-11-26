@@ -1,0 +1,74 @@
+@import 'abstracts/variables';
+@import 'abstracts/mixins';
+
+.bid-history-wrapper {
+  padding: 2.2rem 0 0;
+  border-top: .2rem solid rgba(var(--text-color), .05);
+
+  p {
+    font-size: 1.4rem;
+    text-align: center;
+    font-weight: 500;
+    color: rgba(var(--text-color), .5);
+  }
+
+  .bid-history-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+
+    height: 3rem;
+
+    span {
+      font-size: 1.4rem;
+      color: rgba(var(--text-color), .5);
+    }
+
+    button {
+      font-size: 1.2rem;
+      color: rgba(var(--text-color), .5);
+
+      &:active {
+        color: rgba(var(--text-color), 1);
+      }
+
+      &.disabled {
+        color: rgba(var(--text-color), .2);
+        pointer-events: none;
+      }
+    }
+  }
+  .bid-history {
+    .bid-item {
+      font-family: $secondary-font-stack;
+      font-size: 1.4rem;
+
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+
+      padding: .5rem 0;
+
+      eth-address {}
+
+      .bid-amount-wrapper {
+
+        display: flex;
+        align-items: center;
+
+        span {
+          padding-right: 1rem;
+        }
+
+        a {
+          padding: .5rem;
+
+          svg {
+            display: block;
+          }
+        }
+
+      }
+    }
+  }
+}

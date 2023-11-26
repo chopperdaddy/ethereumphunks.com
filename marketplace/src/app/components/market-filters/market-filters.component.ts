@@ -27,12 +27,10 @@ import { tap } from 'rxjs';
 
 export class MarketFiltersComponent {
 
-  activeFiltersModel: any = {};
-
   traitCount!: number;
-
   objectKeys = Object.keys;
 
+  activeFiltersModel: any = {};
   activeTraitFilters$ = this.store.select(selectActiveTraitFilters).pipe(
     tap((filters) => this.activeFiltersModel = { ...filters }),
   );

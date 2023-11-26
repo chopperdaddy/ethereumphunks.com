@@ -1,17 +1,11 @@
 @if ((transactions$ | async); as txns) {
-
   @if (txns.length) {
-<div class="txns">
-
-    @for (txn of txns; track trackByFn($index, txn)) {
-  
-      @if (!txn.dismissed) {
-<app-notif [txn]="txn" />
-}
-    
-}
-
-  </div>
-}
-
+    <div class="txns">
+      @for (txn of txns; track trackByFn($index, txn)) {
+        @if (!txn.dismissed) {
+          <app-notif [txn]="txn" />
+        }
+      }
+    </div>
+  }
 }

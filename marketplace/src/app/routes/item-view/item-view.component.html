@@ -5,13 +5,17 @@
 
   <div class="inner">
     @if ((singlePhunk$ | async); as phunk) {
+
     <div class="details-wrapper">
 
       <div class="title-wrapper">
         <h1 i18n>EtherPhunk {{ phunk.phunkId }}</h1>
         <div class="hash-id">
-          {{ phunk.hashId }}
-          <!-- <app-wallet-address [address]="phunk.hashId"></app-wallet-address> -->
+          <!-- {{ phunk.hashId }} -->
+          <app-wallet-address
+            [address]="phunk.hashId"
+            [clickCopy]="true"
+          />
         </div>
         @if (phunk.attributes) {
         <h2 i18n>One of {{ phunk.attributes[0].v | traitCount }}
@@ -24,41 +28,50 @@
       </div>
 
       <div class="split">
-
         <div class="left">
           <div class="market-status">
-            <h2 i18n>Market Status</h2>
-
-            @if (phunk.isEscrowed) {
-              <!-- Owner -->
-              @if (phunk.prevOwner; as owner) {
-                <p i18n>This EtherPhunk is held in <a [routerLink]="['/', 'owned']" [queryParams]="{ address: escrowAddress }">escrow</a> for <a [routerLink]="['/', 'owned']" [queryParams]="{ address: owner }"><app-wallet-address [address]="owner"></app-wallet-address></a>.</p>
-              }
+            @if (phunk.auction) {
+              <h2 i18n>Auction</h2>
+              <app-auction
+                [auction]="phunk.auction"
+              />
             } @else {
-              <!-- Owner -->
-              @if (phunk.owner; as owner) {
-                <p i18n>This EtherPhunk is owned by <a [routerLink]="['/', 'owned']" [queryParams]="{ address: owner }"><app-wallet-address [address]="owner"></app-wallet-address></a>.</p>
-              }
-            }
+              <h2 i18n>Market Status</h2>
 
-            <!-- Value (Listing) -->
-            @if (phunk.listing?.minValue; as value) {
-              <p i18n>This EtherPhunk is for sale for <span class="highlight">{{ (value | weiToEth) | formatCash }} ETH</span><span class="bold"> (${{ ((value | weiToEth) * ((dataSvc.usd$ | async) || 0)) | formatCash }})</span>.</p>
-            } @else {
-              <p i18n>This EtherPhunk is not for sale.</p>
-            }
-
-            <!-- Has bid -->
-            @if (phunk.bid; as bid) {
-              @if (bid.value && bid.fromAddress) {
-                <p i18n>There is a bid of <span class="bold">{{ bid.value | weiToEth }} ETH</span> ({{ ((bid.value | weiToEth) * ((dataSvc.usd$ | async) || 0)) | currency }}) for this EtherPhunk from <a [routerLink]="['/', 'owned']" [queryParams]="{ address: bid.fromAddress }"><app-wallet-address [address]="bid.fromAddress"></app-wallet-address></a>.</p>
+              @if (phunk.isEscrowed) {
+                <!-- Owner -->
+                @if (phunk.prevOwner; as owner) {
+                  <p i18n>This EtherPhunk is held in <a [routerLink]="['/', 'owned']" [queryParams]="{ address: escrowAddress }">escrow</a> for <a [routerLink]="['/', 'owned']" [queryParams]="{ address: owner }"><app-wallet-address [address]="owner"></app-wallet-address></a>.</p>
+                }
+              } @else {
+                <!-- Owner -->
+                @if (phunk.owner; as owner) {
+                  <p i18n>This EtherPhunk is owned by <a [routerLink]="['/', 'owned']" [queryParams]="{ address: owner }"><app-wallet-address [address]="owner"></app-wallet-address></a>.</p>
+                }
               }
-            } @else {
-              <p i18n>There are no bids on this EtherPhunk.</p>
+
+              <!-- Value (Listing) -->
+              @if (phunk.listing?.minValue; as value) {
+                <p i18n>This EtherPhunk is for sale for <span class="highlight">{{ (value | weiToEth) | formatCash }} ETH</span><span class="bold"> (${{ ((value | weiToEth) * ((dataSvc.usd$ | async) || 0)) | formatCash }})</span>.</p>
+              } @else {
+                <p i18n>This EtherPhunk is not for sale.</p>
+              }
+
+              <!-- Has bid -->
+              @if (phunk.bid; as bid) {
+                @if (bid.value && bid.fromAddress) {
+                  <p i18n>There is a bid of <span class="bold">{{ bid.value | weiToEth }} ETH</span> ({{ ((bid.value | weiToEth) * ((dataSvc.usd$ | async) || 0)) | currency }}) for this EtherPhunk from <a [routerLink]="['/', 'owned']" [queryParams]="{ address: bid.fromAddress }"><app-wallet-address [address]="bid.fromAddress"></app-wallet-address></a>.</p>
+                }
+              } @else {
+                <p i18n>There are no bids on this EtherPhunk.</p>
+              }
             }
           </div>
 
-          <div class="actions-wrapper" [class.cooldown]="isCooling$ | async" [class.pending]="hasPendingTx$ | async">
+          <div
+            class="actions-wrapper"
+            [class.cooldown]="isCooling$ | async"
+            [class.pending]="hasPendingTx$ | async">
 
             @if ((walletAddress$ | async); as address) {
               @if (phunk.owner; as owner) {
@@ -88,15 +101,7 @@
                     @if (phunk.isEscrowed) {
                       <ng-container *ngTemplateOutlet="sellForm; context:{ $implicit: phunk }" />
                     } @else {
-                      <div class="form-wrapper">
-                        @if (isCooling$ | async) {
-                          <ng-template [ngTemplateOutlet]="cooldown" />
-                        }
-                        <p i18n>Your EtherPhunk must be held in escrow in order to be listed. <span class="small">While held in escrow, your Phunk will not show in your wallet on other apps/marketplaces.</span></p>
-                        <button i18n class="sell" (click)="sendToEscrow(phunk)">
-                          Send to Escrow
-                        </button>
-                      </div>
+                      <ng-container *ngTemplateOutlet="escrowForm; context:{ $implicit: phunk, type: 'list' }" />
                     }
                   }
 
@@ -113,12 +118,12 @@
                     Transfer
                   </button>
 
-                  <button (click)="sendToAuction(phunk.hashId)">Send to Auction</button>
-
                   <!-- Transfer Actions -->
                   @if (transferActive) {
                     <ng-container *ngTemplateOutlet="transferForm; context:{ $implicit: phunk }" />
                   }
+
+                  <button (click)="sendToAuction(phunk.hashId)">Send to Auction</button>
                 }
 
                 <!-- Delist button -->
@@ -155,14 +160,20 @@
                 }
 
                 <!-- Accept Bid button -->
-                @if (
-                  phunk.bid &&
-                  ((owner | lowercase) === (escrowAddress | lowercase)) &&
-                  (phunk.prevOwner | lowercase) === (address | lowercase)
-                ) {
-                  <button i18n class="sell" (click)="acceptBidForPhunk(phunk)">
-                    Accept Top Bid
-                  </button>
+                @if (phunk.bid) {
+                  @if (
+                    ((owner | lowercase) === (escrowAddress | lowercase)) &&
+                    (phunk.prevOwner | lowercase) === (address | lowercase)
+                  ) {
+                    <button i18n class="sell" (click)="acceptBidForPhunk(phunk)">
+                      Accept Top Bid
+                    </button>
+                  } @else {
+                    <ng-container *ngTemplateOutlet="escrowForm; context:{ $implicit: phunk, type: 'bid' }" />
+                    <!-- <button i18n class="sell" (click)="acceptBidForPhunk(phunk)">
+                      Accept Top Bid
+                    </button> -->
+                  }
                 }
               }
 
@@ -198,7 +209,9 @@
         </div>
       </div>
 
-      <app-tx-history [hashId]="phunk.hashId"></app-tx-history>
+      @defer {
+        <app-tx-history [hashId]="phunk.hashId"></app-tx-history>
+      }
     </div>
     } @else {
       <div class="details-wrapper">
@@ -279,6 +292,23 @@
       <button i18n type="submit" class="submit" (click)="submitListing(phunk)">Offer EtherPhunk</button>
     </div>
   </form>
+</ng-template>
+
+<!-- Escrow Form -->
+<ng-template #escrowForm let-phunk let-type="type">
+  <div class="form-wrapper">
+    @if (isCooling$ | async) {
+      <ng-template [ngTemplateOutlet]="cooldown" />
+    }
+    @if (type === 'bid') {
+      <p i18n>Your EtherPhunk must be held in escrow in order have a bid accepted on it. <span class="small">You'll need to wait the default 4 blocks before accepting the bid once the EtherPhunk is in escrow.</span></p>
+    } @else if (type === 'list') {
+      <p i18n>Your EtherPhunk must be held in escrow in order to be listed. <span class="small">While held in escrow, your Phunk will not show in your wallet on other apps/marketplaces.</span></p>
+    }
+    <button i18n class="sell" (click)="sendToEscrow(phunk)">
+      Send to Escrow
+    </button>
+  </div>
 </ng-template>
 
 

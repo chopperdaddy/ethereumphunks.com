@@ -11,19 +11,14 @@ h2 {
 }
 
 section {
-
   padding-bottom: 6rem;
-
-  h2 {
-    padding-bottom: 2rem;
-  }
 
   .events-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
 
-    padding-bottom: 2rem;
+    padding: 0 3rem 2rem;
 
     h2 {
       padding: 0;
@@ -35,17 +30,22 @@ section {
     }
   }
 
+  &.events-wrapper {}
+
   .events-items,
   .sales-items {
-    display: grid;
-    grid-template-columns: repeat(6, 1fr);
-    column-gap: 4rem;
-    row-gap: 3rem;
+    display: flex;
+    overflow-y: scroll;
+    grid-gap: 3rem;
+    padding: 0 3rem 2rem;
   }
 
-  .event-item,
-  .sale-item {
+  .event-item {
     position: relative;
+
+    min-width: 12rem;
+    width: 12rem;
+    max-width: 12rem;
 
     text-decoration: none;
     color: rgba(var(--text-color), 1);
@@ -95,10 +95,18 @@ section {
         padding-bottom: .5rem;
       }
 
-      .label {}
+      .label {
+        color: rgba(var(--text-color), .9);
+        font-size: 1.4rem;
+        font-weight: 500;
+
+        .value {
+
+        }
+      }
 
       .date {
-        font-size: 1.4rem;
+        font-size: 1.2rem;
         font-weight: 600;
         color: rgba(var(--text-color), .65);
 
@@ -146,9 +154,6 @@ section {
     }
   }
 
-  &.sales-wrapper,
-  &.events-wrapper {}
-
   @media (max-width: $mobile) {
 
     .events-header {
@@ -166,8 +171,7 @@ section {
       }
     }
 
-    .events-items,
-    .sales-items {
+    .events-items {
       display: flex;
       overflow-y: scroll;
       padding-bottom: 2rem;
@@ -176,10 +180,6 @@ section {
     .event-item,
     .sale-item {
       min-width: 12rem;
-    }
-
-    &.events-wrapper {
-      padding-bottom: 0;
     }
   }
 }

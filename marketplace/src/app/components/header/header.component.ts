@@ -5,6 +5,7 @@ import { RouterModule } from '@angular/router';
 import { Store } from '@ngrx/store';
 
 import { MenuComponent } from '@/components/menu/menu.component';
+import { SearchComponent } from '../search/search.component';
 
 import { Web3Service } from '@/services/web3.service';
 
@@ -27,6 +28,7 @@ import * as appStateActions from '@/state/actions/app-state.actions';
     RouterModule,
 
     MenuComponent,
+    SearchComponent,
 
     WalletAddressDirective,
 

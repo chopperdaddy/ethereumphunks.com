@@ -6,6 +6,9 @@ import { environment } from 'src/environments/environment';
 
 import { Observable, catchError, filter, of, tap } from 'rxjs';
 
+import PointsAbi from '@/abi/Points.json';
+import DonationsAbi from '@/abi/Donations.json';
+import AuctionAbi from '@/abi/EtherPhunksAuctionHouse.json';
 import EtherPhunksMarketAbi from '@/abi/EtherPhunksMarket.json';
 
 import { FallbackTransport, TransactionReceipt, WatchBlockNumberReturnType, createWalletClient, custom, decodeFunctionData, formatEther, fromHex, isAddress, parseEther, toHex } from 'viem';
@@ -21,7 +24,11 @@ import * as appStateActions from '@/state/actions/app-state.actions';
 
 import { GlobalState } from '@/models/global-state';
 
-const marketAddress = environment.phunksMarketAddress;
+const marketAddress = environment.marketAddress;
+const pointsAddress = environment.pointsAddress;
+const auctionAddress = environment.auctionAddress;
+const donationsAddress = environment.donationsAddress;
+
 const projectId = '9455b1a68e7f81eee6e1090c12edbf00';
 
 @Injectable({
@@ -319,8 +326,8 @@ export class Web3Service {
   async getUserPoints(address: string): Promise<number> {
     const publicClient = getPublicClient();
     const points = await publicClient?.readContract({
-      address: marketAddress as `0x${string}`,
-      abi: EtherPhunksMarketAbi,
+      address: pointsAddress as `0x${string}`,
+      abi: PointsAbi,
       functionName: 'points',
       args: [address],
     });
@@ -332,43 +339,6 @@ export class Web3Service {
   //////////////////////////////////
 
   async getTransaction(hash: string): Promise<any> {}
-
-  // ///////////////////////////////
-  // NETWORKS //////////////////////
-  //////////////////////////////////
-
-  async addFlashbotsNetwork(): Promise<void> {
-
-    const network = getNetwork();
-    const id = network.chain?.id;
-    const networks: any = { 1: 'mainnet', 5: 'goerli' };
-
-    const flashbotsProtectRPC: Chain = {
-      id: id!,
-      name: 'Flashbots Protect RPC',
-      network: networks[id!],
-      nativeCurrency: {
-        decimals: 18,
-        name: 'Ether',
-        symbol: 'ETH',
-      },
-      rpcUrls: {
-        public: { http: [`https://rpc${id === 5 ? '-goerli' : ''}.flashbots.net?hint=hash`] },
-        default: { http: [`https://rpc${id === 5 ? '-goerli' : ''}.flashbots.net?hint=hash`] },
-      },
-      blockExplorers: {
-        etherscan: { name: 'Etherscan', url: `https://${id === 5 ? 'goerli.' : ''}etherscan.io` },
-        default: { name: 'Etherscan', url: `https://${id === 5 ? 'goerli.' : ''}etherscan.io` },
-      },
-    };
-
-    const walletClient = createWalletClient({
-      chain: flashbotsProtectRPC,
-      transport: custom((window as any).ethereum)
-    });
-
-    return walletClient.addChain({ chain: flashbotsProtectRPC });
-  }
 
   //////////////////////////////////
   // UTILS /////////////////////////

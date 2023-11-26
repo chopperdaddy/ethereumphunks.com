@@ -38,10 +38,13 @@
 .inner {
   position: relative;
   display: grid;
-  grid-template-columns: calc(70% - 6rem) 30%;
+  grid-template-columns: calc(100% - 35rem - 6rem) 35rem;
   column-gap: 6rem;
   row-gap: 1rem;
   max-height: 100%;
+
+  width: 100%;
+  max-width: 100%;
 
   grid-template-areas: 'sections user-wrapper';
   overflow: hidden;

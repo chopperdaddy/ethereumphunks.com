@@ -1,4 +1,4 @@
-import { Directive, ElementRef, Input, OnChanges, OnInit, SimpleChanges } from '@angular/core';
+import { Directive, ElementRef, HostListener, Input, OnChanges, OnInit, SimpleChanges } from '@angular/core';
 
 import { Web3Service } from '@/services/web3.service';
 
@@ -11,14 +11,18 @@ export class WalletAddressDirective implements OnChanges {
 
   @Input() address!: string | null;
   @Input() ens: boolean = true;
+  @Input() clickCopy: boolean = false;
 
   constructor(
     private el: ElementRef,
     public web3Svc: Web3Service
   ) {}
 
-  ngOnChanges(changes: SimpleChanges): void {
+  @HostListener('click') onClick(): void {
+    if (this.clickCopy) this.copyToClipboard();
+  }
 
+  ngOnChanges(changes: SimpleChanges): void {
     const el = this.el.nativeElement as HTMLElement;
     const address = changes.address.currentValue;
 
@@ -27,13 +31,18 @@ export class WalletAddressDirective implements OnChanges {
       if (this.ens) this.getEns(el, address);
       return;
     }
-
     el.innerText = '';
   }
 
   async getEns(el: HTMLElement, address: string): Promise<void> {
     const ens = await this.web3Svc.getEnsFromAddress(address);
     if (ens) el.innerText = ens;
+  }
+
+  async copyToClipboard(): Promise<void> {
+    if (!navigator.clipboard) return;
+    if (!this.address) return;
+    await navigator.clipboard.writeText(this.address);
   }
 
 }

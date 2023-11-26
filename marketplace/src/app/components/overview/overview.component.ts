@@ -64,11 +64,11 @@ export class TxOverviewComponent {
   // activeTxFilter$ = this.activeTxFilter.asObservable();
 
   labels: any = {
-    BidEntered: 'New bid of',
-    BidWithdrawn: 'Bid withdrawn',
-    OfferWithdrawn: 'Offer withdrawn',
-    Offered: 'Offered for',
-    sale: 'Bought for',
+    PhunkBidEntered: 'New bid of',
+    PhunkBidWithdrawn: 'Bid withdrawn',
+    PhunkNoLongerForSale: 'Offer withdrawn',
+    PhunkOffered: 'Offered for',
+    PhunkBought: 'Bought for',
     transfer: 'Transferred to',
   };
 

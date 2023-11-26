@@ -1,29 +1,23 @@
 @for (key of objectKeys(dataSvc.filterData); track key; let i = $index) {
   <div
-  [id]="key"
-  class="filter-group-wrapper"
- >
+    [id]="key"
+    class="filter-group-wrapper">
 
-  <ng-select
-    [(ngModel)]="activeFiltersModel[key]"
-    placeholder="{{ key | titlecase }}"
-    (change)="selectFilter($event, key)"
-    [searchable]="true"
-    [class.active]="((activeTraitFilters$ | async) || {})[key]">
+    <ng-select
+      [(ngModel)]="activeFiltersModel[key]"
+      placeholder="{{ key | titlecase }}"
+      (change)="selectFilter($event, key)"
+      [searchable]="true"
+      [class.active]="((activeTraitFilters$ | async) || {})[key]">
 
-    @for (item of dataSvc.filterData[key]; track item) {
-  <ng-option
-     
-      [value]="item">
-
-      {{ item.replaceAll('-', ' ') | titlecase }}
-    </ng-option>
+      @for (item of dataSvc.filterData[key]; track item) {
+        <ng-option [value]="item">
+          {{ item.replaceAll('-', ' ') | titlecase }}
+        </ng-option>
+      }
+    </ng-select>
+  </div>
 }
-  </ng-select>
-</div>
-}
-
-<!-- {{ activeTraitFilters$ | async | json }} -->
 
 <div class="filter-group-wrapper">
   <ng-select

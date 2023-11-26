@@ -13,11 +13,14 @@
   pointer-events: none;
 
   .inner {
+    width: 100%;
+    max-width: 100%;
+
     position: relative;
     z-index: 10;
-    display: flex;
+    display: grid;
+    grid-template-columns: auto 1fr 1fr;
     align-items: center;
-    justify-content: space-between;
 
     padding: 0 3rem;
     height: var(--header-height);
@@ -36,15 +39,29 @@
       }
     }
 
+    app-search {
+      pointer-events: all;
+    }
+
     .user-tools {
       display: flex;
       align-items: center;
+      justify-content: flex-end;
 
+      padding-left: 3rem;
       pointer-events: all;
 
       .connect-menu {
         display: flex;
         align-items: center;
+
+        app-wallet-address {
+          font-family: $secondary-font-stack;
+          color: rgba(var(--header-text), 1);
+          font-size: 1.4rem;
+          font-weight: normal;
+          margin: 0 2rem 0 0;
+        }
 
         button {
           color: rgba(var(--header-highlight), 1);
@@ -52,14 +69,12 @@
 
           &.connect {
             font-family: $secondary-font-stack;
-            // height: 4rem;
             font-size: 1.4rem;
             font-weight: 400;
           }
 
           &.menu {
             position: relative;
-
             .notif {
               position: absolute;
               top: -.5rem;
@@ -81,12 +96,6 @@
               text-align: center;
             }
 
-            app-wallet-address {
-              font-family: $secondary-font-stack;
-              font-size: 1.4rem;
-              font-weight: normal;
-            }
-
             .arrow {
               display: flex;
               align-items: center;
@@ -94,8 +103,6 @@
 
               width: 2rem;
               height: 2rem;
-
-              margin-left: .5rem;
 
               svg {
                 width: 1.3rem;
@@ -109,11 +116,21 @@
 
           &.points {
             font-family: $secondary-font-stack;
-            // height: 4rem;
+            height: 3rem;
             font-size: 1.4rem;
             font-weight: 400;
 
-            margin-left: 2rem;
+            margin-right: .3rem;
+
+            svg {
+              width: 1.4rem;
+              height: 1.4rem;
+              margin-left: .75rem;
+
+              path {
+                fill: rgba(var(--header-highlight), 1);
+              }
+            }
           }
 
           &.active {
@@ -162,6 +179,7 @@
 
   @media (max-width: $mobile) {
     .inner {
+      grid-template-columns: 6rem 1fr 1fr;
       height: calc(var(--header-height) / 1.5);
       padding: 0 1.5rem;
 

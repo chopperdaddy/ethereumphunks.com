@@ -12,7 +12,7 @@ import { Bid, Event, Listing, Phunk } from '@/models/db';
 
 import { createClient } from '@supabase/supabase-js'
 import { Observable, of, BehaviorSubject, from, forkJoin } from 'rxjs';
-import { map, switchMap, tap } from 'rxjs/operators';
+import { catchError, map, switchMap, tap } from 'rxjs/operators';
 
 import { environment } from 'src/environments/environment';
 
@@ -31,7 +31,7 @@ export class DataService {
   public prefix: string = environment.chainId === 1 ? '_mainnet' : '_goerli';
 
   staticUrl = environment.staticUrl;
-  escrowAddress = environment.phunksMarketAddress;
+  escrowAddress = environment.marketAddress;
 
   private attributesData!: any;
 
@@ -104,7 +104,7 @@ export class DataService {
     const request = supabase
       .from('phunks' + this.prefix)
       .select(`*, listings${this.prefix}(hashId, minValue, toAddress)`)
-      .or(`owner.eq.${address},and(owner.eq.${environment.phunksMarketAddress},prevOwner.eq.${address})`);
+      .or(`owner.eq.${address},and(owner.eq.${environment.marketAddress},prevOwner.eq.${address})`);
 
     return from(request).pipe(
       map((res) => res.data as any[]),
@@ -114,7 +114,7 @@ export class DataService {
           hashId: item.hashId,
           owner: item.owner,
           prevOwner: item.prevOwner,
-          isEscrowed: item.owner === environment.phunksMarketAddress && item.prevOwner === address,
+          isEscrowed: item.owner === environment.marketAddress && item.prevOwner === address,
           listing: item['listings' + this.prefix] ? item['listings' + this.prefix] : null,
           attributes: [],
         };
@@ -238,14 +238,46 @@ export class DataService {
   fetchSinglePhunk(phunkId: string): Observable<any> {
     let query = supabase
       .from('phunks' + this.prefix)
-      .select('*')
+      .select(`
+        hashId,
+        phunkId,
+        createdAt,
+        owner,
+        prevOwner,
+        auctions${this.prefix}(
+          hashId,
+          settled,
+          bidder,
+          startTime,
+          endTime,
+          amount,
+          prevOwner
+        )
+      `)
+      .eq(`auctions${this.prefix}.settled`, 'false')
       .limit(1);
 
     if (phunkId.startsWith('0x')) query = query.eq('hashId', phunkId);
     else query = query.eq('phunkId', phunkId);
-    return from(query).pipe(map((res: any) => {
-      return res.data[0] || { phunkId };
-    }));
+
+    return from(query).pipe(
+      map((res: any) => {
+        const data = res.data ? res.data[0] : { phunkId };
+
+        if (!data[`auctions${this.prefix}`][0]) return data;
+
+        data.auction = data[`auctions${this.prefix}`][0]
+          ? { ...data[`auctions${this.prefix}`][0] }
+          : null;
+
+        data.auction.startTime = new Date(data.auction.startTime).getTime();
+        data.auction.endTime = new Date(data.auction.endTime).getTime();
+
+
+        delete data[`auctions${this.prefix}`];
+        return data;
+      })
+    );
   }
 
   async getListingForPhunkId(hashId: string | undefined): Promise<Listing | null> {
@@ -310,6 +342,23 @@ export class DataService {
       }),
     );
   }
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  // AUCTIONS //////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  // async fetchAuctions(hashId: string): Promise<any> {
+  //   let query = supabase
+  //     .from('auctions' + this.prefix)
+  //     .select('*')
+  //     .eq('hashId', hashId)
+
+
+  //   return from(query).pipe(map((res: any) => {
+  //     console.log('fetchSinglePhunk', res);
+  //     return res.data[0] || { phunkId };
+  //   }));
+  // }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   // USD ///////////////////////////////////////////////////////////////////////////////////////////////////////////////

@@ -44,6 +44,31 @@
     height: 3.6rem;
     margin-left: 2rem;
 
+    &.filters-button {
+      position: relative;
+
+      .count {
+        position: absolute;
+        top: -.5rem;
+        right: -.5rem;
+
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        background-color: rgba(var(--highlight), 1);
+        color: rgba(var(--pink), 1);
+
+        width: 2rem;
+        height: 2rem;
+
+        font-family: $secondary-font-stack;
+        font-size: 1.2rem;
+        font-weight: normal;
+        text-align: center;
+      }
+    }
+
     &.all-none {
       margin-left: .5rem;
       background: none;

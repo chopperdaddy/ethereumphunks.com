@@ -5,6 +5,7 @@
   display: block;
 
   margin-top: var(--billboard-height);
+
 }
 
 app-splash {
@@ -50,44 +51,7 @@ section {
   .section-stats-wrapper {}
 
   &.overview {
-    padding-bottom: 0;
-  }
-
-  &.phunk-box {
-    form {
-      display: flex;
-      flex-direction: column;
-      align-items: flex-start;
-
-      .input-wrapper {
-        display: flex;
-        align-items: center;
-        width: 100%;
-
-        input {
-          width: 100%;
-          max-width: 42rem;
-          margin-bottom: 1rem;
-
-          &.disabled {
-            opacity: .5;
-            pointer-events: none;
-          }
-        }
-
-        img {
-          margin-left: 1rem;
-        }
-      }
-
-      button {
-        padding: 1rem 2rem;
-      }
-
-      p {
-        &.error {}
-      }
-    }
+    padding-bottom: 4rem;
   }
 
   &.intro-wrapper {
@@ -159,4 +123,3 @@ section {
     }
   }
 }
-
