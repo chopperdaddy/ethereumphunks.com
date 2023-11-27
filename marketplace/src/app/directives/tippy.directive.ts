@@ -19,7 +19,6 @@ export class TippyDirective implements OnInit, OnChanges {
   ) {}
 
   public ngOnInit() {
-
     const el = this.el.nativeElement as HTMLElement;
 
     if (this.el.nativeElement._tippy) {

@@ -1,4 +1,4 @@
-import { Component, OnDestroy } from '@angular/core';
+import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
@@ -18,8 +18,6 @@ import { CalcPipe } from '@/pipes/calculate.pipe';
 import { FormatCashPipe } from '@/pipes/format-cash.pipe';
 
 import { GlobalState, TxFilterItem } from '@/models/global-state';
-
-import { BehaviorSubject, Subject, tap } from 'rxjs';
 
 import * as dataStateSelectors from '@/state/selectors/data-state.selectors';
 import * as appStateActions from '@/state/actions/app-state.actions';
@@ -42,21 +40,21 @@ import * as appStateActions from '@/state/actions/app-state.actions';
     CalcPipe,
     FormatCashPipe
   ],
-  selector: 'app-overview',
-  templateUrl: './overview.component.html',
-  styleUrls: ['./overview.component.scss']
+  selector: 'app-recent-activity',
+  templateUrl: './recent-activity.component.html',
+  styleUrls: ['./recent-activity.component.scss']
 })
-export class TxOverviewComponent {
+export class RecentActivityComponent {
 
   txFilters: TxFilterItem[] = [
     { label: 'All', value: 'All' },
     { label: 'Created', value: 'created' },
     { label: 'Transferred', value: 'transfer' },
-    { label: 'Sale', value: 'PhunkBought' },
+    { label: 'Sold', value: 'PhunkBought' },
     { label: 'Bid Entered', value: 'PhunkBidEntered' },
     { label: 'Bid Withdrawn', value: 'PhunkBidWithdrawn' },
     { label: 'Offered', value: 'PhunkOffered' },
-    { label: 'Offer Withdrawn', value: 'PhunkOfferWithdrawn' },
+    // { label: 'Offer Withdrawn', value: 'PhunkOfferWithdrawn' },
   ];
 
   _activeTxFilter: string = this.txFilters[0].value;
@@ -66,10 +64,11 @@ export class TxOverviewComponent {
   labels: any = {
     PhunkBidEntered: 'New bid of',
     PhunkBidWithdrawn: 'Bid withdrawn',
-    PhunkNoLongerForSale: 'Offer withdrawn',
+    // PhunkNoLongerForSale: 'Offer withdrawn',
     PhunkOffered: 'Offered for',
     PhunkBought: 'Bought for',
     transfer: 'Transferred to',
+    created: 'Created by'
   };
 
   events$ = this.store.select(dataStateSelectors.selectEvents);

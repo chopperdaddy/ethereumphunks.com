@@ -40,17 +40,17 @@ export class SearchComponent {
 
   async onSubmit($event: any): Promise<void> {
     try {
+      this.phunkBoxError = false;
       this.phunkBoxLoading = true;
 
-      const addressInput  = this.phunkBox?.value?.addressInput;
-      let address = addressInput;
+      const addressInput  = this.phunkBox?.value?.addressInput?.toLowerCase();
 
       const isEns = addressInput?.includes('.eth');
       const isAddress = this.web3Svc.verifyAddress(addressInput);
       const isTokenId = Number(addressInput) < 10000 && Number(addressInput) > 0;
       const possibleHashId = addressInput.length === 66;
 
-      if (!isEns && !isAddress && !isTokenId && !possibleHashId) throw new Error('Invalid Address');
+      if (!isEns && !isAddress && !isTokenId && !possibleHashId) throw new Error('Invalid Search Parameters');
 
       if (isTokenId) {
         this.router.navigate(['/', 'details', addressInput]);
@@ -58,6 +58,7 @@ export class SearchComponent {
         return;
       }
 
+      let address = addressInput;
       if (isEns) address = await this.web3Svc.getEnsOwner(addressInput);
       else address = this.web3Svc.verifyAddress(addressInput);
 
@@ -67,9 +68,9 @@ export class SearchComponent {
 
       this.phunkBoxLoading = false;
       this.phunkBox.reset();
-
     } catch (error) {
       console.log(error);
+
       this.phunkBoxLoading = false;
       this.phunkBoxError = true;
       setTimeout(() => this.phunkBoxError = false, 3000);

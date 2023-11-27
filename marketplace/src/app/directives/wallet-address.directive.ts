@@ -16,7 +16,9 @@ export class WalletAddressDirective implements OnChanges {
   constructor(
     private el: ElementRef,
     public web3Svc: Web3Service
-  ) {}
+  ) {
+    this.el.nativeElement.style.cursor = 'pointer';
+  }
 
   @HostListener('click') onClick(): void {
     if (this.clickCopy) this.copyToClipboard();

@@ -24,15 +24,18 @@ form {
     input {
       width: 100%;
       max-width: 60rem;
-      background-color: rgba(var(--background), .1);
-      color: rgba(var(--background), 1);
+      background-color: rgba(var(--black), .1);
+      color: rgba(var(--black), 1);
+      border-radius: 0;
+
+      font-weight: normal;
 
       &::placeholder {
         font-family: $secondary-font-stack;
         font-size: 1.2rem;
         font-weight: normal;
         transform: translateY(-1px);
-        color: rgba(var(--background), .25);
+        color: rgba(var(--black), .25);
       }
 
       &.disabled {
@@ -51,7 +54,7 @@ form {
 
       &:focus {
         &::placeholder {
-          color: rgba(var(--background), .5);
+          color: rgba(var(--black), .5);
         }
       }
     }

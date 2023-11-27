@@ -39,21 +39,14 @@
           <div class="label">
             <div>{{ labels[event.type] }}</div>
 
-            @if (event.to && event.type === 'transfer') {
+            @if (
+              event.to && event.type === 'transfer' ||
+              event.type === 'created'
+            ) {
               <app-wallet-address
                 [address]="event.to">
               </app-wallet-address>
             }
-
-            <!-- @if (event.from && event.type === 'sale') {
-              Bought for Ξ{{ event.value | weiToEth }}
-              ({{ ((event.value | weiToEth) * (+event.usd || (dataSvc.usd$ | async) || 0)) | currency }})
-            } -->
-
-            <!-- @if (event.from && event.type === 'sale') {
-              Bought for Ξ{{ event.value | weiToEth }}
-              ({{ ((event.value | weiToEth) * (+event.usd || (dataSvc.usd$ | async) || 0)) | currency }})
-            } -->
 
             @if (event.value !== '0') {
               <span class="value">
@@ -61,11 +54,6 @@
                 ({{ ((event.value | weiToEth) * (+event.usd || (dataSvc.usd$ | async) || 0)) | currency }})
               </span>
             }
-
-            <!-- <ng-container *ngIf="event.value !== '0'">
-              Ξ{{ event.value | weiToEth }}
-              ({{ ((event.value | weiToEth) * (+event.usd || (dataSvc.usd$ | async) || 0)) | currency }})
-            </ng-container> -->
 
             <div class="date">
               {{ event.blockTimestamp | timeago : true }}

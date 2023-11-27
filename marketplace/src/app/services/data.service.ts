@@ -191,13 +191,18 @@ export class DataService {
     let query = supabase
       .from('events' + this.prefix)
       .select('*')
+      .neq('to', environment.auctionAddress) // remove auction events
+      .neq('to', environment.marketAddress) // remove escrow events
+      .neq('from', environment.auctionAddress) // remove auction events
+      .neq('type', 'PhunkNoLongerForSale') // remove delist events
       .order('blockTimestamp', { ascending: false })
       .limit(limit);
 
     if (type && type !== 'All') query = query.eq('type', type);
 
-    const response = query;
-    return from(response).pipe(map((res: any) => res.data));
+    return from(query).pipe(
+      map((res: any) => res.data)
+    );
   }
 
   fetchSingleTokenEvents(hashId: string): Observable<any> {
@@ -238,23 +243,29 @@ export class DataService {
   fetchSinglePhunk(phunkId: string): Observable<any> {
     let query = supabase
       .from('phunks' + this.prefix)
+      // .select(`
+      //   hashId,
+      //   phunkId,
+      //   createdAt,
+      //   owner,
+      //   prevOwner,
+      //   auctions${this.prefix}(
+      //     hashId,
+      //     settled,
+      //     bidder,
+      //     startTime,
+      //     endTime,
+      //     amount,
+      //     prevOwner
+      //   )
+      // `)
       .select(`
         hashId,
         phunkId,
         createdAt,
         owner,
         prevOwner,
-        auctions${this.prefix}(
-          hashId,
-          settled,
-          bidder,
-          startTime,
-          endTime,
-          amount,
-          prevOwner
-        )
       `)
-      .eq(`auctions${this.prefix}.settled`, 'false')
       .limit(1);
 
     if (phunkId.startsWith('0x')) query = query.eq('hashId', phunkId);
@@ -263,19 +274,16 @@ export class DataService {
     return from(query).pipe(
       map((res: any) => {
         const data = res.data ? res.data[0] : { phunkId };
-
-        if (!data[`auctions${this.prefix}`][0]) return data;
-
-        data.auction = data[`auctions${this.prefix}`][0]
-          ? { ...data[`auctions${this.prefix}`][0] }
-          : null;
-
-        data.auction.startTime = new Date(data.auction.startTime).getTime();
-        data.auction.endTime = new Date(data.auction.endTime).getTime();
-
-
-        delete data[`auctions${this.prefix}`];
         return data;
+        // // if (!data[`auctions${this.prefix}`][0]) return data;
+        // data.auction = data[`auctions${this.prefix}`][0]
+        //   ? { ...data[`auctions${this.prefix}`][0] }
+        //   : null;
+
+        // data.auction.startTime = new Date(data.auction.startTime).getTime();
+        // data.auction.endTime = new Date(data.auction.endTime).getTime();
+        // delete data[`auctions${this.prefix}`];
+        // return data;
       })
     );
   }

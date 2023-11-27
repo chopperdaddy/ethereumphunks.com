@@ -11,8 +11,6 @@ h2 {
 }
 
 section {
-  padding-bottom: 6rem;
-
   .events-header {
     display: flex;
     align-items: center;
@@ -30,14 +28,18 @@ section {
     }
   }
 
-  &.events-wrapper {}
-
-  .events-items,
-  .sales-items {
+  .events-items {
     display: flex;
-    overflow-y: scroll;
+    overflow-y: auto;
     grid-gap: 3rem;
     padding: 0 3rem 2rem;
+
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+
+    &::-webkit-scrollbar {
+      display: none;
+    }
   }
 
   .event-item {
@@ -140,7 +142,8 @@ section {
       }
     }
 
-    &.phunkofferwithdrawn {
+    &.phunkofferwithdrawn,
+    &.phunknolongerforsale {
       .image-wrapper {
         background-color: rgba(var(--listed-color), 1);
       }
@@ -152,6 +155,13 @@ section {
         background-color: rgba(var(--bid-color), 1);
       }
     }
+
+    // &.auctionstarted,
+    // &.auctionended {
+    //   .image-wrapper {
+    //     background-color: #03B8FF;
+    //   }
+    // }
   }
 
   @media (max-width: $mobile) {
@@ -160,6 +170,8 @@ section {
       flex-direction: column;
       align-items: flex-start;
       justify-content: flex-start;
+
+      padding: 0 2rem 2rem;
 
       h2 {
         padding-bottom: 1rem;
@@ -174,7 +186,9 @@ section {
     .events-items {
       display: flex;
       overflow-y: scroll;
-      padding-bottom: 2rem;
+
+      grid-gap: 2rem;
+      padding: 0 2rem 2rem;
     }
 
     .event-item,

@@ -41,10 +41,6 @@ import * as appStateActions from '@/state/actions/app-state.actions';
 
 export class HeaderComponent {
 
-  @ViewChild('menuButton') menuButton!: ElementRef;
-  @ViewChild('menuInner') menuInner!: ElementRef;
-  @ViewChild('menuBackdrop') menuBackdrop!: ElementRef;
-
   connected$ = this.store.select(appStateSelectors.selectConnected);
   walletAddress$ = this.store.select(appStateSelectors.selectWalletAddress);
   hasWithdrawal$ = this.store.select(appStateSelectors.selectHasWithdrawal);

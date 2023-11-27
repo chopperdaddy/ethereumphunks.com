@@ -30,12 +30,12 @@
       <div class="split">
         <div class="left">
           <div class="market-status">
-            @if (phunk.auction) {
+            <!-- @if (phunk.auction) {
               <h2 i18n>Auction</h2>
               <app-auction
                 [auction]="phunk.auction"
               />
-            } @else {
+            } @else { -->
               <h2 i18n>Market Status</h2>
 
               @if (phunk.isEscrowed) {
@@ -65,7 +65,7 @@
               } @else {
                 <p i18n>There are no bids on this EtherPhunk.</p>
               }
-            }
+            <!-- } -->
           </div>
 
           <div
@@ -123,7 +123,7 @@
                     <ng-container *ngTemplateOutlet="transferForm; context:{ $implicit: phunk }" />
                   }
 
-                  <button (click)="sendToAuction(phunk.hashId)">Send to Auction</button>
+                  <!-- <button (click)="sendToAuction(phunk.hashId)">Send to Auction</button> -->
                 }
 
                 <!-- Delist button -->

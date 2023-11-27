@@ -1,4 +1,4 @@
-<div #menuInner class="inner">
+<div class="inner" [class.active]="menuActive$ | async">
 
   <a [routerLink]="['/']" class="logo">
     <ng-template [ngTemplateOutlet]="logo" />
@@ -27,7 +27,6 @@
         </button>
 
         <button
-          #menuButton
           class="menu"
           [class.active]="menuActive$ | async"
           (click)="toggleMenu$.next()">

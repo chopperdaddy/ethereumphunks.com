@@ -18,8 +18,6 @@ import { DEFAULT_CONFIG } from 'ngforage';
 
 import { environment } from './environments/environment';
 
-import 'chartjs-adapter-moment';
-
 import { provideStore } from '@ngrx/store';
 import { provideEffects } from '@ngrx/effects';
 import { provideRouterStore, routerReducer } from '@ngrx/router-store';

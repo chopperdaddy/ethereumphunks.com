@@ -7,10 +7,13 @@
       [class.error]="phunkBoxError"
       [class.disabled]="phunkBoxLoading"
     />
-
-    @if (phunkBoxLoading) {
-      <img src="/assets/loader-{{ theme$ | async }}.gif" width="20" height="20" />
-    }
   </div>
-  <button i18n type="submit">Go</button>
+
+  @if (phunkBoxLoading) {
+    <button>
+      <img src="/assets/loader-{{ theme$ | async }}.gif" width="20" height="20" />
+    </button>
+  } @else {
+    <button i18n type="submit">Go</button>
+  }
 </form>

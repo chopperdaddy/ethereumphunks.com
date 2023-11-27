@@ -22,7 +22,7 @@
   transform: translateX(-50%);
 
   @media (max-width: $mobile) {
-    top: calc((var(--header-height) / 1.5) + 2rem);
+    top: calc(var(--header-height) + 2rem);
     left: 0;
     padding: 0 1rem;
 
@@ -31,7 +31,6 @@
 }
 
 .txns {
-
   width: 100%;
   max-height: 100%;
   max-width: 36rem;

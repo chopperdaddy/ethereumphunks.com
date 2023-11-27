@@ -5,11 +5,15 @@
 $primary-font-stack: 'Montserrat', sans-serif !default;
 $secondary-font-stack: 'Retro Computer', sans-serif !default;
 
+$mobile: 800px;
+
+$base-url: '/assets/' !default;
+
 :root {
   --header-height: 8rem;
   --billboard-height: 50rem;
 
-  --max-width: 160rem;
+  --max-width: 140rem;
 
   --white: 255, 255, 255;
   --black: 0, 0, 0;
@@ -33,8 +37,8 @@ $secondary-font-stack: 'Retro Computer', sans-serif !default;
   --claimed-color: 195, 255, 0;
   --sale-color: 0, 255, 201;
   --escrow-color: 255, 230, 0;
+
+  @media (max-width: $mobile) {
+    --header-height: 12rem;
+  }
 }
-
-$mobile: 800px;
-
-$base-url: '/assets/' !default;

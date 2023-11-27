@@ -118,17 +118,17 @@
     }
   }
 
-  &.compact {
-    grid-template-columns: repeat(22, calc(100% / 22));
-  }
-
   &.menu {
     grid-template-columns: repeat(16, calc(100% / 16));
   }
 
-  @media (max-width: 1400px) {
-    grid-template-columns: repeat(14, calc(100% / 14));
+  &.compact {
+    grid-template-columns: repeat(22, calc(100% / 22));
   }
+
+  // @media (max-width: 1400px) {
+  //   grid-template-columns: repeat(14, calc(100% / 14));
+  // }
 
   @media (max-width: 1200px) {
     grid-template-columns: repeat(12, calc(100% / 12));

@@ -1,14 +1,14 @@
-import { Component } from '@angular/core';
+import { Component, Inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
-import { IntersectionObserveeDirective, IntersectionObserverModule } from '@ng-web-apis/intersection-observer';
+import { IntersectionObserverModule, IntersectionObserverService } from '@ng-web-apis/intersection-observer';
 
 import { Store } from '@ngrx/store';
 import { TimeagoModule } from 'ngx-timeago';
 import { LazyLoadImageModule } from 'ng-lazyload-image';
 
 import { PhunkGridComponent } from '@/components/shared/phunk-grid/phunk-grid.component';
-import { TxOverviewComponent } from '@/components/overview/overview.component';
+import { RecentActivityComponent } from '@/components/recent-activity/recent-activity.component';
 import { SplashComponent } from '@/components/splash/splash.component';
 
 import { WeiToEthPipe } from '@/pipes/wei-to-eth.pipe';
@@ -37,11 +37,14 @@ import * as dataStateSelectors from '@/state/selectors/data-state.selectors';
 
     SplashComponent,
     PhunkGridComponent,
-    TxOverviewComponent,
+    RecentActivityComponent,
 
     WeiToEthPipe,
     CalcPipe,
     TokenIdParsePipe
+  ],
+  providers: [
+    // IntersectionObserverService,
   ],
   selector: 'app-index',
   templateUrl: './index.component.html',
@@ -62,12 +65,17 @@ export class IndexComponent {
   isMobile$ = this.store.select(appStateSelectors.selectIsMobile);
 
   constructor(
+    // @Inject(IntersectionObserverService) entries$: IntersectionObserverService,
     private store: Store<GlobalState>,
     public themeSvc: ThemeService,
     public dataSvc: DataService,
   ) {
     this.store.dispatch(dataStateActions.fetchMarketData());
     this.store.dispatch(dataStateActions.fetchAllPhunks());
+
+    // entries$.subscribe(entries => {
+    //   console.log('entries', entries);
+    // })
   }
 
   onIntersection($event: any): void {

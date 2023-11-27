@@ -13,6 +13,8 @@
   background-color: rgba(var(--dark-text), .1);
 
   .inner {
+    max-width: 120rem;
+
     .pfp-options-wrapper {
       display: flex;
       align-items: center;

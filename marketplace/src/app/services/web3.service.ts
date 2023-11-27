@@ -11,14 +11,15 @@ import DonationsAbi from '@/abi/Donations.json';
 import AuctionAbi from '@/abi/EtherPhunksAuctionHouse.json';
 import EtherPhunksMarketAbi from '@/abi/EtherPhunksMarket.json';
 
-import { FallbackTransport, TransactionReceipt, WatchBlockNumberReturnType, createWalletClient, custom, decodeFunctionData, formatEther, fromHex, isAddress, parseEther, toHex } from 'viem';
+import { TransactionReceipt, WatchBlockNumberReturnType, decodeFunctionData, formatEther, fromHex, isAddress, parseEther, toHex } from 'viem';
 import { mainnet, goerli } from 'viem/chains';
 
-import { Chain, Config, PublicClient, WebSocketPublicClient, configureChains, createConfig, disconnect, getAccount, getNetwork, getPublicClient, getWalletClient, switchNetwork, watchAccount, watchBlockNumber } from '@wagmi/core';
+import { configureChains, createConfig, disconnect, getAccount, getNetwork, getPublicClient, getWalletClient, switchNetwork, watchAccount, InjectedConnector } from '@wagmi/core';
 
-import { Web3Modal } from '@web3modal/html';
+import { createWeb3Modal, walletConnectProvider } from '@web3modal/wagmi'
 import { jsonRpcProvider } from '@wagmi/core/providers/jsonRpc';
-import { EthereumClient, w3mConnectors } from '@web3modal/ethereum';
+
+import { WalletConnectConnector } from '@wagmi/core/connectors/walletConnect';
 
 import * as appStateActions from '@/state/actions/app-state.actions';
 
@@ -29,7 +30,37 @@ const pointsAddress = environment.pointsAddress;
 const auctionAddress = environment.auctionAddress;
 const donationsAddress = environment.donationsAddress;
 
-const projectId = '9455b1a68e7f81eee6e1090c12edbf00';
+const projectId = 'd183619f342281fd3f3ff85716b6016a';
+
+const { chains, publicClient } = configureChains([mainnet, goerli], [
+  jsonRpcProvider({ rpc: () => ({ http: environment.rpcHttpProvider }) }),
+  walletConnectProvider({ projectId }),
+]);
+
+const metadata = {
+  name: 'Ethereum Phunks',
+  description: 'Ethereum Phunks',
+  url: 'https://ethereumphunks.com',
+  icons: ['']
+};
+
+const wagmiConfig = createConfig({
+  autoConnect: true,
+  connectors: [
+    new WalletConnectConnector({ chains, options: { projectId, showQrModal: false, metadata } }),
+    // new EIP6963Connector({ chains }),
+    new InjectedConnector({ chains, options: { shimDisconnect: true } }),
+  ],
+  publicClient
+});
+
+const themeVariables = {
+  '--w3m-font-family': 'Montserrat, sans-serif',
+  '--w3m-accent': 'rgba(var(--highlight), 1)',
+  '--w3m-z-index': 999,
+  '--w3m-border-radius-master': '0',
+};
+const modal = createWeb3Modal({ wagmiConfig, projectId, chains, themeVariables })
 
 @Injectable({
   providedIn: 'root'
@@ -37,92 +68,20 @@ const projectId = '9455b1a68e7f81eee6e1090c12edbf00';
 
 export class Web3Service {
 
-  maxCooldown = 2;
-
-  config!: Config<PublicClient<FallbackTransport, Chain>, WebSocketPublicClient<FallbackTransport, Chain>>;
-  connectors: any[] = [];
-  web3modal!: Web3Modal;
-
+  maxCooldown = 4;
   web3Connecting: boolean = false;
-
   connectedState!: Observable<any>;
 
   constructor(
     private store: Store<GlobalState>
   ) {
-
-    const { chains, publicClient, webSocketPublicClient } = configureChains(
-      [mainnet, goerli],
-      [
-        jsonRpcProvider({
-          rpc: (chain) => ({
-            http: environment.rpcHttpProvider,
-          }),
-        }),
-      ],
-    );
-
-    this.connectors = [ ...w3mConnectors({ projectId, chains }) ];
-
-    this.config = createConfig({
-      autoConnect: true,
-      publicClient,
-      webSocketPublicClient,
-      connectors: this.connectors
-    });
-
-    const ethereumClient = new EthereumClient(this.config, chains);
-    this.web3modal = new Web3Modal({
-      projectId,
-      themeVariables: {
-        '--w3m-font-family': 'Montserrat, sans-serif',
-        '--w3m-accent-color': 'rgba(var(--highlight), 1)',
-        '--w3m-accent-fill-color': 'rgba(var(--text-color), 1)',
-        '--w3m-background-color': 'rgba(var(--background), 1)',
-        '--w3m-overlay-background-color': 'rgba(var(--background), .5)',
-        '--w3m-z-index': '2000',
-        '--w3m-wallet-icon-border-radius': '0',
-        '--w3m-background-border-radius': '0',
-        '--w3m-button-border-radius': '0',
-        '--w3m-button-hover-highlight-border-radius': '0',
-        '--w3m-container-border-radius': '0',
-        '--w3m-icon-button-border-radius': '0',
-        '--w3m-secondary-button-border-radius': '0',
-      }
-    }, ethereumClient);
-
     this.createListeners();
-
-    const firstHalf = toHex('data:,{"p":"erc-20","op":"mint","tick":"nullvoid","id":"');
-    const secondHalf = toHex('","amt":"1000"}');
-
-    console.log({firstHalf, secondHalf})
-    const data = firstHalf.slice(2) + toHex('1').slice(2) + secondHalf.slice(2);
-    console.log(fromHex(('0x' + data) as `0x${string}`, 'string'));
-  }
-
-  async deployToken(): Promise<void> {
-    const walletClient = await getWalletClient();
-    const hash = await walletClient?.sendTransaction({
-      chain: getNetwork().chain,
-      account: getAccount().address as `0x${string}`,
-      to: getAccount().address as `0x${string}`,
-      value: BigInt(0),
-      data: toHex('data:,' + JSON.stringify({
-          p: 'erc-20',
-          op: 'mint',
-          tick: 'nullvoid',
-          id: '1',
-          amt: '1000',
-        })
-      ),
-    });
-
-    console.log(hash);
   }
 
   createListeners(): void {
-    this.connectedState = new Observable((observer) => watchAccount((account) => observer.next(account)));
+    this.connectedState = new Observable((observer) => watchAccount((account) => {
+      setTimeout(() => observer.next(account), 0);
+    }));
     this.connectedState.pipe(
       tap((account) => { if (account.isDisconnected) this.disconnectWeb3(); }),
       filter((account) => account.isConnected),
@@ -147,7 +106,7 @@ export class Web3Service {
 
   async connect(): Promise<void> {
     try {
-      await this.web3modal.openModal();
+      await modal.open();
     } catch (error) {
       console.log(error);
       this.disconnectWeb3();

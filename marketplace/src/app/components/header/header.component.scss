@@ -13,19 +13,24 @@
   pointer-events: none;
 
   .inner {
+    position: relative;
+    z-index: 10;
+
     width: 100%;
     max-width: 100%;
 
-    position: relative;
-    z-index: 10;
     display: grid;
     grid-template-columns: auto 1fr 1fr;
+    grid-template-areas: "logo search user-tools";
     align-items: center;
 
     padding: 0 3rem;
     height: var(--header-height);
 
+    background-color: rgba(var(--base-color), 1);
+
     .logo {
+      grid-area: logo;
       width: 26rem;
       display: flex;
       align-items: center;
@@ -40,10 +45,13 @@
     }
 
     app-search {
+      grid-area: search;
       pointer-events: all;
     }
 
     .user-tools {
+      grid-area: user-tools;
+
       display: flex;
       align-items: center;
       justify-content: flex-end;
@@ -175,13 +183,20 @@
         }
       }
     }
+
+    &.active {
+      background-color: rgba(var(--base-color), 0);
+    }
   }
 
   @media (max-width: $mobile) {
     .inner {
-      grid-template-columns: 6rem 1fr 1fr;
-      height: calc(var(--header-height) / 1.5);
-      padding: 0 1.5rem;
+      grid-template-columns: 4rem 1fr;
+      grid-template-rows: 1fr 1fr;
+      grid-template-areas: "logo user-tools" "search search";
+
+      height: var(--header-height);
+      padding: 0 1.5rem 1rem;
 
       .logo {
         overflow: hidden;
@@ -199,20 +214,16 @@
         }
       }
 
+      app-search {
+        padding-top: 1rem;
+      }
+
       .user-tools {
         .connect-menu {
           position: relative;
-          // display: flex;
-          // flex-direction: column-reverse;
 
-          a {
-            position: absolute;
-            top: 100%;
-            right: 0;
-
-            app-wallet-address {
-              font-size: 1rem;
-            }
+          app-wallet-address {
+            font-size: 1rem;
           }
         }
       }
