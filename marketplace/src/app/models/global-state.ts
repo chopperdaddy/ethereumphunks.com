@@ -1,6 +1,6 @@
 import { DataState } from './data.state';
 import { Phunk } from './db';
-import { MarketTypes, Sorts } from './pipes';
+import { MarketTypes, Sort, Sorts } from './pipes';
 import { Theme } from './theme';
 
 export interface GlobalState {
@@ -17,12 +17,13 @@ export interface AppState {
 
   isMobile: boolean;
   menuActive: boolean;
+  slideoutActive: boolean;
 
   selectedPhunks: Phunk[] | null;
   activeTraitFilters: TraitFilter;
 
   marketType: MarketTypes;
-  activeSort: Sorts;
+  activeSort: Sort;
   // activeFilters: any;
   activeEventTypeFilter: EventType;
 
@@ -40,7 +41,11 @@ export interface Transaction {
   id: number;
   type: 'wallet' | 'pending' | 'complete' | 'error' | 'event';
   function: TxFunction;
+
   phunkId: number;
+
+  isBatch?: boolean;
+  phunkIds?: number[];
 
   isNotification?: boolean;
   dismissed?: boolean;

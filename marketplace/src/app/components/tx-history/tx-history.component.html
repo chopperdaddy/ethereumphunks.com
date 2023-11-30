@@ -28,7 +28,7 @@
                 <div class="cell-inner">
                   @if (event.from !== ZERO_ADDRESS) {
                     <a [routerLink]="['/', 'owned']" [queryParams]="{ address: event.from }">
-                      <app-wallet-address [address]="event.from"></app-wallet-address>
+                      <app-address [address]="event.from" />
                     </a>
                   } @else {
                     <ng-template [ngTemplateOutlet]="placeholderCell" />
@@ -40,7 +40,7 @@
                 <div class="cell-inner">
                   @if (event.to !== ZERO_ADDRESS) {
                     <a [routerLink]="['/', 'owned']" [queryParams]="{ address: event.to }">
-                      <app-wallet-address [address]="event.to"></app-wallet-address>
+                      <app-address [address]="event.to" />
                     </a>
                   } @else {
                     <ng-template [ngTemplateOutlet]="placeholderCell" />

@@ -84,23 +84,19 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
   @ViewChild('sellPriceInput') sellPriceInput!: ElementRef<HTMLInputElement>;
   @ViewChild('transferAddressInput') transferAddressInput!: ElementRef<HTMLInputElement>;
 
-  explorerUrl = `https://${environment.chainId === 5 ? 'goerli.' : ''}etherscan.io`;
+  explorerUrl = environment.explorerUrl
   escrowAddress = environment.marketAddress;
 
   sellActive: boolean = false;
-  listPrice = new FormControl<number>(0);
-  listToAddress = new FormControl<string | null>('');
-
   bidActive: boolean = false;
-  bidPrice = new FormControl<number>(0);
-
   withdrawActive: boolean = false;
-
   transferActive: boolean = false;
-  transferAddress = new FormControl<string | null>('');
-
   acceptbidActive: boolean = false;
-  // transferAddress = new FormControl<string | null>('');
+
+  transferAddress = new FormControl<string | null>('');
+  bidPrice = new FormControl<number | null>(null);
+  listPrice = new FormControl<number | null>(null);
+  listToAddress = new FormControl<string | null>('');
 
   objectValues = Object.values;
 
@@ -169,8 +165,8 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
   }
 
   acceptBid(): void {
-    // this.closeAll();
-    // this.acceptbidActive = true;
+    this.closeAll();
+    this.acceptbidActive = true;
   }
 
   closeAcceptBid(): void {
@@ -189,7 +185,7 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
 
   closeBid(): void {
     this.bidActive = false;
-    this.bidPrice.setValue(0);
+    this.bidPrice.setValue(null);
   }
 
   // withdraw(): void {
@@ -247,7 +243,7 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
         }
       }));
 
-      const receipt = await this.pollReceipt(hash!);
+      const receipt = await this.web3Svc.pollReceipt(hash!);
       // this.setTransactionCompleteMessage(receipt);
       this.store.dispatch(appStateActions.upsertTransaction({
         transaction: {
@@ -259,7 +255,7 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
         }
       }));
 
-      this.listPrice.setValue(0);
+      this.closeListing();
 
       this.store.dispatch(appStateActions.addCooldown({ cooldown: { phunkId, startBlock: Number(receipt.blockNumber) }}));
     } catch (err) {
@@ -306,7 +302,7 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
         }
       }));
 
-      const receipt = await this.pollReceipt(hash!);
+      const receipt = await this.web3Svc.pollReceipt(hash!);
       // this.setTransactionCompleteMessage(receipt);
       this.store.dispatch(appStateActions.upsertTransaction({
         transaction: {
@@ -363,7 +359,7 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
         }
       }));
 
-      const receipt = await this.pollReceipt(hash!);
+      const receipt = await this.web3Svc.pollReceipt(hash!);
       // this.setTransactionCompleteMessage(receipt);
       this.store.dispatch(appStateActions.upsertTransaction({
         transaction: {
@@ -421,7 +417,7 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
         }
       }));
 
-      const receipt = await this.pollReceipt(hash!);
+      const receipt = await this.web3Svc.pollReceipt(hash!);
       // this.setTransactionCompleteMessage(receipt);
       this.store.dispatch(appStateActions.upsertTransaction({
         transaction: {
@@ -458,7 +454,6 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
       const tokenId = phunk.hashId;
       const value = phunk.bid?.value;
 
-      this.closeAcceptBid();
       // this.initTransactionMessage();
       this.store.dispatch(appStateActions.upsertTransaction({
         transaction: {
@@ -480,7 +475,7 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
         }
       }));
 
-      const receipt = await this.pollReceipt(hash!);
+      const receipt = await this.web3Svc.pollReceipt(hash!);
       // this.setTransactionCompleteMessage(receipt);
       this.store.dispatch(appStateActions.upsertTransaction({
         transaction: {
@@ -539,7 +534,7 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
         }
       }));
 
-      const receipt = await this.pollReceipt(hash!);
+      const receipt = await this.web3Svc.pollReceipt(hash!);
       // this.setTransactionCompleteMessage(receipt);
       this.store.dispatch(appStateActions.upsertTransaction({
         transaction: {
@@ -600,7 +595,7 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
         }
       }));
 
-      const receipt = await this.pollReceipt(hash!);
+      const receipt = await this.web3Svc.pollReceipt(hash!);
       // this.setTransactionCompleteMessage(receipt);
       this.store.dispatch(appStateActions.upsertTransaction({
         transaction: {
@@ -663,7 +658,7 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
         }
       }));
 
-      const receipt = await this.pollReceipt(hash!);
+      const receipt = await this.web3Svc.pollReceipt(hash!);
       // this.setTransactionCompleteMessage(receipt);
       this.store.dispatch(appStateActions.upsertTransaction({
         transaction: {
@@ -723,7 +718,7 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
         }
       }));
 
-      const receipt = await this.pollReceipt(hash!);
+      const receipt = await this.web3Svc.pollReceipt(hash!);
       // this.setTransactionCompleteMessage(receipt);
       this.store.dispatch(appStateActions.upsertTransaction({
         transaction: {
@@ -749,24 +744,6 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
         }
       }));
     }
-  }
-
-  pollReceipt(hash: string): Promise<TransactionReceipt> {
-    let resolved = false;
-    return new Promise(async (resolve, reject) => {
-      while (!resolved) {
-        console.log('polling');
-        try {
-          const receipt = await this.web3Svc.waitForTransaction(hash);
-          if (receipt) {
-            resolved = true;
-            resolve(receipt);
-          }
-        } catch (err) {
-          console.log(err);
-        }
-      }
-    });
   }
 
   getItemQueryParams(item: any): any {

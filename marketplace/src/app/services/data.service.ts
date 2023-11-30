@@ -55,7 +55,7 @@ export class DataService {
     private http: HttpClient,
     private web3Svc: Web3Service
   ) {
-    // this.fetchUSDPrice();
+    this.fetchUSDPrice();
 
     supabase
       .channel('any')
@@ -103,7 +103,7 @@ export class DataService {
     address = address.toLowerCase();
     const request = supabase
       .from('phunks' + this.prefix)
-      .select(`*, listings${this.prefix}(hashId, minValue, toAddress)`)
+      .select(`*, listings${this.prefix}(hashId, minValue, toAddress, createdAt)`)
       .or(`owner.eq.${address},and(owner.eq.${environment.marketAddress},prevOwner.eq.${address})`);
 
     return from(request).pipe(
@@ -264,7 +264,7 @@ export class DataService {
         phunkId,
         createdAt,
         owner,
-        prevOwner,
+        prevOwner
       `)
       .limit(1);
 
@@ -391,5 +391,31 @@ export class DataService {
       },
       responseType: 'text'
     });
+  }
+
+  fetchLeaderboard(): Observable<any> {
+    const query = supabase
+      .from('users' + this.prefix)
+      .select(`
+        *,
+        events${this.prefix}!events${this.prefix}_from_fkey (
+          from
+        )
+      `)
+      .eq(`events${this.prefix}.type`, 'PhunkBought')
+      .order('points', { ascending: false })
+      .limit(10);
+
+    return from(query).pipe(
+      map((res: any) => res.data?.map((item: any) => {
+        const response = {
+          ...item,
+          sales: item[`events${this.prefix}`].length,
+        };
+        delete response[`events${this.prefix}`]
+        return response;
+      })),
+      tap((res) => console.log('fetchLeaderboard', res)),
+    );
   }
 }

@@ -36,6 +36,17 @@ app-phunk-billboard {
         transform: translate(-.3rem, 0);
       }
 
+      .hash-id {
+        font-size: 1.2rem;
+        font-weight: 600;
+        padding: .5rem 0 1.5rem;
+
+        a {
+          color: rgba(var(--text-color), 1);
+          text-decoration: none;
+        }
+      }
+
       h2 {
         font-size: 1.8rem;
       }
@@ -65,7 +76,7 @@ app-phunk-billboard {
 
     .split {
       display: grid;
-      grid-template-columns: calc(70% - 2rem) calc(30% - 2rem);
+      grid-template-columns: auto 35rem;
       column-gap: 4rem;
 
       padding-bottom: 6rem;
@@ -77,6 +88,9 @@ app-phunk-billboard {
     }
 
     .accessories-wrapper {
+      width: 100%;
+      max-width: 35rem;
+
       h2 {
         font-size: 2.4rem;
         padding-bottom: 2rem;

@@ -14,12 +14,13 @@ export const initialState: AppState = {
 
   isMobile: false,
   menuActive: false,
+  slideoutActive: false,
 
   selectedPhunks: null,
   activeTraitFilters: {},
 
   marketType: 'all',
-  activeSort: 'id',
+  activeSort: { label: 'Price Low', value: 'price-low' },
 
   activeEventTypeFilter: 'All',
 
@@ -128,7 +129,7 @@ export const appStateReducer: ActionReducer<AppState, Action> = createReducer(
   on(actions.setActiveSort, (state, { activeSort }) => {
     const setActiveSort = {
       ...state,
-      activeSort
+      activeSort,
     };
     // console.log('setActiveSort', setActiveSort);
     return setActiveSort
@@ -140,6 +141,14 @@ export const appStateReducer: ActionReducer<AppState, Action> = createReducer(
     };
     // console.log('setMenuActive', setMenuActive);
     return setMenuActive
+  }),
+  on(actions.setSlideoutActive, (state, { slideoutActive }) => {
+    const setSlideoutActive = {
+      ...state,
+      slideoutActive
+    };
+    // console.log('setSlideoutActive', setSlideoutActive);
+    return setSlideoutActive
   }),
   on(actions.setTheme, (state, { theme }) => {
     const setTheme = {

@@ -45,7 +45,18 @@ export class NotifComponent {
     enterBidForPhunk: 'Enter Bid For EtherPhunk',
     transferPhunk: 'Transfer EtherPhunk',
     withdrawPhunk: 'Withdraw EtherPhunk from Escrow',
-    purchased: 'Your EtherPhunk Sold!'
+    purchased: 'Your EtherPhunk Sold!',
+    batch: {
+      sendToEscrow: 'Send <span class="highlight">%length%</span> EtherPhunks to Escrow',
+      phunkNoLongerForSale: 'Delist <span class="highlight">%length%</span> EtherPhunks',
+      offerPhunkForSale: 'Offer <span class="highlight">%length%</span> EtherPhunks For Sale',
+      withdrawBidForPhunk: 'Withdraw Bid For <span class="highlight">%length%</span> EtherPhunks',
+      acceptBidForPhunk: 'Accept Bid For <span class="highlight">%length%</span> EtherPhunks',
+      buyPhunk: 'Buy <span class="highlight">%length%</span> EtherPhunks',
+      enterBidForPhunk: 'Enter Bid For <span class="highlight">%length%</span> EtherPhunks',
+      transferPhunk: 'Transfer <span class="highlight">%length%</span> EtherPhunks',
+      withdrawPhunk: 'Withdraw <span class="highlight">%length%</span> EtherPhunks from Escrow',
+    }
   };
 
   classes: any = {

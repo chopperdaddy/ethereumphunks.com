@@ -43,9 +43,9 @@
               event.to && event.type === 'transfer' ||
               event.type === 'created'
             ) {
-              <app-wallet-address
+              <app-address
                 [address]="event.to">
-              </app-wallet-address>
+              </app-address>
             }
 
             @if (event.value !== '0') {

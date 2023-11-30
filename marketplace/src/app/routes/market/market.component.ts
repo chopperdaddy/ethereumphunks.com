@@ -1,7 +1,7 @@
-import { Component } from '@angular/core';
+import { Component, ElementRef, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterModule } from '@angular/router';
-import { FormArray, FormBuilder, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormArray, FormBuilder, FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 
 import { Store } from '@ngrx/store';
 import { IntersectionObserverModule } from '@ng-web-apis/intersection-observer';
@@ -24,12 +24,17 @@ import { Phunk } from '@/models/db';
 import { DataService } from '@/services/data.service';
 import { Web3Service } from '@/services/web3.service';
 
-import { environment } from 'src/environments/environment';
+import { SlideoutComponent } from '@/components/slideout/slideout.component';
 
-import { BehaviorSubject, firstValueFrom, map } from 'rxjs';
+import { WeiToEthPipe } from '@/pipes/wei-to-eth.pipe';
 
 import * as appStateSelectors from '@/state/selectors/app-state.selectors';
+import * as appStateActions from '@/state/actions/app-state.actions';
 import * as dataStateSelectors from '@/state/selectors/data-state.selectors';
+
+import { environment } from 'src/environments/environment';
+
+import { firstValueFrom, map, tap } from 'rxjs';
 
 @Component({
   selector: 'app-phunk-grid-view',
@@ -46,8 +51,10 @@ import * as dataStateSelectors from '@/state/selectors/data-state.selectors';
     PhunkGridComponent,
     MarketFiltersComponent,
     ModalComponent,
+    SlideoutComponent,
 
     WalletAddressDirective,
+    WeiToEthPipe,
 
     TokenIdParsePipe,
   ],
@@ -56,6 +63,8 @@ import * as dataStateSelectors from '@/state/selectors/data-state.selectors';
 })
 
 export class MarketComponent {
+
+  @ViewChild('transferAddressInput') transferAddressInput!: ElementRef<HTMLInputElement>;
 
   env = environment;
 
@@ -75,23 +84,23 @@ export class MarketComponent {
     { label: 'Token ID', value: 'id' }
   ];
 
-  private activeSort = new BehaviorSubject(this.sorts[0]);
-  activeSort$ = this.activeSort.asObservable();
   activeSortModel: any = this.sorts[0];
 
   filtersVisible: boolean = false;
 
-  transferModalActive: boolean = false;
-
   selectedPhunksFormArray: FormArray = this.fb.array([]);
+  transferAddress = new FormControl<string | null>('');
 
   selected: { [string: Phunk['hashId']]: Phunk } = {};
   deselected: Phunk[] = [];
   selectedLength: number = Object.keys(this.selected).length;
+  selectedValue: string = '';
 
   selectMutipleActive: boolean = false;
   selectAll: boolean = false;
+
   isListingBulk: boolean = false;
+  isTransferingBulk: boolean = false;
 
   bulkListingForm = this.fb.group({
     listingPhunks: this.fb.array([])
@@ -115,6 +124,20 @@ export class MarketComponent {
   activeTraitFilters$ = this.store.select(appStateSelectors.selectActiveTraitFilters).pipe(
     map((filters: any) => Object.keys(filters).length),
   );
+  activeSort$ = this.store.select(appStateSelectors.selectActiveSort).pipe(
+    tap((sort: any) => this.activeSortModel = sort)
+  );
+  slidseoutActive$ = this.store.select(appStateSelectors.selectSlideoutActive).pipe(
+    tap((slideoutActive: boolean) => {
+      if (!slideoutActive) {
+        this.isListingBulk = false;
+        this.isTransferingBulk = false;
+        this.selectedPhunksFormArray = this.fb.array([]);
+      }
+    })
+  );
+
+  ceil = Math.ceil;
 
   constructor(
     private store: Store<GlobalState>,
@@ -125,31 +148,65 @@ export class MarketComponent {
   ) {}
 
   setSort($event: any): void {
-    this.activeSort.next({ ...$event });
+    this.store.dispatch(appStateActions.setActiveSort({ activeSort: $event }));
   }
 
-  setSelectMiltiple() {
-    this.selectMutipleActive = !this.selectMutipleActive;
-    this.selectAll = false;
-  }
-
-  clearSelectedAndClose() {
-    this.selectAll = false;
-    this.selected = {};
-  }
-
-  async batchAction(type: 'transfer' | 'escrow' | 'withdraw' | 'list'): Promise<void> {
+  async batchAction(type: 'transfer' | 'escrow' | 'withdraw' | 'list' | 'sweep'): Promise<void> {
     if (!Object.keys(this.selected).length) return;
 
-    this.transferModalActive = true;
-
+    if (type === 'sweep') {
+      this.buySelected();
+    }
+    if (type === 'transfer') await this.transferSelected();
     if (type === 'list') await this.listSelected();
-    if (type === 'escrow') await this.batchTransfer(this.escrowAddress);
+    if (type === 'escrow') await this.batchTransfer();
     if (type === 'withdraw') await this.withdrawBatch();
   }
 
-  async batchTransfer(toAddress: string): Promise<string | undefined> {
+  async transferSelected(): Promise<void> {
+    this.isTransferingBulk = true;
+    this.store.dispatch(appStateActions.setSlideoutActive({ slideoutActive: true }));
 
+    const { inEscrow, deselected } = await this.getSelectedEscrowed();
+    this.deselected = inEscrow;
+
+    const formArray = this.fb.array(deselected.map((phunk: Phunk) => this.fb.group({
+      phunkId: [phunk.phunkId],
+      hashId: [phunk.hashId],
+      listPrice: [''],
+    }))) as FormArray;
+
+    this.bulkListingForm.setControl('listingPhunks', formArray);
+    this.selectedPhunksFormArray = this.bulkListingForm.get('listingPhunks') as FormArray;
+
+    setTimeout(() => this.transferAddressInput.nativeElement.focus(), 0);
+  }
+
+  async listSelected(): Promise<void> {
+    this.isListingBulk = true;
+    this.store.dispatch(appStateActions.setSlideoutActive({ slideoutActive: true }));
+
+    const { inEscrow, deselected } = await this.getSelectedEscrowed();
+    this.deselected = deselected;
+
+    console.log({inEscrow, deselected});
+
+    const formArray = this.fb.array(inEscrow.map((phunk: Phunk) => this.fb.group({
+      phunkId: [phunk.phunkId],
+      hashId: [phunk.hashId],
+      listPrice: [''],
+    }))) as FormArray;
+
+    this.bulkListingForm.setControl('listingPhunks', formArray);
+    this.selectedPhunksFormArray = this.bulkListingForm.get('listingPhunks') as FormArray;
+  }
+
+  async buySelected(): Promise<void> {
+    // check wallet balance
+    await this.web3Svc.batchBuyPhunks(Object.values(this.selected));
+  }
+
+  async batchTransfer(): Promise<string | undefined> {
     const selectedHashIds = Object.keys(this.selected);
     const canTransfer = await firstValueFrom(
       this.dataSvc.phunksCanTransfer(selectedHashIds)
@@ -162,11 +219,12 @@ export class MarketComponent {
     const hexString = Object.keys(selected).map(hashId => hashId?.substring(2)).join('');
     const hex = `0x${hexString}`;
 
-    return await this.web3Svc.transferPhunk(hex, toAddress);
+    if (hex === '0x') return;
+    console.log({hex});
+    return await this.web3Svc.transferPhunk(hex, this.escrowAddress);
   }
 
   async withdrawBatch(): Promise<string | undefined> {
-
     const selectedHashIds = Object.keys(this.selected);
     const inEscrow = await firstValueFrom(
       this.dataSvc.phunksAreInEscrow(selectedHashIds)
@@ -192,42 +250,196 @@ export class MarketComponent {
     return { deselected, inEscrow };
   }
 
-  selectedChange($event: any): void {
-    this.selectedLength = Object.keys(this.selected).length;
+  async submitBatchTransfer(): Promise<void> {
 
-    Object.values(this.selected).forEach((phunk: Phunk) => {
-      this.actionsState.canWithdraw = !!phunk.isEscrowed;
-      this.actionsState.canList = !!phunk.isEscrowed;
-      this.actionsState.canTransfer = !phunk.isEscrowed;
-      this.actionsState.canEscrow = !phunk.isEscrowed;
-    });
+    if (!this.bulkListingForm.value.listingPhunks) return;
+    const hashIds = this.bulkListingForm.value.listingPhunks.map((phunk: any) => phunk.hashId);
+    const phunkIds = this.bulkListingForm.value.listingPhunks.map((phunk: any) => phunk.phunkId as number) || [];
 
-    this.actionsState = { ...this.actionsState };
-  }
+    if (!hashIds?.length) return;
+    if (!this.transferAddress.value) return;
 
-  closeModal(): void {
-    this.transferModalActive = false;
-  }
+    try {
+      let toAddress: string | null = this.transferAddress.value;
+      toAddress = await this.web3Svc.verifyAddressOrEns(toAddress);
+      if (!toAddress) throw new Error('Invalid address');
 
-  async listSelected(): Promise<void> {
-    this.isListingBulk = true;
-    const { inEscrow, deselected } = await this.getSelectedEscrowed();
-    this.deselected = deselected;
+      this.store.dispatch(appStateActions.upsertTransaction({
+        transaction: {
+          id: Date.now(),
+          type: 'wallet',
+          function: 'transferPhunk',
+          phunkId: phunkIds[0],
+          phunkIds,
+          isBatch: true,
+        }
+      }));
 
-    const formArray = this.fb.array(inEscrow.map((phunk: Phunk) => this.fb.group({
-      phunkId: [phunk.phunkId],
-      hashId: [phunk.hashId],
-      listPrice: [''],
-    }))) as FormArray;
+      this.closeModal();
 
-    this.bulkListingForm.setControl('listingPhunks', formArray);
-    this.selectedPhunksFormArray = this.bulkListingForm.get('listingPhunks') as FormArray;
+      const hash = await this.web3Svc.batchTransferPhunks(hashIds, toAddress);
+
+      this.store.dispatch(appStateActions.upsertTransaction({
+        transaction: {
+          id: Date.now(),
+          type: 'pending',
+          function: 'transferPhunk',
+          phunkId: phunkIds[0],
+          phunkIds,
+          isBatch: true,
+          hash,
+        }
+      }));
+
+      const receipt = await this.web3Svc.pollReceipt(hash!);
+      // this.setTransactionCompleteMessage(receipt);
+      this.store.dispatch(appStateActions.upsertTransaction({
+        transaction: {
+          id: Date.now(),
+          type: 'complete',
+          function: 'transferPhunk',
+          phunkId: phunkIds[0],
+          phunkIds,
+          isBatch: true,
+          hash: receipt.transactionHash,
+        }
+      }));
+    } catch (err) {
+      console.log(err);
+
+      this.store.dispatch(appStateActions.upsertTransaction({
+        transaction: {
+          id: Date.now(),
+          type: 'error',
+          function: 'transferPhunk',
+          phunkId: phunkIds[0],
+          phunkIds,
+          isBatch: true,
+          detail: err,
+        }
+      }));
+    }
   }
 
   async submitBatchListing(): Promise<void> {
-    const hashIds = this.bulkListingForm.value.listingPhunks?.map((phunk: any) => phunk.hashId);
-    const listPrices = this.bulkListingForm.value.listingPhunks?.map((phunk: any) => phunk.listPrice);
-    if (!hashIds || !listPrices) return;
-    this.web3Svc.batchOfferPhunkForSale(hashIds, listPrices);
+
+    if (!this.bulkListingForm.value.listingPhunks) return;
+
+    const newListings = this.bulkListingForm.value.listingPhunks
+      .filter((phunk: any) => phunk.listPrice);
+
+    if (!newListings.length) return;
+
+    const listings = newListings.map((phunk: any) => ({ hashId: phunk.hashId, listPrice: phunk.listPrice }))|| [];
+    const phunkIds = newListings.map((phunk: any) => phunk.phunkId as number) || [];
+
+    try {
+      this.store.dispatch(appStateActions.upsertTransaction({
+        transaction: {
+          id: Date.now(),
+          type: 'wallet',
+          function: 'offerPhunkForSale',
+          phunkId: phunkIds[0],
+          phunkIds,
+          isBatch: true,
+        }
+      }));
+
+      this.closeModal();
+
+      const hash = await this.web3Svc.batchOfferPhunkForSale(
+        listings.map(phunk => phunk.hashId),
+        listings.map(phunk => phunk.listPrice)
+      );
+
+      this.store.dispatch(appStateActions.upsertTransaction({
+        transaction: {
+          id: Date.now(),
+          type: 'pending',
+          function: 'offerPhunkForSale',
+          phunkId: phunkIds[0],
+          phunkIds,
+          isBatch: true,
+          hash,
+        }
+      }));
+
+      const receipt = await this.web3Svc.pollReceipt(hash!);
+      // this.setTransactionCompleteMessage(receipt);
+      this.store.dispatch(appStateActions.upsertTransaction({
+        transaction: {
+          id: Date.now(),
+          type: 'complete',
+          function: 'offerPhunkForSale',
+          phunkId: phunkIds[0],
+          phunkIds,
+          isBatch: true,
+          hash: receipt.transactionHash,
+        }
+      }));
+    } catch (err) {
+      console.log(err);
+
+      this.store.dispatch(appStateActions.upsertTransaction({
+        transaction: {
+          id: Date.now(),
+          type: 'error',
+          function: 'offerPhunkForSale',
+          phunkId: phunkIds[0],
+          phunkIds,
+          isBatch: true,
+          detail: err,
+        }
+      }));
+    }
+
+    // this.closeModal();
+  }
+
+  selectedChange($event: any): void {
+    this.selectedLength = Object.keys(this.selected).length;
+    this.selectedValue = Object.values(this.selected).reduce(
+      (acc: number, phunk: Phunk) => acc += Number(phunk.listing?.minValue || '0'),
+    0).toString();
+
+
+    this.actionsState = {
+      canList: false,
+      canTransfer: false,
+      canWithdraw: false,
+      canEscrow: false,
+    };
+
+    Object.values(this.selected).forEach((phunk: Phunk) => {
+      // console.log({phunk});
+      if (phunk.isEscrowed) {
+        this.actionsState.canWithdraw = true;
+        this.actionsState.canList = true;
+      } else {
+        this.actionsState.canTransfer = true;
+        this.actionsState.canEscrow = true;
+      };
+    });
+    this.actionsState = { ...this.actionsState };
+  }
+
+  setSelectMiltiple() {
+    this.selectMutipleActive = !this.selectMutipleActive;
+    this.selectAll = false;
+  }
+
+  clearSelectedAndClose() {
+    this.selectAll = false;
+    this.selected = {};
+  }
+
+  closeModal(): void {
+    this.store.dispatch(appStateActions.setSlideoutActive({ slideoutActive: false }));
+  }
+
+  copyToNext(index: number) {
+    this.selectedPhunksFormArray.controls[index + 1].get('listPrice')?.setValue(
+      this.selectedPhunksFormArray.controls[index].get('listPrice')?.value
+    );
   }
 }

@@ -78,4 +78,14 @@ form {
     width: 5rem;
     height: 100%;
   }
+
+  @media (max-width: $mobile) {
+    max-width: 100%;
+
+    .input-wrapper {
+      input {
+        max-width: 100%;
+      }
+    }
+  }
 }

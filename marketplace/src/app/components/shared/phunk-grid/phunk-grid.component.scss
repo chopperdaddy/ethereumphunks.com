@@ -104,17 +104,27 @@
         text-align: center;
       }
     }
-
-    &.selected {
-      .image-wrapper {
-        transform: scale(.94);
-      }
-    }
   }
 
   &.selectable {
     .item {
+      &:active {
+        .image-wrapper {
+          transform: scale(.92);
+        }
+      }
 
+      &.selected {
+        .image-wrapper {
+          transform: scale(.94);
+        }
+
+        &:active {
+          .image-wrapper {
+            transform: scale(.92);
+          }
+        }
+      }
     }
   }
 

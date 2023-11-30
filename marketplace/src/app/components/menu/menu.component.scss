@@ -6,21 +6,28 @@
   justify-content: center;
 
   position: fixed;
-  z-index: 990;
+  z-index: 994;
   top: 0;
-  left: 0;
+  right: 0;
 
-  width: 100%;
-  height: var(--billboard-height);
-  transform: translateY(-100%);
+  width: var(--slideout-width);
+  height: 100%;
+  transform: translateX(100%);
 
-  background-color: rgba(var(--bid-color), .75);
-  padding-top: var(--header-height);
-
-  // font-family: $secondary-font-stack;
+  background-color: rgba(var(--bid-color), .9);
   color: rgba(var(--white), 1);
 
+  padding-top: var(--header-height);
+
   backdrop-filter: blur(1rem);
+
+  overflow: scroll;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
 
   @media (max-width: $mobile) {
     height: 100%;
@@ -37,51 +44,89 @@
 
 .inner {
   position: relative;
-  display: grid;
-  grid-template-columns: calc(100% - 35rem - 6rem) 35rem;
-  column-gap: 6rem;
-  row-gap: 1rem;
-  max-height: 100%;
+  // display: grid;
+  // grid-template-columns: 100%;
+  // grid-template-rows: auto auto;
+  // grid-template-areas: 'user-wrapper' 'leaderboard';
+  // row-gap: 4rem;
 
   width: 100%;
-  max-width: 100%;
+  max-width: var(--slideout-width);
 
-  grid-template-areas: 'sections user-wrapper';
-  overflow: hidden;
   padding-top: 3rem;
 
-  &:before {
-    content: '';
-    position: absolute;
-    z-index: 1;
-    top: 0;
-    left: 3rem;
-
-    width: calc(100% - 6rem);
-    height: .3rem;
-    background-color: rgba(var(--white), .15);
-  }
-
   h3 {
-    font-size: 1.6rem;
-    font-weight: 700;
+    font-family: $secondary-font-stack;
+    font-size: 1.2rem;
+    font-weight: normal;
     padding-bottom: 1rem;
   }
 
-  .wallet-info {
-    grid-area: wallet-info;
+  .user-wrapper {
+    grid-area: user-wrapper;
+    padding-bottom: 4rem;
+
+    .user-actions {
+      button {
+        width: 100%;
+        margin-bottom: .5rem;
+        height: 3rem;
+
+        font-size: 1.2rem;
+        font-weight: normal;
+        font-family: $secondary-font-stack;
+
+        background-color: rgba(var(--background), 1);
+
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+
+        &.disabled {
+          opacity: .5;
+          pointer-events: none;
+        }
+
+        &:last-child {
+          margin-bottom: 0;
+        }
+      }
+    }
+
+    .notifications-wrapper {
+      padding-top: 1rem;
+
+      .no-activity {
+        padding: 0;
+        margin: 0;
+        font-size: 1.2rem;
+      }
+
+      .notifications {
+        max-height: 30rem;
+        overflow-y: auto;
+        scrollbar-width: none;
+        -webkit-overflow-scrolling: touch;
+
+        p {
+          font-family: $secondary-font-stack;
+          font-size: 1.2rem;
+        }
+
+        &::-webkit-scrollbar {
+          display: none;
+        }
+      }
+    }
+  }
+
+  app-leaderboard {
+    grid-area: leaderboard;
+    padding-bottom: 4rem;
   }
 
   .sections-wrapper {
     grid-area: sections;
-
-    overflow-y: scroll;
-    scrollbar-width: none;
-    -webkit-overflow-scrolling: touch;
-
-    &::-webkit-scrollbar {
-      display: none;
-    }
 
     section {
       padding-top: 1rem;
@@ -106,67 +151,6 @@
 
       &:last-child {
         padding-bottom: 0;
-      }
-    }
-  }
-
-  .user-wrapper {
-    grid-area: user-wrapper;
-
-    display: flex;
-    flex-direction: column;
-    align-items: stretch;
-    justify-content: flex-start;
-    max-height: 100%;
-    overflow: hidden;
-
-    .user-actions {
-      button {
-        width: 100%;
-        margin-bottom: .5rem;
-
-        font-size: 1.2rem;
-        font-weight: normal;
-        font-family: $secondary-font-stack;
-
-        background-color: rgba(var(--background), 1);
-
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-
-        &:last-child {
-          margin-bottom: 0;
-        }
-      }
-    }
-
-    .notifications-wrapper {
-      padding-top: 1rem;
-      max-height: 100%;
-      overflow: hidden;
-
-      .no-activity {
-        padding: 0;
-        margin: 0;
-        font-size: 1.2rem;
-      }
-
-      .notifications {
-        padding-bottom: 3rem;
-        max-height: 100%;
-        overflow-y: auto;
-        scrollbar-width: none;
-        -webkit-overflow-scrolling: touch;
-
-        p {
-          font-family: $secondary-font-stack;
-          font-size: 1.2rem;
-        }
-
-        &::-webkit-scrollbar {
-          display: none;
-        }
       }
     }
   }
@@ -202,8 +186,7 @@
   }
 
   @media (max-width: $mobile) {
-    grid-template-columns: 1fr;
-    grid-template-areas: 'sections' 'user-wrapper';
+    padding: 3rem 1.5rem;
 
     .sections-wrapper {
       overflow: auto;

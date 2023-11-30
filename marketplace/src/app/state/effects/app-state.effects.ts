@@ -14,7 +14,7 @@ import { ThemeService } from '@/services/theme.service';
 import { Phunk } from '@/models/db';
 import { MarketTypes } from '@/models/pipes';
 import { DataState } from '@/models/data.state';
-import { Cooldown, GlobalState } from '@/models/global-state';
+import { Cooldown, GlobalState, Transaction } from '@/models/global-state';
 
 import { EMPTY, concatMap, delay, distinctUntilChanged, filter, from, map, mergeMap, of, switchMap, tap, withLatestFrom } from 'rxjs';
 
@@ -73,8 +73,6 @@ export class AppStateEffects {
         );
       }
 
-      console.log('marketType', marketType);
-
       if (marketType === 'all') return this.store.select(dataStateSelectors.selectAllPhunks);
       if (marketType === 'listings') return this.store.select(dataStateSelectors.selectListings);
       if (marketType === 'bids') return this.store.select(dataStateSelectors.selectBids);
@@ -87,7 +85,9 @@ export class AppStateEffects {
     ofType(appStateActions.setWalletAddress),
     tap((action) => {
       const address = action.walletAddress;
-      const transactions = JSON.parse(localStorage.getItem(`EtherPhunks_transactions__${address}`) || '[]');
+      const transactions = JSON.parse(localStorage.getItem(`EtherPhunks_transactions__${address}`) || '[]').filter(
+        (txn: Transaction) => txn.type === 'complete' || txn.type === 'event'
+      );
       this.store.dispatch(appStateActions.setTransactions({ transactions }));
       this.store.dispatch(appStateActions.checkHasWithdrawal());
       this.store.dispatch(appStateActions.fetchUserPoints());
@@ -132,7 +132,10 @@ export class AppStateEffects {
   ));
 
   menuActive$ = createEffect(() => this.actions$.pipe(
-    ofType(appStateActions.setMenuActive, appStateActions.setTheme),
+    ofType(
+      appStateActions.setMenuActive,
+      appStateActions.setTheme
+    ),
     withLatestFrom(
       this.store.select(appStateSelectors.selectMenuActive),
       this.store.select(appStateSelectors.selectTheme)
@@ -158,11 +161,10 @@ export class AppStateEffects {
         return;
       }
       this.themeSvc.setThemeStyles(theme);
-
-      document.documentElement.style.setProperty(
-        '--header-text',
-        menuActive ? '255, 255, 255' : (this.themeSvc.themeStyles as any)[theme]['--header-text']
-      );
+      // document.documentElement.style.setProperty(
+      //   '--header-text',
+      //   menuActive ? '255, 255, 255' : (this.themeSvc.themeStyles as any)[theme]['--header-text']
+      // );
     }),
   ), { dispatch: false });
 
@@ -209,9 +211,16 @@ export class AppStateEffects {
       this.store.select(appStateSelectors.selectTransactions),
       this.store.select(appStateSelectors.selectWalletAddress),
     ),
-    tap(([_, transactions, address]) => localStorage.setItem(`EtherPhunks_transactions__${address}`, JSON.stringify(transactions))),
+    tap(([_, transactions, address]) => localStorage.setItem(
+      `EtherPhunks_transactions__${address}`,
+      JSON.stringify(transactions.filter((txn: Transaction) => txn.type === 'complete' || txn.type === 'event')))
+    ),
     concatMap(([action]) =>
-    action.type === '[App State] Upsert Transaction' && action.transaction.type === 'complete' ?
+      action.type === '[App State] Upsert Transaction'
+      && (
+        action.transaction.type === 'complete'
+        || action.transaction.type === 'error'
+      ) ?
       of(action).pipe(
         delay(5000),
         tap(() => {
@@ -224,14 +233,32 @@ export class AppStateEffects {
 
   onMouseUp$ = createEffect(() => this.actions$.pipe(
     ofType(appStateActions.mouseUp),
-    withLatestFrom(this.store.select(appStateSelectors.selectMenuActive)),
-    tap(([action, menuActive]) => {
+    withLatestFrom(
+      this.store.select(appStateSelectors.selectMenuActive),
+      this.store.select(appStateSelectors.selectSlideoutActive),
+    ),
+    tap(([action, menuActive, slideoutActive]) => {
+
+      const slideout = document.querySelector('app-slideout') as HTMLElement;
       const menu = document.querySelector('app-menu') as HTMLElement;
       const header = document.querySelector('app-header') as HTMLElement;
       const target = action.event.target as HTMLElement;
-      if (!menu?.contains(target) && !header.contains(target) && menuActive) {
+
+      if (
+        menuActive
+        && !menu?.contains(target)
+        && !header.contains(target)
+      ) {
         this.store.dispatch(appStateActions.setMenuActive({ menuActive: false }));
       }
+
+      if (
+        slideoutActive
+        && !slideout?.contains(target)
+      ) {
+        this.store.dispatch(appStateActions.setSlideoutActive({ slideoutActive: false }));
+      }
+
     }),
   ), { dispatch: false });
 

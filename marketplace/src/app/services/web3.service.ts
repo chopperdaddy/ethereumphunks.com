@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, NgZone } from '@angular/core';
 
 import { Store } from '@ngrx/store';
 
@@ -11,19 +11,22 @@ import DonationsAbi from '@/abi/Donations.json';
 import AuctionAbi from '@/abi/EtherPhunksAuctionHouse.json';
 import EtherPhunksMarketAbi from '@/abi/EtherPhunksMarket.json';
 
-import { TransactionReceipt, WatchBlockNumberReturnType, decodeFunctionData, formatEther, fromHex, isAddress, parseEther, toHex } from 'viem';
+import { TransactionReceipt, WatchBlockNumberReturnType, decodeFunctionData, encodeFunctionData, formatEther, getContract, isAddress, parseEther } from 'viem';
 import { mainnet, goerli } from 'viem/chains';
 
-import { configureChains, createConfig, disconnect, getAccount, getNetwork, getPublicClient, getWalletClient, switchNetwork, watchAccount, InjectedConnector } from '@wagmi/core';
+import { EIP6963Connector, createWeb3Modal, walletConnectProvider } from '@web3modal/wagmi';
+import { Web3Modal } from '@web3modal/wagmi/dist/types/src/client';
 
-import { createWeb3Modal, walletConnectProvider } from '@web3modal/wagmi'
 import { jsonRpcProvider } from '@wagmi/core/providers/jsonRpc';
-
 import { WalletConnectConnector } from '@wagmi/core/connectors/walletConnect';
+import { CoinbaseWalletConnector } from '@wagmi/core/connectors/coinbaseWallet';
+
+import { configureChains, createConfig, disconnect, getAccount, getNetwork, getPublicClient, getWalletClient, switchNetwork, watchAccount, InjectedConnector } from '@wagmi/core';
 
 import * as appStateActions from '@/state/actions/app-state.actions';
 
 import { GlobalState } from '@/models/global-state';
+import { Phunk } from '@/models/db';
 
 const marketAddress = environment.marketAddress;
 const pointsAddress = environment.pointsAddress;
@@ -32,35 +35,12 @@ const donationsAddress = environment.donationsAddress;
 
 const projectId = 'd183619f342281fd3f3ff85716b6016a';
 
-const { chains, publicClient } = configureChains([mainnet, goerli], [
-  jsonRpcProvider({ rpc: () => ({ http: environment.rpcHttpProvider }) }),
-  walletConnectProvider({ projectId }),
-]);
-
-const metadata = {
-  name: 'Ethereum Phunks',
-  description: 'Ethereum Phunks',
-  url: 'https://ethereumphunks.com',
-  icons: ['']
-};
-
-const wagmiConfig = createConfig({
-  autoConnect: true,
-  connectors: [
-    new WalletConnectConnector({ chains, options: { projectId, showQrModal: false, metadata } }),
-    // new EIP6963Connector({ chains }),
-    new InjectedConnector({ chains, options: { shimDisconnect: true } }),
-  ],
-  publicClient
-});
-
 const themeVariables = {
   '--w3m-font-family': 'Montserrat, sans-serif',
   '--w3m-accent': 'rgba(var(--highlight), 1)',
   '--w3m-z-index': 999,
   '--w3m-border-radius-master': '0',
 };
-const modal = createWeb3Modal({ wagmiConfig, projectId, chains, themeVariables })
 
 @Injectable({
   providedIn: 'root'
@@ -72,15 +52,48 @@ export class Web3Service {
   web3Connecting: boolean = false;
   connectedState!: Observable<any>;
 
+  modal!: Web3Modal;
+
   constructor(
-    private store: Store<GlobalState>
+    private store: Store<GlobalState>,
+    private ngZone: NgZone
   ) {
+    const { chains, publicClient } = configureChains([mainnet, goerli], [
+      jsonRpcProvider({ rpc: () => ({ http: environment.rpcHttpProvider }) }),
+      walletConnectProvider({ projectId }),
+    ]);
+
+    const metadata = {
+      name: 'Ethereum Phunks',
+      description: '',
+      url: 'https://ethereumphunks.com',
+    };
+
+    const wagmiConfig = createConfig({
+      autoConnect: true,
+      connectors: [
+        new WalletConnectConnector({ chains, options: { projectId, showQrModal: false } }),
+        new EIP6963Connector({ chains }),
+        new InjectedConnector({ chains, options: { shimDisconnect: true } }),
+        new CoinbaseWalletConnector({ chains, options: { appName: metadata.name }}),
+      ],
+      publicClient
+    });
+
+    this.modal = createWeb3Modal({
+      wagmiConfig,
+      projectId,
+      chains,
+      themeVariables,
+      defaultChain: goerli,
+    });
+
     this.createListeners();
   }
 
   createListeners(): void {
     this.connectedState = new Observable((observer) => watchAccount((account) => {
-      setTimeout(() => observer.next(account), 0);
+      this.ngZone.run(() => observer.next(account));
     }));
     this.connectedState.pipe(
       tap((account) => { if (account.isDisconnected) this.disconnectWeb3(); }),
@@ -106,7 +119,7 @@ export class Web3Service {
 
   async connect(): Promise<void> {
     try {
-      await modal.open();
+      await this.modal.open();
     } catch (error) {
       console.log(error);
       this.disconnectWeb3();
@@ -121,10 +134,7 @@ export class Web3Service {
     this.store.dispatch(appStateActions.setConnected({ connected: true }));
 
     this.startBlockWatcher();
-
-    if (this.checkNetwork() !== environment.chainId) {
-      await switchNetwork({ chainId: environment.chainId });
-    }
+    this.switchNetwork();
   }
 
   async disconnectWeb3(): Promise<void> {
@@ -132,6 +142,12 @@ export class Web3Service {
       await disconnect();
       this.store.dispatch(appStateActions.setWalletAddress({ walletAddress: '' }));
       this.store.dispatch(appStateActions.setConnected({ connected: getAccount().isConnected }));
+    }
+  }
+
+  async switchNetwork(): Promise<void> {
+    if (this.checkNetwork() !== environment.chainId) {
+      await switchNetwork({ chainId: environment.chainId });
     }
   }
 
@@ -186,8 +202,13 @@ export class Web3Service {
     return decoded;
   }
 
-  async marketContractInteraction(functionName: string, args: any[], value?: string): Promise<string | undefined> {
+  async marketContractInteraction(
+    functionName: string,
+    args: any[],
+    value?: string
+  ): Promise<string | undefined> {
     if (!functionName) return;
+    await this.switchNetwork();
 
     const network = getNetwork();
     const walletClient = await getWalletClient({ chainId: network.chain?.id });
@@ -236,8 +257,55 @@ export class Web3Service {
 
   async batchOfferPhunkForSale(hashIds: string[], listPrices: number[]): Promise<string | undefined> {
     const weiValues = listPrices.map((price) => BigInt(price * 1e18));
-    console.log('batchOfferPhunkForSale', hashIds, listPrices, weiValues);
     return this.marketContractInteraction('batchOfferPhunkForSale', [hashIds, weiValues]);
+  }
+
+  async batchBuyPhunks(phunks: Phunk[]): Promise<string | undefined> {
+
+    const abi = [{
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "phunkId",
+          "type": "bytes32"
+        }
+      ],
+      "name": "buyPhunk",
+      "outputs": [],
+      "stateMutability": "payable",
+      "type": "function"
+    }];
+    const walletClient = await getWalletClient();
+    const contract = getContract({
+      abi,
+      address: marketAddress as `0x${string}`,
+      publicClient: getPublicClient(),
+    });
+
+    const txns = [];
+    let value = 0;
+    for (const phunk of phunks) {
+      if (!phunk.listing?.minValue) continue;
+
+      const encodedData = encodeFunctionData({
+        abi,
+        functionName: 'buyPhunk',
+        args: [phunk.hashId],
+      });
+      txns.push(encodedData);
+    }
+
+    console.log('batchBuyPhunks', txns);
+
+    // return await walletClient?.writeContract({
+    //   chain: getNetwork().chain,
+    //   address: marketAddress as `0x${string}`,
+    //   abi: EtherPhunksMarketAbi,
+    //   functionName: 'multicall',
+    //   args: [txns],
+    // });
+
+    return;
   }
 
   async phunkNoLongerForSale(tokenId: string): Promise<string | undefined> {
@@ -245,6 +313,11 @@ export class Web3Service {
   }
 
   async transferPhunk(hashId: string, toAddress: string): Promise<string | undefined> {
+    if (!hashId) throw new Error('No phunk selected');
+    if (!toAddress) throw new Error('No address provided');
+
+    await this.switchNetwork();
+
     const wallet = await getWalletClient();
     return wallet?.sendTransaction({
       chain: getNetwork().chain,
@@ -253,6 +326,14 @@ export class Web3Service {
       value: BigInt(0),
       data: hashId as `0x${string}`,
     });
+  }
+
+  async batchTransferPhunks(hashIds: string[], toAddress: string | null): Promise<string | undefined> {
+    if (!hashIds.length) throw new Error('No phunks selected');
+    if (!toAddress) throw new Error('No address provided');
+    const hash = hashIds.map((res) => res.replace('0x', '')).join('');
+    console.log('batchTransferPhunks', {hashIds, toAddress});
+    return await this.transferPhunk(`0x${hash}`, toAddress);
   }
 
   async enterBidForPhunk(tokenId: string, value: number): Promise<string | undefined> {
@@ -298,6 +379,24 @@ export class Web3Service {
   //////////////////////////////////
 
   async getTransaction(hash: string): Promise<any> {}
+
+  pollReceipt(hash: string): Promise<TransactionReceipt> {
+    let resolved = false;
+    return new Promise(async (resolve, reject) => {
+      while (!resolved) {
+        console.log('polling');
+        try {
+          const receipt = await this.waitForTransaction(hash);
+          if (receipt) {
+            resolved = true;
+            resolve(receipt);
+          }
+        } catch (err) {
+          console.log(err);
+        }
+      }
+    });
+  }
 
   //////////////////////////////////
   // UTILS /////////////////////////

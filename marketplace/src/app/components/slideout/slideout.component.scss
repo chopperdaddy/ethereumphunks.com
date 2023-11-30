@@ -1,0 +1,29 @@
+:host {
+  position: fixed;
+  top: 0;
+  right: 0;
+
+  width: var(--slideout-width);
+  height: 100%;
+  z-index: 992;
+
+  background-color: rgba(var(--background), .85);
+  backdrop-filter: blur(1rem);
+
+  transform: translateX(100%);
+
+  overflow: scroll;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+
+  // color: rgba(var(--black), 1);
+
+  .inner {
+    padding: 3rem;
+    padding-top: calc(var(--header-height) + 6rem);
+  }
+}

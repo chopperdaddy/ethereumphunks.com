@@ -7,7 +7,7 @@
   width: 100%;
   height: var(--billboard-height);
 
-  background-color: rgba(var(--highlight), 1);
+  background-color: rgba(var(--base-color), 1);
 }
 
 .images-wrapper {
@@ -29,6 +29,7 @@
       display: block;
       width: 32rem;
       height: 32rem;
+      image-rendering: pixelated;
     }
   }
 }

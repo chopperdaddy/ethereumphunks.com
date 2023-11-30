@@ -64,7 +64,7 @@
               overflow: hidden;
               text-overflow: ellipsis;
 
-              app-wallet-address {
+              app-address {
 
               }
             }
@@ -100,8 +100,8 @@
           }
         }
 
-        &.bidwithdrawn,
-        &.bidentered {
+        &.phunkbidwithdrawn,
+        &.phunkbidentered {
           td {
             background-color: rgba(var(--bid-color), .5);
 
@@ -125,7 +125,7 @@
           }
         }
 
-        &.sale {
+        &.phunkbought {
           td {
             background-color: rgba(var(--sale-color), .5);
 
@@ -137,8 +137,8 @@
           }
         }
 
-        &.offered,
-        &.offerwithdrawn {
+        &.phunkoffered,
+        &.phunknolongerforsale {
           td {
             background-color: rgba(var(--listed-color), .5);
 

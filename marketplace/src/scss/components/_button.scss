@@ -1,0 +1,27 @@
+button {
+
+  .notif {
+    position: absolute;
+    top: -.5rem;
+    right: -.5rem;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    background-color: rgba(var(--pink), 1);
+    color: rgba(var(--white), 1);
+
+    height: 2rem;
+    padding: .5rem .65rem;
+
+    width: fit-content;
+
+    font-family: $secondary-font-stack;
+    font-size: 1rem;
+    font-weight: normal;
+    text-align: center;
+
+    border: .2rem solid rgba(var(--highlight), 1);
+  }
+}

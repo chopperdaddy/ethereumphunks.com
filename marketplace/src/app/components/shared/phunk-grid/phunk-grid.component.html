@@ -1,14 +1,13 @@
 @if ((mktType$ | async); as mktType) {
   @if (phunkData) {
     <div class="grid-wrapper" [class.selectable]="selectable" [class]="viewType">
-
       @for (
         phunk of phunkData |
         properties : (activeTraitFilters$ | async) : traitCount |
-        sort: (activeSort$ | async); track phunk.phunkId; let i = $index
+        sort: (activeSort$ | async) : (mktType$ | async); track phunk.phunkId; let i = $index
       ) {
         @if (i < limit) {
-          <ng-container *ngTemplateOutlet="phunkItem; context:{ $implicit: phunk, index: i }"></ng-container>
+          <ng-container *ngTemplateOutlet="phunkItem; context:{ $implicit: phunk, index: i }" />
         }
       }
     </div>

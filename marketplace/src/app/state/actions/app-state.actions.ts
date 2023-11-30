@@ -2,7 +2,7 @@ import { Phunk } from '@/models/db';
 
 import { createAction, props } from '@ngrx/store';
 
-import { MarketTypes, Sorts } from '@/models/pipes';
+import { MarketTypes, Sort, Sorts } from '@/models/pipes';
 import { AppState, EventType, Transaction } from '@/models/global-state';
 
 export const setConnected = createAction(
@@ -40,7 +40,7 @@ export const setMarketType = createAction(
 
 export const setActiveSort = createAction(
   '[Market] Set Active Sort',
-  props<{ activeSort: Sorts }>()
+  props<{ activeSort: Sort }>()
 );
 
 export const addRemoveTraitFilter = createAction(
@@ -65,6 +65,11 @@ export const setSelectedPhunks = createAction(
 export const setMenuActive = createAction(
   '[App State] Set Menu Active',
   props<{ menuActive: AppState['menuActive'] }>()
+);
+
+export const setSlideoutActive = createAction(
+  '[App State] Set Slideout Active',
+  props<{ slideoutActive: AppState['slideoutActive'] }>()
 );
 
 export const setTheme = createAction(

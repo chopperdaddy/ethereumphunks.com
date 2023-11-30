@@ -1,0 +1,33 @@
+<div class="leaderboard-header">
+  <div class="logo-wrapper">
+    <ng-template [ngTemplateOutlet]="pointsIcon"></ng-template>
+  </div>
+  <div>
+    <h3>Points Leaderboard</h3>
+    <p>Points represent your sales achievements and offer access to future rewards & exclusive airdrops within the ecosystem.</p>
+  </div>
+</div>
+
+<div class="grid-header">
+  <span></span>
+  <span>Wallet</span>
+  <span>Sales</span>
+  <span>Points</span>
+</div>
+
+@for (item of (leaderboard$ | async); track $index) {
+  <div
+    class="leaderboard-item"
+    [class]="'i' + $index">
+
+    <span class="rank" [class.highlight]="$index < 3" [class.top]="$index === 0">{{ $index + 1 }}</span>
+
+    <app-address [address]="item.address" />
+    <span class="sales">{{ item.sales }}</span>
+    <span class="points">{{ item.points }}</span>
+  </div>
+}
+
+<ng-template #pointsIcon>
+  <svg height="119" viewBox="0 0 119 119" width="119" xmlns="http://www.w3.org/2000/svg"><path d="m17 17v17h-17v-17zm17-17v17h-17v-17zm0 17v-17h34v17zm-34 17h17v34h-17zm68 17v-17h34v34h-17v-17zm51-17h-17v17h17zm-85 17v-17h34v17zm0 17h-17v17h17zm0 17v-17h34v17zm34-68v-17h34v34h-17v-17zm0 68v-17h34v17zm17 0h17v34h-17z"/></svg>
+</ng-template>

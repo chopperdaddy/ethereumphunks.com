@@ -18,12 +18,15 @@
       @if ((connected$ | async)) {
 
         @if ((walletAddress$ | async); as address) {
-          <app-wallet-address [address]="address" />
+          <app-address [address]="address" />
         }
 
-        <button class="points">
-          {{ (userPoints$ | async) | number }}
+        <button
+          class="points"
+          (click)="toggleMenu$.next()">
+
           <ng-template [ngTemplateOutlet]="pointsIcon" />
+          {{ (userPoints$ | async) | number }}
         </button>
 
         <button
@@ -63,9 +66,10 @@
 </ng-template>
 
 <ng-template #menuIcon>
-  <svg height="6" viewBox="0 0 10 6" width="10" xmlns="http://www.w3.org/2000/svg"><path d="m6 4v2h-2v-2zm2-2v2h-2v-2zm-4 0v2h-2v-2zm6-2v2h-2v-2zm-8 0v2h-2v-2z" fill="#c3ff00" fill-rule="evenodd"/></svg>
+  <!-- <svg height="6" viewBox="0 0 10 6" width="10" xmlns="http://www.w3.org/2000/svg"><path d="m6 4v2h-2v-2zm2-2v2h-2v-2zm-4 0v2h-2v-2zm6-2v2h-2v-2zm-8 0v2h-2v-2z" fill="#c3ff00" fill-rule="evenodd"/></svg> -->
+  <svg height="15" viewBox="0 0 9 15" width="9" xmlns="http://www.w3.org/2000/svg"><path d="m6 6h3v3h-3zm-3-3h3v3h-3zm0 6h3v3h-3zm-3-9h3v3h-3zm0 12h3v3h-3z" fill-rule="evenodd"/></svg>
 </ng-template>
 
 <ng-template #pointsIcon>
-  <svg height="7" viewBox="0 0 7 7" width="7" xmlns="http://www.w3.org/2000/svg"><path d="m6 0v.99994118l1 .00005882v1h-1l-.00005882-1h-.99994118v-1zm-3 1v-1h2v1zm3 1h1v2h-1zm-5 0h2v1h-1v1h-1zm-1 0h1v1h-1zm3 1v-1h2v1zm2 1h1v1h-1zm-2 1v-1h2v1zm-2-5h2v1h-1v1h-1zm0 5v-1h2v1zm0 0h1v2h-1z"/></svg>
+  <svg height="119" viewBox="0 0 119 119" width="119" xmlns="http://www.w3.org/2000/svg"><path d="m17 17v17h-17v-17zm17-17v17h-17v-17zm0 17v-17h34v17zm-34 17h17v34h-17zm68 17v-17h34v34h-17v-17zm51-17h-17v17h17zm-85 17v-17h34v17zm0 17h-17v17h17zm0 17v-17h34v17zm34-68v-17h34v34h-17v-17zm0 68v-17h34v17zm17 0h17v34h-17z"/></svg>
 </ng-template>

@@ -9,7 +9,7 @@
               <h2>
                 by
                 <a [href]="env.explorerUrl + '/address/' + address" target="_blank">
-                  <app-wallet-address [address]="address" class="highlight"></app-wallet-address>
+                  <app-address [address]="address" class="highlight" />
                 </a>
               </h2>
             }
@@ -44,13 +44,13 @@
             </button>
 
             @if (
-              marketType === 'owned' &&
-              (route.snapshot.queryParams.address | lowercase) === (walletAddress$ | async)
+              (marketType === 'owned'
+              && (route.snapshot.queryParams.address | lowercase) === (walletAddress$ | async))
+              || marketType === 'listings'
             ) {
               <div class="select-buttons">
-
-                <button (click)="setSelectMiltiple()">Select</button>
-                @if (selectMutipleActive) {
+                <button (click)="setSelectMiltiple()" [class.active]="selectMutipleActive">Select</button>
+                @if (selectMutipleActive && marketType !== 'listings') {
                   <button
                     class="all-none"
                     [class.all]="selectAll"
@@ -65,20 +65,32 @@
         </div>
 
         @if (
-          selectMutipleActive &&
-          marketType === 'owned' &&
-          (route.snapshot.queryParams.address | lowercase) === (walletAddress$ | async)
+          selectMutipleActive
+          && (((marketType === 'owned')
+          && (route.snapshot.queryParams.address | lowercase) === (walletAddress$ | async)) || marketType === 'listings')
         ) {
           <div class="selection-toolbar">
             <div class="selected-label">
-              Selected: {{ selectedLength }}
+              Selected: <span>{{ selectedLength }}</span>
             </div>
 
             <div class="actions" [class.disabled]="!selectedLength">
-              <button (click)="batchAction('list')" [class.disabled]="!actionsState.canList">List</button>
-              <button (click)="batchAction('transfer')" [class.disabled]="!actionsState.canTransfer">Transfer</button>
-              <button (click)="batchAction('escrow')" [class.disabled]="!actionsState.canEscrow">Escrow</button>
-              <button (click)="batchAction('withdraw')" [class.disabled]="!actionsState.canWithdraw">Withdraw</button>
+              @if (marketType === 'owned') {
+                <button (click)="batchAction('list')" [class.disabled]="!actionsState.canList">List</button>
+                <button (click)="batchAction('transfer')" [class.disabled]="!actionsState.canTransfer">Transfer</button>
+                <button (click)="batchAction('escrow')" [class.disabled]="!actionsState.canEscrow">Escrow</button>
+                <button (click)="batchAction('withdraw')" [class.disabled]="!actionsState.canWithdraw">Withdraw</button>
+              } @else if (marketType === 'listings') {
+                <div class="total-value">
+                  <span class="label">Total Cost: </span>
+                  <span class="value">{{ selectedValue | weiToEth }}Ξ</span>
+                </div>
+                <button (click)="batchAction('sweep')" class="disabled">
+                  Buy Selected
+
+                  <!-- <span class="notif">coming soon</span> -->
+                </button>
+              }
             </div>
           </div>
         }
@@ -97,9 +109,9 @@
           [phunkData]="phunkData"
           [selectAll]="selectAll"
           [selectable]="
-            selectMutipleActive &&
-            marketType === 'owned' &&
-            (route.snapshot.queryParams.address | lowercase) === (walletAddress$ | async)
+            selectMutipleActive
+            && (((marketType === 'owned')
+            && (route.snapshot.queryParams.address | lowercase) === (walletAddress$ | async)) || marketType === 'listings')
           "
           [(selected)]="selected"
           (selectedChange)="selectedChange($event)"
@@ -109,41 +121,88 @@
   </div>
 }
 
-<app-modal [class.active]="isListingBulk">
-  <form *ngIf="isListingBulk" [formGroup]="bulkListingForm">
-    <div class="top-bar">
-      <h2 i18n>Bulk List <span class="highlight">{{ bulkListingForm.value.listingPhunks?.length }}</span> Phunks</h2>
-    </div>
+<app-slideout [active]="!!(slidseoutActive$ | async)">
+  @if (isListingBulk) {
+    <form [formGroup]="bulkListingForm">
+      <div class="top-bar">
+        <h2 i18n>Bulk List <span class="highlight">{{ bulkListingForm.value.listingPhunks?.length }}</span> EtherPhunks</h2>
+        @if (deselected.length) {
+          <h3>
+            <span class="highlight">
+              {{ deselected.length }}
+            </span> Selected EtherPhunks are not eligible to be listed
+          </h3>
+        }
+      </div>
 
-    <div class="selected-wrapper">
-      <ng-container formArrayName="listingPhunks">
-        @for (phunk of selectedPhunksFormArray.controls; track phunk; let i = $index) {
-          <div [formGroupName]="i">
+      <div class="selected-wrapper">
+        <ng-container formArrayName="listingPhunks">
+          @for (phunk of selectedPhunksFormArray.controls; track phunk; let i = $index) {
+            <div [formGroupName]="i">
 
-            <div class="selected">
-              <img
-                [lazyLoad]="dataSvc.staticUrl + '/images/phunk' + (phunk.value.phunkId | tokenIdParse) + '.svg'"
-                [defaultImage]="'assets/loadingphunk.png'"
-                width="50"
-                height="50"
-              />
+              <div class="selected">
+                <img
+                  [lazyLoad]="dataSvc.staticUrl + '/images/phunk' + (phunk.value.phunkId | tokenIdParse) + '.svg'"
+                  [defaultImage]="'assets/loadingphunk.png'"
+                  width="50"
+                  height="50"
+                />
 
-              <div class="form-item">
-                <label [for]="phunk.value.phunkId">List Price</label>
-                <input type="number" [id]="phunk.value.phunkId" placeholder="ETH" formControlName="listPrice">
+                <div class="form-group">
+                  <label [for]="phunk.value.phunkId">List Price</label>
+                  <input type="number" [id]="phunk.value.phunkId" placeholder="ETH" formControlName="listPrice">
+                  @if (selectedPhunksFormArray.controls[i].get('listPrice')?.value) {
+                    <button tabindex="-1" class="copy" (click)="copyToNext(i)">Copy</button>
+                  }
+                </div>
               </div>
             </div>
+          }
+        </ng-container>
+      </div>
+
+      <div class="form-actions">
+        <button type="reset" (click)="closeModal()">Cancel</button>
+        <button type="submit" (click)="submitBatchListing()">List All</button>
+      </div>
+    </form>
+  } @else if (isTransferingBulk) {
+    <form [formGroup]="bulkListingForm" class="transfer">
+      <div class="top-bar">
+        <h2 i18n>Bulk transfer <span class="highlight">{{ bulkListingForm.value.listingPhunks?.length }}</span> Phunks</h2>
+        @if (deselected.length) {
+          <h3>
+            <span class="highlight">
+              {{ deselected.length }}
+            </span> Selected EtherPhunks are not eligible to be transferred
+          </h3>
+        }
+      </div>
+
+      <div class="image-grid-wrapper">
+        @for (phunk of selectedPhunksFormArray.controls; track phunk; let i = $index) {
+          <div class="image">
+            <img
+              [lazyLoad]="dataSvc.staticUrl + '/images/phunk' + (phunk.value.phunkId | tokenIdParse) + '.svg'"
+              [defaultImage]="'assets/loadingphunk.png'"
+            />
           </div>
         }
-      </ng-container>
-    </div>
+      </div>
 
-    <div class="form-actions">
-      <button type="reset" (click)="isListingBulk = false">Cancel</button>
-      <button type="submit" (click)="submitBatchListing()">List All</button>
-    </div>
-  </form>
-</app-modal>
+      <div class="form-group">
+        <label i18n for="transfer-address">Transfer to address</label>
+        <input #transferAddressInput type="text" id="transfer-address" [formControl]="transferAddress"
+          placeholder="0x or .ens" role="presentation" autocomplete="off" />
+      </div>
+
+      <div class="form-actions">
+        <button type="reset" (click)="closeModal()">Cancel</button>
+        <button type="submit" (click)="submitBatchTransfer()">Transfer All</button>
+      </div>
+    </form>
+  }
+</app-slideout>
 
 <ng-template #prevIcon>
   <svg height="13" viewBox="0 0 8 13" width="8" xmlns="http://www.w3.org/2000/svg">

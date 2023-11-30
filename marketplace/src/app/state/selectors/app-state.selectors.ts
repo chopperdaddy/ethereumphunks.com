@@ -54,6 +54,11 @@ export const selectMenuActive = createSelector(
   (appState: AppState) => appState.menuActive
 );
 
+export const selectSlideoutActive = createSelector(
+  selectAppState,
+  (appState: AppState) => appState.slideoutActive
+);
+
 export const selectTheme = createSelector(
   selectAppState,
   (appState: AppState) => appState.theme
@@ -83,3 +88,5 @@ export const selectUserPoints = createSelector(
   selectAppState,
   (appState: AppState) => appState.userPoints
 );
+
+

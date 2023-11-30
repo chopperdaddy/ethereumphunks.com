@@ -11,11 +11,10 @@
       <div class="title-wrapper">
         <h1 i18n>EtherPhunk {{ phunk.phunkId }}</h1>
         <div class="hash-id">
-          <!-- {{ phunk.hashId }} -->
-          <app-wallet-address
-            [address]="phunk.hashId"
-            [clickCopy]="true"
-          />
+          <span>Hash ID: </span>
+          <a [href]="explorerUrl + '/tx/' + phunk.hashId" target="_blank">
+            <app-address [address]="phunk.hashId" />
+          </a>
         </div>
         @if (phunk.attributes) {
         <h2 i18n>One of {{ phunk.attributes[0].v | traitCount }}
@@ -41,12 +40,12 @@
               @if (phunk.isEscrowed) {
                 <!-- Owner -->
                 @if (phunk.prevOwner; as owner) {
-                  <p i18n>This EtherPhunk is held in <a [routerLink]="['/', 'owned']" [queryParams]="{ address: escrowAddress }">escrow</a> for <a [routerLink]="['/', 'owned']" [queryParams]="{ address: owner }"><app-wallet-address [address]="owner"></app-wallet-address></a>.</p>
+                  <p i18n>This EtherPhunk is held in <a [routerLink]="['/', 'owned']" [queryParams]="{ address: escrowAddress }">escrow</a> for <a [routerLink]="['/', 'owned']" [queryParams]="{ address: owner }"><app-address [address]="owner" /></a>.</p>
                 }
               } @else {
                 <!-- Owner -->
                 @if (phunk.owner; as owner) {
-                  <p i18n>This EtherPhunk is owned by <a [routerLink]="['/', 'owned']" [queryParams]="{ address: owner }"><app-wallet-address [address]="owner"></app-wallet-address></a>.</p>
+                  <p i18n>This EtherPhunk is owned by <a [routerLink]="['/', 'owned']" [queryParams]="{ address: owner }"><app-address [address]="owner" /></a>.</p>
                 }
               }
 
@@ -60,7 +59,7 @@
               <!-- Has bid -->
               @if (phunk.bid; as bid) {
                 @if (bid.value && bid.fromAddress) {
-                  <p i18n>There is a bid of <span class="bold">{{ bid.value | weiToEth }} ETH</span> ({{ ((bid.value | weiToEth) * ((dataSvc.usd$ | async) || 0)) | currency }}) for this EtherPhunk from <a [routerLink]="['/', 'owned']" [queryParams]="{ address: bid.fromAddress }"><app-wallet-address [address]="bid.fromAddress"></app-wallet-address></a>.</p>
+                  <p i18n>There is a bid of <span class="bold">{{ bid.value | weiToEth }} ETH</span> ({{ ((bid.value | weiToEth) * ((dataSvc.usd$ | async) || 0)) | currency }}) for this EtherPhunk from <a [routerLink]="['/', 'owned']" [queryParams]="{ address: bid.fromAddress }"><app-address [address]="bid.fromAddress" /></a>.</p>
                 }
               } @else {
                 <p i18n>There are no bids on this EtherPhunk.</p>
@@ -168,8 +167,15 @@
                     <button i18n class="sell" (click)="acceptBidForPhunk(phunk)">
                       Accept Top Bid
                     </button>
-                  } @else {
-                    <ng-container *ngTemplateOutlet="escrowForm; context:{ $implicit: phunk, type: 'bid' }" />
+                  } @else if ((owner | lowercase) === (address | lowercase)) {
+                    <button i18n class="sell" [class.active]="acceptbidActive" (click)="acceptBid()">
+                      Accept Top Bid
+                    </button>
+
+                    @if (acceptbidActive) {
+                      <ng-container *ngTemplateOutlet="escrowForm; context:{ $implicit: phunk, type: 'bid' }" />
+                    }
+
                     <!-- <button i18n class="sell" (click)="acceptBidForPhunk(phunk)">
                       Accept Top Bid
                     </button> -->
@@ -262,7 +268,7 @@
     <!-- @if (isCooling$ | async) { <ng-template [ngTemplateOutlet]="cooldown" /> } -->
     <div class="form-group">
       <label i18n for="bid-price">Bid Price (Ξ)</label>
-      <input #bidPriceInput type="number" id="bid-price" [formControl]="bidPrice" placeholder="0" />
+      <input #bidPriceInput type="number" id="bid-price" [formControl]="bidPrice" />
     </div>
 
     <div class="form-actions">
@@ -314,7 +320,7 @@
 
 <ng-template #cooldown>
   <div class="cooldown-wrapper">
-    <p>6 Block cooldown period</p>
+    <p>{{ web3Svc.maxCooldown }} Block cooldown period</p>
     <img src="/assets/loader-phunk.gif" width="30" height="30" alt="">
   </div>
 </ng-template>

@@ -12,6 +12,7 @@ $base-url: '/assets/' !default;
 :root {
   --header-height: 8rem;
   --billboard-height: 50rem;
+  --slideout-width: 46rem;
 
   --max-width: 140rem;
 
@@ -40,5 +41,6 @@ $base-url: '/assets/' !default;
 
   @media (max-width: $mobile) {
     --header-height: 12rem;
+    --slideout-width: 100%;
   }
 }

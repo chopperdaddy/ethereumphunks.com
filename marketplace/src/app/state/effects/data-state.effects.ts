@@ -23,23 +23,23 @@ export class DataStateEffects {
 
   dbEventTriggered$ = createEffect(() => this.actions$.pipe(
     ofType(dataStateActions.dbEventTriggered),
+    withLatestFrom(
+      this.store.select(dataStateSelectors.selectSinglePhunk)
+    ),
+    tap(([action, singlePhunk]) => {
+      const newEvent = action.payload.new as Event;
+      const eventHashId = newEvent.hashId;
+      if (singlePhunk && singlePhunk.hashId === eventHashId) {
+        this.store.dispatch(dataStateActions.refreshSinglePhunk());
+        this.store.dispatch(dataStateActions.fetchTxHistory({ hashId: eventHashId }));
+      }
+    }),
     // Start with the throttle
     throttleTime(3000, asyncScheduler, {
       leading: true, // emit the first value immediately
       trailing: true // emit the last value in the window
     }),
-    // Now, inside the throttle, apply debounce to catch any final burst of events
-    // switchMap(action =>
-    //   timer(3000).pipe( // 3 second after the last burst of events
-    //     map(() => action),
-    //     // Start with the first event
-    //     startWith(action)
-    //   )
-    // ),
-    // tap((action) => console.log('dbEventTriggered', action)),
-    withLatestFrom(this.store.select(appStateSelectors.selectWalletAddress)),
     map(([action]) => action.payload.new as Event),
-    filter((newData) => !!newData),
     withLatestFrom(
       this.store.select(dataStateSelectors.selectSinglePhunk),
       this.store.select(appStateSelectors.selectWalletAddress),
@@ -52,6 +52,7 @@ export class DataStateEffects {
 
       this.store.dispatch(dataStateActions.fetchOwnedPhunks());
       this.store.dispatch(dataStateActions.fetchMarketData());
+      this.store.dispatch(appStateActions.fetchUserPoints());
       this.store.dispatch(appStateActions.setEventTypeFilter({ eventTypeFilter: activeEventTypeFilter }));
     }),
   ), { dispatch: false });

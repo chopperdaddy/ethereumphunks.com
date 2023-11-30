@@ -10,3 +10,13 @@ main {
     // padding-top: calc((var(--header-height) / 2) + 4rem);
   }
 }
+
+.header-backdrop {
+  position: fixed;
+  z-index: 990;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: var(--header-height);
+  background-color: rgba(var(--base-color), 1);
+}

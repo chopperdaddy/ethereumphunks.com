@@ -4,7 +4,7 @@ import { Web3Service } from '@/services/web3.service';
 
 @Directive({
   standalone: true,
-  selector: 'app-wallet-address'
+  selector: 'app-address'
 })
 
 export class WalletAddressDirective implements OnChanges {

@@ -13,6 +13,7 @@ import { Web3Service } from '@/services/web3.service';
 import { PhunkGridComponent } from '@/components/shared/phunk-grid/phunk-grid.component';
 import { TxModalComponent } from '@/components/tx-modal/tx-modal.component';
 import { NotifComponent } from '@/components/shared/notif/notif.component';
+import { LeaderboardComponent } from '../leaderboard/leaderboard.component';
 
 import { WalletAddressDirective } from '@/directives/wallet-address.directive';
 
@@ -22,10 +23,11 @@ import * as appStateActions from '@/state/actions/app-state.actions';
 import * as dataStateActions from '@/state/actions/data-state.actions';
 import * as dataStateSelectors from '@/state/selectors/data-state.selectors';
 
+import { WeiToEthPipe } from '@/pipes/wei-to-eth.pipe';
+
 import anime from 'animejs';
 
 import { map, tap } from 'rxjs';
-import { WeiToEthPipe } from '@/pipes/wei-to-eth.pipe';
 
 @Component({
   selector: 'app-menu',
@@ -38,6 +40,7 @@ import { WeiToEthPipe } from '@/pipes/wei-to-eth.pipe';
     PhunkGridComponent,
     NotifComponent,
     TxModalComponent,
+    LeaderboardComponent,
 
     WeiToEthPipe,
 
@@ -82,11 +85,10 @@ export class MenuComponent implements AfterViewInit {
     private web3Svc: Web3Service,
     private el: ElementRef,
   ) {
-    el.nativeElement.style.transform = 'translateY(-100%)';
+    el.nativeElement.style.transform = 'translateX(100%)';
   }
 
   ngAfterViewInit(): void {
-
     this.menuActive$.pipe(
       tap((active: boolean) => console.log(`Menu active: ${active}`)),
       tap((active: boolean) => {
@@ -95,7 +97,7 @@ export class MenuComponent implements AfterViewInit {
           duration: 400,
         }).add({
           targets: this.el?.nativeElement,
-          translateY: active ? '0%' : '-100%',
+          translateX: active ? '0' : '100%',
         }).add({
           targets: this.menuInner?.nativeElement,
           opacity: active ? 1 : 0,
@@ -104,6 +106,16 @@ export class MenuComponent implements AfterViewInit {
     ).subscribe();
 
     this.store.dispatch(dataStateActions.fetchUserOpenBids());
+  }
+
+  async disconnect(): Promise<void> {
+    await this.web3Svc.disconnectWeb3();
+    this.store.dispatch(appStateActions.setMenuActive({ menuActive: false }));
+  }
+
+  async withdraw(): Promise<void> {
+    await this.web3Svc.withdraw();
+    this.store.dispatch(appStateActions.checkHasWithdrawal());
   }
 
   createOwnedStats(owned: Phunk[] | null) {
@@ -161,14 +173,5 @@ export class MenuComponent implements AfterViewInit {
       bids: bids?.length,
       bidsValue: totalBidValue,
     };
-  }
-
-  async disconnect(): Promise<void> {
-    await this.web3Svc.disconnectWeb3();
-    this.store.dispatch(appStateActions.setMenuActive({ menuActive: false }));
-  }
-
-  async withdraw(): Promise<void> {
-    await this.web3Svc.withdraw();
   }
 }

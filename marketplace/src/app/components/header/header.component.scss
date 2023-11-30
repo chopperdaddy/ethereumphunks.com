@@ -27,8 +27,6 @@
     padding: 0 3rem;
     height: var(--header-height);
 
-    background-color: rgba(var(--base-color), 1);
-
     .logo {
       grid-area: logo;
       width: 26rem;
@@ -63,7 +61,7 @@
         display: flex;
         align-items: center;
 
-        app-wallet-address {
+        app-address {
           font-family: $secondary-font-stack;
           color: rgba(var(--header-text), 1);
           font-size: 1.4rem;
@@ -83,26 +81,6 @@
 
           &.menu {
             position: relative;
-            .notif {
-              position: absolute;
-              top: -.5rem;
-              right: -.5rem;
-
-              display: flex;
-              align-items: center;
-              justify-content: center;
-
-              background-color: rgba(var(--pink), 1);
-              color: rgba(var(--white), 1);
-
-              width: 2rem;
-              height: 2rem;
-
-              font-family: $secondary-font-stack;
-              font-size: 1.2rem;
-              font-weight: normal;
-              text-align: center;
-            }
 
             .arrow {
               display: flex;
@@ -131,9 +109,9 @@
             margin-right: .3rem;
 
             svg {
-              width: 1.4rem;
-              height: 1.4rem;
-              margin-left: .75rem;
+              width: 1.2rem;
+              height: 1.2rem;
+              margin-right: .75rem;
 
               path {
                 fill: rgba(var(--header-highlight), 1);
@@ -185,7 +163,7 @@
     }
 
     &.active {
-      background-color: rgba(var(--base-color), 0);
+      // background-color: rgba(var(--base-color), 0);
     }
   }
 
@@ -196,7 +174,7 @@
       grid-template-areas: "logo user-tools" "search search";
 
       height: var(--header-height);
-      padding: 0 1.5rem 1rem;
+      padding: 0 1.5rem;
 
       .logo {
         overflow: hidden;
@@ -215,14 +193,14 @@
       }
 
       app-search {
-        padding-top: 1rem;
+        // padding-top: 1rem;
       }
 
       .user-tools {
         .connect-menu {
           position: relative;
 
-          app-wallet-address {
+          app-address {
             font-size: 1rem;
           }
         }
