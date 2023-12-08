@@ -22,7 +22,7 @@ export class BlockService {
 
   async addBlockToQueue(blockNum: number, timestamp: number) {
     const jobId = `block_${blockNum}__${chain}`;
-    const maxRetries = 10;
+    const maxRetries = 69;
 
     const existingJob = await this.queue.getJob(jobId);
     if (existingJob) {
@@ -45,7 +45,7 @@ export class BlockService {
         removeOnFail: true,
       }
     );
-    Logger.log(`Added block ${blockNum} to queue`);
+    if (blockNum % 1000 === 0) Logger.debug(`Added block ${blockNum} to queue`);
   }
 
   async getOrCreateBlockFile(block: number): Promise<number> {

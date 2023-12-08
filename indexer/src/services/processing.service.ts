@@ -7,13 +7,15 @@ import { SupabaseService } from './supabase.service';
 import { UtilityService } from '../utils/utility.service';
 
 import { esip1Abi, esip2Abi } from 'src/abi/EthscriptionsProtocol';
+
 import { etherPhunksMarketAbi } from 'src/abi/EtherPhunksMarket';
+import etherPhunksAuctionHouseAbi from 'src/abi/EtherPhunksAuctionHouse.json';
 
 import * as esips from 'src/constants/EthscriptionsProtocol';
 
 import { Phunk } from 'src/models/db';
 
-import { DecodeEventLogReturnType, FormattedTransaction, Log, Transaction, decodeEventLog, hexToString } from 'viem';
+import { DecodeEventLogReturnType, FormattedTransaction, Log, Transaction, TransactionReceipt, decodeEventLog, hexToString } from 'viem';
 
 import crypto from 'crypto';
 import dotenv from 'dotenv';
@@ -66,7 +68,7 @@ export class ProcessingService {
   async processBlock(blockNum: number): Promise<void> {
     const { txns, createdAt } = await this.web3Svc.getBlockTransactions(blockNum);
     const timeAgo = this.timeSvc.howLongAgo(createdAt as any);
-    Logger.debug(`Processing block ${blockNum} (${this.web3Svc.chain}) ➖ ${timeAgo}`);
+    Logger.log(`Processing block ${blockNum} (${this.web3Svc.chain}) ➖ ${timeAgo}`);
     await this.processTransactions(txns, createdAt);
   }
 
@@ -91,21 +93,27 @@ export class ProcessingService {
   }
 
   // Method to add transactions to the database
-  async processTransactions(txns: FormattedTransaction[], createdAt: Date) {
+  async processTransactions(
+    txns: { transaction: FormattedTransaction; receipt: TransactionReceipt; }[],
+    createdAt: Date
+  ) {
 
-    // Filter empty transactions and sort by transaction index
-    txns = txns.sort((a, b) => a.transactionIndex - b.transactionIndex);
+    // Sort by transaction index
+    txns = txns.sort((a, b) => a.receipt.transactionIndex - a.receipt.transactionIndex);
 
     for (let i = 0; i < txns.length; i++) {
-      const transaction = txns[i] as Transaction;
-      const { hash } = transaction;
+      const transaction = txns[i].transaction as Transaction;
+      const receipt = txns[i].receipt as TransactionReceipt;
+
+      const { input } = transaction;
 
       // Skip any transaction with no input
-      if (transaction.input === '0x') continue;
+      // Skip any transaction that failed
+      if (input === '0x' || receipt.status !== 'success') continue;
 
       // DISABLED: All 10,000 have been ethscribed
       // Check if possible ethPhunk
-      const { possibleEthPhunk, cleanedString } = this.possibleEthPhunk(transaction.input);
+      const { possibleEthPhunk, cleanedString } = this.possibleEthPhunk(input);
       if (possibleEthPhunk) {
         Logger.debug('Processing ethscription', transaction.hash);
         await this.processEthscriptionEvent(transaction as Transaction, createdAt, cleanedString);
@@ -113,34 +121,27 @@ export class ProcessingService {
       }
 
       // Check if possible transfer
-      const possibleTransfer = transaction.input.substring(2).length === SEGMENT_SIZE;
+      const possibleTransfer = input.substring(2).length === SEGMENT_SIZE;
       if (possibleTransfer) {
         Logger.debug(`Processing transfer (${this.web3Svc.chain})`, transaction.hash);
         await this.processTransferEvent(
-          transaction.input,
+          input,
           transaction as Transaction,
           createdAt
         );
-        // continue;
-
-        /**
-         * NOTE: In some instances, we're seeing these transfers
-         * coming from the smart contract. These are not valid EOA
-         * transfers, so we should NOT "continue" but rather proceed
-         * with marketplace transfers
-         */
       }
 
-      const possibleBatchTransfer = transaction.input.substring(2).length % SEGMENT_SIZE === 0;
+      // Check if possible batch transfer
+      const possibleBatchTransfer =
+        input.substring(2).length !== SEGMENT_SIZE
+        && input.substring(2).length % SEGMENT_SIZE === 0;
+
       if (possibleBatchTransfer) {
         await this.processEsip5(
           transaction as Transaction,
           createdAt
         );
       }
-
-      // Check if possible marketplace event
-      const receipt = await this.web3Svc.getTransactionReceipt(hash);
 
       // Filter logs for ethscription transfers (esip1)
       const esip1Transfers = receipt.logs.filter(
@@ -176,7 +177,19 @@ export class ProcessingService {
           `Processing EtherPhunk Marketplace event (${this.web3Svc.chain})`,
           transaction.hash
         );
-        await this.processMarketplaceEvents(marketplaceLogs, transaction, createdAt);
+        await this.processEtherPhunkMarketplaceEvents(marketplaceLogs, transaction, createdAt);
+      }
+
+      // Filter logs for EtherPhunk Auction House Events
+      const auctionHouseLogs = receipt.logs.filter(
+        (log: any) => log.address === this.web3Svc.auctionAddress
+      );
+      if (auctionHouseLogs.length) {
+        Logger.debug(
+          `Processing EtherPhunk Auction House event (${this.web3Svc.chain})`,
+          transaction.hash
+        );
+        await this.processAuctionHouseEvents(auctionHouseLogs, transaction, createdAt);
       }
     }
   }
@@ -251,7 +264,7 @@ export class ProcessingService {
 
     const samePrevOwner = (ethPhunk.prevOwner && prevOwner) ? ethPhunk.prevOwner.toLowerCase() === prevOwner.toLowerCase() : true;
 
-    console.log({isMatchedHashId, transferrerIsOwner, samePrevOwner});
+    // console.log({isMatchedHashId, transferrerIsOwner, samePrevOwner});
 
     if (!isMatchedHashId || !transferrerIsOwner || !samePrevOwner) return;
 
@@ -355,7 +368,7 @@ export class ProcessingService {
     }
   }
 
-  async processMarketplaceEvents(
+  async processEtherPhunkMarketplaceEvents(
     marketplaceLogs: any[],
     transaction: Transaction,
     createdAt: Date
@@ -370,11 +383,11 @@ export class ProcessingService {
         topics: log.topics,
       });
 
-      await this.processMarketplaceEvent(transaction, createdAt, decoded, log);
+      await this.processEtherPhunkMarketplaceEvent(transaction, createdAt, decoded, log);
     }
   }
 
-  async processMarketplaceEvent(
+  async processEtherPhunkMarketplaceEvent(
     txn: Transaction,
     createdAt: Date,
     decoded: DecodeEventLogReturnType,
@@ -385,24 +398,33 @@ export class ProcessingService {
 
     if (!eventName || !args) return;
 
-    const phunkId =
+    const hashId =
       args.id ||
       args.phunkId ||
       args.potentialEthscriptionId;
 
-    if (!phunkId) return;
+    if (!hashId) return;
 
-    const phunkExists = await this.sbSvc.checkEthPhunkExistsByHashId(phunkId);
+    const phunkExists = await this.sbSvc.checkEthPhunkExistsByHashId(hashId);
     if (!phunkExists) return;
 
+    // Get or create the users from address
+    await this.sbSvc.getOrCreateUser(txn.from, createdAt);
+
     if (eventName === 'PhunkBought') {
-      const { phunkId, fromAddress, toAddress, value } = args;
-      await this.sbSvc.removeListing(createdAt, phunkId);
+      const { phunkId: hashId, fromAddress, toAddress, value } = args;
+
+      const bid = await this.sbSvc.getBid(hashId);
+      if (bid && bid.fromAddress?.toLowerCase() === toAddress.toLowerCase()) {
+        await this.sbSvc.removeBid(hashId);
+      }
+
+      await this.sbSvc.removeListing(hashId);
       await this.sbSvc.addEvent(
         txn,
         fromAddress,
         toAddress,
-        phunkId,
+        hashId,
         phunkExists.phunkId,
         eventName,
         createdAt,
@@ -414,13 +436,13 @@ export class ProcessingService {
     }
 
     if (eventName === 'PhunkBidEntered') {
-      const { phunkId, fromAddress, value } = args;
-      await this.sbSvc.createBid(txn, createdAt, phunkId, fromAddress, value);
+      const { phunkId: hashId, fromAddress, value } = args;
+      await this.sbSvc.createBid(txn, createdAt, hashId, fromAddress, value);
       await this.sbSvc.addEvent(
         txn,
         txn.from,
         null,
-        phunkId,
+        hashId,
         phunkExists.phunkId,
         eventName,
         createdAt,
@@ -430,13 +452,13 @@ export class ProcessingService {
     }
 
     if (eventName === 'PhunkBidWithdrawn') {
-      const { phunkId } = args;
-      await this.sbSvc.removeBid(createdAt, phunkId);
+      const { phunkId: hashId } = args;
+      await this.sbSvc.removeBid(hashId);
       await this.sbSvc.addEvent(
         txn,
         txn.from,
         null,
-        phunkId,
+        hashId,
         phunkExists.phunkId,
         eventName,
         createdAt,
@@ -446,14 +468,14 @@ export class ProcessingService {
     }
 
     if (eventName === 'PhunkNoLongerForSale') {
-      const { phunkId } = args;
-      console.log(args);
-      await this.sbSvc.removeListing(createdAt, phunkId);
+      const { phunkId: hashId } = args;
+      // console.log(args);
+      await this.sbSvc.removeListing(hashId);
       await this.sbSvc.addEvent(
         txn,
         txn.from,
         null,
-        phunkId,
+        hashId,
         phunkExists.phunkId,
         eventName,
         createdAt,
@@ -463,13 +485,13 @@ export class ProcessingService {
     }
 
     if (eventName === 'PhunkOffered') {
-      const { phunkId, toAddress, minValue } = args;
-      await this.sbSvc.createListing(txn, createdAt, phunkId, toAddress, minValue);
+      const { phunkId: hashId, toAddress, minValue } = args;
+      await this.sbSvc.createListing(txn, createdAt, hashId, toAddress, minValue);
       await this.sbSvc.addEvent(
         txn,
         txn.from,
         toAddress,
-        phunkId,
+        hashId,
         phunkExists.phunkId,
         eventName,
         createdAt,
@@ -477,6 +499,68 @@ export class ProcessingService {
         log.logIndex
       );
     }
+  }
+
+  async processAuctionHouseEvents(
+    auctionHouseLogs: any[],
+    transaction: Transaction,
+    createdAt: Date
+  ): Promise<void> {
+    for (const log of auctionHouseLogs) {
+
+      if (log.address.toLowerCase() !== this.web3Svc.auctionAddress) continue;
+
+      const decoded = decodeEventLog({
+        abi: etherPhunksAuctionHouseAbi,
+        data: log.data,
+        topics: log.topics,
+      });
+
+      await this.processAuctionHouseEvent(transaction, createdAt, decoded, log);
+    }
+  }
+
+  async processAuctionHouseEvent(
+    txn: Transaction,
+    createdAt: Date,
+    decoded: DecodeEventLogReturnType,
+    log: Log
+  ): Promise<void> {
+    const { eventName } = decoded;
+    const { args } = decoded as any;
+
+    if (!eventName || !args) return;
+
+    const phunkId = args.hashId;
+    if (!phunkId) return;
+
+    const phunkExists = await this.sbSvc.checkEthPhunkExistsByHashId(phunkId);
+    if (!phunkExists) return;
+
+    if (eventName === 'AuctionSettled') {
+      await this.sbSvc.settleAuction(args);
+    }
+
+    if (eventName === 'AuctionCreated') {
+      await this.sbSvc.createAuction(args, createdAt);
+    }
+
+    if (eventName === 'AuctionBid') {
+      await this.sbSvc.createAuctionBid(args, txn, createdAt);
+    }
+
+    if (eventName === 'AuctionExtended') {
+      await this.sbSvc.extendAuction(args);
+    }
+
+    // event AuctionCreated(bytes32 indexed hashId, address owner, uint256 auctionId, uint256 startTime, uint256 endTime);
+    // event AuctionBid(bytes32 indexed hashId, uint256 auctionId, address sender, uint256 value, bool extended);
+    // event AuctionExtended(bytes32 indexed hashId, uint256 auctionId, uint256 endTime);
+    // event AuctionSettled(bytes32 indexed hashId, uint256 auctionId, address winner, uint256 amount);
+    // event AuctionTimeBufferUpdated(uint256 timeBuffer);
+    // event AuctionDurationUpdated(uint256 duration);
+    // event AuctionReservePriceUpdated(uint256 reservePrice);
+    // event AuctionMinBidIncrementPercentageUpdated(uint256 minBidIncrementPercentage);
   }
 
   possibleEthPhunk(input: string): {

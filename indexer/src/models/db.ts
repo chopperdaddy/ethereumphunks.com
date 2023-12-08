@@ -25,6 +25,11 @@ export interface ListingResponse {
   error: PostgrestError | null;
 }
 
+export interface BidResponse {
+  data: Bid[];
+  error: PostgrestError | null;
+}
+
 export interface Listing {
   hashId: string
   blockNum: number
@@ -34,6 +39,14 @@ export interface Listing {
   seller: string
   transactionHash: string
   value: number
+}
+
+export interface Bid {
+  hashId: string
+  txHash: string
+  createdAt: string;
+  value: string;
+  fromAddress: string;
 }
 
 export interface Phunk {
@@ -50,7 +63,6 @@ export interface Phunk {
 }
 
 export interface Event {
-  id: number;
   type: EventType;
   hashId: string | null;
   from: string | null;

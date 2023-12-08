@@ -6,7 +6,7 @@ import { UtilityService } from './utils/utility.service';
 
 import { StandardMerkleTree } from '@openzeppelin/merkle-tree';
 
-// import * as MerkleTree from './abi/tree.json'
+import * as MerkleTree from './abi/tree.json'
 
 import dotenv from 'dotenv';
 dotenv.config();
@@ -53,18 +53,18 @@ export class AppService {
   }
 
   getMerkleProofs(leaf: string): any {
-    return '';
-    // const tree = StandardMerkleTree.load(MerkleTree as any);
-    // const root = tree.root;
-    // let proof = tree.getProof([leaf]);
+    // return '';
+    const tree = StandardMerkleTree.load(MerkleTree as any);
+    const root = tree.root;
+    let proof = tree.getProof([leaf]);
 
-    // console.log(root);
-    // return leaf + proof.map(p => p.substring(2)).join('');
+    console.log(root);
+    return leaf + proof.map(p => p.substring(2)).join('');
   }
 
   getMerkleRoot(): string {
-    return '';
-    // const tree = StandardMerkleTree.load(MerkleTree as any);
-    // return tree.root
+    // return '';
+    const tree = StandardMerkleTree.load(MerkleTree as any);
+    return tree.root
   }
 }

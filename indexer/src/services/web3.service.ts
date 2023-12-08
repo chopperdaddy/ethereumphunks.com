@@ -1,9 +1,10 @@
 import { Injectable, Logger } from '@nestjs/common';
 
-import { FormattedTransaction, GetBlockReturnType, createPublicClient, http } from 'viem';
+import { FormattedTransaction, GetBlockReturnType, TransactionReceipt, createPublicClient, http } from 'viem';
 import { goerli, mainnet } from 'viem/chains';
 
-import punkDataABI from '../abi/PunkData.json';
+import punkDataAbi from '../abi/PunkData.json';
+import pointsAbi from '../abi/Points.json';
 import { etherPhunksMarketAbi } from '../abi/EtherPhunksMarket';
 
 import { StandardMerkleTree } from '@openzeppelin/merkle-tree';
@@ -15,6 +16,9 @@ dotenv.config();
 export class Web3Service {
 
   marketAddress = (process.env.MARKET_ADDRESS).toLowerCase();
+  auctionAddress = (process.env.AUCTION_ADDRESS).toLowerCase();
+  pointsAddress = (process.env.POINTS_ADDRESS).toLowerCase();
+
   chain: 'mainnet' | 'goerli' = process.env.CHAIN_ID === '5' ? 'goerli' : 'mainnet';
   rpcURL: string = this.chain === 'goerli' ? process.env.RPC_URL_GOERLI : process.env.RPC_URL_MAINNET;
 
@@ -25,7 +29,7 @@ export class Web3Service {
 
   // Method to get transactions from a specific block
   async getBlockTransactions(n: number): Promise<{
-    txns: FormattedTransaction[];
+    txns: { transaction: FormattedTransaction; receipt: TransactionReceipt; }[],
     createdAt: Date
   }> {
     const block = await this.client.getBlock({
@@ -35,7 +39,14 @@ export class Web3Service {
 
     const ts = Number(block.timestamp);
     const createdAt = new Date(ts * 1000);
-    const txns = block.transactions;
+
+    const txArray = block.transactions.filter((txn) => txn.input !== '0x');
+    const txns = await Promise.all(txArray.map(async (tx) => {
+      return {
+        transaction: tx,
+        receipt: await this.client.getTransactionReceipt({ hash: tx.hash }),
+      };
+    }));
 
     return { txns, createdAt };
   }
@@ -45,7 +56,7 @@ export class Web3Service {
     return transaction;
   }
 
-  async getTransactionReceipt(hash: `0x${string}`): Promise<any> {
+  async getTransactionReceipt(hash: `0x${string}`): Promise<TransactionReceipt> {
     const receipt = await this.client.getTransactionReceipt({ hash });
     return receipt;
   }
@@ -61,8 +72,8 @@ export class Web3Service {
 
   async getPoints(address: `0x${string}`): Promise<number> {
     const points = await this.client.readContract({
-      address: this.marketAddress as `0x${string}`,
-      abi: etherPhunksMarketAbi,
+      address: this.pointsAddress as `0x${string}`,
+      abi: pointsAbi,
       functionName: 'points',
       args: [`${address}`],
     });
@@ -76,7 +87,7 @@ export class Web3Service {
   async getPunkImage(tokenId: number): Promise<any> {
     const punkImage = await this.client.readContract({
       address: '0x16F5A35647D6F03D5D3da7b35409D65ba03aF3B2' as `0x${string}`,
-      abi: punkDataABI,
+      abi: punkDataAbi,
       functionName: 'punkImageSvg',
       args: [`${tokenId}`],
     });
@@ -86,7 +97,7 @@ export class Web3Service {
   async getPunkAttributes(tokenId: number): Promise<any> {
     const punkAttributes = await this.client.readContract({
       address: '0x16F5A35647D6F03D5D3da7b35409D65ba03aF3B2' as `0x${string}`,
-      abi: punkDataABI,
+      abi: punkDataAbi,
       functionName: 'punkAttributes',
       args: [`${tokenId}`],
     });
