@@ -7,8 +7,6 @@ import punkDataAbi from '../abi/PunkData.json';
 import pointsAbi from '../abi/Points.json';
 import { etherPhunksMarketAbi } from '../abi/EtherPhunksMarket';
 
-import { StandardMerkleTree } from '@openzeppelin/merkle-tree';
-
 import dotenv from 'dotenv';
 dotenv.config();
 
@@ -71,6 +69,72 @@ export class Web3Service {
       args: [`${address}`],
     });
     return points as number;
+  }
+
+  async userEthscriptionPossiblyStored(prevOwner: string, hashId: string): Promise<boolean> {
+    const isInEscrow = await this.client.readContract({
+      address: this.marketAddress as `0x${string}`,
+      abi: etherPhunksMarketAbi,
+      functionName: 'userEthscriptionPossiblyStored',
+      args: [prevOwner, hashId],
+    });
+    return isInEscrow as boolean;
+  }
+
+  async phunkBids(hashId: string): Promise<[
+    hasBid: boolean,
+    phunkId: string,
+    bidder: string,
+    value: string,
+  ]> {
+    const abi = [{
+      inputs: [{ internalType: 'bytes32', name: '', type: 'bytes32' }],
+      name: 'phunkBids',
+      outputs: [
+        { internalType: 'bool', name: 'hasBid', type: 'bool' },
+        { internalType: 'bytes32', name: 'phunkId', type: 'bytes32' },
+        { internalType: 'address', name: 'bidder', type: 'address' },
+        { internalType: 'uint256', name: 'value', type: 'uint256' },
+      ],
+      stateMutability: 'view',
+      type: 'function',
+    }];
+    const bid = await this.client.readContract({
+      address: this.marketAddress as `0x${string}`,
+      abi,
+      functionName: 'phunkBids',
+      args: [hashId as `0x${string}`],
+    });
+    return bid as any;
+  }
+
+  async phunksOfferedForSale(hashId: string): Promise<[
+    isForSale: boolean,
+    phunkId: string,
+    seller: string,
+    minValue: string,
+    onlySellTo: string,
+  ]> {
+    const abi = [{
+      inputs: [{ internalType: 'bytes32', name: '', type: 'bytes32' }],
+      name: 'phunksOfferedForSale',
+      outputs: [
+        { internalType: 'bool', name: 'isForSale', type: 'bool' },
+        { internalType: 'bytes32', name: 'phunkId', type: 'bytes32' },
+        { internalType: 'address', name: 'seller', type: 'address' },
+        { internalType: 'uint256', name: 'minValue', type: 'uint256' },
+        { internalType: 'address', name: 'onlySellTo', type: 'address' },
+      ],
+      stateMutability: 'view',
+      type: 'function',
+    }];
+    const isListed = await this.client.readContract({
+      address: this.marketAddress as `0x${string}`,
+      abi,
+      functionName: 'phunksOfferedForSale',
+      args: [hashId as `0x${string}`],
+    });
+    return isListed as any;
   }
 
   ///////////////////////////////////////////////////////////////////////////////

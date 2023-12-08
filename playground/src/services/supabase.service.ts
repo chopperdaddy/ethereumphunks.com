@@ -19,6 +19,7 @@ import {
   ListingResponse,
   Bid,
   BidResponse,
+  Listing,
 } from 'src/models/db';
 
 import dotenv from 'dotenv';
@@ -40,7 +41,7 @@ export class SupabaseService {
     // });
   }
 
-  async removeBid(createdAt: Date, hashId: string): Promise<void> {
+  async removeBid(hashId: string): Promise<void> {
     const response: ListingResponse = await supabase
       .from('bids' + this.suffix)
       .delete()
@@ -85,6 +86,19 @@ export class SupabaseService {
     return null;
   }
 
+  async getListing(hashId: string): Promise<Listing> {
+    const response: ListingResponse = await supabase
+      .from('listings' + this.suffix)
+      .select('*')
+      .eq('hashId', hashId);
+
+    const { data, error } = response;
+
+    if (error) throw error;
+    if (data?.length) return data[0] as Listing;
+    return null;
+  }
+
   async createListing(
     txn: Transaction,
     createdAt: Date,
@@ -109,7 +123,7 @@ export class SupabaseService {
     Logger.log('Listing created', hashId);
   }
 
-  async removeListing(createdAt: Date, hashId: string): Promise<void> {
+  async removeListing(hashId: string): Promise<void> {
     const response: ListingResponse = await supabase
       .from('listings' + this.suffix)
       .delete()
@@ -441,7 +455,7 @@ export class SupabaseService {
     if (data?.length) return data;
   }
 
-  async getAllEthPhunks(): Promise<void> {
+  async getAllEthPhunks(): Promise<Phunk[]> {
     let allPhunks: any[] = [];
     const pageSize = 1000; // Max rows per request
     let hasMore = true;
@@ -450,8 +464,9 @@ export class SupabaseService {
     while (hasMore) {
       const { data, error } = await supabase
         .from('phunks' + this.suffix)
-        .select('hashId')
+        .select('*')
         .order('phunkId', { ascending: true })
+        // .neq('prevOwner', null)
         .range(page * pageSize, (page + 1) * pageSize - 1);
 
       if (error) {
@@ -468,12 +483,7 @@ export class SupabaseService {
       }
     }
 
-    const cleanPhunks = allPhunks.map((phunk) => phunk.hashId);
-
-    // const tree = StandardMerkleTree.of(cleanPhunks, ["bytes32"]);
-    // console.log('Merkle Root:', tree.root);
-
-    await writeFile('tree.json', JSON.stringify(cleanPhunks));
+    return allPhunks;
   }
 
   async getUnminted(): Promise<void> {
