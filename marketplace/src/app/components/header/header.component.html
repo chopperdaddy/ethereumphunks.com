@@ -18,30 +18,30 @@
       @if ((connected$ | async)) {
 
         @if ((walletAddress$ | async); as address) {
-          <app-address [address]="address" />
+          <a [routerLink]="['/', 'owned']" [queryParams]="{ address }">
+            <app-address [address]="address" />
+          </a>
         }
 
-        <button
-          class="points"
-          (click)="toggleMenu$.next()">
+        <div class="toggle-wrapper" (click)="toggleMenu$.next()">
+          <button class="points">
+            <ng-template [ngTemplateOutlet]="pointsIcon" />
+            {{ (userPoints$ | async) | number }}
+          </button>
 
-          <ng-template [ngTemplateOutlet]="pointsIcon" />
-          {{ (userPoints$ | async) | number }}
-        </button>
+          <button
+            class="menu"
+            [class.active]="menuActive$ | async">
 
-        <button
-          class="menu"
-          [class.active]="menuActive$ | async"
-          (click)="toggleMenu$.next()">
+            @if ((notifications$ | async); as notifs) {
+              <div class="notif">{{ notifs | number }}</div>
+            }
 
-          @if ((notifications$ | async); as notifs) {
-            <div class="notif">{{ notifs | number }}</div>
-          }
-
-          <div class="arrow">
-            <ng-template [ngTemplateOutlet]="menuIcon" />
-          </div>
-        </button>
+            <div class="arrow">
+              <ng-template [ngTemplateOutlet]="menuIcon" />
+            </div>
+          </button>
+        </div>
       } @else {
         <button
           class="connect"

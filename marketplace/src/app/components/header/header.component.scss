@@ -29,7 +29,7 @@
 
     .logo {
       grid-area: logo;
-      width: 26rem;
+      width: 22rem;
       display: flex;
       align-items: center;
 
@@ -61,12 +61,16 @@
         display: flex;
         align-items: center;
 
-        app-address {
-          font-family: $secondary-font-stack;
-          color: rgba(var(--header-text), 1);
-          font-size: 1.4rem;
-          font-weight: normal;
-          margin: 0 2rem 0 0;
+        a {
+          text-decoration: none;
+
+          app-address {
+            font-family: $secondary-font-stack;
+            color: rgba(var(--header-text), 1);
+            font-size: 1.4rem;
+            font-weight: normal;
+            margin: 0 2rem 0 0;
+          }
         }
 
         button {
@@ -126,6 +130,11 @@
               }
             }
           }
+        }
+
+        .toggle-wrapper {
+          display: flex;
+          align-items: center;
         }
       }
 
@@ -197,11 +206,15 @@
       }
 
       .user-tools {
+        padding: 0;
         .connect-menu {
           position: relative;
 
-          app-address {
-            font-size: 1rem;
+          a {
+
+            app-address {
+              font-size: 1rem;
+            }
           }
         }
       }

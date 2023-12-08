@@ -35,25 +35,28 @@ export class DataStateEffects {
       }
     }),
     // Start with the throttle
-    throttleTime(3000, asyncScheduler, {
+    throttleTime(5000, asyncScheduler, {
       leading: true, // emit the first value immediately
       trailing: true // emit the last value in the window
     }),
     map(([action]) => action.payload.new as Event),
     withLatestFrom(
-      this.store.select(dataStateSelectors.selectSinglePhunk),
       this.store.select(appStateSelectors.selectWalletAddress),
-      this.store.select(appStateSelectors.selectactiveEventTypeFilter)
+      this.store.select(dataStateSelectors.selectSinglePhunk),
+      this.store.select(dataStateSelectors.selectOwnedPhunks),
+      this.store.select(appStateSelectors.selectEventTypeFilter),
     ),
-    tap(([newData, singlePhunk, address, activeEventTypeFilter]) => {
+    tap(([newData, address, singlePhunk, ownedPhunks, eventTypeFilter]) => {
 
       this.checkEventForPurchaseFromUser(newData, address);
       this.checkEventIsActiveSinglePhunk(newData, singlePhunk);
 
-      this.store.dispatch(dataStateActions.fetchOwnedPhunks());
+      // WATCHME: This may need more thought
+      if (ownedPhunks) this.checkEventIsOrWasOwnedPhunk(newData, ownedPhunks, address);
+
       this.store.dispatch(dataStateActions.fetchMarketData());
       this.store.dispatch(appStateActions.fetchUserPoints());
-      this.store.dispatch(appStateActions.setEventTypeFilter({ eventTypeFilter: activeEventTypeFilter }));
+      this.store.dispatch(appStateActions.setEventTypeFilter({ eventTypeFilter }));
     }),
   ), { dispatch: false });
 
@@ -115,26 +118,6 @@ export class DataStateEffects {
   fetchMarketData$ = createEffect(() => this.actions$.pipe(
     ofType(dataStateActions.fetchMarketData),
     switchMap(() => this.dataSvc.fetchMarketData()),
-    map(([listings, bids]) => {
-      const merged: any = {};
-
-      for (const listing of listings) merged[listing.hashId] = {
-        ...merged[listing.hashId],
-        phunkId: listing[`phunks${this.dataSvc.prefix}`].phunkId,
-        hashId: listing.hashId,
-        listing,
-      };
-      for (const bid of bids) merged[bid.hashId] = {
-        ...merged[bid.hashId],
-        phunkId: bid[`phunks${this.dataSvc.prefix}`].phunkId,
-        hashId: bid.hashId,
-        bid,
-      };
-
-      const marketData = Object.values(merged);
-      return marketData;
-    }),
-    switchMap((res: any) => this.dataSvc.addAttributes(res)),
     map((marketData: Phunk[]) => {
       const listingsData = marketData.filter((item: any) => item.listing && item.listing.value !== '0');
       const bidsData = marketData.filter((item: any) => item.bid && item.bid.value !== '0');
@@ -201,9 +184,19 @@ export class DataStateEffects {
     ofType(dataStateActions.fetchUserOpenBids),
     switchMap(() => this.store.select(appStateSelectors.selectWalletAddress).pipe(
       filter((address) => !!address),
-      switchMap((address) => this.dataSvc.fetchUserOpenBids(address)),
+      switchMap((address) => this.store.select(dataStateSelectors.selectBids).pipe(
+        // tap((phunks) => console.log('fetchUserOpenBids', phunks)),
+        map((phunks) => phunks?.filter((phunk) => phunk.bid?.fromAddress === address) || []),
+        // tap((phunks) => console.log('fetchUserOpenBids', phunks)),
+      )),
     )),
     map((userOpenBids) => dataStateActions.setUserOpenBids({ userOpenBids })),
+  ));
+
+  fetchLeaderboard$ = createEffect(() => this.actions$.pipe(
+    ofType(dataStateActions.fetchLeaderboard),
+    switchMap(() => this.dataSvc.fetchLeaderboard()),
+    map((leaderboard) => dataStateActions.setLeaderboard({ leaderboard })),
   ));
 
   constructor(
@@ -235,6 +228,17 @@ export class DataStateEffects {
     if (!singlePhunk) return;
     if (event.phunkId === singlePhunk.phunkId) {
       this.store.dispatch(dataStateActions.refreshSinglePhunk());
+    }
+  }
+
+  checkEventIsOrWasOwnedPhunk(event: Event, ownedPhunks: Phunk[], address: string) {
+    if (
+      event.from === address
+      || event.to === address
+      || ownedPhunks.find((phunk) => phunk.phunkId === event.phunkId)
+
+    ) {
+      this.store.dispatch(dataStateActions.fetchOwnedPhunks());
     }
   }
 

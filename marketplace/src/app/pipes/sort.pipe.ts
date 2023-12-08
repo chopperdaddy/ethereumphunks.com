@@ -1,48 +1,52 @@
 import { Pipe, PipeTransform } from '@angular/core';
-
 import { Phunk } from '@/models/db';
 
 @Pipe({
   standalone: true,
   name: 'sort'
 })
-
 export class SortPipe implements PipeTransform {
-
   transform(value: Phunk[], ...args: any): Phunk[] {
     if (!value?.length) return [];
     if (!args) return value;
 
-    const sort = args[0]?.value;
+    const sort = args[0];
     const type = args[1];
 
-    // console.log({ sort, type })
-
-    let sorted = [ ...value ];
+    let sorted = [...value];
 
     const dateToNumber = (date: Date | undefined): number => {
       if (!date) return 0;
       return new Date(date).getTime();
-    }
+    };
+
+    const priceComparison = (a: Phunk, b: Phunk, isLowToHigh: boolean) => {
+      const aPrice = type === 'listings' ? Number(a.listing?.minValue) : Number(a.bid?.value);
+      const bPrice = type === 'listings' ? Number(b.listing?.minValue) : Number(b.bid?.value);
+      const aVal = aPrice !== undefined ? aPrice : Infinity;
+      const bVal = bPrice !== undefined ? bPrice : Infinity;
+      return isLowToHigh ? aVal - bVal : bVal - aVal;
+    };
 
     if (sort === 'price-low') {
-      if (type === 'listings' || type === 'owned') sorted = value.sort((a: Phunk, b: Phunk) => Number(a.listing?.minValue || '0') - Number(b.listing?.minValue || '0'));
-      if (type === 'bids') sorted = value.sort((a: Phunk, b: Phunk) => Number(a.bid?.value || '0') - Number(b.bid?.value || '0'));
+      sorted = sorted.sort((a, b) => priceComparison(a, b, true));
     }
 
     if (sort === 'price-high') {
-      if (type === 'listings' || type === 'owned') sorted = value.sort((a: Phunk, b: Phunk) => Number(b.listing?.minValue || '0') - Number(a.listing?.minValue || '0'));
-      if (type === 'bids') sorted = value.sort((a: Phunk, b: Phunk) => Number(b.bid?.value || '0') - Number(a.bid?.value || '0'));
+      sorted = sorted.sort((a, b) => priceComparison(a, b, false));
     }
 
     if (sort === 'recent') {
-      // console.log(args)
-      // console.log({ value })
-      if (type === 'listings' || type === 'owned') sorted = value.sort((a: Phunk, b: Phunk) => dateToNumber(b.listing?.createdAt) - dateToNumber(a.listing?.createdAt));
-      if (type === 'bids') sorted = value.sort((a: Phunk, b: Phunk) => dateToNumber(b.bid?.createdAt) - dateToNumber(a.bid?.createdAt));
+      if (type === 'listings') {
+        sorted = sorted.sort((a, b) => dateToNumber(b.listing?.createdAt) - dateToNumber(a.listing?.createdAt));
+      } else if (type === 'bids') {
+        sorted = sorted.sort((a, b) => dateToNumber(b.bid?.createdAt) - dateToNumber(a.bid?.createdAt));
+      }
     }
 
-    if (sort === 'id') sorted = value.sort((a: Phunk, b: Phunk) => a.phunkId - b.phunkId);
+    if (sort === 'id') {
+      sorted = sorted.sort((a, b) => a.phunkId - b.phunkId);
+    }
 
     return sorted;
   }

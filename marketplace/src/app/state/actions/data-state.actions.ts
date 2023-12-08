@@ -10,6 +10,11 @@ export const resetDataState = createAction(
   '[Data State] Reset Data State'
 );
 
+export const setUsd = createAction(
+  '[Data State] Set USD',
+  props<{ usd: number }>()
+);
+
 export const fetchEvents = createAction(
   '[Data State] Fetch Events',
   props<{ eventType: EventType }>()
@@ -110,4 +115,13 @@ export const fetchUserOpenBids = createAction(
 export const setUserOpenBids = createAction(
   '[Data State] Set User Open Bids',
   props<{ userOpenBids: Phunk[] }>()
+);
+
+export const fetchLeaderboard = createAction(
+  '[Data State] Fetch Leaderboard'
+);
+
+export const setLeaderboard = createAction(
+  '[Data State] Set Leaderboard',
+  props<{ leaderboard: any[] }>()
 );

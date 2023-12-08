@@ -51,7 +51,7 @@
 
               <!-- Value (Listing) -->
               @if (phunk.listing?.minValue; as value) {
-                <p i18n>This EtherPhunk is for sale for <span class="highlight">{{ (value | weiToEth) | formatCash }} ETH</span><span class="bold"> (${{ ((value | weiToEth) * ((dataSvc.usd$ | async) || 0)) | formatCash }})</span>.</p>
+                <p i18n>This EtherPhunk is for sale for <span class="highlight">{{ (value | weiToEth) }} ETH</span><span class="bold"> (${{ ((value | weiToEth) * ((usd$ | async) || 0)) | formatCash }})</span>.</p>
               } @else {
                 <p i18n>This EtherPhunk is not for sale.</p>
               }
@@ -59,7 +59,7 @@
               <!-- Has bid -->
               @if (phunk.bid; as bid) {
                 @if (bid.value && bid.fromAddress) {
-                  <p i18n>There is a bid of <span class="bold">{{ bid.value | weiToEth }} ETH</span> ({{ ((bid.value | weiToEth) * ((dataSvc.usd$ | async) || 0)) | currency }}) for this EtherPhunk from <a [routerLink]="['/', 'owned']" [queryParams]="{ address: bid.fromAddress }"><app-address [address]="bid.fromAddress" /></a>.</p>
+                  <p i18n>There is a bid of <span class="bold">{{ bid.value | weiToEth }} ETH</span> ({{ ((bid.value | weiToEth) * ((usd$ | async) || 0)) | currency }}) for this EtherPhunk from <a [routerLink]="['/', 'owned']" [queryParams]="{ address: bid.fromAddress }"><app-address [address]="bid.fromAddress" /></a>.</p>
                 }
               } @else {
                 <p i18n>There are no bids on this EtherPhunk.</p>
@@ -284,7 +284,7 @@
     <!-- @if (isCooling$ | async) { <ng-template [ngTemplateOutlet]="cooldown" /> } -->
     <div class="form-group">
       <label i18n for="list-price">Asking Price in ETH (Ξ)</label>
-      <input #sellPriceInput type="number" id="list-price" [min]="0" [formControl]="listPrice" />
+      <input #sellPriceInput type="number" id="list-price" [formControl]="listPrice" />
     </div>
 
     <div class="form-group" [class.disabled]="!phunk.isEscrowed">

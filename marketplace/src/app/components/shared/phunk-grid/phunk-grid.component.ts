@@ -9,7 +9,7 @@ import { IntersectionObserverModule } from '@ng-web-apis/intersection-observer';
 
 import { ViewType } from '@/models/view-types';
 import { Phunk } from '@/models/db';
-import { MarketTypes, Sorts } from '@/models/pipes';
+import { MarketTypes, Sort, Sorts } from '@/models/pipes';
 import { GlobalState } from '@/models/global-state';
 
 import { DataService } from '@/services/data.service';
@@ -22,9 +22,10 @@ import { PropertiesPipe } from '@/pipes/properties';
 
 import { environment } from 'src/environments/environment';
 
+import * as dataStateSelectors from '@/state/selectors/data-state.selectors';
 import * as appStateSelectors from '@/state/selectors/app-state.selectors';
 
-import { distinctUntilChanged, filter, map, tap } from 'rxjs';
+import { filter, map, tap } from 'rxjs';
 
 let PAGE_SIZE = 36;
 
@@ -44,6 +45,10 @@ let PAGE_SIZE = 36;
     SortPipe,
     PropertiesPipe
   ],
+  host:  {
+    '[class.selectable]': 'selectable',
+    '[class]': 'viewType',
+  },
   templateUrl: './phunk-grid.component.html',
   styleUrls: ['./phunk-grid.component.scss']
 })
@@ -55,10 +60,11 @@ export class PhunkGridComponent implements OnChanges {
   escrowAddress = environment.marketAddress;
 
   @Input() marketType!: MarketTypes;
+  @Input() activeSort!: Sort['value'];
+
   @Input() phunkData: Phunk[] = [];
   @Input() viewType: ViewType = 'market';
   @Input() limit: number = 110;
-  @Input() sort!: Sorts;
   @Input() currentPage: number = 1;
   @Input() showLabels: boolean = true;
   @Input() observe: boolean = false;
@@ -69,16 +75,10 @@ export class PhunkGridComponent implements OnChanges {
   @Output() selectedChange = new EventEmitter<{ [string: Phunk['hashId']]: Phunk }>();
   @Input() selected: { [string: Phunk['hashId']]: Phunk } = {};
 
-  traitCount!: number;
   limitArr = Array.from({length: this.limit}, (_, i) => i);
 
+  usd$ = this.store.select(dataStateSelectors.selectUsd);
   activeTraitFilters$ = this.store.select(appStateSelectors.selectActiveTraitFilters);
-  activeSort$ = this.store.select(appStateSelectors.selectActiveSort);
-  mktType$ = this.store.select(appStateSelectors.selectMarketType).pipe(
-    filter((type) => !!type),
-    distinctUntilChanged(),
-    map((type) => this.marketType || type || 'all' as MarketTypes),
-  );
 
   constructor(
     private store: Store<GlobalState>,

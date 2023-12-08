@@ -32,7 +32,7 @@
                 [viewType]="'compact'"
                 [limit]="(isMobile$ | async) ? 100 : 110"
                 [marketType]="'owned'"
-                [sort]="'price-low'"
+                [activeSort]="'price-low'"
               />
             </div>
           </section>
@@ -47,7 +47,7 @@
         @if (listings$ | async; as listings) {
           <div class="section-stats-wrapper">
             @if ((listings | calc : 'lowestListingPrice'); as ethPrice) {
-              <p i18n>The lowest price EtherPhunk currently for sale is <span class="bold">Ξ{{ ethPrice | number : '1.2-2' }} ({{ (ethPrice * ((dataSvc.usd$ | async) || 0)) | currency }} USD)</span>.</p>
+              <p i18n>The lowest price EtherPhunk currently for sale is <span class="bold">Ξ{{ ethPrice | number : '1.2-2' }} ({{ (ethPrice * ((usd$ | async) || 0)) | currency }} USD)</span>.</p>
             }
 
             <p i18n>Showing lowest price offers, <a class="highlight" [routerLink]="['/listings']" [href]="'/listings'">({{ listings.length | number }}) view all.</a></p>
@@ -59,7 +59,7 @@
           [viewType]="'compact'"
           [limit]="(isMobile$ | async) ? 100 : 110"
           [marketType]="'listings'"
-          [sort]="'price-low'"
+          [activeSort]="'price-low'"
         />
       </div>
     </section>
@@ -71,10 +71,10 @@
         @if ((bids$ | async); as bids) {
           <div class="section-stats-wrapper">
             @if ((bids | calc : 'averageBidPrice'); as ethPrice) {
-              <p i18n>The average currently open bid is <span class="bold">Ξ{{ ethPrice | number : '1.2-2' }} ({{ (ethPrice * ((dataSvc.usd$ | async) || 0)) | currency }} USD)</span>.</p>
+              <p i18n>The average currently open bid is <span class="bold">Ξ{{ ethPrice | number : '1.2-2' }} ({{ (ethPrice * ((usd$ | async) || 0)) | currency }} USD)</span>.</p>
             }
             @if ((bids | calc : 'totalBidsValue'); as ethPrice) {
-              <p i18n>Total value of all current bids is <span class="bold">Ξ{{ ethPrice | number : '1.2-2' }} ({{ (ethPrice * ((dataSvc.usd$ | async) || 0)) | currency }} USD)</span>.</p>
+              <p i18n>Total value of all current bids is <span class="bold">Ξ{{ ethPrice | number : '1.2-2' }} ({{ (ethPrice * ((usd$ | async) || 0)) | currency }} USD)</span>.</p>
             }
             <p i18n>Showing top bids, <a class="highlight" [routerLink]="['/bids']" [href]="'/bids'">({{ bids.length | number }}) view all.</a></p>
           </div>
@@ -85,7 +85,7 @@
           [viewType]="'compact'"
           [limit]="(isMobile$ | async) ? 100 : 110"
           [marketType]="'bids'"
-          [sort]="'price-high'"
+          [activeSort]="'price-high'"
         />
       </div>
     </section>
@@ -103,7 +103,7 @@
             [viewType]="'compact'"
             [limit]="(isMobile$ | async) ? 100 : 110"
             [marketType]="'all'"
-            [sort]="'id'"
+            [activeSort]="'id'"
           />
         </div>
       </section>

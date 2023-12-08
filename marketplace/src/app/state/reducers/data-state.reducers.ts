@@ -4,6 +4,7 @@ import { Action, ActionReducer, createReducer, on } from '@ngrx/store';
 import * as actions from '../actions/data-state.actions';
 
 export const initialState: DataState = {
+  usd: null,
   events: null,
   allPhunks: null,
   singlePhunk: null,
@@ -14,11 +15,21 @@ export const initialState: DataState = {
   userOpenBids: null,
   activeMarketRouteData: null,
   txHistory: null,
+  leaderboard: null,
 }
 
 export const dataStateReducer: ActionReducer<DataState, Action> = createReducer(
   initialState,
   on(actions.resetDataState, () => initialState),
+  // Set the USD price
+  on(actions.setUsd, (state, { usd }) => {
+    const setUsd = {
+      ...state,
+      usd,
+    };
+    // console.log('setUsd', setUsd);
+    return setUsd
+  }),
   // Set the events
   on(actions.setEvents, (state, { events }) => {
     const setEvents = {
@@ -132,5 +143,14 @@ export const dataStateReducer: ActionReducer<DataState, Action> = createReducer(
     };
     // console.log('clearActiveMarketRouteData', clearActiveMarketRouteData);
     return clearActiveMarketRouteData
+  }),
+  // Set the leaderboard
+  on(actions.setLeaderboard, (state, { leaderboard }) => {
+    const setLeaderboard = {
+      ...state,
+      leaderboard,
+    };
+    // console.log('setLeaderboard', setLeaderboard);
+    return setLeaderboard
   }),
 );

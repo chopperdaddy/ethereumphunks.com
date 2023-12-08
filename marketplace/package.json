@@ -62,6 +62,6 @@
     "@types/node": "^12.11.1",
     "@types/react": "^17.0.15",
     "@types/tinycolor2": "^1.4.3",
-    "typescript": "^5.2.2"
+    "typescript": "5.2.2"
   }
 }

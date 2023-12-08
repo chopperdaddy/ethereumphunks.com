@@ -1,15 +1,17 @@
 import { Injectable } from '@angular/core';
 import { HttpParams } from '@angular/common/http';
 import { Location } from '@angular/common';
+import { Router } from '@angular/router';
 
 import { Store } from '@ngrx/store';
-import { ROUTER_NAVIGATED, ROUTER_NAVIGATION, getRouterSelectors } from '@ngrx/router-store';
+import { ROUTER_NAVIGATION, getRouterSelectors } from '@ngrx/router-store';
 
 import { Actions, createEffect, ofType } from '@ngrx/effects';
 
 import { Web3Service } from '@/services/web3.service';
 import { DataService } from '@/services/data.service';
 import { ThemeService } from '@/services/theme.service';
+import { NavigationTrackerService } from '@/services/nav.service';
 
 import { Phunk } from '@/models/db';
 import { MarketTypes } from '@/models/pipes';
@@ -34,7 +36,7 @@ export class AppStateEffects {
       this.store.select(getRouterSelectors().selectQueryParams),
       this.store.select(getRouterSelectors().selectRouteParams),
     ),
-    tap(([_, queryParams, routeParams]) => {
+    tap(([action, queryParams, routeParams]) => {
       const marketType = routeParams['marketType'];
       if (!marketType) {
         this.store.dispatch(appStateActions.clearActiveTraitFilters());
@@ -54,10 +56,11 @@ export class AppStateEffects {
 
   onMarketTypeChanged$ = createEffect(() => this.actions$.pipe(
     ofType(appStateActions.setMarketType),
-    distinctUntilChanged(),
-    withLatestFrom(this.store.select(getRouterSelectors().selectQueryParam('address'))),
+    // distinctUntilChanged(),
+    withLatestFrom(
+      this.store.select(getRouterSelectors().selectQueryParam('address'))
+    ),
     switchMap(([action, queryAddress]) => {
-
       const marketType = action.marketType;
       if (!marketType) return from([]);
 
@@ -65,6 +68,7 @@ export class AppStateEffects {
         return this.store.select(appStateSelectors.selectWalletAddress).pipe(
           switchMap((res) => {
             if (res && res === queryAddress?.toLowerCase()) {
+              if (marketType === 'bids') return this.store.select(dataStateSelectors.selectUserOpenBids);
               return this.store.select(dataStateSelectors.selectOwnedPhunks);
             } else {
               return this.dataSvc.fetchOwned(queryAddress);
@@ -268,7 +272,9 @@ export class AppStateEffects {
     private web3Svc: Web3Service,
     private dataSvc: DataService,
     private location: Location,
-    private themeSvc: ThemeService
+    private themeSvc: ThemeService,
+    private router: Router,
+    private navSvc: NavigationTrackerService
   ) {}
 
   checkUserEvent(newData: any, address: string): boolean {

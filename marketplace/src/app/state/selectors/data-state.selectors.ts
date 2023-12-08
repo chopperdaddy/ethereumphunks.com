@@ -4,6 +4,11 @@ import { createSelector } from '@ngrx/store';
 
 export const selectDataState = (state: GlobalState) => state.dataState;
 
+export const selectUsd = createSelector(
+  selectDataState,
+  (appState: DataState) => appState.usd
+);
+
 export const selectSinglePhunk = createSelector(
   selectDataState,
   (appState: DataState) => appState.singlePhunk
@@ -52,4 +57,9 @@ export const selectUserOpenBids = createSelector(
 export const selectActiveMarketRouteData = createSelector(
   selectDataState,
   (appState: DataState) => appState.activeMarketRouteData
+);
+
+export const selectLeaderboard = createSelector(
+  selectDataState,
+  (appState: DataState) => appState.leaderboard
 );

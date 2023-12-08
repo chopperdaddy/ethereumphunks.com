@@ -67,6 +67,11 @@ export const setMenuActive = createAction(
   props<{ menuActive: AppState['menuActive'] }>()
 );
 
+export const setActiveMenuNav = createAction(
+  '[App State] Set Active Menu Nav',
+  props<{ activeMenuNav: AppState['activeMenuNav'] }>()
+);
+
 export const setSlideoutActive = createAction(
   '[App State] Set Slideout Active',
   props<{ slideoutActive: AppState['slideoutActive'] }>()
@@ -137,4 +142,9 @@ export const fetchUserPoints = createAction(
 export const setUserPoints = createAction(
   '[App State] Set User Points',
   props<{ userPoints: number }>()
+);
+
+export const restoreScrollPosition = createAction(
+  '[Router] Restore Scroll Position',
+  props<{ navigationId: number }>()
 );

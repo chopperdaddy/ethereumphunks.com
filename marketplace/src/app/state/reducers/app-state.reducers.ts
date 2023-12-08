@@ -14,15 +14,18 @@ export const initialState: AppState = {
 
   isMobile: false,
   menuActive: false,
+  activeMenuNav: 'main',
   slideoutActive: false,
 
   selectedPhunks: null,
   activeTraitFilters: {},
 
+  scrollPositions: {},
+
   marketType: 'all',
   activeSort: { label: 'Price Low', value: 'price-low' },
 
-  activeEventTypeFilter: 'All',
+  eventTypeFilter: 'All',
 
   blockNumber: -1,
   transactions: [],
@@ -70,7 +73,7 @@ export const appStateReducer: ActionReducer<AppState, Action> = createReducer(
   on(actions.setEventTypeFilter, (state, { eventTypeFilter }) => {
     const setActiveFilters = {
       ...state,
-      activeFilters: eventTypeFilter,
+      eventTypeFilter,
     };
     // console.log('setActiveFilters', setActiveFilters);
     return setActiveFilters
@@ -107,7 +110,6 @@ export const appStateReducer: ActionReducer<AppState, Action> = createReducer(
     // console.log('clearTraitFilters', clearTraitFilters);
     return clearTraitFilters
   }),
-
   on(actions.setSelectedPhunks, (state, { selectedPhunks }) => {
     const setSelectedPhunks = {
       ...state,
@@ -141,6 +143,14 @@ export const appStateReducer: ActionReducer<AppState, Action> = createReducer(
     };
     // console.log('setMenuActive', setMenuActive);
     return setMenuActive
+  }),
+  on(actions.setActiveMenuNav, (state, { activeMenuNav }) => {
+    const setActiveMenuNav = {
+      ...state,
+      activeMenuNav
+    };
+    // console.log('setActiveMenuNav', setActiveMenuNav);
+    return setActiveMenuNav
   }),
   on(actions.setSlideoutActive, (state, { slideoutActive }) => {
     const setSlideoutActive = {

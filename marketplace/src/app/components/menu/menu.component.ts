@@ -1,4 +1,4 @@
-import { AfterViewInit, Component, ElementRef, ViewChild } from '@angular/core';
+import { Component, ElementRef, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 
@@ -25,9 +25,9 @@ import * as dataStateSelectors from '@/state/selectors/data-state.selectors';
 
 import { WeiToEthPipe } from '@/pipes/wei-to-eth.pipe';
 
-import anime from 'animejs';
+import { map, switchMap, tap } from 'rxjs';
 
-import { map, tap } from 'rxjs';
+import anime from 'animejs';
 
 @Component({
   selector: 'app-menu',
@@ -46,15 +46,20 @@ import { map, tap } from 'rxjs';
 
     WalletAddressDirective
   ],
+  host: {
+    style: 'transform: translateX(100%);',
+  },
   templateUrl: './menu.component.html',
   styleUrls: ['./menu.component.scss']
 })
-export class MenuComponent implements AfterViewInit {
+export class MenuComponent {
 
-  @ViewChild('menuInner') menuInner!: ElementRef;
+  @ViewChild('menuMain') menuMain!: ElementRef;
+  @ViewChild('menuLeaderboard') menuLeaderboard!: ElementRef;
 
   address$ = this.store.select(appStateSelectors.selectWalletAddress);
   menuActive$ = this.store.select(appStateSelectors.selectMenuActive);
+  activeMenuNav$ = this.store.select(appStateSelectors.selectActiveMenuNav);
 
   listedPhunks$ = this.store.select(dataStateSelectors.selectOwnedPhunks).pipe(
     tap((owned: Phunk[] | null) => this.createOwnedStats(owned)),
@@ -62,6 +67,7 @@ export class MenuComponent implements AfterViewInit {
   );
 
   userOpenBids$ = this.store.select(dataStateSelectors.selectUserOpenBids).pipe(
+    // tap((bids) => console.log({bids})),
     tap((bids: Phunk[] | null) => this.createBidStats(bids))
   );
 
@@ -71,6 +77,7 @@ export class MenuComponent implements AfterViewInit {
 
   isMobile$ = this.store.select(appStateSelectors.selectIsMobile);
   hasWithdrawal$ = this.store.select(appStateSelectors.selectHasWithdrawal);
+  leaderboard$ = this.store.select(dataStateSelectors.selectLeaderboard);
 
   stats: any = {
     owned: 0,
@@ -85,27 +92,31 @@ export class MenuComponent implements AfterViewInit {
     private web3Svc: Web3Service,
     private el: ElementRef,
   ) {
-    el.nativeElement.style.transform = 'translateX(100%)';
-  }
-
-  ngAfterViewInit(): void {
-    this.menuActive$.pipe(
-      tap((active: boolean) => console.log(`Menu active: ${active}`)),
-      tap((active: boolean) => {
-        anime.timeline({
-          easing: 'cubicBezier(0.785, 0.135, 0.15, 0.86)',
-          duration: 400,
-        }).add({
-          targets: this.el?.nativeElement,
-          translateX: active ? '0' : '100%',
-        }).add({
-          targets: this.menuInner?.nativeElement,
-          opacity: active ? 1 : 0,
-        });
-      })
-    ).subscribe();
-
     this.store.dispatch(dataStateActions.fetchUserOpenBids());
+
+    this.menuActive$.pipe(
+      switchMap((active) => {
+        return this.activeMenuNav$.pipe(
+          tap((menuNav) => {
+            this.menuTimeline = anime.timeline({
+              easing: 'cubicBezier(0.85, 0, 0.30, 1.01)',
+              duration: 400,
+            }).add({
+              targets: this.el?.nativeElement,
+              translateX: active ? '0' : '100%',
+            }).add({
+              targets: this.menuMain?.nativeElement,
+              opacity: menuNav === 'main' ? 1 : 0,
+              translateX: menuNav === 'main' ? '0' : '100%',
+            }, '-=400').add({
+              targets: this.menuLeaderboard?.nativeElement,
+              opacity: menuNav === 'leaderboard' ? 1 : 0,
+              translateX: menuNav === 'leaderboard' ? '0' : '100%',
+            }, '-=400');
+          })
+        );
+      }),
+    ).subscribe();
   }
 
   async disconnect(): Promise<void> {
@@ -173,5 +184,9 @@ export class MenuComponent implements AfterViewInit {
       bids: bids?.length,
       bidsValue: totalBidValue,
     };
+  }
+
+  navigateMenu(activeMenuNav: GlobalState['appState']['activeMenuNav']): void {
+    this.store.dispatch(appStateActions.setActiveMenuNav({ activeMenuNav }));
   }
 }

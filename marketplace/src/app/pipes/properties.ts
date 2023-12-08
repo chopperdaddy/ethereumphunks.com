@@ -9,34 +9,36 @@ import { TraitFilter } from '@/models/global-state';
 
 export class PropertiesPipe implements PipeTransform {
 
-  transform(value: Phunk[], activeTraitFilters: TraitFilter | null, traitCount: number): Phunk[] {
+  transform(value: Phunk[], activeTraitFilters: TraitFilter | null): Phunk[] {
+
+    // console.log({ value, activeTraitFilters });
 
     if (!value) return [];
     if (!activeTraitFilters) return value;
 
-    if (traitCount || traitCount === 0) {
-      value = value.filter((res) => {
-        if (!res.attributes) return false;
-        return (res.attributes?.length - 2) === traitCount;
+    let filtered = value;
+    const filtersLength = Object.keys(activeTraitFilters).length;
+    const traitCountFilter = activeTraitFilters['trait-count'];
+
+    if (traitCountFilter !== undefined) {
+      const traitCount = Number(traitCountFilter);
+      filtered = filtered.filter((res) => {
+        return res.attributes && (res.attributes.length === traitCount + 2);
       });
     }
 
-    const filtersLength = Object.keys(activeTraitFilters).length;
-
-    const filtered = value.filter((res: Phunk) => {
-      const attrs = res.attributes;
-      if (attrs) {
-        const found = attrs.filter((attr) => {
+    if (filtersLength > 1 || (filtersLength === 1 && traitCountFilter === undefined)) {
+      filtered = filtered.filter((res: Phunk) => {
+        if (!res.attributes) return false;
+        const matches = res.attributes.filter((attr) => {
           const key = attr?.k?.replace(/ /g, '-')?.toLowerCase();
           const val = attr?.v?.replace(/ /g, '-')?.toLowerCase();
           return activeTraitFilters[key] === val;
         });
-        if (found.length === filtersLength) return true;
-      }
-      return false;
-    });
+        return matches.length === filtersLength - (traitCountFilter !== undefined ? 1 : 0);
+      });
+    }
 
-    if (!filtered.length && !filtersLength) return value;
     return filtered;
   }
 }

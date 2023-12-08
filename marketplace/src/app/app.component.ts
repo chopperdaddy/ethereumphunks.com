@@ -52,11 +52,14 @@ export class AppComponent {
     private router: Router
   ) {
 
+    this.store.dispatch(appStateActions.setTheme({ theme: 'initial' }));
+
     this.store.dispatch(dataStateActions.fetchMarketData());
     this.store.dispatch(dataStateActions.fetchAllPhunks());
 
     this.store.dispatch(appStateActions.setEventTypeFilter({ eventTypeFilter: 'All' }));
-    this.store.dispatch(appStateActions.setTheme({ theme: 'initial' }));
+
+    this.store.dispatch(dataStateActions.fetchLeaderboard());
 
     // setTimeout(() => this.store.dispatch(appStateActions.setMenuActive({ menuActive: true })), 0);
 
@@ -70,7 +73,7 @@ export class AppComponent {
           event,
           positions: {
             ...acc.positions,
-            ...(event instanceof NavigationStart ? { [event.id]: window.pageYOffset || this.document.documentElement.scrollTop } : {}),
+            ...(event instanceof NavigationStart ? { [event.id]: window.scrollY } : {}),
           },
           trigger: event instanceof NavigationStart ? event.navigationTrigger : acc.trigger,
           idToRestore: (event instanceof NavigationStart && event.restoredState && event.restoredState.navigationId + 1) || acc.idToRestore,
@@ -80,8 +83,8 @@ export class AppComponent {
       observeOn(asyncScheduler),
       tap(({ trigger, positions, idToRestore }) => {
         setTimeout(() => {
-          if (trigger === 'imperative') this.document.documentElement.scrollTop = 0;
-          if (trigger === 'popstate') this.document.documentElement.scrollTop = positions[idToRestore];
+          if (trigger === 'imperative') window.scrollTo(0, 0);
+          if (trigger === 'popstate') window.scrollTo(0, positions[idToRestore] || 0);
         }, 0);
       })
     ).subscribe();

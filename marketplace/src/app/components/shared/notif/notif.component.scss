@@ -16,6 +16,7 @@
   margin-bottom: .5rem;
 
   background-color: rgba(var(--black), 1);
+  box-shadow: -.3rem .3rem 0 0 rgba(var(--black), 1);
 
   .dismiss {
     position: absolute;
@@ -114,6 +115,8 @@
   }
 
   &.bid {
+    box-shadow: -.3rem .3rem 0 0 rgba(var(--bid-color), 1);
+
     app-phunk-image {
       background-color: rgba(var(--bid-color), 1);
     }
@@ -125,6 +128,8 @@
     }
   }
   &.sale {
+    box-shadow: -.3rem .3rem 0 0 rgba(var(--sale-color), 1);
+
     app-phunk-image {
       background-color: rgba(var(--sale-color), 1);
     }
@@ -136,6 +141,8 @@
     }
   }
   &.transfer {
+    box-shadow: -.3rem .3rem 0 0 rgba(var(--transferred-color), 1);
+
     app-phunk-image {
       background-color: rgba(var(--transferred-color), 1);
     }
@@ -147,6 +154,8 @@
     }
   }
   &.escrow {
+    box-shadow: -.3rem .3rem 0 0 rgba(var(--escrow-color), 1);
+
     app-phunk-image {
       background-color: rgba(var(--escrow-color), 1);
     }
@@ -158,6 +167,8 @@
     }
   }
   &.event {
+    box-shadow: -.3rem .3rem 0 0 rgba(var(--sale-color), 1);
+
     app-phunk-image {
       background-color: rgba(var(--sale-color), 1);
     }
@@ -168,6 +179,11 @@
       }
     }
   }
+
+  &.is-menu {
+    box-shadow: none;
+  }
+
   &.purchased {
     box-shadow: inset 0 0 0 .3rem rgba(var(--sale-color), 1);
   }

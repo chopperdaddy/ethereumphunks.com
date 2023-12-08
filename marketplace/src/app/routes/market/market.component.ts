@@ -36,6 +36,13 @@ import { environment } from 'src/environments/environment';
 
 import { firstValueFrom, map, tap } from 'rxjs';
 
+const defaultActionState = {
+  canList: false,
+  canTransfer: false,
+  canWithdraw: false,
+  canEscrow: false,
+};
+
 @Component({
   selector: 'app-phunk-grid-view',
   standalone: true,
@@ -85,7 +92,6 @@ export class MarketComponent {
   ];
 
   activeSortModel: any = this.sorts[0];
-
   filtersVisible: boolean = false;
 
   selectedPhunksFormArray: FormArray = this.fb.array([]);
@@ -93,7 +99,7 @@ export class MarketComponent {
 
   selected: { [string: Phunk['hashId']]: Phunk } = {};
   deselected: Phunk[] = [];
-  selectedLength: number = Object.keys(this.selected).length;
+  objectKeys = Object.keys;
   selectedValue: string = '';
 
   selectMutipleActive: boolean = false;
@@ -111,12 +117,7 @@ export class MarketComponent {
     canTransfer: boolean,
     canWithdraw: boolean,
     canEscrow: boolean,
-  } = {
-    canList: false,
-    canTransfer: false,
-    canWithdraw: false,
-    canEscrow: false,
-  }
+  } = defaultActionState;
 
   walletAddress$ = this.store.select(appStateSelectors.selectWalletAddress);
   marketType$ = this.store.select(appStateSelectors.selectMarketType);
@@ -319,6 +320,7 @@ export class MarketComponent {
         }
       }));
     }
+    this.clearSelectedAndClose();
   }
 
   async submitBatchListing(): Promise<void> {
@@ -393,15 +395,13 @@ export class MarketComponent {
       }));
     }
 
-    // this.closeModal();
+    this.clearSelectedAndClose();
   }
 
   selectedChange($event: any): void {
-    this.selectedLength = Object.keys(this.selected).length;
     this.selectedValue = Object.values(this.selected).reduce(
       (acc: number, phunk: Phunk) => acc += Number(phunk.listing?.minValue || '0'),
     0).toString();
-
 
     this.actionsState = {
       canList: false,
@@ -429,8 +429,10 @@ export class MarketComponent {
   }
 
   clearSelectedAndClose() {
+    this.selectMutipleActive = false;
     this.selectAll = false;
     this.selected = {};
+    this.actionsState = defaultActionState;
   }
 
   closeModal(): void {

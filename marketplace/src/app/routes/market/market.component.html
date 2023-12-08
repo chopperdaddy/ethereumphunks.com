@@ -71,10 +71,10 @@
         ) {
           <div class="selection-toolbar">
             <div class="selected-label">
-              Selected: <span>{{ selectedLength }}</span>
+              Selected: <span>{{ objectKeys(selected).length }}</span>
             </div>
 
-            <div class="actions" [class.disabled]="!selectedLength">
+            <div class="actions" [class.disabled]="!objectKeys(selected).length">
               @if (marketType === 'owned') {
                 <button (click)="batchAction('list')" [class.disabled]="!actionsState.canList">List</button>
                 <button (click)="batchAction('transfer')" [class.disabled]="!actionsState.canTransfer">Transfer</button>
@@ -82,13 +82,14 @@
                 <button (click)="batchAction('withdraw')" [class.disabled]="!actionsState.canWithdraw">Withdraw</button>
               } @else if (marketType === 'listings') {
                 <div class="total-value">
-                  <span class="label">Total Cost: </span>
-                  <span class="value">{{ selectedValue | weiToEth }}Ξ</span>
+                  <span class="label">Total cost: </span>
+                  <span class="value">{{ (selectedValue | weiToEth) | number }}Ξ</span>
                 </div>
-                <button (click)="batchAction('sweep')" class="disabled">
-                  Buy Selected
+                <button
+                  (click)="batchAction('sweep')"
+                  class="disabled">
 
-                  <!-- <span class="notif">coming soon</span> -->
+                  Buy Selected
                 </button>
               }
             </div>
@@ -106,6 +107,7 @@
         <app-phunk-grid
           [observe]="true"
           [marketType]="marketType"
+          [activeSort]="(activeSort$ | async).value"
           [phunkData]="phunkData"
           [selectAll]="selectAll"
           [selectable]="

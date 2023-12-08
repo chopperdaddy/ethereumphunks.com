@@ -1,70 +1,126 @@
-<div #menuInner class="inner" [style]="{ 'opacity': '0' }" waIntersectionObserver waIntersectionThreshold="0.5">
-
+<!-- waIntersectionObserver waIntersectionThreshold="0.5" -->
+<section #menuMain class="main" [style]="{ 'opacity': '0' }">
   @if (address$ | async; as address) {
 
-    <!-- <div class="sections-wrapper">
-      @if ((listedPhunks$ | async); as listed) {
-        <section class="owned">
-          <p i18n>You own <span class="highlight">{{ stats.owned | number }}</span> EtherPhunks, <a class="highlight" [routerLink]="['/', 'owned']" [href]="'/owned'" [queryParams]="{ address }">view all.</a></p>
+    <div class="user-actions">
+      <button
+        (click)="withdraw()"
+        [class.disabled]="(hasWithdrawal$ | async) === 0">
 
-          <p i18n>You have <span class="highlight">{{ stats.listed | number }}</span> EtherPhunks listed for sale.</p>
+        <span>Withdraw Funds</span>
+        <span>({{ (hasWithdrawal$ | async) | weiToEth }} ETH)</span>
+      </button>
+      <button (click)="disconnect()">Disconnect</button>
+    </div>
 
-          @if (menuActive$ | async) {
-            <app-phunk-grid
-              [phunkData]="listed || []"
-              [viewType]="(isMobile$ | async) ? 'menu' : 'market'"
-              [showLabels]="false"
-              [limit]="24"
-              [marketType]="'owned'"
-              [sort]="'price-low'"
-            />
-          }
-        </section>
-      }
-
+    <div class="stats-wrapper" waIntersectionObserver waIntersectionThreshold="0.5">
       @if ((userOpenBids$ | async); as bids) {
-        <section class="bids">
-          <p i18n>You have <span class="highlight">{{ stats.bids | number }}</span> open bids</p>
+        <a
+          class="stat-item bids"
+          [routerLink]="['/', 'bids']" [queryParams]="{ address }">
 
           <app-phunk-grid
             [phunkData]="bids || []"
-            [viewType]="(isMobile$ | async) ? 'menu' : 'market'"
+            [viewType]="'compact'"
             [showLabels]="false"
-            [limit]="24"
+            [limit]="5"
             [marketType]="'bids'"
           />
-        </section>
+          <div class="stat">
+            <div class="label"><span>Open</span><span>Bids</span></div>
+            <div class="value">{{ stats.bids | number }}</div>
+          </div>
+          <div class="arrow">
+            <ng-template [ngTemplateOutlet]="arrowIcon" />
+          </div>
+        </a>
       }
-    </div> -->
 
-    <div class="user-wrapper">
-      <div class="user-actions">
-        <button
-          (click)="withdraw()"
-          [class.disabled]="(hasWithdrawal$ | async) === 0">
+      @if ((listedPhunks$ | async); as listed) {
+        @if (listed.length) {
+          <a
+            class="stat-item listings"
+            [routerLink]="['/', 'owned']" [queryParams]="{ address }">
 
-          <span>Withdraw Funds</span>
-          <span>({{ (hasWithdrawal$ | async) | weiToEth }} ETH)</span>
-        </button>
-        <button (click)="disconnect()">Disconnect</button>
-      </div>
+            <app-phunk-grid
+              [phunkData]="listed || []"
+              [viewType]="'compact'"
+              [showLabels]="false"
+              [limit]="5"
+              [marketType]="'listings'"
+            />
+            <div class="stat">
+              <div class="label"><span>Active</span><span>Listings</span></div>
+              <div class="value">{{ stats.listed | number }}</div>
+            </div>
+            <div class="arrow">
+              <ng-template [ngTemplateOutlet]="arrowIcon" />
+            </div>
+          </a>
+        }
+      }
+    </div>
 
-      @if ((transactions$ | async); as txns) {
-        <div class="notifications-wrapper">
-          <h3>Activity</h3>
-          <div class="notifications">
-            @if (txns.length) {
-              @for (txn of txns; track txn) { <app-notif [txn]="txn" [dismissible]="false" /> }
-            } @else {
-              <p class="no-activity">No recent activity.</p>
-            }
+    <div class="menu-items">
+      @if (leaderboard$ | async; as leaderboard) {
+        <div
+          (click)="navigateMenu('leaderboard')"
+          class="leaderboard-button">
+
+          <div class="logo-wrapper">
+            <ng-template [ngTemplateOutlet]="pointsIcon"></ng-template>
+          </div>
+          <div class="button-content">
+            <h4>Points Leaderboard</h4>
+            <span class="top-points">
+              <div class="value">{{ leaderboard[0].points }}</div>
+              <div class="label">Points</div>
+            </span>
+            <div class="top-holder">
+              <app-address [address]="leaderboard[0].address" />
+              <div class="label">#1 Points holder</div>
+            </div>
+          </div>
+          <div class="arrow">
+            <ng-template [ngTemplateOutlet]="arrowIcon" />
           </div>
         </div>
       }
     </div>
 
-    <div class="leaderboard">
-      <app-leaderboard />
-    </div>
+    @if ((transactions$ | async); as txns) {
+      <div class="notifications-wrapper">
+        <h3>Activity</h3>
+        <div class="notifications" [class.scrollbar]="txns.length > 4">
+          @if (txns.length) {
+            @for (txn of txns; track txn) { <app-notif [txn]="txn" [dismissible]="false" [isMenu]="true" /> }
+          } @else {
+            <p class="no-activity">No recent activity.</p>
+          }
+        </div>
+      </div>
+    }
   }
-</div>
+</section>
+
+<section #menuLeaderboard class="leaderboard" [style]="{ 'opacity': '0' }">
+  <div class="section-header">
+    <button (click)="navigateMenu('main')">
+      <ng-template [ngTemplateOutlet]="backIcon"></ng-template>
+      Back
+    </button>
+  </div>
+  <app-leaderboard />
+</section>
+
+<ng-template #backIcon>
+  <svg height="15" viewBox="0 0 9 15" width="9" xmlns="http://www.w3.org/2000/svg"><path d="m6 6h3v3h-3zm-3-3h3v3h-3zm0 6h3v3h-3zm-3-9h3v3h-3zm0 12h3v3h-3z" fill-rule="evenodd"/></svg>
+</ng-template>
+
+<ng-template #pointsIcon>
+  <svg height="119" viewBox="0 0 119 119" width="119" xmlns="http://www.w3.org/2000/svg"><path d="m17 17v17h-17v-17zm17-17v17h-17v-17zm0 17v-17h34v17zm-34 17h17v34h-17zm68 17v-17h34v34h-17v-17zm51-17h-17v17h17zm-85 17v-17h34v17zm0 17h-17v17h17zm0 17v-17h34v17zm34-68v-17h34v34h-17v-17zm0 68v-17h34v17zm17 0h17v34h-17z"/></svg>
+</ng-template>
+
+<ng-template #arrowIcon>
+  <svg height="25" viewBox="0 0 15 25" width="15" xmlns="http://www.w3.org/2000/svg"><path d="m10 10h5v5h-5zm-5-5h5v5h-5zm0 10h5v5h-5zm-5-15h5v5h-5zm0 20h5v5h-5z" fill-rule="evenodd"/></svg>
+</ng-template>

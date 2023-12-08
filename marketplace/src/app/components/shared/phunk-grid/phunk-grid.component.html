@@ -1,37 +1,36 @@
-@if ((mktType$ | async); as mktType) {
+@if (marketType) {
+
+  <!-- <div>{{ viewType }} | {{ marketType }}</div> -->
+
   @if (phunkData) {
-    <div class="grid-wrapper" [class.selectable]="selectable" [class]="viewType">
-      @for (
-        phunk of phunkData |
-        properties : (activeTraitFilters$ | async) : traitCount |
-        sort: (activeSort$ | async) : (mktType$ | async); track phunk.phunkId; let i = $index
-      ) {
-        @if (i < limit) {
-          <ng-container *ngTemplateOutlet="phunkItem; context:{ $implicit: phunk, index: i }" />
-        }
+    @for (
+      phunk of phunkData |
+      properties : (activeTraitFilters$ | async) |
+      sort: activeSort : marketType;
+      track phunk.phunkId;
+      let i = $index;
+    ) {
+      @if (i < limit) {
+        <ng-container *ngTemplateOutlet="phunkItem; context:{ $implicit: phunk, index: i }" />
       }
-    </div>
+    }
   } @else {
-    <div class="grid-wrapper" [class]="viewType">
-
-      @for (i of limitArr; track i) {
-        <div class="item-link">
-          <div class="item">
-
-            <div class="image-wrapper">
-              <img [src]="'assets/loadingphunk.png'" width="50" height="50" />
-            </div>
-
-            @if (viewType === 'market') {
-              <div class="labels-wrapper">
-                <div class="label">#0000</div>
-                <div class="label">Loading...<br />&nbsp;</div>
-              </div>
-            }
+    @for (i of limitArr; track i) {
+      <div class="item-link">
+        <div class="item">
+          <div class="image-wrapper">
+            <img [src]="'assets/loadingphunk.png'" width="50" height="50" />
           </div>
+
+          @if (viewType === 'market') {
+            <div class="labels-wrapper">
+              <div class="label">#0000</div>
+              <div class="label">Loading...<br />&nbsp;</div>
+            </div>
+          }
         </div>
-      }
-    </div>
+      </div>
+    }
   }
 
   <ng-template #phunkItem let-phunk let-i="index">
@@ -39,7 +38,10 @@
       class="item"
       (waIntersectionObservee)="onIntersection($event)"
       [class.selected]="selected[phunk.hashId]"
-      [attr.data-index]="i">
+      [attr.data-index]="i"
+      [class.in-escrow]="(marketType === 'owned' && viewType === 'market') && phunk.owner === escrowAddress && !phunk.listing"
+      [class.listing]="(marketType === 'listings' || (marketType === 'owned' && viewType === 'market')) && phunk.listing"
+      [class.bid]="(marketType === 'bids' || (marketType === 'owned' && viewType === 'market')) && phunk.bid">
 
       @if (selectable) {
         <div class="selector">
@@ -63,12 +65,7 @@
         [routerLink]="['/', 'details', phunk.phunkId]"
         [href]="'/details/' + phunk.phunkId">
 
-        <div
-          class="image-wrapper"
-          [class.in-escrow]="phunk.owner === escrowAddress"
-          [class.listing]="(mktType === 'listings' || mktType === 'owned') && phunk.listing"
-          [class.bid]="mktType === 'bids' && phunk.bid">
-
+        <div class="image-wrapper">
           <img
             [lazyLoad]="dataSvc.staticUrl + '/images/phunk' + (phunk.phunkId | tokenIdParse) + '.svg'"
             [defaultImage]="'assets/loadingphunk.png'"
@@ -81,24 +78,25 @@
           <div class="labels-wrapper">
             <div class="label">#{{ phunk.phunkId }}</div>
 
-            @if (mktType === 'listings' || mktType === 'owned') {
+            @if (
+              marketType === 'listings'
+              || marketType === 'owned'
+            ) {
               @if (phunk.listing; as listing) {
                 <p i18n>
-                  {{ (listing.minValue | weiToEth) | formatCash }}Ξ<br />
-                  <!-- @if ((dataSvc.usd$ | async); as usd) {
-                    ${{ ((listing.minValue | weiToEth) * usd) | formatCash }}
-                  } -->
+                  {{ (listing.minValue | weiToEth) }}Ξ<br />
+                  ${{ ((listing.minValue | weiToEth) * ((usd$ | async) || 0)) | formatCash }}
                 </p>
               }
             }
 
-            @if (mktType === 'bids') {
+            @if (
+              marketType === 'bids'
+            ) {
               @if (phunk.bid; as bid) {
                 <p i18n>
-                  {{ (bid.value | weiToEth) | formatCash }}Ξ<br />
-                  <!-- @if ((dataSvc.usd$ | async); as usd) {
-                    ${{ ((bid.value | weiToEth) * usd) | formatCash }}
-                  } -->
+                  {{ (bid.value | weiToEth) }}Ξ<br />
+                  ${{ ((bid.value | weiToEth) * ((usd$ | async) || 0)) | formatCash }}
                 </p>
               }
             }

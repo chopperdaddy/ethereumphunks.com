@@ -22,9 +22,15 @@
 
     <span class="rank" [class.highlight]="$index < 3" [class.top]="$index === 0">{{ $index + 1 }}</span>
 
-    <app-address [address]="item.address" />
+    <a [routerLink]="['/', 'owned']" [queryParams]="{ address: item.address }">
+      <app-address [address]="item.address" />
+    </a>
     <span class="sales">{{ item.sales }}</span>
     <span class="points">{{ item.points }}</span>
+  </div>
+} @empty {
+  <div class="no-results">
+    <p>No results found.</p>
   </div>
 }
 

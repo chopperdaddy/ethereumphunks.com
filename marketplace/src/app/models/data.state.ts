@@ -1,8 +1,7 @@
 import { Phunk } from './db';
 
 export interface DataState {
-
-
+  usd: number | null;
   events: any[] | null;
   allPhunks: Phunk[] | null;
   singlePhunk: Phunk | null;
@@ -13,4 +12,5 @@ export interface DataState {
   userOpenBids: Phunk[] | null;
   activeMarketRouteData: Phunk[] | null;
   txHistory: any[] | null;
+  leaderboard: any[] | null;
 }

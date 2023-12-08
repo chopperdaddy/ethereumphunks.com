@@ -54,6 +54,7 @@ export class RecentActivityComponent {
     { label: 'Bid Entered', value: 'PhunkBidEntered' },
     { label: 'Bid Withdrawn', value: 'PhunkBidWithdrawn' },
     { label: 'Offered', value: 'PhunkOffered' },
+    // { label: 'Escrowed', value: 'escrow' },
     // { label: 'Offer Withdrawn', value: 'PhunkOfferWithdrawn' },
   ];
 
@@ -68,10 +69,12 @@ export class RecentActivityComponent {
     PhunkOffered: 'Offered for',
     PhunkBought: 'Bought for',
     transfer: 'Transferred to',
-    created: 'Created by'
+    created: 'Created by',
+    // escrow: 'Escrowed by',
   };
 
   events$ = this.store.select(dataStateSelectors.selectEvents);
+  usd$ = this.store.select(dataStateSelectors.selectUsd);
 
   constructor(
     private store: Store<GlobalState>,

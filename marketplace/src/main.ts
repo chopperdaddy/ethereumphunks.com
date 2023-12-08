@@ -1,7 +1,7 @@
 import { enableProdMode, importProvidersFrom, isDevMode } from '@angular/core';
 import { bootstrapApplication } from '@angular/platform-browser';
 import { provideAnimations } from '@angular/platform-browser/animations';
-import { RouteReuseStrategy, provideRouter, withHashLocation } from '@angular/router';
+import { RouteReuseStrategy, provideRouter, withHashLocation, withInMemoryScrolling } from '@angular/router';
 
 import { HttpClientModule } from '@angular/common/http';
 // import { GraphQLModule } from './app/graphql.module';
@@ -60,10 +60,12 @@ bootstrapApplication(AppComponent, {
     provideAnimations(),
     provideRouterStore(),
     importProvidersFrom(HttpClientModule),
-    provideRouter(routes, withHashLocation()),
-    provideServiceWorker('ngsw-worker.js', {
-        enabled: !isDevMode(),
-        registrationStrategy: 'registerWhenStable:30000'
-    })
+    provideRouter(routes, withHashLocation(), withInMemoryScrolling({
+      scrollPositionRestoration: 'top',
+    })),
+    // provideServiceWorker('ngsw-worker.js', {
+    //     enabled: !isDevMode(),
+    //     registrationStrategy: 'registerWhenStable:30000'
+    // })
 ]
 });

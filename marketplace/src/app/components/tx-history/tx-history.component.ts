@@ -20,6 +20,8 @@ import { ZERO_ADDRESS } from '@/constants/utils';
 import * as dataStateActions from '@/state/actions/data-state.actions';
 import * as dataStateSelectors from '@/state/selectors/data-state.selectors';
 
+import { map } from 'rxjs';
+
 @Component({
   standalone: true,
   imports: [
@@ -47,14 +49,18 @@ export class TxHistoryComponent implements OnChanges, OnDestroy {
 
   @Input() hashId!: string | undefined;
 
-  tokenSales$ = this.store.select(dataStateSelectors.selectTxHistory);
+  tokenSales$ = this.store.select(dataStateSelectors.selectTxHistory).pipe(
+    map((data) => data?.map((tx) => ({
+      ...tx,
+      type: tx.type === 'transfer' && tx.to.toLowerCase() === environment.marketAddress ? 'escrow' : tx.type,
+    }))),
+  );
 
   constructor(
     private store: Store<GlobalState>,
   ) {}
 
   ngOnChanges(changes: SimpleChanges): void {
-    // console.log('TxHistoryComponent', changes);
     this.store.dispatch(dataStateActions.fetchTxHistory({ hashId: changes.hashId.currentValue }));
   }
 

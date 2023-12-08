@@ -5,7 +5,7 @@
 
     <ng-select
       [(ngModel)]="activeFiltersModel[key]"
-      placeholder="{{ key | titlecase }}"
+      placeholder="{{ key.replace('-', ' ') | titlecase }}"
       (change)="selectFilter($event, key)"
       [searchable]="true"
       [class.active]="((activeTraitFilters$ | async) || {})[key]">
@@ -18,12 +18,3 @@
     </ng-select>
   </div>
 }
-
-<div class="filter-group-wrapper">
-  <ng-select
-    [items]="[0, 1, 2, 3, 4, 5, 6, 7]"
-    [(ngModel)]="traitCount"
-    [searchable]="false"
-    placeholder="Trait Count">
-  </ng-select>
-</div>

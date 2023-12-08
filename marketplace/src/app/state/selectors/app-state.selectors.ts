@@ -34,9 +34,14 @@ export const selectActiveSort = createSelector(
 //   (appState: AppState) => appState.activeFilters
 // );
 
-export const selectactiveEventTypeFilter = createSelector(
+export const selectScrollPositions = createSelector(
   selectAppState,
-  (appState: AppState) => appState.activeEventTypeFilter
+  (appState: AppState) => appState.scrollPositions
+);
+
+export const selectEventTypeFilter = createSelector(
+  selectAppState,
+  (appState: AppState) => appState.eventTypeFilter
 );
 
 export const selectActiveTraitFilters = createSelector(
@@ -52,6 +57,11 @@ export const selectSelectedPhunks = createSelector(
 export const selectMenuActive = createSelector(
   selectAppState,
   (appState: AppState) => appState.menuActive
+);
+
+export const selectActiveMenuNav = createSelector(
+  selectAppState,
+  (appState: AppState) => appState.activeMenuNav
 );
 
 export const selectSlideoutActive = createSelector(

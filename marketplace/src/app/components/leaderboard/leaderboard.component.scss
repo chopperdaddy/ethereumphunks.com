@@ -60,14 +60,19 @@
 
   position: relative;
   display: grid;
-  grid-template-columns: 3rem auto 6rem 6rem;
+  grid-template-columns: 3rem auto 8rem 8rem;
   padding: 1rem;
   align-items: center;
 
   font-size: 1.2rem;
 
-  app-address {
+  a {
+    color: rgba(var(--white), 1);
+    text-decoration: none;
 
+    app-address {
+
+    }
   }
 
   .points {
@@ -101,6 +106,9 @@
   &.i0 {
     background-color: rgba(var(--highlight), 1);
     color: rgba(var(--black), 1);
+    a {
+      color: rgba(var(--black), 1);
+    }
   }
 
   &.i1 {

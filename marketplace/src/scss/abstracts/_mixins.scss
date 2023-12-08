@@ -64,3 +64,26 @@
     padding: 2rem 2rem 6rem;
   }
 }
+
+@mixin scrollbars() {
+  /* Firefox */
+  scrollbar-width: auto;
+  scrollbar-color: #ff03b4 #c2ff02;
+  -webkit-overflow-scrolling: touch;
+
+  /* Chrome, Edge, and Safari */
+  &::-webkit-scrollbar {
+    width: 1rem;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: #c2ff02;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background-color: #ff03b4;
+    border-radius: 0;
+    border: none;
+    border-left: .3rem solid rgba(0, 0, 0, 0);
+  }
+}

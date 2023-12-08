@@ -9,12 +9,10 @@ import { SearchComponent } from '../search/search.component';
 
 import { Web3Service } from '@/services/web3.service';
 
-import { Subject, firstValueFrom, map, tap, withLatestFrom } from 'rxjs';
+import { Subject, map, tap, withLatestFrom } from 'rxjs';
 
 import { WalletAddressDirective } from '@/directives/wallet-address.directive';
 import { FormatCashPipe } from '@/pipes/format-cash.pipe';
-
-import anime from 'animejs/lib/anime.es.js';
 
 import { GlobalState } from '@/models/global-state';
 

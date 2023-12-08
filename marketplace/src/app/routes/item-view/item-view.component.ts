@@ -94,8 +94,8 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
   acceptbidActive: boolean = false;
 
   transferAddress = new FormControl<string | null>('');
-  bidPrice = new FormControl<number | null>(null);
-  listPrice = new FormControl<number | null>(null);
+  bidPrice = new FormControl<number | undefined>(undefined);
+  listPrice = new FormControl<number | undefined>(undefined);
   listToAddress = new FormControl<string | null>('');
 
   objectValues = Object.values;
@@ -121,6 +121,7 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
   walletAddress$ = this.store.select(appStateSelectors.selectWalletAddress);
   singlePhunk$ = this.store.select(dataStateSelectors.selectSinglePhunk);
   theme$ = this.store.select(appStateSelectors.selectTheme);
+  usd$ = this.store.select(dataStateSelectors.selectUsd);
 
   private destroy$ = new Subject<void>();
 
@@ -175,7 +176,7 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
 
   closeListing(): void {
     this.sellActive = false;
-    this.listPrice.setValue(0);
+    this.listPrice.setValue(undefined);
   }
 
   closeTransfer(): void {
@@ -185,7 +186,7 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
 
   closeBid(): void {
     this.bidActive = false;
-    this.bidPrice.setValue(null);
+    this.bidPrice.setValue(undefined);
   }
 
   // withdraw(): void {

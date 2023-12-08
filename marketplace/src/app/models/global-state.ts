@@ -17,15 +17,18 @@ export interface AppState {
 
   isMobile: boolean;
   menuActive: boolean;
+  activeMenuNav: 'main' | 'leaderboard';
   slideoutActive: boolean;
 
   selectedPhunks: Phunk[] | null;
   activeTraitFilters: TraitFilter;
+  eventTypeFilter: EventType;
+
+  scrollPositions: { [navigationId: number]: number },
 
   marketType: MarketTypes;
   activeSort: Sort;
   // activeFilters: any;
-  activeEventTypeFilter: EventType;
 
   blockNumber: number;
   transactions: Transaction[];
@@ -60,4 +63,4 @@ export interface TraitFilter { [key: string]: string };
 
 export interface TxFilterItem { label: string, value: EventType };
 
-export type EventType = 'All' | 'created' | 'transfer' | 'PhunkOffered' | 'PhunkBidEntered' | 'PhunkBidWithdrawn' | 'PhunkBought' | 'PhunkOfferWithdrawn';
+export type EventType = 'All' | 'created' | 'transfer' | 'escrow' | 'PhunkOffered' | 'PhunkBidEntered' | 'PhunkBidWithdrawn' | 'PhunkBought' | 'PhunkOfferWithdrawn';

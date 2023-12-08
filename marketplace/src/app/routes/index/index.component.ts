@@ -63,6 +63,7 @@ export class IndexComponent {
   listings$ = this.store.select(dataStateSelectors.selectListings);
   bids$ = this.store.select(dataStateSelectors.selectBids);
   isMobile$ = this.store.select(appStateSelectors.selectIsMobile);
+  usd$ = this.store.select(dataStateSelectors.selectUsd);
 
   constructor(
     // @Inject(IntersectionObserverService) entries$: IntersectionObserverService,
@@ -70,8 +71,8 @@ export class IndexComponent {
     public themeSvc: ThemeService,
     public dataSvc: DataService,
   ) {
-    this.store.dispatch(dataStateActions.fetchMarketData());
-    this.store.dispatch(dataStateActions.fetchAllPhunks());
+    // this.store.dispatch(dataStateActions.fetchMarketData());
+    // this.store.dispatch(dataStateActions.fetchAllPhunks());
 
     // entries$.subscribe(entries => {
     //   console.log('entries', entries);
@@ -79,7 +80,7 @@ export class IndexComponent {
   }
 
   onIntersection($event: any): void {
-    console.log('onIntersection', $event);
+    // console.log('onIntersection', $event);
     // this.store.dispatch(appStateActions.setIsVisible({ isVisible: visible }));
   }
 }

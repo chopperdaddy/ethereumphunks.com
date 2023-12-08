@@ -36,6 +36,7 @@ export class PhunkImageComponent implements OnChanges {
 
     firstValueFrom(
       this.http.get(url, { responseType: 'text' }).pipe(
+        // tap(data => console.log(data)),
         switchMap(data => from(svgson.parse(data))),
         map(data => this.color ? data : this.stripColors(data)),
         map(data => this.convertToBase64(data))

@@ -32,11 +32,11 @@ $base-url: '/assets/' !default;
   --base-color: 195, 255, 0;
   --button-color: 255, 4, 180;
 
-  --listed-color: 0, 255, 201;
   --bid-color: 158, 3, 255;
   --transferred-color: 2, 255, 100;
   --claimed-color: 195, 255, 0;
-  --sale-color: 0, 255, 201;
+  --sale-color: 0, 255, 200;
+  --listed-color: 0, 255, 200;
   --escrow-color: 255, 230, 0;
 
   @media (max-width: $mobile) {

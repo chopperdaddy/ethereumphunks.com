@@ -32,6 +32,7 @@ export class NotifComponent {
 
   @Input() txn: Transaction | undefined;
   @Input() dismissible: boolean = true;
+  @Input() isMenu: boolean = false;
 
   env = environment;
 

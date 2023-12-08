@@ -8,6 +8,14 @@
   .transaction-wrapper {
     width: 100%;
     overflow-y: scroll;
+
+    overflow: scroll;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+
+    &::-webkit-scrollbar {
+      display: none;
+    }
   }
 
   table, tr, th, td {
@@ -145,6 +153,18 @@
             .cell-inner {
               &.type-label {
                 border-left: .3rem solid rgba(var(--listed-color), 1);
+              }
+            }
+          }
+        }
+
+        &.escrow {
+          td {
+            background-color: rgba(var(--escrow-color), .5);
+
+            .cell-inner {
+              &.type-label {
+                border-left: .3rem solid rgba(var(--escrow-color), 1);
               }
             }
           }
