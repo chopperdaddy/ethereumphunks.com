@@ -143,7 +143,7 @@ export class BreadcrumbsComponent {
 
   async getPunkImage(): Promise<string | undefined> {
     if (!this.phunk) return;
-    const imgUrl = this.dataSvc.staticUrl + '/images/phunk' + this.tokenIdParsePipe.transform(this.phunk.phunkId) + '.svg';
+    const imgUrl = this.dataSvc.staticUrl + '/images/phunk' + this.tokenIdParsePipe.transform(this.phunk.tokenId) + '.svg';
     const svg = await firstValueFrom(this.http.get(imgUrl, { responseType: 'text' }));
     return svg;
   }
@@ -152,7 +152,7 @@ export class BreadcrumbsComponent {
     if (!this.phunk) return;
 
     const link = document.createElement('a');
-    if (window.innerWidth > 800) link.download = 'EthereumPhunk#' + this.phunk.phunkId + '.png';
+    if (window.innerWidth > 800) link.download = 'EthereumPhunk#' + this.phunk.tokenId + '.png';
 
     link.target = '_blank';
     link.href = this.pfp.nativeElement.toDataURL('image/png;base64');

@@ -33,6 +33,8 @@ export interface AppState {
   blockNumber: number;
   transactions: Transaction[];
   cooldowns: Cooldown[];
+
+  notifHoverState: { [notificationId: string]: boolean };
 };
 
 export interface Cooldown {

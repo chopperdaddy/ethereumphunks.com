@@ -26,7 +26,11 @@ import { TimeagoModule } from 'ngx-timeago';
     WalletAddressDirective
   ],
   templateUrl: './notif.component.html',
-  styleUrls: ['./notif.component.scss']
+  styleUrls: ['./notif.component.scss'],
+  host: {
+    '(mouseenter)': 'onMouseEnter(txn.id)',
+    '(mouseleave)': 'onMouseLeave(txn.id)'
+  }
 })
 export class NotifComponent {
 
@@ -100,6 +104,18 @@ export class NotifComponent {
 
   dismiss(txn: Transaction) {
     this.store.dispatch(appStateActions.removeTransaction({ txId: txn.id }));
+  }
+
+  onMouseEnter(notificationId: string) {
+    // Update the notification hover state
+    console.log('onMouseEnter', notificationId);
+    this.store.dispatch(appStateActions.setNotifHoverState({ notifHoverState: { [notificationId]: true } }));
+  }
+
+  onMouseLeave(notificationId: string) {
+    // Update the notification hover state
+    console.log('onMouseLeave', notificationId);
+    this.store.dispatch(appStateActions.setNotifHoverState({ notifHoverState: { [notificationId]: false } }));
   }
 
 }

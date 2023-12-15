@@ -106,7 +106,7 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
     filter((cooldowns) => !!cooldowns),
     switchMap((cooldowns) => this.singlePhunk$.pipe(
       filter((phunk) => !!phunk),
-      map((phunk) => cooldowns.filter((cooldown) => cooldown?.phunkId === phunk?.phunkId)?.length > 0),
+      map((phunk) => cooldowns.filter((cooldown) => cooldown?.phunkId === phunk?.tokenId)?.length > 0),
     )),
   );
 
@@ -114,7 +114,7 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
     filter((transactions) => !!transactions),
     switchMap((transactions) => this.singlePhunk$.pipe(
       filter((phunk) => !!phunk),
-      map((phunk) => transactions.filter((tx) => tx?.phunkId === phunk?.phunkId && tx.type === 'pending')?.length > 0),
+      map((phunk) => transactions.filter((tx) => tx?.phunkId === phunk?.tokenId && tx.type === 'pending')?.length > 0),
     )),
   );
 
@@ -202,7 +202,7 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
   }
 
   async submitListing(phunk: Phunk): Promise<void> {
-    const phunkId = phunk.phunkId;
+    const phunkId = phunk.tokenId;
 
     try {
       if (!phunk.hashId) throw new Error('Invalid hashId');
@@ -275,7 +275,7 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
   }
 
   async sendToEscrow(phunk: Phunk): Promise<void> {
-    const phunkId = phunk.phunkId;
+    const phunkId = phunk.tokenId;
 
     try {
       if (!phunk.hashId) throw new Error('Invalid hashId');
@@ -332,7 +332,7 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
   }
 
   async phunkNoLongerForSale(phunk: Phunk): Promise<void> {
-    const phunkId = phunk.phunkId;
+    const phunkId = phunk.tokenId;
 
     try {
       if (!phunk.hashId) throw new Error('Invalid hashId');
@@ -389,7 +389,7 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
   }
 
   async withdrawBidForPhunk(phunk: Phunk): Promise<void> {
-    const phunkId = phunk.phunkId;
+    const phunkId = phunk.tokenId;
 
     try {
       if (!phunk.hashId) throw new Error('Invalid hashId');
@@ -447,7 +447,7 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
   }
 
   async acceptBidForPhunk(phunk: Phunk): Promise<void> {
-    const phunkId = phunk.phunkId;
+    const phunkId = phunk.tokenId;
 
     try {
       if (!phunk.hashId) throw new Error('Invalid hashId');
@@ -505,7 +505,7 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
   }
 
   async buyPhunk(phunk: Phunk): Promise<void> {
-    const phunkId = phunk.phunkId;
+    const phunkId = phunk.tokenId;
 
     try {
       if (!phunk.hashId) throw new Error('Invalid hashId');
@@ -564,7 +564,7 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
   }
 
   async submitBid(phunk: Phunk): Promise<void> {
-    const phunkId = phunk.phunkId;
+    const phunkId = phunk.tokenId;
 
     try {
       if (!phunk.hashId) throw new Error('Invalid hashId');
@@ -625,7 +625,7 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
   }
 
   async transferPhunk(data: Phunk, address?: string): Promise<void> {
-    const phunkId = data.phunkId;
+    const phunkId = data.tokenId;
 
     try {
 
@@ -688,7 +688,7 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
   }
 
   async withdrawPhunk(phunk: Phunk): Promise<void> {
-    const phunkId = phunk.phunkId;
+    const phunkId = phunk.tokenId;
 
     try {
       if (!phunk.hashId) throw new Error('Invalid hashId');

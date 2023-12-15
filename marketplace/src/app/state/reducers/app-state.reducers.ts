@@ -30,6 +30,8 @@ export const initialState: AppState = {
   blockNumber: -1,
   transactions: [],
   cooldowns: JSON.parse(localStorage.getItem('EtherPhunks_cooldowns') || '[]'),
+
+  notifHoverState: {},
 };
 
 export const appStateReducer: ActionReducer<AppState, Action> = createReducer(
@@ -236,5 +238,13 @@ export const appStateReducer: ActionReducer<AppState, Action> = createReducer(
     };
     // console.log('setBlockNumber', setBlockNumber);
     return setBlockNumber
+  }),
+  on(actions.setNotifHoverState, (state, { notifHoverState }) => {
+    const setNotifHoverState = {
+      ...state,
+      notifHoverState
+    };
+    // console.log('setNotifHoverState', setNotifHoverState);
+    return setNotifHoverState
   }),
 );

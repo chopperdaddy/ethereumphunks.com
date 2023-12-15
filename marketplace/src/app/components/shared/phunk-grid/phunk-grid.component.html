@@ -1,13 +1,11 @@
 @if (marketType) {
 
-  <!-- <div>{{ viewType }} | {{ marketType }}</div> -->
-
   @if (phunkData) {
     @for (
       phunk of phunkData |
       properties : (activeTraitFilters$ | async) |
       sort: activeSort : marketType;
-      track phunk.phunkId;
+      track phunk.tokenId;
       let i = $index;
     ) {
       @if (i < limit) {
@@ -48,13 +46,13 @@
           <input
             #phunkCheck
             type="checkbox"
-            [id]="'checkbox-' + phunk.phunkId"
+            [id]="'checkbox-' + phunk.tokenId"
             [checked]="selected[phunk.hashId]"
             [attr.data-hash-id]="phunk.hashId"
             (change)="selectPhunk(phunk)"
           />
 
-          <label [for]="'checkbox-' + phunk.phunkId">
+          <label [for]="'checkbox-' + phunk.tokenId">
             <div class="check"></div>
           </label>
         </div>
@@ -62,12 +60,12 @@
 
       <a
         class="item-link"
-        [routerLink]="['/', 'details', phunk.phunkId]"
-        [href]="'/details/' + phunk.phunkId">
+        [routerLink]="['/', 'details', phunk.tokenId]"
+        [href]="'/details/' + phunk.tokenId">
 
         <div class="image-wrapper">
           <img
-            [lazyLoad]="dataSvc.staticUrl + '/images/phunk' + (phunk.phunkId | tokenIdParse) + '.svg'"
+            [lazyLoad]="dataSvc.staticUrl + '/images/phunk' + (phunk.tokenId | tokenIdParse) + '.svg'"
             [defaultImage]="'assets/loadingphunk.png'"
             width="50"
             height="50"
@@ -76,7 +74,7 @@
 
         @if (showLabels && viewType === 'market') {
           <div class="labels-wrapper">
-            <div class="label">#{{ phunk.phunkId }}</div>
+            <div class="label">#{{ phunk.tokenId }}</div>
 
             @if (
               marketType === 'listings'

@@ -99,4 +99,7 @@ export const selectUserPoints = createSelector(
   (appState: AppState) => appState.userPoints
 );
 
-
+export const selectNotifHoverState = createSelector(
+  selectAppState,
+  (appState: AppState) => appState.notifHoverState
+);

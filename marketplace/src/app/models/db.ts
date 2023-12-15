@@ -20,18 +20,17 @@ export interface Auction {
 
 export interface Phunk {
   hashId: string
-  phunkId: number
+  tokenId: number
   createdAt: Date
   owner: string
   prevOwner: string | null
 
   creator?: string | null
   data?: string | null
-  ethscriptionNumber?: number | null
   sha?: string
 
   isEscrowed?: boolean;
-  attributes?: Attribute[],
+  attributes?: Attribute[]
   listing?: Listing | null
   bid?: Bid | null
 

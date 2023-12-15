@@ -23,6 +23,9 @@
               <ng-template [ngTemplateOutlet]="externalIcon"></ng-template>
             </a>
           }
+          @if (txn.type === 'error') {
+            <span class="error">{{ txn.detail.shortMessage || txn.detail.message || txn.detail }}</span>
+          }
           @if (!dismissible) {
             <div class="timestamp">{{ txn.id | timeago : true }}</div>
           }
@@ -43,6 +46,9 @@
               <app-address [address]="txn.hash"></app-address>
               <ng-template [ngTemplateOutlet]="externalIcon"></ng-template>
             </a>
+          }
+          @if (txn.type === 'error') {
+            <span class="error">{{ txn.detail.shortMessage || txn.detail.message || txn.detail }}</span>
           }
           @if (!dismissible) {
             <div class="timestamp">{{ txn.id | timeago : true }}</div>

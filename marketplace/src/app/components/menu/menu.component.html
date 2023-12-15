@@ -15,25 +15,27 @@
 
     <div class="stats-wrapper" waIntersectionObserver waIntersectionThreshold="0.5">
       @if ((userOpenBids$ | async); as bids) {
-        <a
-          class="stat-item bids"
-          [routerLink]="['/', 'bids']" [queryParams]="{ address }">
+        @if (bids.length) {
+          <a
+            class="stat-item bids"
+            [routerLink]="['/', 'bids']" [queryParams]="{ address }">
 
-          <app-phunk-grid
-            [phunkData]="bids || []"
-            [viewType]="'compact'"
-            [showLabels]="false"
-            [limit]="5"
-            [marketType]="'bids'"
-          />
-          <div class="stat">
-            <div class="label"><span>Open</span><span>Bids</span></div>
-            <div class="value">{{ stats.bids | number }}</div>
-          </div>
-          <div class="arrow">
-            <ng-template [ngTemplateOutlet]="arrowIcon" />
-          </div>
-        </a>
+            <app-phunk-grid
+              [phunkData]="bids || []"
+              [viewType]="'compact'"
+              [showLabels]="false"
+              [limit]="5"
+              [marketType]="'bids'"
+            />
+            <div class="stat">
+              <div class="label"><span>Open</span><span>Bids</span></div>
+              <div class="value">{{ stats.bids | number }}</div>
+            </div>
+            <div class="arrow">
+              <ng-template [ngTemplateOutlet]="arrowIcon" />
+            </div>
+          </a>
+        }
       }
 
       @if ((listedPhunks$ | async); as listed) {
@@ -90,7 +92,7 @@
 
     @if ((transactions$ | async); as txns) {
       <div class="notifications-wrapper">
-        <h3>Activity</h3>
+        <h3>Your Activity</h3>
         <div class="notifications" [class.scrollbar]="txns.length > 4">
           @if (txns.length) {
             @for (txn of txns; track txn) { <app-notif [txn]="txn" [dismissible]="false" [isMenu]="true" /> }

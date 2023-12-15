@@ -160,7 +160,7 @@ export class MarketComponent {
     }
     if (type === 'transfer') await this.transferSelected();
     if (type === 'list') await this.listSelected();
-    if (type === 'escrow') await this.batchTransfer();
+    if (type === 'escrow') await this.batchEscrow();
     if (type === 'withdraw') await this.withdrawBatch();
   }
 
@@ -172,7 +172,7 @@ export class MarketComponent {
     this.deselected = inEscrow;
 
     const formArray = this.fb.array(deselected.map((phunk: Phunk) => this.fb.group({
-      phunkId: [phunk.phunkId],
+      phunkId: [phunk.tokenId],
       hashId: [phunk.hashId],
       listPrice: [''],
     }))) as FormArray;
@@ -193,7 +193,7 @@ export class MarketComponent {
     console.log({inEscrow, deselected});
 
     const formArray = this.fb.array(inEscrow.map((phunk: Phunk) => this.fb.group({
-      phunkId: [phunk.phunkId],
+      phunkId: [phunk.tokenId],
       hashId: [phunk.hashId],
       listPrice: [''],
     }))) as FormArray;
@@ -207,7 +207,7 @@ export class MarketComponent {
     await this.web3Svc.batchBuyPhunks(Object.values(this.selected));
   }
 
-  async batchTransfer(): Promise<string | undefined> {
+  async batchEscrow(): Promise<void> {
     const selectedHashIds = Object.keys(this.selected);
     const canTransfer = await firstValueFrom(
       this.dataSvc.phunksCanTransfer(selectedHashIds)
@@ -217,15 +217,68 @@ export class MarketComponent {
     canTransfer.forEach((phunk: Phunk) => selected[phunk.hashId] = phunk);
     this.selected = selected;
 
+    const phunkIds = Object.values(selected).map((phunk: Phunk) => phunk.tokenId);
     const hexString = Object.keys(selected).map(hashId => hashId?.substring(2)).join('');
-    const hex = `0x${hexString}`;
 
+    const hex = `0x${hexString}`;
     if (hex === '0x') return;
-    console.log({hex});
-    return await this.web3Svc.transferPhunk(hex, this.escrowAddress);
+
+    try {
+      this.store.dispatch(appStateActions.upsertTransaction({
+        transaction: {
+          id: Date.now(),
+          type: 'wallet',
+          function: 'sendToEscrow',
+          phunkId: phunkIds[0],
+          phunkIds,
+          isBatch: true,
+        }
+      }));
+
+      const hash = await this.web3Svc.transferPhunk(hex, this.escrowAddress);
+
+      this.store.dispatch(appStateActions.upsertTransaction({
+        transaction: {
+          id: Date.now(),
+          type: 'pending',
+          function: 'sendToEscrow',
+          phunkId: phunkIds[0],
+          phunkIds,
+          isBatch: true,
+          hash,
+        }
+      }));
+
+      const receipt = await this.web3Svc.pollReceipt(hash!);
+      this.store.dispatch(appStateActions.upsertTransaction({
+        transaction: {
+          id: Date.now(),
+          type: 'complete',
+          function: 'sendToEscrow',
+          phunkId: phunkIds[0],
+          phunkIds,
+          isBatch: true,
+          hash: receipt.transactionHash,
+        }
+      }));
+      this.clearSelectedAndClose();
+    } catch (err) {
+      console.log(err);
+      this.store.dispatch(appStateActions.upsertTransaction({
+        transaction: {
+          id: Date.now(),
+          type: 'error',
+          function: 'sendToEscrow',
+          phunkId: phunkIds[0],
+          phunkIds,
+          isBatch: true,
+          detail: err,
+        }
+      }));
+    }
   }
 
-  async withdrawBatch(): Promise<string | undefined> {
+  async withdrawBatch(): Promise<void> {
     const selectedHashIds = Object.keys(this.selected);
     const inEscrow = await firstValueFrom(
       this.dataSvc.phunksAreInEscrow(selectedHashIds)
@@ -235,7 +288,61 @@ export class MarketComponent {
     inEscrow.forEach((phunk: Phunk) => selected[phunk.hashId] = phunk);
     this.selected = selected;
 
-    return await this.web3Svc.withdrawBatch(Object.keys(selected));
+    const phunkIds = Object.values(selected).map((phunk: Phunk) => phunk.tokenId);
+
+    try {
+      this.store.dispatch(appStateActions.upsertTransaction({
+        transaction: {
+          id: Date.now(),
+          type: 'wallet',
+          function: 'withdrawPhunk',
+          phunkId: phunkIds[0],
+          phunkIds,
+          isBatch: true,
+        }
+      }));
+
+      const hash = await this.web3Svc.withdrawBatch(Object.keys(selected));
+
+      this.store.dispatch(appStateActions.upsertTransaction({
+        transaction: {
+          id: Date.now(),
+          type: 'pending',
+          function: 'withdrawPhunk',
+          phunkId: phunkIds[0],
+          phunkIds,
+          isBatch: true,
+          hash,
+        }
+      }));
+
+      const receipt = await this.web3Svc.pollReceipt(hash!);
+      this.store.dispatch(appStateActions.upsertTransaction({
+        transaction: {
+          id: Date.now(),
+          type: 'complete',
+          function: 'withdrawPhunk',
+          phunkId: phunkIds[0],
+          phunkIds,
+          isBatch: true,
+          hash: receipt.transactionHash,
+        }
+      }));
+      this.clearSelectedAndClose();
+    } catch (err) {
+      console.log(err);
+      this.store.dispatch(appStateActions.upsertTransaction({
+        transaction: {
+          id: Date.now(),
+          type: 'error',
+          function: 'withdrawPhunk',
+          phunkId: phunkIds[0],
+          phunkIds,
+          isBatch: true,
+          detail: err,
+        }
+      }));
+    }
   }
 
   async getSelectedEscrowed(): Promise<{ deselected: Phunk[], inEscrow: Phunk[]}> {
@@ -305,6 +412,7 @@ export class MarketComponent {
           hash: receipt.transactionHash,
         }
       }));
+      this.clearSelectedAndClose();
     } catch (err) {
       console.log(err);
 
@@ -320,7 +428,6 @@ export class MarketComponent {
         }
       }));
     }
-    this.clearSelectedAndClose();
   }
 
   async submitBatchListing(): Promise<void> {
@@ -379,6 +486,8 @@ export class MarketComponent {
           hash: receipt.transactionHash,
         }
       }));
+
+      this.clearSelectedAndClose();
     } catch (err) {
       console.log(err);
 
@@ -394,8 +503,6 @@ export class MarketComponent {
         }
       }));
     }
-
-    this.clearSelectedAndClose();
   }
 
   selectedChange($event: any): void {

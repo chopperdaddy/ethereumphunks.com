@@ -11,8 +11,8 @@ import { EventType, GlobalState } from '@/models/global-state';
 import { Bid, Event, Listing, Phunk } from '@/models/db';
 
 import { createClient } from '@supabase/supabase-js'
-import { Observable, of, BehaviorSubject, from, forkJoin } from 'rxjs';
-import { catchError, map, switchMap, tap } from 'rxjs/operators';
+import { Observable, of, BehaviorSubject, from } from 'rxjs';
+import { map, switchMap, tap } from 'rxjs/operators';
 
 import { environment } from 'src/environments/environment';
 
@@ -65,9 +65,13 @@ export class DataService {
         'postgres_changes',
         { event: '*', schema: 'public' },
         (payload) => {
+          // Listening to the `events` table is no longewr a viable options
+          // as the indexer now adds events in a bulk action and supabase
+          // only sends the last entry from the bulk action.
+          // So, we are listening to `listings`, `bids` and `ethscriptions` tables
+          // for changes and then disaptching the event to the store.
           if (!payload) return;
-          const isEvent = payload?.table === 'events' + this.prefix;
-          if (isEvent) this.store.dispatch(dataStateActions.dbEventTriggered({ payload }));
+          this.store.dispatch(dataStateActions.dbEventTriggered({ payload }));
         },
       ).subscribe();
   }
@@ -89,7 +93,7 @@ export class DataService {
       map((res: any) => {
         return phunks.map((item: Phunk) => ({
           ...item,
-          attributes: res[item.phunkId]
+          attributes: res[item.tokenId]
         }));
       })
     );
@@ -104,6 +108,7 @@ export class DataService {
 
     const qurey = supabase.rpc('fetch_phunks_owned_with_listings_and_bids', { address });
     return from(qurey).pipe(
+      // tap((res) => console.log('fetchOwned', res)),
       map((res: any) => res.data),
       map((res: any[]) => res.map((item: any) => {
         const phunk = item.phunk.phunk;
@@ -115,47 +120,20 @@ export class DataService {
           attributes: [],
         }
       })),
-      // tap((res) => console.log('fetchOwned', res)),
       switchMap((res: any) => this.addAttributes(res)),
     ) as Observable<any>;
-
-    // const request = supabase
-    //   .from('phunks' + this.prefix)
-    //   .select(`
-    //     *,
-    //     listings${this.prefix}(hashId, minValue, toAddress, createdAt),
-    //     bids${this.prefix}(hashId, value, fromAddress, createdAt)
-    //   `)
-    //   .or(`owner.eq.${address},and(owner.eq.${environment.marketAddress},prevOwner.eq.${address})`);
-
-    // return from(request).pipe(
-    //   map((res) => res.data as any[]),
-    //   map((res: any) => res?.map((item: any) => {
-    //     return {
-    //       phunkId: item.phunkId,
-    //       hashId: item.hashId,
-    //       owner: item.owner,
-    //       prevOwner: item.prevOwner,
-    //       isEscrowed: item.owner === environment.marketAddress && item.prevOwner === address,
-    //       listing: item['listings' + this.prefix] ? item['listings' + this.prefix] : null,
-    //       bid: item['bids' + this.prefix] ? item['bids' + this.prefix] : null,
-    //       attributes: [],
-    //     };
-    //   })),
-    //   switchMap((phunks: Phunk[]) => this.addAttributes(phunks)),
-    // );
   }
 
   fetchUserOpenBids(address: string): Observable<any[]> {
     address = address.toLowerCase();
     const request = supabase
       .from('bids' + this.prefix)
-      .select(`*, phunks${this.prefix}(phunkId)`)
+      .select(`*, ethscriptions${this.prefix}(tokenId)`)
       .eq('fromAddress', address)
       .order('value', { ascending: false });
 
     return from(request).pipe(
-      tap((res) => console.log('fetchUserOpenBids', res)),
+      // tap((res) => console.log('fetchUserOpenBids', res)),
       map((res) => res.data as any[]),
       map((res: any) => res.map((item: any) => {
         return {
@@ -214,11 +192,11 @@ export class DataService {
       p_limit: limit,
       p_type: type && type !== 'All' ? type : null
     })).pipe(
+      // tap((res) => console.log('fetchEvents', res)),
       map((res: any) => res.data.map((item: any) => ({
         ...item,
-        blockTimestamp: new Date(item.blockTimestamp).getTime(),
+        // blockTimestamp: new Date(item.blockTimestamp).getTime(),
       }))),
-      // tap((res) => console.log('fetchEvents', res)),
     );
   }
 
@@ -257,9 +235,9 @@ export class DataService {
   // SINGLE PHUNK //////////////////////////////////////////////////////////////////////////////////////////////////////
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  fetchSinglePhunk(phunkId: string): Observable<any> {
+  fetchSinglePhunk(tokenId: string): Observable<any> {
     let query = supabase
-      .from('phunks' + this.prefix)
+      .from('ethscriptions' + this.prefix)
       // .select(`
       //   hashId,
       //   phunkId,
@@ -278,34 +256,24 @@ export class DataService {
       // `)
       .select(`
         hashId,
-        phunkId,
+        tokenId,
         createdAt,
         owner,
         prevOwner
       `)
       .limit(1);
 
-    if (phunkId.startsWith('0x')) query = query.eq('hashId', phunkId);
-    else query = query.eq('phunkId', phunkId);
+    if (tokenId.startsWith('0x')) query = query.eq('hashId', tokenId);
+    else query = query.eq('tokenId', tokenId);
 
     return from(query).pipe(
       map((res: any) => {
-        const data = res.data ? res.data[0] : { phunkId };
-        return data;
-        // // if (!data[`auctions${this.prefix}`][0]) return data;
-        // data.auction = data[`auctions${this.prefix}`][0]
-        //   ? { ...data[`auctions${this.prefix}`][0] }
-        //   : null;
-
-        // data.auction.startTime = new Date(data.auction.startTime).getTime();
-        // data.auction.endTime = new Date(data.auction.endTime).getTime();
-        // delete data[`auctions${this.prefix}`];
-        // return data;
+        return res.data ? res.data[0] : { tokenId };
       })
     );
   }
 
-  async getListingForPhunkId(hashId: string | undefined): Promise<Listing | null> {
+  async getListingFromHashId(hashId: string | undefined): Promise<Listing | null> {
     if (!hashId) return null;
 
     const call = await this.web3Svc.readContract('phunksOfferedForSale', [hashId]);
@@ -321,7 +289,7 @@ export class DataService {
     };
   }
 
-  async getBidForPhunkId(hashId: string | undefined): Promise<Bid | null> {
+  async getBidFromHashId(hashId: string | undefined): Promise<Bid | null> {
     if (!hashId) return null;
 
     const call = await this.web3Svc.readContract('phunkBids', [hashId]);
@@ -343,10 +311,11 @@ export class DataService {
     return this.walletAddress$.pipe(
       switchMap((address) => {
         const query = supabase
-          .from('phunks' + this.prefix)
+          .from('ethscriptions' + this.prefix)
           .select()
           .in('hashId', hashIds)
-          .eq('owner', address);
+          .eq('owner', address)
+          .limit(1000);
 
         return from(query).pipe(map((res: any) => res.data));
       }),
@@ -357,11 +326,12 @@ export class DataService {
     return this.walletAddress$.pipe(
       switchMap((address) => {
         const query = supabase
-          .from('phunks' + this.prefix)
+          .from('ethscriptions' + this.prefix)
           .select()
           .in('hashId', hashIds)
           .eq('prevOwner', address)
-          .eq('owner', this.escrowAddress);
+          .eq('owner', this.escrowAddress)
+          .limit(1000);
 
         return from(query).pipe(map((res: any) => res.data));
       }),

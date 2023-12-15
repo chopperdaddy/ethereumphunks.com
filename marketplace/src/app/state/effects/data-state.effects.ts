@@ -14,7 +14,7 @@ import * as appStateSelectors from '@/state/selectors/app-state.selectors';
 import * as dataStateActions from '@/state/actions/data-state.actions';
 import * as dataStateSelectors from '@/state/selectors/data-state.selectors';
 
-import { asyncScheduler, catchError, delay, filter, forkJoin, from, map, mergeMap, of, switchMap, tap, throttleTime, withLatestFrom } from 'rxjs';
+import { asyncScheduler, catchError, filter, forkJoin, from, map, mergeMap, of, switchMap, tap, throttleTime, withLatestFrom } from 'rxjs';
 
 import { environment } from 'src/environments/environment';
 
@@ -27,15 +27,16 @@ export class DataStateEffects {
       this.store.select(dataStateSelectors.selectSinglePhunk)
     ),
     tap(([action, singlePhunk]) => {
+      // if (action.payload.table === 'events_goerli') {
+      //   console.log('dbEventTriggered', action.payload);
+      //   // const newEvent = action.payload.new as Event;
+      //   // this.checkEventIsActiveSinglePhunk(newEvent, singlePhunk);
+      // }
       const newEvent = action.payload.new as Event;
-      const eventHashId = newEvent.hashId;
-      if (singlePhunk && singlePhunk.hashId === eventHashId) {
-        this.store.dispatch(dataStateActions.refreshSinglePhunk());
-        this.store.dispatch(dataStateActions.fetchTxHistory({ hashId: eventHashId }));
-      }
+      this.checkEventIsActiveSinglePhunk(newEvent, singlePhunk);
     }),
     // Start with the throttle
-    throttleTime(5000, asyncScheduler, {
+    throttleTime(3000, asyncScheduler, {
       leading: true, // emit the first value immediately
       trailing: true // emit the last value in the window
     }),
@@ -49,14 +50,14 @@ export class DataStateEffects {
     tap(([newData, address, singlePhunk, ownedPhunks, eventTypeFilter]) => {
 
       this.checkEventForPurchaseFromUser(newData, address);
-      this.checkEventIsActiveSinglePhunk(newData, singlePhunk);
 
       // WATCHME: This may need more thought
-      if (ownedPhunks) this.checkEventIsOrWasOwnedPhunk(newData, ownedPhunks, address);
+      // if (ownedPhunks) this.checkEventIsOrWasOwnedPhunk(newData, ownedPhunks, address);
 
+      this.store.dispatch(dataStateActions.fetchOwnedPhunks());
       this.store.dispatch(dataStateActions.fetchMarketData());
-      this.store.dispatch(appStateActions.fetchUserPoints());
       this.store.dispatch(appStateActions.setEventTypeFilter({ eventTypeFilter }));
+      this.store.dispatch(appStateActions.fetchUserPoints());
     }),
   ), { dispatch: false });
 
@@ -100,10 +101,11 @@ export class DataStateEffects {
     ofType(dataStateActions.fetchAllPhunks),
     switchMap(() => this.dataSvc.getAttributes()),
     map((attributes) => {
+      // console.log('attributes', attributes);
       return Object.keys(attributes).map((k) => {
         return {
           hashId: '',
-          phunkId: Number(k),
+          tokenId: Number(k),
           createdAt: new Date(),
           owner: '',
           prevOwner: '',
@@ -146,8 +148,8 @@ export class DataStateEffects {
     switchMap((res: Phunk) => forkJoin([
       this.dataSvc.addAttributes([res]),
       from(Promise.all([
-        this.dataSvc.getListingForPhunkId(res.hashId),
-        this.dataSvc.getBidForPhunkId(res.hashId),
+        this.dataSvc.getListingFromHashId(res.hashId),
+        this.dataSvc.getBidFromHashId(res.hashId),
       ]))
     ])),
     map(([[res], [listing, bid]]) => ({
@@ -226,24 +228,25 @@ export class DataStateEffects {
 
   checkEventIsActiveSinglePhunk(event: Event, singlePhunk: Phunk | null) {
     if (!singlePhunk) return;
-    if (event.phunkId === singlePhunk.phunkId) {
+    if (event.hashId === singlePhunk.hashId) {
       this.store.dispatch(dataStateActions.refreshSinglePhunk());
+      this.store.dispatch(dataStateActions.fetchTxHistory({ hashId: event.hashId }));
     }
   }
 
   checkEventIsOrWasOwnedPhunk(event: Event, ownedPhunks: Phunk[], address: string) {
+    console.log('checkEventIsOrWasOwnedPhunk', event, ownedPhunks, address);
     if (
       event.from === address
       || event.to === address
-      || ownedPhunks.find((phunk) => phunk.phunkId === event.phunkId)
-
+      || ownedPhunks.find((phunk) => phunk.tokenId === event.phunkId)
     ) {
       this.store.dispatch(dataStateActions.fetchOwnedPhunks());
     }
   }
 
   checkIsOrWasOwnedPhunk(event: Event, ownedPhunks: Phunk[]) {
-    const ownedPhunk = ownedPhunks.find((phunk) => phunk.phunkId === event.phunkId);
+    const ownedPhunk = ownedPhunks.find((phunk) => phunk.tokenId === event.phunkId);
     if (ownedPhunk) {
       this.store.dispatch(dataStateActions.fetchOwnedPhunks());
     }

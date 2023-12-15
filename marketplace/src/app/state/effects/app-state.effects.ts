@@ -227,8 +227,11 @@ export class AppStateEffects {
       ) ?
       of(action).pipe(
         delay(5000),
-        tap(() => {
-          this.store.dispatch(appStateActions.removeTransaction({ txId: action.transaction.id }));
+        withLatestFrom(this.store.select(appStateSelectors.selectNotifHoverState)),
+        tap(([action, notifHoverState]) => {
+          if (!notifHoverState[action.transaction.id]) {
+            this.store.dispatch(appStateActions.removeTransaction({ txId: action.transaction.id }));
+          }
         })
       ) :
       EMPTY

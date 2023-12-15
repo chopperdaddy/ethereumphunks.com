@@ -11,6 +11,6 @@ export const environment = {
   donationsAddress: '0x5795Af0D8eD22a8C013031B355b5F472867D345F'.toLowerCase(),
   staticUrl: 'http://localhost:3001',
 
-  supabaseUrl: 'http://localhost:8000',
+  supabaseUrl: 'https://kcbuycbhynlmsrvoegzp.supabase.co',
   supabaseKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtjYnV5Y2JoeW5sbXNydm9lZ3pwIiwicm9sZSI6ImFub24iLCJpYXQiOjE2ODkyMTMzNTQsImV4cCI6MjAwNDc4OTM1NH0.jUvNzW6jrBPfKg9SvDhW5auqF8y_DKo4tmAmXCwgHAY',
 };

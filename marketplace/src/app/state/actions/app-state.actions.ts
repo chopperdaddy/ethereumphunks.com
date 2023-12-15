@@ -148,3 +148,8 @@ export const restoreScrollPosition = createAction(
   '[Router] Restore Scroll Position',
   props<{ navigationId: number }>()
 );
+
+export const setNotifHoverState = createAction(
+  '[App State] Set Notif Hover State',
+  props<{ notifHoverState: AppState['notifHoverState'] }>()
+);
