@@ -31,6 +31,9 @@ contract EtherPhunksMarket is
     Multicall,
     EthscriptionsEscrower
 {
+    bytes32 DEPOSIT_AND_ACCEPT_BID_SIGNATURE = 0x4445504f5349545f414e445f4143434550545f4249445f5349474e4154555245;
+    bytes32 DEPOSIT_AND_LIST_SIGNATURE = 0x4445504f5349545f414e445f4c4953545f5349474e4154555245000000000000;
+
     address public pointsAddress;
 
     struct Offer {
@@ -84,11 +87,8 @@ contract EtherPhunksMarket is
     );
 
     constructor(
-        address _initialOwner,
         address _initialPointsAddress
-    )
-        Ownable(_initialOwner)
-    {
+    ) Ownable(msg.sender) {
         pointsAddress = _initialPointsAddress;
     }
 
@@ -220,11 +220,14 @@ contract EtherPhunksMarket is
         );
 
         Bid memory bid = phunkBids[phunkId];
-        if (bid.value == 0) revert("cannot enter bid of zero");
-        if (bid.value < minPrice) revert("your bid is too low");
+
+        // Gas efficient way to check if bid is valid
+        require(bid.value != 0 && bid.value >= minPrice && seller != bid.bidder);
+        // if (bid.value == 0) revert("cannot enter bid of zero");
+        // if (bid.value < minPrice) revert("your bid is too low");
+        // if (seller == bidder) revert("you already own this token");
 
         address bidder = bid.bidder;
-        if (seller == bidder) revert("you already own this token");
         phunksOfferedForSale[phunkId] = Offer(
             false,
             phunkId,
@@ -314,9 +317,6 @@ contract EtherPhunksMarket is
 
             ids[i] = potentialEthscriptionId;
         }
-
-        // Probably dont need this pointless event
-        // emit BulkPotentialEthscriptionsDeposited(previousOwner, ids);
     }
 
     // This internal function does the actual work without reentrancy checks.
@@ -385,6 +385,28 @@ contract EtherPhunksMarket is
     }
 
     fallback() external {
+        bytes32 phunkId;
+        bytes32 signature;
+
+        assembly {
+            phunkId := calldataload(0)
+            signature := calldataload(32)
+        }
+
+        if (signature == DEPOSIT_AND_ACCEPT_BID_SIGNATURE) {
+            _onPotentialEthscriptionDeposit(msg.sender, msg.data);
+            return;
+        }
+
+        if (signature == DEPOSIT_AND_LIST_SIGNATURE) {
+            bytes32 listingPrice;
+            assembly {
+                listingPrice := calldataload(64)
+            }
+            _onPotentialEthscriptionDeposit(msg.sender, msg.data);
+            _offerPhunkForSale(phunkId, uint256(listingPrice));
+        }
+
         _onPotentialEthscriptionDeposit(msg.sender, msg.data);
     }
 }

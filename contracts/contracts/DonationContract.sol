@@ -6,7 +6,10 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 
 import "./interfaces/IPoints.sol";
 
-contract DonationContract is Ownable, Pausable {
+contract Donations is Ownable, Pausable {
+
+    // Beneficiary address
+    address payable public beneficiary;
 
     // Address of the Points contract
     address public pointsAddress;
@@ -17,9 +20,6 @@ contract DonationContract is Ownable, Pausable {
     // Mapping to keep track of donations per address
     mapping(address => uint256) public donations;
 
-    // Beneficiary address
-    address payable public beneficiary;
-
     // Event to be emitted on donation
     event DonationReceived(address indexed donor, uint256 amount);
 
@@ -28,9 +28,11 @@ contract DonationContract is Ownable, Pausable {
 
     // Constructor to set the initial owner and beneficiary
     constructor(
-        address payable _beneficiary
+        address payable _beneficiary,
+        address _pointsAddress
     ) Ownable(msg.sender) {
         beneficiary = _beneficiary;
+        pointsAddress = _pointsAddress;
     }
 
     // Function to allow withdrawal of all funds to the beneficiary

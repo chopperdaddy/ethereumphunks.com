@@ -38,14 +38,13 @@ contract EtherPhunksAuctionHouse is
     address payable public treasuryWallet;
 
     constructor(
-        address initialOwner,
         address _initialPointsAddress,
         address payable _treasuryWallet,
         bytes32 _merkleRoot,
         uint256 _timeBuffer,
         uint8 _minBidIncrementPercentage,
         uint256 _duration
-    ) Ownable(initialOwner) {
+    ) Ownable(msg.sender) {
         treasuryWallet = _treasuryWallet;
         merkleRoot = _merkleRoot;
         timeBuffer = _timeBuffer;
@@ -263,8 +262,6 @@ contract EtherPhunksAuctionHouse is
         EthscriptionsEscrowerStorage.s().ethscriptionReceivedOnBlockNumber[
             previousOwner
         ][hashId] = block.number;
-
-        emit PotentialEthscriptionDeposited(previousOwner, hashId);
     }
 
     fallback() external {

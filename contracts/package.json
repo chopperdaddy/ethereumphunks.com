@@ -2,12 +2,8 @@
   "scripts": {
     "compile": "npx hardhat compile",
     "test": "hardhat test",
-    "deploy:auction": "npx hardhat run --network goerli scripts/deploy-auction.ts",
-    "deploy:token": "npx hardhat run --network goerli scripts/deploy-token.ts",
-    "deploy:market": "npx hardhat run --network goerli scripts/deploy-market.ts",
-    "deploy:donate": "npx hardhat run --network goerli scripts/deploy-donate.ts",
-    "change:multiplier": "npx hardhat run --network goerli scripts/change-multiplier.ts",
-    "verify": "npx hardhat verify --network goerli 0x618bdabC8447b09a6C1531D0DBEcA15912B0F008 clkqer 1000000",
+    "deploy": "npx hardhat run --network goerli scripts/deploy-all.ts",
+    "verify": "npx hardhat verify --network goerli",
     "clean": "npx hardhat clean"
   },
   "devDependencies": {

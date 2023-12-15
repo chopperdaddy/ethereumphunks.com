@@ -6,7 +6,7 @@ import "solady/src/utils/ECDSA.sol";
 import "solady/src/utils/EIP712.sol";
 import "solady/src/utils/ERC1967FactoryConstants.sol";
 import "@solidstate/contracts/security/reentrancy_guard/ReentrancyGuard.sol";
-import "./EthscriptionsEscrower.sol";
+import "../contracts/EthscriptionsEscrower.sol";
 
 contract EthscriptionsMarketV3 is
     ReentrancyGuard,
