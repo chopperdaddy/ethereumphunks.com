@@ -748,6 +748,7 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
   }
 
   getItemQueryParams(item: any): any {
+    if (!item) return;
     return { [item.k.replace(/ /g, '-').toLowerCase()]: item.v.replace(/ /g, '-').toLowerCase() };
   }
 

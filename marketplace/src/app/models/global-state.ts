@@ -13,6 +13,7 @@ export interface AppState {
   connected: boolean;
   hasWithdrawal: number;
   userPoints: number;
+  activeMultiplier: number;
   theme: Theme;
 
   isMobile: boolean;

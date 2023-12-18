@@ -27,11 +27,6 @@ export class DataStateEffects {
       this.store.select(dataStateSelectors.selectSinglePhunk)
     ),
     tap(([action, singlePhunk]) => {
-      // if (action.payload.table === 'events_goerli') {
-      //   console.log('dbEventTriggered', action.payload);
-      //   // const newEvent = action.payload.new as Event;
-      //   // this.checkEventIsActiveSinglePhunk(newEvent, singlePhunk);
-      // }
       const newEvent = action.payload.new as Event;
       this.checkEventIsActiveSinglePhunk(newEvent, singlePhunk);
     }),
@@ -49,13 +44,10 @@ export class DataStateEffects {
     ),
     tap(([newData, address, singlePhunk, ownedPhunks, eventTypeFilter]) => {
 
+      // this.store.dispatch(dataStateActions.fetchOwnedPhunks());
+      // this.store.dispatch(dataStateActions.fetchMarketData());
+
       this.checkEventForPurchaseFromUser(newData, address);
-
-      // WATCHME: This may need more thought
-      // if (ownedPhunks) this.checkEventIsOrWasOwnedPhunk(newData, ownedPhunks, address);
-
-      this.store.dispatch(dataStateActions.fetchOwnedPhunks());
-      this.store.dispatch(dataStateActions.fetchMarketData());
       this.store.dispatch(appStateActions.setEventTypeFilter({ eventTypeFilter }));
       this.store.dispatch(appStateActions.fetchUserPoints());
     }),
@@ -119,7 +111,7 @@ export class DataStateEffects {
 
   fetchMarketData$ = createEffect(() => this.actions$.pipe(
     ofType(dataStateActions.fetchMarketData),
-    switchMap(() => this.dataSvc.fetchMarketData()),
+    switchMap((action) => this.dataSvc.fetchMarketData()),
     map((marketData: Phunk[]) => {
       const listingsData = marketData.filter((item: any) => item.listing && item.listing.value !== '0');
       const bidsData = marketData.filter((item: any) => item.bid && item.bid.value !== '0');
@@ -137,11 +129,12 @@ export class DataStateEffects {
 
   fetchSinglePhunk$ = createEffect(() => this.actions$.pipe(
     ofType(dataStateActions.fetchSinglePhunk),
+    tap(() => this.store.dispatch(dataStateActions.clearSinglePhunk())),
     // delay(1000),
     switchMap((action) => this.dataSvc.fetchSinglePhunk(action.phunkId)),
     map((phunk: Phunk) => {
       const newPhunk = { ...phunk } as Phunk;
-      newPhunk.isEscrowed = phunk.owner === environment.marketAddress;
+      newPhunk.isEscrowed = phunk?.owner === environment.marketAddress;
       newPhunk.attributes = [];
       return newPhunk;
     }),

@@ -37,6 +37,7 @@ export class AppStateEffects {
       this.store.select(getRouterSelectors().selectRouteParams),
     ),
     tap(([action, queryParams, routeParams]) => {
+      console.log({ action, queryParams, routeParams })
       const marketType = routeParams['marketType'];
       if (!marketType) {
         this.store.dispatch(appStateActions.clearActiveTraitFilters());
@@ -133,6 +134,12 @@ export class AppStateEffects {
     filter(([action, address]) => !!address),
     switchMap(([action, address]) => from(this.web3Svc.getUserPoints(address))),
     map((userPoints) => appStateActions.setUserPoints({ userPoints }))
+  ));
+
+  fetchActiveMultiplier$ = createEffect(() => this.actions$.pipe(
+    ofType(appStateActions.fetchActiveMultiplier),
+    switchMap(() => from(this.web3Svc.getMultiplier())),
+    map((activeMultiplier) => appStateActions.setActiveMultiplier({ activeMultiplier }))
   ));
 
   menuActive$ = createEffect(() => this.actions$.pipe(

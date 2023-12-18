@@ -18,7 +18,7 @@
       @if ((connected$ | async)) {
 
         @if ((walletAddress$ | async); as address) {
-          <a [routerLink]="['/', 'owned']" [queryParams]="{ address }">
+          <a [routerLink]="['/', 'market', 'owned']" [queryParams]="{ address }">
             <app-address [address]="address" />
           </a>
         }
@@ -41,6 +41,15 @@
               <ng-template [ngTemplateOutlet]="menuIcon" />
             </div>
           </button>
+
+          @if (activeMultiplier$ | async; as multiplier) {
+            @if (multiplier > 1) {
+              <button class="multiplier">
+                <span class="value">{{ multiplier }}x</span>
+                <span class="label">points<br />multiplier</span>
+              </button>
+            }
+          }
         </div>
       } @else {
         <button

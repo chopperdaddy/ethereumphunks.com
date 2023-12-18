@@ -10,6 +10,7 @@ export const initialState: AppState = {
   walletAddress: '',
   hasWithdrawal: 0,
   userPoints: 0,
+  activeMultiplier: 1,
   theme: localStorage.getItem('EtherPhunks_theme') as Theme || 'initial',
 
   isMobile: false,
@@ -71,6 +72,14 @@ export const appStateReducer: ActionReducer<AppState, Action> = createReducer(
     };
     // console.log('setUserPoints', setUserPoints);
     return setUserPoints
+  }),
+  on(actions.setActiveMultiplier, (state, { activeMultiplier }) => {
+    const setActiveMultiplier = {
+      ...state,
+      activeMultiplier,
+    };
+    // console.log('setActiveMultiplier', setActiveMultiplier);
+    return setActiveMultiplier
   }),
   on(actions.setEventTypeFilter, (state, { eventTypeFilter }) => {
     const setActiveFilters = {

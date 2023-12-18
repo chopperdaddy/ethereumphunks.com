@@ -11,8 +11,8 @@ import { EventType, GlobalState } from '@/models/global-state';
 import { Bid, Event, Listing, Phunk } from '@/models/db';
 
 import { createClient } from '@supabase/supabase-js'
-import { Observable, of, BehaviorSubject, from } from 'rxjs';
-import { map, switchMap, tap } from 'rxjs/operators';
+import { Observable, of, BehaviorSubject, from, forkJoin } from 'rxjs';
+import { concatMap, map, switchMap, tap } from 'rxjs/operators';
 
 import { environment } from 'src/environments/environment';
 
@@ -63,13 +63,8 @@ export class DataService {
       .channel('any')
       .on(
         'postgres_changes',
-        { event: '*', schema: 'public' },
+        { event: '*', schema: 'public', table: 'events' + this.prefix },
         (payload) => {
-          // Listening to the `events` table is no longewr a viable options
-          // as the indexer now adds events in a bulk action and supabase
-          // only sends the last entry from the bulk action.
-          // So, we are listening to `listings`, `bids` and `ethscriptions` tables
-          // for changes and then disaptching the event to the store.
           if (!payload) return;
           this.store.dispatch(dataStateActions.dbEventTriggered({ payload }));
         },
@@ -168,17 +163,22 @@ export class DataService {
   // MARKET DATA ///////////////////////////////////////////////////////////////////////////////////////////////////////
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  fetchMarketData(): Observable<Phunk[]> {
-    return from(supabase.rpc('fetch_phunks_with_listings_and_bids')).pipe(
+  fetchMarketData(limit: number = 1500): Observable<Phunk[]> {
+    return from(
+      supabase.rpc(
+        'fetch_ethscriptions_with_listings_and_bids',
+        { collection_slug: 'ethereum-phunks' }
+      ).limit(limit)
+    ).pipe(
       map((res: any) => res.data),
       map((res: any[]) => res.map((item: any) => {
         return {
-          ...item.phunk.phunk,
-          listing: item.phunk.listing ? item.phunk.listing[0] : null,
-          bid: item.phunk.bid ? item.phunk.bid[0] : null,
+          ...item.ethscription.ethscription,
+          listing: item.ethscription.listing ? item.ethscription.listing[0] : null,
+          bid: item.ethscription.bid ? item.ethscription.bid[0] : null,
         }
       })),
-      // tap((res) => console.log('fetchMarketData', res)),
+      tap((res) => console.log('fetchMarketData', res)),
       switchMap((res: any) => this.addAttributes(res)),
     ) as Observable<any>;
   }
@@ -335,6 +335,40 @@ export class DataService {
 
         return from(query).pipe(map((res: any) => res.data));
       }),
+    );
+  }
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  // COLLECTIONS ///////////////////////////////////////////////////////////////////////////////////////////////////////
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  fetchCollections(): Observable<any[]> {
+    const query = supabase
+      .from('collections' + this.prefix)
+      .select(`*, ethscriptions${this.prefix}(*)`)
+      .order('id', { ascending: false })
+      .limit(12, { referencedTable: `ethscriptions${this.prefix}` });
+
+    return from(query).pipe(map((res: any) => res.data)).pipe(
+      switchMap((res: any) => {
+        return forkJoin(
+          res.map((coll: any) => {
+            return from(
+              supabase.rpc(
+                'get_lowest_price_ethscription_by_collection',
+                { collection_slugs: [coll.slug] }
+              )
+            ).pipe(
+              map((res) => ({
+                ...coll,
+                lowestPrice: res.data[0]?.minValue,
+              }))
+            );
+          })
+        );
+      }),
+      tap((res) => console.log('fetchCollections', res)),
+      map((res: any) => res),
     );
   }
 

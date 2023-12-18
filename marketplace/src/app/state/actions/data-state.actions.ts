@@ -26,7 +26,8 @@ export const setEvents = createAction(
 );
 
 export const fetchAllPhunks = createAction(
-  '[Data State] Fetch All Phunks'
+  '[Data State] Fetch All Phunks',
+  props<{ limit: number }>()
 );
 
 export const setAllPhunks = createAction(

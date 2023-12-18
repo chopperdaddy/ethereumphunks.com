@@ -4,7 +4,6 @@ import { ActivatedRoute, RouterModule } from '@angular/router';
 import { FormArray, FormBuilder, FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 
 import { Store } from '@ngrx/store';
-import { IntersectionObserverModule } from '@ng-web-apis/intersection-observer';
 import { NgxPaginationModule } from 'ngx-pagination';
 import { LazyLoadImageModule } from 'ng-lazyload-image';
 import { NgSelectModule } from '@ng-select/ng-select';
@@ -155,13 +154,17 @@ export class MarketComponent {
   async batchAction(type: 'transfer' | 'escrow' | 'withdraw' | 'list' | 'sweep'): Promise<void> {
     if (!Object.keys(this.selected).length) return;
 
-    if (type === 'sweep') {
-      this.buySelected();
-    }
+    if (type === 'sweep') this.buySelected();
     if (type === 'transfer') await this.transferSelected();
     if (type === 'list') await this.listSelected();
     if (type === 'escrow') await this.batchEscrow();
     if (type === 'withdraw') await this.withdrawBatch();
+  }
+
+  // Actions
+  async buySelected(): Promise<void> {
+    // check wallet balance
+    await this.web3Svc.batchBuyPhunks(Object.values(this.selected));
   }
 
   async transferSelected(): Promise<void> {
@@ -200,11 +203,6 @@ export class MarketComponent {
 
     this.bulkListingForm.setControl('listingPhunks', formArray);
     this.selectedPhunksFormArray = this.bulkListingForm.get('listingPhunks') as FormArray;
-  }
-
-  async buySelected(): Promise<void> {
-    // check wallet balance
-    await this.web3Svc.batchBuyPhunks(Object.values(this.selected));
   }
 
   async batchEscrow(): Promise<void> {
@@ -345,6 +343,7 @@ export class MarketComponent {
     }
   }
 
+  // Submissions
   async getSelectedEscrowed(): Promise<{ deselected: Phunk[], inEscrow: Phunk[]}> {
     const selectedHashIds = Object.keys(this.selected);
     const inEscrow = await firstValueFrom(

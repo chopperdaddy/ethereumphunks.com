@@ -18,8 +18,7 @@
   <div class="events-items">
     @for (event of ((events$ | async)); track event.tokenId) {
       <a
-        [routerLink]="['/details', event.tokenId]"
-        [href]="'/details/' + event.tokenId"
+        [routerLink]="['/', 'details', event.tokenId]"
         class="event-item"
         [class]="event.type | lowercase">
 

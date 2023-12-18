@@ -18,7 +18,7 @@
         @if (bids.length) {
           <a
             class="stat-item bids"
-            [routerLink]="['/', 'bids']" [queryParams]="{ address }">
+            [routerLink]="['/', 'market', 'bids']" [queryParams]="{ address }">
 
             <app-phunk-grid
               [phunkData]="bids || []"
@@ -42,7 +42,7 @@
         @if (listed.length) {
           <a
             class="stat-item listings"
-            [routerLink]="['/', 'owned']" [queryParams]="{ address }">
+            [routerLink]="['/', 'market', 'owned']" [queryParams]="{ address }">
 
             <app-phunk-grid
               [phunkData]="listed || []"

@@ -43,6 +43,7 @@ export class HeaderComponent {
   walletAddress$ = this.store.select(appStateSelectors.selectWalletAddress);
   hasWithdrawal$ = this.store.select(appStateSelectors.selectHasWithdrawal);
   userPoints$ = this.store.select(appStateSelectors.selectUserPoints);
+  activeMultiplier$ = this.store.select(appStateSelectors.selectActiveMultiplier);
   menuActive$ = this.store.select(appStateSelectors.selectMenuActive);
   theme$ = this.store.select(appStateSelectors.selectTheme);
   notifications$ = this.store.select(appStateSelectors.selectTransactions).pipe(

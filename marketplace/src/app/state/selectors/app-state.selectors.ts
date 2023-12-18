@@ -103,3 +103,8 @@ export const selectNotifHoverState = createSelector(
   selectAppState,
   (appState: AppState) => appState.notifHoverState
 );
+
+export const selectActiveMultiplier = createSelector(
+  selectAppState,
+  (appState: AppState) => appState.activeMultiplier
+);

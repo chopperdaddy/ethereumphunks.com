@@ -61,6 +61,12 @@
         display: flex;
         align-items: center;
 
+        .toggle-wrapper {
+          position: relative;
+          display: flex;
+          align-items: center;
+        }
+
         a {
           text-decoration: none;
 
@@ -74,11 +80,11 @@
         }
 
         button {
+          font-family: $secondary-font-stack;
           color: rgba(var(--header-highlight), 1);
           background-color: rgba(var(--header-text), 1);
 
           &.connect {
-            font-family: $secondary-font-stack;
             font-size: 1.4rem;
             font-weight: 400;
           }
@@ -105,7 +111,7 @@
           }
 
           &.points {
-            font-family: $secondary-font-stack;
+            position: relative;
             height: 3rem;
             font-size: 1.4rem;
             font-weight: 400;
@@ -123,6 +129,77 @@
             }
           }
 
+          &.multiplier {
+            position: fixed;
+            top: calc(var(--header-height) - 1rem);
+            right: 3rem;
+
+            display: flex;
+            align-items: center;
+
+            font-family: $secondary-font-stack;
+            font-size: 1.2rem;
+
+            color: rgba(var(--base-color), 1);
+            background-color: rgba(var(--pink), 1);
+
+            @include trans();
+
+            @keyframes ripple {
+              0% {
+                transform: scale3d(1, 1, 1);
+                opacity: 0;
+              }
+              25% {
+                opacity: 0.6;
+              }
+              50% {
+                transform:scale3d(1.15, 1.6, 1);
+                opacity: 0;
+              }
+              100% {
+                transform:scale3d(1.15, 1.6, 1);
+                opacity: 0;
+              }
+            }
+
+            &:before,
+            &:after {
+              display: block;
+              content: '';
+
+              position: absolute;
+              z-index: -1;
+              top: 0;
+              left: 0;
+
+              height: 100%;
+              width: 100%;
+
+              background-color: rgba(var(--pink), .5);
+              animation: ripple 2s .35s infinite cubic-bezier(0.21, 0.53, 0.56, 0.8);
+
+              mix-blend-mode: difference;
+            }
+
+            &:before {
+              z-index: -2;
+              background-color: rgba(var(--base-color), .5);
+              animation-delay: 0s;
+              mix-blend-mode: color-dodge;
+            }
+
+            .value {
+              font-size: 1.8rem;
+              padding-right: .5rem;
+            }
+
+            .label {
+              text-align: left;
+              font-size: .8rem;
+            }
+          }
+
           &.active {
             .arrow {
               svg {
@@ -130,11 +207,6 @@
               }
             }
           }
-        }
-
-        .toggle-wrapper {
-          display: flex;
-          align-items: center;
         }
       }
 
@@ -173,6 +245,17 @@
 
     &.active {
       // background-color: rgba(var(--base-color), 0);
+
+      .connect-menu {
+
+        button {
+
+          &.multiplier {
+            opacity: 0;
+            pointer-events: none;
+          }
+        }
+      }
     }
   }
 

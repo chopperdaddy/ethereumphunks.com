@@ -5,239 +5,253 @@
 
   <div class="inner">
     @if ((singlePhunk$ | async); as phunk) {
+      <div class="details-wrapper">
 
-    <div class="details-wrapper">
-
-      <div class="title-wrapper">
-        <h1 i18n>EtherPhunk {{ phunk.tokenId }}</h1>
-        <div class="hash-id">
-          <span>Hash ID: </span>
-          <a [href]="explorerUrl + '/tx/' + phunk.hashId" target="_blank">
-            <app-address [address]="phunk.hashId" />
-          </a>
-        </div>
-        @if (phunk.attributes) {
-        <h2 i18n>One of {{ phunk.attributes[0].v | traitCount }}
-          <a class="highlight" [routerLink]="['/', 'all']" [queryParams]="getItemQueryParams(phunk.attributes[0])">
-
-            {{ phunk.attributes[0].v }}
-          </a> EtherPhunks.
-        </h2>
-        }
-      </div>
-
-      <div class="split">
-        <div class="left">
-          <div class="market-status">
-            <!-- @if (phunk.auction) {
-              <h2 i18n>Auction</h2>
-              <app-auction
-                [auction]="phunk.auction"
-              />
-            } @else { -->
-              <h2 i18n>Market Status</h2>
-
-              @if (phunk.isEscrowed) {
-                <!-- Owner -->
-                @if (phunk.prevOwner; as owner) {
-                  <p i18n>This EtherPhunk is held in <a [routerLink]="['/', 'owned']" [queryParams]="{ address: escrowAddress }">escrow</a> for <a [routerLink]="['/', 'owned']" [queryParams]="{ address: owner }"><app-address [address]="owner" /></a>.</p>
-                }
-              } @else {
-                <!-- Owner -->
-                @if (phunk.owner; as owner) {
-                  <p i18n>This EtherPhunk is owned by <a [routerLink]="['/', 'owned']" [queryParams]="{ address: owner }"><app-address [address]="owner" /></a>.</p>
-                }
-              }
-
-              <!-- Value (Listing) -->
-              @if (phunk.listing?.minValue; as value) {
-                <p i18n>This EtherPhunk is for sale for <span class="highlight">{{ (value | weiToEth) }} ETH</span><span class="bold"> (${{ ((value | weiToEth) * ((usd$ | async) || 0)) | formatCash }})</span>.</p>
-              } @else {
-                <p i18n>This EtherPhunk is not for sale.</p>
-              }
-
-              <!-- Has bid -->
-              @if (phunk.bid; as bid) {
-                @if (bid.value && bid.fromAddress) {
-                  <p i18n>There is a bid of <span class="bold">{{ bid.value | weiToEth }} ETH</span> ({{ ((bid.value | weiToEth) * ((usd$ | async) || 0)) | currency }}) for this EtherPhunk from <a [routerLink]="['/', 'owned']" [queryParams]="{ address: bid.fromAddress }"><app-address [address]="bid.fromAddress" /></a>.</p>
-                }
-              } @else {
-                <p i18n>There are no bids on this EtherPhunk.</p>
-              }
-            <!-- } -->
+        <div class="title-wrapper">
+          <h1 i18n>EtherPhunk {{ phunk.tokenId }}</h1>
+          <div class="hash-id">
+            <span>Hash ID: </span>
+            <a [href]="explorerUrl + '/tx/' + phunk.hashId" target="_blank">
+              <app-address [address]="phunk.hashId" />
+            </a>
           </div>
+          @if (phunk.attributes && phunk.attributes.length) {
+          <h2 i18n>One of {{ phunk.attributes[0].v | traitCount }}
+            <a
+              class="highlight"
+              [routerLink]="['/', 'market', 'all']"
+              [queryParams]="getItemQueryParams(phunk.attributes[0])">
 
-          <div
-            class="actions-wrapper"
-            [class.cooldown]="isCooling$ | async"
-            [class.pending]="hasPendingTx$ | async">
+              {{ phunk.attributes[0].v }}
+            </a> EtherPhunks.
+          </h2>
+          }
+        </div>
 
-            @if ((walletAddress$ | async); as address) {
-              @if (phunk.owner; as owner) {
-                <!-- Buy button -->
-                @if (
-                  phunk.listing &&
-                  phunk.isEscrowed &&
-                  (phunk.prevOwner | lowercase) !== (address | lowercase)
-                ) {
-                  <button i18n class="buy" (click)="buyPhunk(phunk)">
-                    Buy
-                  </button>
+        <div class="split">
+          <div class="left">
+            <div class="market-status">
+              <!-- @if (phunk.auction) {
+                <h2 i18n>Auction</h2>
+                <app-auction
+                  [auction]="phunk.auction"
+                />
+              } @else { -->
+                <h2 i18n>Market Status</h2>
+
+                @if (phunk.isEscrowed) {
+                  <!-- Owner -->
+                  @if (phunk.prevOwner; as owner) {
+                    <p i18n>This EtherPhunk is held in <a [routerLink]="['/', 'market', 'owned']" [queryParams]="{ address: escrowAddress }">escrow</a> for <a [routerLink]="['/', 'market', 'owned']" [queryParams]="{ address: owner }"><app-address [address]="owner" /></a>.</p>
+                  }
+                } @else {
+                  <!-- Owner -->
+                  @if (phunk.owner; as owner) {
+                    <p i18n>This EtherPhunk is owned by <a [routerLink]="['/', 'market', 'owned']" [queryParams]="{ address: owner }"><app-address [address]="owner" /></a>.</p>
+                  }
                 }
 
-                <!-- Sell (Ownership actions) -->
-                @if (
-                  ((owner | lowercase) === (escrowAddress | lowercase) &&
-                  (phunk.prevOwner | lowercase) === (address | lowercase)) ||
-                  (owner | lowercase) === (address | lowercase)
-                ) {
-                  <button i18n class="sell" (click)="sellPhunk()" [class.active]="sellActive">
-                    Sell
-                  </button>
+                <!-- Value (Listing) -->
+                @if (phunk.listing?.minValue; as value) {
+                  <p i18n>This EtherPhunk is for sale for <span class="highlight">{{ (value | weiToEth) }} ETH</span><span class="bold"> (${{ ((value | weiToEth) * ((usd$ | async) || 0)) | formatCash }})</span>.</p>
+                } @else {
+                  <p i18n>This EtherPhunk is not for sale.</p>
+                }
 
-                  <!-- Sell Actions -->
-                  @if (sellActive) {
+                <!-- Has bid -->
+                @if (phunk.bid; as bid) {
+                  @if (bid.value && bid.fromAddress) {
+                    <p i18n>There is a bid of <span class="bold">{{ bid.value | weiToEth }} ETH</span> ({{ ((bid.value | weiToEth) * ((usd$ | async) || 0)) | currency }}) for this EtherPhunk from <a [routerLink]="['/', 'market', 'owned']" [queryParams]="{ address: bid.fromAddress }"><app-address [address]="bid.fromAddress" /></a>.</p>
+                  }
+                } @else {
+                  <p i18n>There are no bids on this EtherPhunk.</p>
+                }
+              <!-- } -->
+            </div>
+
+            <div
+              class="actions-wrapper"
+              [class.cooldown]="isCooling$ | async"
+              [class.pending]="hasPendingTx$ | async">
+
+              @if ((walletAddress$ | async); as address) {
+                @if (phunk.owner; as owner) {
+                  <!-- Buy button -->
+                  @if (
+                    phunk.listing &&
+                    phunk.isEscrowed &&
+                    (phunk.prevOwner | lowercase) !== (address | lowercase)
+                  ) {
+                    <button i18n class="buy" (click)="buyPhunk(phunk)">
+                      Buy
+                    </button>
+                  }
+
+                  <!-- Sell (Ownership actions) -->
+                  @if (
+                    ((owner | lowercase) === (escrowAddress | lowercase) &&
+                    (phunk.prevOwner | lowercase) === (address | lowercase)) ||
+                    (owner | lowercase) === (address | lowercase)
+                  ) {
+                    <button i18n class="sell" (click)="sellPhunk()" [class.active]="sellActive">
+                      Sell
+                    </button>
+
+                    <!-- Sell Actions -->
+                    @if (sellActive) {
+                      @if (phunk.isEscrowed) {
+                        <ng-container *ngTemplateOutlet="sellForm; context:{ $implicit: phunk }" />
+                      } @else {
+                        <ng-container *ngTemplateOutlet="escrowForm; context:{ $implicit: phunk, type: 'list' }" />
+                      }
+                    }
+
                     @if (phunk.isEscrowed) {
-                      <ng-container *ngTemplateOutlet="sellForm; context:{ $implicit: phunk }" />
-                    } @else {
-                      <ng-container *ngTemplateOutlet="escrowForm; context:{ $implicit: phunk, type: 'list' }" />
+                      <button i18n class="withdraw" (click)="withdrawPhunk(phunk)">
+                        Withdraw from escrow
+                      </button>
                     }
                   }
 
-                  @if (phunk.isEscrowed) {
-                    <button i18n class="withdraw" (click)="withdrawPhunk(phunk)">
-                      Withdraw from escrow
+                  <!-- Transfer -->
+                  @if ((owner | lowercase) === (address | lowercase)) {
+                    <button i18n class="transfer" [class.active]="transferActive" (click)="transferPhunkAction()">
+                      Transfer
                     </button>
-                  }
-                }
 
-                <!-- Transfer -->
-                @if ((owner | lowercase) === (address | lowercase)) {
-                  <button i18n class="transfer" [class.active]="transferActive" (click)="transferPhunkAction()">
-                    Transfer
-                  </button>
+                    <!-- Transfer Actions -->
+                    @if (transferActive) {
+                      <ng-container *ngTemplateOutlet="transferForm; context:{ $implicit: phunk }" />
+                    }
 
-                  <!-- Transfer Actions -->
-                  @if (transferActive) {
-                    <ng-container *ngTemplateOutlet="transferForm; context:{ $implicit: phunk }" />
+                    <!-- <button (click)="sendToAuction(phunk.hashId)">Send to Auction</button> -->
                   }
 
-                  <!-- <button (click)="sendToAuction(phunk.hashId)">Send to Auction</button> -->
-                }
-
-                <!-- Delist button -->
-                @if (
-                  phunk.listing &&
-                  (owner | lowercase) === (escrowAddress | lowercase) &&
-                  (phunk.prevOwner | lowercase) === (address | lowercase)
-                ) {
-                  <button i18n class="sell" (click)="phunkNoLongerForSale(phunk)">
-                    Delist
-                  </button>
-                }
-
-                <!-- Bid -->
-                @if (
-                  (owner | lowercase) !== (address | lowercase) &&
-                  (phunk.prevOwner | lowercase) !== (address | lowercase)
-                ) {
-                  <button i18n [class.active]="bidActive" class="sell" (click)="bidOnPhunk()">
-                    Place Bid
-                  </button>
-
-                  <!-- Bid Actions -->
-                  @if (bidActive) {
-                    <ng-container *ngTemplateOutlet="bidForm; context:{ $implicit: phunk }" />
-                  }
-                }
-
-                <!-- Withdraw Bid button -->
-                @if (((phunk.bid?.fromAddress | lowercase) === (address | lowercase))) {
-                  <button i18n class="sell" (click)="withdrawBidForPhunk(phunk)">
-                    Withdraw Bid
-                  </button>
-                }
-
-                <!-- Accept Bid button -->
-                @if (phunk.bid) {
+                  <!-- Delist button -->
                   @if (
-                    ((owner | lowercase) === (escrowAddress | lowercase)) &&
+                    phunk.listing &&
+                    (owner | lowercase) === (escrowAddress | lowercase) &&
                     (phunk.prevOwner | lowercase) === (address | lowercase)
                   ) {
-                    <button i18n class="sell" (click)="acceptBidForPhunk(phunk)">
-                      Accept Top Bid
+                    <button i18n class="sell" (click)="phunkNoLongerForSale(phunk)">
+                      Delist
                     </button>
-                  } @else if ((owner | lowercase) === (address | lowercase)) {
-                    <button i18n class="sell" [class.active]="acceptbidActive" (click)="acceptBid()">
-                      Accept Top Bid
+                  }
+
+                  <!-- Bid -->
+                  @if (
+                    (owner | lowercase) !== (address | lowercase) &&
+                    (phunk.prevOwner | lowercase) !== (address | lowercase)
+                  ) {
+                    <button i18n [class.active]="bidActive" class="sell" (click)="bidOnPhunk()">
+                      Place Bid
                     </button>
 
-                    @if (acceptbidActive) {
-                      <ng-container *ngTemplateOutlet="escrowForm; context:{ $implicit: phunk, type: 'bid' }" />
+                    <!-- Bid Actions -->
+                    @if (bidActive) {
+                      <ng-container *ngTemplateOutlet="bidForm; context:{ $implicit: phunk }" />
                     }
+                  }
 
-                    <!-- <button i18n class="sell" (click)="acceptBidForPhunk(phunk)">
-                      Accept Top Bid
-                    </button> -->
+                  <!-- Withdraw Bid button -->
+                  @if (((phunk.bid?.fromAddress | lowercase) === (address | lowercase))) {
+                    <button i18n class="sell" (click)="withdrawBidForPhunk(phunk)">
+                      Withdraw Bid
+                    </button>
+                  }
+
+                  <!-- Accept Bid button -->
+                  @if (phunk.bid) {
+                    @if (
+                      ((owner | lowercase) === (escrowAddress | lowercase)) &&
+                      (phunk.prevOwner | lowercase) === (address | lowercase)
+                    ) {
+                      <button i18n class="sell" (click)="acceptBidForPhunk(phunk)">
+                        Accept Top Bid
+                      </button>
+                    } @else if ((owner | lowercase) === (address | lowercase)) {
+                      <button i18n class="sell" [class.active]="acceptbidActive" (click)="acceptBid()">
+                        Accept Top Bid
+                      </button>
+
+                      @if (acceptbidActive) {
+                        <ng-container *ngTemplateOutlet="escrowForm; context:{ $implicit: phunk, type: 'bid' }" />
+                      }
+
+                      <!-- <button i18n class="sell" (click)="acceptBidForPhunk(phunk)">
+                        Accept Top Bid
+                      </button> -->
+                    }
                   }
                 }
+
+              } @else {
+                <button i18n (click)="web3Svc.connect()">Connect an Ethereum wallet to interact with this item</button>
               }
 
-            } @else {
-              <button i18n (click)="web3Svc.connect()">Connect an Ethereum wallet to interact with this item</button>
-            }
-
+            </div>
           </div>
-        </div>
 
-        <div class="right">
-          <div class="accessories-wrapper">
-            <h2 i18n>Attributes</h2>
-            @if (phunk.attributes?.length) {
-              <div class="accessories">
-                @for (item of phunk.attributes; track item; let i = $index) {
-                  @if (i > 1) {
-                  <div class="accessory">
-                    <a class="value" [routerLink]="['/', 'all']" [queryParams]="getItemQueryParams(item)">
-                      {{ item.v }}
-                      <span>{{ (+(item.v | traitCount) / 10000) | percent : '1.1-1' }}</span>
-                    </a>
-                    <span class="trait-count">
-                      <span>{{ item.v | traitCount }}</span>
-                      EtherPhunks have this.
-                    </span>
-                  </div>
+          <div class="right">
+            <div class="accessories-wrapper">
+              <h2 i18n>Attributes</h2>
+              @if (phunk.attributes?.length) {
+                <div class="accessories">
+                  @for (item of phunk.attributes; track item; let i = $index) {
+                    @if (i > 1) {
+                    <div class="accessory">
+                      <a class="value" [routerLink]="['/', 'market', 'all']" [queryParams]="getItemQueryParams(item)">
+                        {{ item.v }}
+                        <span>{{ (+(item.v | traitCount) / 10000) | percent : '1.1-1' }}</span>
+                      </a>
+                      <span class="trait-count">
+                        <span>{{ item.v | traitCount }}</span>
+                        EtherPhunks have this.
+                      </span>
+                    </div>
+                    }
                   }
-                }
-              </div>
-            }
+                </div>
+              }
+            </div>
           </div>
         </div>
-      </div>
 
-      @defer {
-        <app-tx-history [hashId]="phunk.hashId"></app-tx-history>
-      }
-    </div>
+        @defer {
+          <app-tx-history [hashId]="phunk.hashId"></app-tx-history>
+        }
+      </div>
     } @else {
       <div class="details-wrapper">
 
         <div class="title-wrapper">
-          <div class="title-color">
-            <h1 i18n>EtherPhunk Loading...</h1>
+          <h1 i18n>EtherPhunk Loading...</h1>
+          <div class="hash-id">
+            <span>Hash ID: </span>
+            <a><app-address [address]="'0x000000000000000000000'" /></a>
           </div>
-          <h2 i18n>&nbsp;</h2>
         </div>
 
-        <div class="accessories-wrapper">
-          <h2 i18n>Attributes</h2>
-          <div class="accessories">
-            @for (item of [0, 1, 2]; track item) {
-              <div class="accessory">
-                <span class="value"></span>
-                <span class="trait-count"></span>
+        <div class="split">
+          <div class="left">
+            <div class="market-status">
+              <h2 i18n>Market Status</h2>
+              <p i18n>This EtherPhunk is not for sale.</p>
+              <p i18n>There are no bids on this EtherPhunk.</p>
+            </div>
+          </div>
+          <div class="right">
+            <div class="accessories-wrapper">
+              <h2 i18n>Attributes</h2>
+              <div class="accessories">
+                @for (item of [0, 1, 2]; track item) {
+                  <div class="accessory">
+                    <span class="value"></span>
+                    <span class="trait-count"></span>
+                  </div>
+                }
               </div>
-            }
+            </div>
           </div>
         </div>
       </div>

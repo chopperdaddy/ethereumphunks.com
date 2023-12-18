@@ -53,14 +53,13 @@ export class AppComponent {
   ) {
 
     this.store.dispatch(appStateActions.setTheme({ theme: 'initial' }));
-
-    this.store.dispatch(dataStateActions.fetchMarketData());
-    this.store.dispatch(dataStateActions.fetchAllPhunks());
-
     this.store.dispatch(appStateActions.setEventTypeFilter({ eventTypeFilter: 'All' }));
 
+    this.store.dispatch(appStateActions.fetchActiveMultiplier());
     this.store.dispatch(dataStateActions.fetchLeaderboard());
 
+    // this.store.dispatch(dataStateActions.fetchMarketData());
+    // this.store.dispatch(dataStateActions.fetchAllPhunks({ limit: 30 }));
     // setTimeout(() => this.store.dispatch(appStateActions.setMenuActive({ menuActive: true })), 0);
 
     this.router.events.pipe(

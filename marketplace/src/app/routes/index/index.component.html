@@ -18,8 +18,7 @@
                 <p i18n>Showing owned EtherPhunks,
                   <a
                     class="highlight"
-                    [routerLink]="['/', 'owned']"
-                    [href]="'/owned'"
+                    [routerLink]="['/', 'market', 'owned']"
                     [queryParams]="{ address }">
 
                     ({{ ownedData.length | number }}) view all.
@@ -50,12 +49,12 @@
               <p i18n>The lowest price EtherPhunk currently for sale is <span class="bold">Ξ{{ ethPrice | number : '1.2-2' }} ({{ (ethPrice * ((usd$ | async) || 0)) | currency }} USD)</span>.</p>
             }
 
-            <p i18n>Showing lowest price offers, <a class="highlight" [routerLink]="['/listings']" [href]="'/listings'">({{ listings.length | number }}) view all.</a></p>
+            <p i18n>Showing lowest price offers, <a class="highlight" [routerLink]="['/', 'market', 'listings']">({{ listings.length | number }}) view all.</a></p>
           </div>
         }
 
         <app-phunk-grid
-          [phunkData]="(listings$ | async) || []"
+          [phunkData]="(listings$ | async)"
           [viewType]="'compact'"
           [limit]="(isMobile$ | async) ? 100 : 110"
           [marketType]="'listings'"
@@ -76,12 +75,12 @@
             @if ((bids | calc : 'totalBidsValue'); as ethPrice) {
               <p i18n>Total value of all current bids is <span class="bold">Ξ{{ ethPrice | number : '1.2-2' }} ({{ (ethPrice * ((usd$ | async) || 0)) | currency }} USD)</span>.</p>
             }
-            <p i18n>Showing top bids, <a class="highlight" [routerLink]="['/bids']" [href]="'/bids'">({{ bids.length | number }}) view all.</a></p>
+            <p i18n>Showing top bids, <a class="highlight" [routerLink]="['/', 'market', 'bids']">({{ bids.length | number }}) view all.</a></p>
           </div>
         }
 
         <app-phunk-grid
-          [phunkData]="(bids$ | async) || []"
+          [phunkData]="(bids$ | async)"
           [viewType]="'compact'"
           [limit]="(isMobile$ | async) ? 100 : 110"
           [marketType]="'bids'"
@@ -90,23 +89,24 @@
       </div>
     </section>
 
-    @if ((allPhunks$ | async); as allPhunks) {
-      <section>
-        <div class="inner">
-          <h3 i18n>All</h3>
-          <div class="section-stats-wrapper">
-            <p i18n><a class="highlight" [routerLink]="['/all']" [href]="'/all'">View all 10,000 EtherPhunks.</a></p>
-          </div>
+    <section>
+      <div class="inner">
+        <h3 i18n>All</h3>
 
-          <app-phunk-grid
-            [phunkData]="allPhunks"
-            [viewType]="'compact'"
-            [limit]="(isMobile$ | async) ? 100 : 110"
-            [marketType]="'all'"
-            [activeSort]="'id'"
-          />
-        </div>
-      </section>
-    }
+        @if ((allPhunks$ | async); as allPhunks) {
+          <div class="section-stats-wrapper">
+            <p i18n><a class="highlight" [routerLink]="['/', 'market', 'all']">View all 10,000 EtherPhunks.</a></p>
+          </div>
+        }
+
+        <app-phunk-grid
+          [phunkData]="(allPhunks$ | async)"
+          [viewType]="'compact'"
+          [limit]="(isMobile$ | async) ? 100 : 110"
+          [marketType]="'all'"
+          [activeSort]="'id'"
+        />
+      </div>
+    </section>
   }
 </div>

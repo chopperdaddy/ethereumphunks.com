@@ -144,6 +144,15 @@ export const setUserPoints = createAction(
   props<{ userPoints: number }>()
 );
 
+export const fetchActiveMultiplier = createAction(
+  '[App State] Fetch Active Multiplier'
+);
+
+export const setActiveMultiplier = createAction(
+  '[App State] Set Active Multiplier',
+  props<{ activeMultiplier: number }>()
+);
+
 export const restoreScrollPosition = createAction(
   '[Router] Restore Scroll Position',
   props<{ navigationId: number }>()

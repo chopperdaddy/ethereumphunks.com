@@ -62,7 +62,7 @@ export class PhunkGridComponent implements OnChanges {
   @Input() marketType!: MarketTypes;
   @Input() activeSort!: Sort['value'];
 
-  @Input() phunkData: Phunk[] = [];
+  @Input() phunkData!: Phunk[] | null;
   @Input() viewType: ViewType = 'market';
   @Input() limit: number = 110;
   @Input() currentPage: number = 1;
@@ -95,7 +95,9 @@ export class PhunkGridComponent implements OnChanges {
     }
 
     if (changes.selectAll) {
+
       this.phunkCheck?.forEach((checkbox) => {
+        if (!this.phunkData) return;
         checkbox.nativeElement.checked = this.selectAll;
 
         const hashId = checkbox.nativeElement.dataset.hashId;
@@ -136,7 +138,7 @@ export class PhunkGridComponent implements OnChanges {
   prevIndex: number | null = null;
 
   onIntersection($event: IntersectionObserverEntry[]): void {
-    if (!this.observe) return;
+    if (!this.observe || !this.phunkData) return;
     if (this.limit >= this.phunkData.length) return;
 
     $event.forEach((entry) => {

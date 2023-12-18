@@ -3,7 +3,7 @@
 
 :host {
   position: fixed;
-  top: calc(var(--header-height) + 2rem);
+  top: calc(var(--header-height) + 4rem);
   left: 50%;
 
   z-index: 980;
@@ -22,7 +22,7 @@
   transform: translateX(-50%);
 
   @media (max-width: $mobile) {
-    top: calc(var(--header-height) + 2rem);
+    top: calc(var(--header-height) + 4rem);
     left: 0;
     padding: 0 1rem;
 

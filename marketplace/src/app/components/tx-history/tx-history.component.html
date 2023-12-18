@@ -27,7 +27,7 @@
               <td>
                 <div class="cell-inner">
                   @if (event.from !== ZERO_ADDRESS) {
-                    <a [routerLink]="['/', 'owned']" [queryParams]="{ address: event.from }">
+                    <a [routerLink]="['/', 'market', 'owned']" [queryParams]="{ address: event.from }">
                       <app-address [address]="event.from" />
                     </a>
                   } @else {
@@ -39,7 +39,7 @@
               <td>
                 <div class="cell-inner">
                   @if (event.to !== ZERO_ADDRESS) {
-                    <a [routerLink]="['/', 'owned']" [queryParams]="{ address: event.to }">
+                    <a [routerLink]="['/', 'market', 'owned']" [queryParams]="{ address: event.to }">
                       <app-address [address]="event.to" />
                     </a>
                   } @else {

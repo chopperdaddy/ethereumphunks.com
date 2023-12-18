@@ -374,6 +374,17 @@ export class Web3Service {
     return Number(points);
   }
 
+  async getMultiplier(): Promise<any> {
+    const publicClient = getPublicClient();
+    const multiplier = await publicClient?.readContract({
+      address: pointsAddress as `0x${string}`,
+      abi: PointsAbi,
+      functionName: 'multiplier',
+      args: [],
+    });
+    return multiplier;
+  }
+
   //////////////////////////////////
   // TXNS //////////////////////////
   //////////////////////////////////

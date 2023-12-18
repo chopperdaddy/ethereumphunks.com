@@ -107,14 +107,12 @@ export class NotifComponent {
   }
 
   onMouseEnter(notificationId: string) {
-    // Update the notification hover state
-    console.log('onMouseEnter', notificationId);
+    if (this.isMenu) return;
     this.store.dispatch(appStateActions.setNotifHoverState({ notifHoverState: { [notificationId]: true } }));
   }
 
   onMouseLeave(notificationId: string) {
-    // Update the notification hover state
-    console.log('onMouseLeave', notificationId);
+    if (this.isMenu) return;
     this.store.dispatch(appStateActions.setNotifHoverState({ notifHoverState: { [notificationId]: false } }));
   }
 
