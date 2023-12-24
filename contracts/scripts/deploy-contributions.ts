@@ -1,7 +1,7 @@
 import hre from 'hardhat';
 
-const contractName = 'Donations';
-const _beneficiary = '0x51A83198deC9EfF470492AE5765aE907dB94F769';
+const contractName = 'Contributions';
+const _beneficiary = '0x051281d626b327638B916E1a52aF1495855016c1';
 
 export async function deployDonations(pointsAddress: string) {
   const [signer] = await hre.ethers.getSigners();
@@ -23,3 +23,10 @@ export async function deployDonations(pointsAddress: string) {
   console.log('\nVerify with:');
   console.log(`npx hardhat verify --network goerli ${contractAddress} ${_beneficiary}`, args.map((arg) => `"${arg}"`).join(' '));
 }
+
+deployDonations('0x2A953aA14e986b0595A0c5201dD267391BF7d39d').then(() => {
+  process.exit(0);
+}).catch((error) => {
+  console.error(error);
+  process.exit(1);
+});

@@ -1,5 +1,8 @@
 import { HardhatUserConfig } from 'hardhat/config';
+
 import '@nomicfoundation/hardhat-toolbox';
+import '@openzeppelin/hardhat-upgrades';
+import "@nomicfoundation/hardhat-ledger";
 
 import dotenv from 'dotenv';
 dotenv.config();
@@ -22,17 +25,17 @@ const config: HardhatUserConfig = {
     artifacts: './artifacts',
   },
   networks: {
-    ganache: {
-      url: "http://127.0.0.1:7545",
-      accounts: {
-        mnemonic: "supreme logic ivory monitor under now quantum next require office crater brain"
-      }
-    },
     goerli: {
       url: 'http://goerli-geth.dappnode:8545',
       chainId: 5,
-      from: process.env.GOERLI_ADDRESS as string,
-      accounts: [`0x${process.env.GOERLI_PK}`],
+      from: process.env.MAINNET_ADDRESS as string,
+      accounts: [`0x${process.env.MAINNET_PK}`],
+    },
+    mainnet: {
+      url: 'http://geth.dappnode:8545',
+      chainId: 1,
+      from: process.env.MAINNET_ADDRESS as string,
+      accounts: [`0x${process.env.MAINNET_PK}`],
     },
   },
   etherscan: {

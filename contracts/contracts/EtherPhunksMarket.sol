@@ -1,39 +1,40 @@
-//////// EtherPhunksMarket.sol /////////
-////////////////////////////////////////
-////////////////////////////////////////
-////////////▒▒▒▒//////▒▒▒▒//////////////
-////////////░░██//////░░██//////////////
-////////////////////////////////////////
-////////////////////////////////////////
-///////////////████/////////////////////
-////////////////////////////////////////
-/////////////////////██/////////////////
-///////////////██████///////////////////
-////////////////////////////////////////
-////////////////////////////////////////
-
 // SPDX-License-Identifier: PHUNKY
+
+/**** EtherPhunksMarket.sol *
+* ░░░░░░░░░░░░░░░░░░░░░░░░░ *
+* ░░░░░░░░░░░░░░░░░░░░░░░░░ *
+* ░░░░░▓▓▓▓░░░░░░▓▓▓▓░░░░░░ *
+* ░░░░░▒▒██░░░░░░▒▒██░░░░░░ *
+* ░░░░░░░░░░░░░░░░░░░░░░░░░ *
+* ░░░░░░░░░░░░░░░░░░░░░░░░░ *
+* ░░░░░░░░░████░░░░░░░░░░░░ *
+* ░░░░░░░░░░░░░░░░░░░░░░░░░ *
+* ░░░░░░░░░░░░░░░██░░░░░░░░ *
+* ░░░░░░░░░██████░░░░░░░░░░ *
+* ░░░░░░░░░░░░░░░░░░░░░░░░░ *
+* ░░░░░░░░░░░░░░░░░░░░░░░░░ *
+****************************/
+
 pragma solidity 0.8.20;
 
-import "@solidstate/contracts/security/reentrancy_guard/ReentrancyGuard.sol";
-import "@solidstate/contracts/utils/Multicall.sol";
-
-import "@openzeppelin/contracts/utils/Pausable.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/utils/PausableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/utils/MulticallUpgradeable.sol";
 
 import "./interfaces/IPoints.sol";
 import "./EthscriptionsEscrower.sol";
 
 contract EtherPhunksMarket is
-    Pausable,
-    Ownable,
-    ReentrancyGuard,
-    Multicall,
+    Initializable,
+    PausableUpgradeable,
+    OwnableUpgradeable,
+    ReentrancyGuardUpgradeable,
+    MulticallUpgradeable,
     EthscriptionsEscrower
 {
-    bytes32 DEPOSIT_AND_ACCEPT_BID_SIGNATURE = 0x4445504f5349545f414e445f4143434550545f4249445f5349474e4154555245;
-    bytes32 DEPOSIT_AND_LIST_SIGNATURE = 0x4445504f5349545f414e445f4c4953545f5349474e4154555245000000000000;
-
+    uint256 public constant contractVersion = 1;
     address public pointsAddress;
 
     struct Offer {
@@ -86,9 +87,12 @@ contract EtherPhunksMarket is
       bytes32 indexed phunkId
     );
 
-    constructor(
+    function initialize(
         address _initialPointsAddress
-    ) Ownable(msg.sender) {
+    ) public initializer {
+        __Ownable_init(msg.sender);
+        __Pausable_init();
+        __ReentrancyGuard_init();
         pointsAddress = _initialPointsAddress;
     }
 
@@ -257,8 +261,9 @@ contract EtherPhunksMarket is
         uint amount = bid.value;
         phunkBids[phunkId] = Bid(false, phunkId, address(0x0), 0);
 
-        // Refund the bid money
-        payable(msg.sender).transfer(amount);
+        // Refund the bid moneys
+        (bool sent, ) = payable(msg.sender).call{value: amount}("");
+        require(sent, "Failed to send Ether");
     }
 
     // Allows users to retrieve ETH from sales
@@ -266,10 +271,13 @@ contract EtherPhunksMarket is
         if (pendingWithdrawals[msg.sender] == 0)
             revert("no pending withdrawals");
         uint amount = pendingWithdrawals[msg.sender];
+
         // Remember to zero the pending refund before
         // sending to prevent re-entrancy attacks
         pendingWithdrawals[msg.sender] = 0;
-        payable(msg.sender).transfer(amount);
+
+        (bool sent, ) = payable(msg.sender).call{value: amount}("");
+        require(sent, "Failed to send Ether");
     }
 
     // Allows EtherPhunk owners to withdraw their Phunks from escrow
@@ -303,8 +311,6 @@ contract EtherPhunksMarket is
         // Ensure calldata length is a multiple of 32 bytes (64 characters)
         require(userCalldata.length % 32 == 0, "InvalidEthscriptionLength");
 
-        bytes32[] memory ids = new bytes32[](userCalldata.length / 32);
-
         // Process each ethscriptionId
         for (uint256 i = 0; i < userCalldata.length / 32; i++) {
             bytes32 potentialEthscriptionId = abi.decode(slice(userCalldata, i * 32, 32), (bytes32));
@@ -313,9 +319,9 @@ contract EtherPhunksMarket is
                 revert EthscriptionAlreadyReceivedFromSender();
             }
 
-            EthscriptionsEscrowerStorage.s().ethscriptionReceivedOnBlockNumber[previousOwner][potentialEthscriptionId] = block.number;
-
-            ids[i] = potentialEthscriptionId;
+            EthscriptionsEscrowerStorage.s().ethscriptionReceivedOnBlockNumber[
+                previousOwner
+            ][potentialEthscriptionId] = block.number;
         }
     }
 
@@ -357,9 +363,9 @@ contract EtherPhunksMarket is
         pointsContract.addPoints(phunk, amount);
     }
 
-    ////////////////////////
-    // Pausible functions //
-    ////////////////////////
+    function setPointsAddress(address _newPointsAddress) public onlyOwner {
+        pointsAddress = _newPointsAddress;
+    }
 
     // Pause the contract
     function pause() public onlyOwner {
@@ -371,10 +377,6 @@ contract EtherPhunksMarket is
         _unpause();
     }
 
-    ////////////////////
-    // Util functions //
-    ////////////////////
-
     // Helper function to slice bytes
     function slice(bytes memory data, uint256 start, uint256 len) internal pure returns (bytes memory) {
         bytes memory b = new bytes(len);
@@ -385,28 +387,6 @@ contract EtherPhunksMarket is
     }
 
     fallback() external {
-        bytes32 phunkId;
-        bytes32 signature;
-
-        assembly {
-            phunkId := calldataload(0)
-            signature := calldataload(32)
-        }
-
-        if (signature == DEPOSIT_AND_ACCEPT_BID_SIGNATURE) {
-            _onPotentialEthscriptionDeposit(msg.sender, msg.data);
-            return;
-        }
-
-        if (signature == DEPOSIT_AND_LIST_SIGNATURE) {
-            bytes32 listingPrice;
-            assembly {
-                listingPrice := calldataload(64)
-            }
-            _onPotentialEthscriptionDeposit(msg.sender, msg.data);
-            _offerPhunkForSale(phunkId, uint256(listingPrice));
-        }
-
         _onPotentialEthscriptionDeposit(msg.sender, msg.data);
     }
 }
