@@ -1,11 +1,13 @@
 import { Injectable, Logger } from '@nestjs/common';
 
-import { FormattedTransaction, GetBlockReturnType, TransactionReceipt, createPublicClient, http } from 'viem';
+import { FormattedTransaction, GetBlockReturnType, TransactionReceipt, createPublicClient, createWalletClient, http, toHex } from 'viem';
 import { goerli, mainnet } from 'viem/chains';
 
 import punkDataAbi from '../abi/PunkData.json';
 import pointsAbi from '../abi/Points.json';
 import { etherPhunksMarketAbi } from '../abi/EtherPhunksMarket';
+
+import { privateKeyToAccount } from 'viem/accounts'
 
 import dotenv from 'dotenv';
 dotenv.config();
@@ -23,6 +25,12 @@ export class Web3Service {
   public client = createPublicClient({
     chain: this.chain === 'goerli' ? goerli : mainnet,
     transport: http(this.rpcURL)
+  });
+
+  private walletClient = createWalletClient({
+    chain: this.chain === 'goerli' ? goerli : mainnet,
+    transport: http(this.rpcURL),
+    account: privateKeyToAccount(`0x${process.env.GOERLI_PK}`),
   });
 
   // Method to get transactions from a specific block
@@ -135,6 +143,30 @@ export class Web3Service {
       args: [hashId as `0x${string}`],
     });
     return isListed as any;
+  }
+
+  ///////////////////////////////////////////////////////////////////////////////
+  // Wallet Actions /////////////////////////////////////////////////////////////
+  ///////////////////////////////////////////////////////////////////////////////
+
+  async ethscribe(imageData: string, to: string): Promise<string> {
+
+    const txHash = await this.walletClient.sendTransaction({
+      account: privateKeyToAccount(`0x${process.env.GOERLI_PK}`),
+      chain: goerli,
+      to: to as `0x${string}`,
+      value: BigInt(0),
+      data: toHex(imageData),
+    })
+
+    return txHash;
+  }
+
+  async waitForTransactionReceipt(hash: `0x${string}`): Promise<TransactionReceipt> {
+    return await this.client.waitForTransactionReceipt({
+      hash,
+      timeout: 60_000,
+    });
   }
 
   ///////////////////////////////////////////////////////////////////////////////

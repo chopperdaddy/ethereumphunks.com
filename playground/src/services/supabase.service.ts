@@ -34,13 +34,6 @@ const supabase = createClient(supabaseUrl, serviceRole);
 export class SupabaseService {
   suffix = process.env.CHAIN_ID === '1' ? '' : '_goerli';
 
-  constructor() {
-    // this.getUnminted().then((phunks) => {
-    // //   // Logger.log(`Loaded ${phunks.length} phunks`);
-    // //   // console.log(phunks);
-    // });
-  }
-
   async removeBid(hashId: string): Promise<void> {
     const response: ListingResponse = await supabase
       .from('bids' + this.suffix)
@@ -152,9 +145,9 @@ export class SupabaseService {
     return null;
   }
 
-  async checkEthPhunkExistsBySha(sha: string): Promise<boolean> {
+  async checkEthscriptionkExistsBySha(sha: string): Promise<boolean> {
     const response: PhunkResponse = await supabase
-      .from('phunks' + this.suffix)
+      .from('ethscriptions' + this.suffix)
       .select('*')
       .eq('sha', sha);
 
@@ -463,9 +456,10 @@ export class SupabaseService {
 
     while (hasMore) {
       const { data, error } = await supabase
-        .from('phunks' + this.suffix)
+        .from('ethscriptions' + this.suffix)
         .select('*')
-        .order('phunkId', { ascending: true })
+        .eq('collectionSlug', 'ethereum-phunks')
+        .order('tokenId', { ascending: true })
         // .neq('prevOwner', null)
         .range(page * pageSize, (page + 1) * pageSize - 1);
 
@@ -475,6 +469,7 @@ export class SupabaseService {
       }
 
       if (data) {
+        console.log('Fetched', data.length, 'phunks');
         allPhunks = allPhunks.concat(data);
         hasMore = data.length === pageSize;
         page++;
