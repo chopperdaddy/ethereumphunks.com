@@ -1,16 +1,13 @@
 import { Injectable, Logger } from '@nestjs/common';
 
-import { createClient } from '@supabase/supabase-js';
-import { Transaction, formatEther, parseEther, parseUnits, zeroAddress } from 'viem';
+import { UtilityService } from 'src/utils/utility.service';
 
-import { StandardMerkleTree } from '@openzeppelin/merkle-tree';
-import { readFile, writeFile } from 'fs/promises';
+import { createClient } from '@supabase/supabase-js';
+import { Transaction, hexToString, zeroAddress } from 'viem';
+import { writeFile } from 'fs/promises';
 
 import {
-  Phunk,
-  Sha,
   Event,
-  PhunkResponse,
   ShaResponse,
   UserResponse,
   EventType,
@@ -19,13 +16,17 @@ import {
   ListingResponse,
   Bid,
   BidResponse,
+  PhunkSha,
+  CuratedItem,
+  EthscriptionResponse,
+  Ethscription,
 } from 'src/models/db';
 
 import dotenv from 'dotenv';
 dotenv.config();
 
-const supabaseUrl = process.env.SUPABASE_URL;
-const serviceRole = process.env.SUPABASE_SERVICE_ROLE;
+const supabaseUrl = process.env.CHAIN_ID === '1' ? process.env.SUPABASE_URL_MAINNET : process.env.SUPABASE_URL_GOERLI;
+const serviceRole = process.env.CHAIN_ID === '1' ? process.env.SUPABASE_SERVICE_ROLE_MAINNET : process.env.SUPABASE_SERVICE_ROLE_GOERLI;
 
 const supabase = createClient(supabaseUrl, serviceRole);
 
@@ -33,7 +34,9 @@ const supabase = createClient(supabaseUrl, serviceRole);
 export class SupabaseService {
   suffix = process.env.CHAIN_ID === '1' ? '' : '_goerli';
 
-  constructor() {
+  constructor(
+    private readonly utilSvc: UtilityService
+  ) {
     // this.getUnminted().then((phunks) => {
     // //   // Logger.log(`Loaded ${phunks.length} phunks`);
     // //   // console.log(phunks);
@@ -125,35 +128,35 @@ export class SupabaseService {
   // Checks //////////////////////////////////////////////////////////////////////
   ////////////////////////////////////////////////////////////////////////////////
 
-  async checkIsEthPhunks(sha: string): Promise<number | null> {
+  async checkIsEthPhunk(sha: string): Promise<PhunkSha | null> {
     const response: ShaResponse = await supabase
-      .from('shas')
+      .from('phunk_shas')
       .select('*')
       .eq('sha', sha);
 
     const { data, error } = response;
 
     if (error) throw error;
-    if (data?.length) return data[0].id;
+    if (data?.length) return data[0];
     return null;
   }
 
-  async checkEthPhunkExistsBySha(sha: string): Promise<boolean> {
-    const response: PhunkResponse = await supabase
-      .from('phunks' + this.suffix)
+  async checkEthscriptionExistsBySha(sha: string): Promise<boolean> {
+    const response: EthscriptionResponse = await supabase
+      .from('ethscriptions' + this.suffix)
       .select('*')
       .eq('sha', sha);
 
     const { data, error } = response;
 
     if (error) throw error;
-    if (!data.length) return false;
+    if (!data?.length) return false;
     return true;
   }
 
-  async checkEthPhunkExistsByHashId(hash: string): Promise<Phunk> {
-    const response: PhunkResponse = await supabase
-      .from('phunks' + this.suffix)
+  async checkEthscriptionExistsByHashId(hash: string): Promise<Ethscription> {
+    const response: EthscriptionResponse = await supabase
+      .from('ethscriptions' + this.suffix)
       .select('*')
       .eq('hashId', hash.toLowerCase());
 
@@ -171,20 +174,64 @@ export class SupabaseService {
   async addEthPhunk(
     txn: Transaction,
     createdAt: Date,
-    phunkId: number,
-    sha: string
+    phunkShaData: PhunkSha
   ): Promise<void> {
-    const response: PhunkResponse = await supabase
-      .from('phunks' + this.suffix)
+
+    const stringData = hexToString(txn.input.toString() as `0x${string}`);
+    const cleanedString = stringData.replace(/\x00/g, '');
+
+    // Get or create the users
+    await Promise.all([
+      this.getOrCreateUser(txn.from, createdAt),
+      this.getOrCreateUser(txn.to, createdAt)
+    ]);
+
+    const response: EthscriptionResponse = await supabase
+      .from('ethscriptions' + this.suffix)
       .insert([
         {
           createdAt,
           creator: txn.from.toLowerCase(),
           owner: txn.to.toLowerCase(),
           hashId: txn.hash.toLowerCase(),
-          data: txn.input,
-          sha,
-          phunkId,
+          data: cleanedString,
+          sha: phunkShaData.sha,
+          collectionSlug: 'etherphunks',
+          tokenId: phunkShaData.phunkId,
+        },
+      ]);
+
+    const { error } = response;
+    if (error) throw error.message;
+  }
+
+  async addCurated(
+    txn: Transaction,
+    createdAt: Date,
+    curatedItem: CuratedItem
+  ): Promise<void> {
+
+    const stringData = hexToString(txn.input?.toString() as `0x${string}`);
+    const cleanedString = stringData.replace(/\x00/g, '');
+
+    // Get or create the users
+    await Promise.all([
+      this.getOrCreateUser(txn.from, createdAt),
+      this.getOrCreateUser(txn.to, createdAt)
+    ]);
+
+    const response: EthscriptionResponse = await supabase
+      .from('ethscriptions' + this.suffix)
+      .insert([
+        {
+          createdAt,
+          creator: txn.from.toLowerCase(),
+          owner: txn.to.toLowerCase(),
+          hashId: txn.hash.toLowerCase(),
+          data: cleanedString,
+          sha: curatedItem.sha,
+          collectionSlug: curatedItem.collectionSlug,
+          tokenId: curatedItem.tokenId,
         },
       ]);
 
@@ -197,20 +244,24 @@ export class SupabaseService {
     from: string,
     to: string,
     hashId: string,
-    phunkId: number,
     type: EventType,
     createdAt: Date,
     value: bigint,
     logIndex: number
   ): Promise<void> {
+    // Get or create the users
+    await Promise.all([
+      this.getOrCreateUser(from, createdAt),
+      this.getOrCreateUser(to, createdAt),
+    ]);
+
     const txId = `${txn.hash.toLowerCase()}-${logIndex}`;
-    const response: PhunkResponse = await supabase
+    const response: EthscriptionResponse = await supabase
       .from('events' + this.suffix)
       .upsert({
         txId,
         blockTimestamp: createdAt,
         type,
-        phunkId,
         value: value.toString(),
         hashId: hashId.toLowerCase(),
         from: from.toLowerCase(),
@@ -228,49 +279,22 @@ export class SupabaseService {
     Logger.log('Event created', txn.hash.toLowerCase());
   }
 
-  async addEvents(data: {
-    txn: Transaction,
-    fromAddress: string,
-    toAddress: string,
-    hashId: string,
-    phunkId: number,
-    eventName: EventType,
-    createdAt: Date,
-    value: bigint,
-    logIndex: number
-  }[]) {
-    const rows = data.map((event) => {
-      const txId = `${event.txn.hash.toLowerCase()}-${event.logIndex}`;
-      return {
-        txId,
-        blockTimestamp: event.createdAt,
-        type: event.eventName,
-        phunkId: event.phunkId,
-        value: event.value.toString(),
-        hashId: event.hashId.toLowerCase(),
-        from: event.fromAddress.toLowerCase(),
-        to: (event.toAddress || zeroAddress).toLowerCase(),
-        blockNumber: Number(event.txn.blockNumber),
-        blockHash: event.txn.blockHash.toLowerCase(),
-        txIndex: Number(event.txn.transactionIndex),
-        txHash: event.txn.hash.toLowerCase(),
-      };
-    });
-
+  async addEvents(events: Event[]): Promise<void> {
     const response: EventResponse = await supabase
       .from('events' + this.suffix)
-      .upsert(rows, {
+      .upsert(events, {
         ignoreDuplicates: true,
       });
 
     const { error } = response;
-    if (error) Logger.error(error.message, data[0].txn.hash.toLowerCase());
+    if (error) throw error.message;
+    Logger.log(`${events.length} events created`, `Block ${events[0].blockNumber.toString()}`);
   }
 
-  async addSha(phunkId: string, sha: string): Promise<Sha> {
+  async addSha(phunkId: string, sha: string): Promise<PhunkSha> {
     const response: ShaResponse = await supabase
-      .from('shas' + this.suffix)
-      .insert({ id: phunkId, sha, phunkId });
+      .from('phunk_shas' + this.suffix)
+      .insert({ sha, phunkId });
 
     const { data, error } = response;
 
@@ -279,6 +303,7 @@ export class SupabaseService {
   }
 
   async getOrCreateUser(address: string, createdAt?: Date): Promise<User> {
+    if (!address) return null;
     address = address.toLowerCase();
 
     const response: UserResponse = await supabase
@@ -293,7 +318,7 @@ export class SupabaseService {
 
     const newUserResponse: UserResponse = await supabase
       .from('users' + this.suffix)
-      .insert({ address, createdAt: new Date() })
+      .insert({ address, createdAt: createdAt || new Date() })
       .select();
 
     const { data: newUser, error: newError } = newUserResponse;
@@ -307,13 +332,17 @@ export class SupabaseService {
   // Updates /////////////////////////////////////////////////////////////////////
   ////////////////////////////////////////////////////////////////////////////////
 
-  async updateEthPhunkOwner(
+  async updateEthscriptionOwner(
     hashId: string,
     prevOwner: string,
     newOwner: string
   ): Promise<void> {
-    const response: PhunkResponse = await supabase
-      .from('phunks' + this.suffix)
+
+    // Get or create the users
+    await this.getOrCreateUser(newOwner);
+
+    const response: EthscriptionResponse = await supabase
+      .from('ethscriptions' + this.suffix)
       .update({
         owner: newOwner.toLowerCase(),
         prevOwner: prevOwner.toLowerCase(),
@@ -328,7 +357,7 @@ export class SupabaseService {
     const response: EventResponse = await supabase
       .from('events' + this.suffix)
       .update(data)
-      .eq('id', eventId);
+      .eq('txId', eventId);
 
     const { error } = response;
     if (error) throw error;
@@ -454,11 +483,11 @@ export class SupabaseService {
   // Gets ////////////////////////////////////////////////////////////////////////
   ////////////////////////////////////////////////////////////////////////////////
 
-  async getPhunkById(phunkId: string): Promise<Phunk> {
-    const response: PhunkResponse = await supabase
-      .from('phunks' + this.suffix)
+  async getEthscriptionByTokenId(tokenId: string): Promise<Ethscription> {
+    const response: EthscriptionResponse = await supabase
+      .from('ethscriptions' + this.suffix)
       .select('*')
-      .eq('phunkId', phunkId);
+      .eq('tokenId', tokenId);
 
     const { data, error } = response;
 
@@ -486,9 +515,9 @@ export class SupabaseService {
 
     while (hasMore) {
       const { data, error } = await supabase
-        .from('phunks' + this.suffix)
+        .from('ethscriptions' + this.suffix)
         .select('hashId')
-        .order('phunkId', { ascending: true })
+        .order('tokenId', { ascending: true })
         .range(page * pageSize, (page + 1) * pageSize - 1);
 
       if (error) {
@@ -563,6 +592,23 @@ export class SupabaseService {
     // console.log('Merkle Root:', tree.root);
 
     // await writeFile('tree.json', JSON.stringify(cleanPhunks));
+  }
+
+  ////////////////////////////////////////////////////////////////////////////////
+  // Images //////////////////////////////////////////////////////////////////////
+  ////////////////////////////////////////////////////////////////////////////////
+
+  async uploadFile(curatedData: CuratedItem): Promise<void> {
+    const imageBlob = this.utilSvc.dataURLtoBuffer(curatedData.image);
+    const fileName = `${curatedData.collectionSlug}_${curatedData.tokenId}.png`;
+
+    const { data, error } = await supabase
+      .storage.from('images')
+      .upload(fileName, imageBlob)
+
+    if (error) {
+      Logger.error('Error uploading image:', error);
+    }
   }
 }
 

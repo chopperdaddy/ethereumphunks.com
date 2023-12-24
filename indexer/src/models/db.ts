@@ -1,7 +1,7 @@
 import { PostgrestError } from '@supabase/supabase-js';
 
-export interface PhunkResponse {
-  data: Phunk[];
+export interface EthscriptionResponse {
+  data: Ethscription[];
   error: PostgrestError | null;
 }
 
@@ -11,7 +11,7 @@ export interface EventResponse {
 }
 
 export interface ShaResponse {
-  data: Sha[];
+  data: PhunkSha[];
   error: PostgrestError | null;
 }
 
@@ -49,36 +49,45 @@ export interface Bid {
   fromAddress: string;
 }
 
-export interface Phunk {
-  id: number;
+export interface Ethscription {
+  hashId: string;
   createdAt: string | null;
   creator: string | null;
   owner: string | null;
-  prevOwner: string | null;
-  hashId: string;
   sha: string;
-  phunkId: number | null;
-  data: string | null;
-  ethscriptionNumber: number | null;
+  tokenId: number | null;
+  ethscriptionNumber?: number | null;
+  prevOwner?: string | null;
+  collectionSlug?: string | null;
+  data?: string | null;
 }
 
 export interface Event {
+  txId: string;
   type: EventType;
   hashId: string | null;
   from: string | null;
   to: string | null;
   blockHash: string | null;
-  txIndex: string | null;
+  txIndex: number | null;
   txHash: string;
-  phunkId: number | null;
   blockNumber: number | null;
-  blockTimestamp: string | null;
+  blockTimestamp: Date | null;
+  value: string | null;
 }
 
-export interface Sha {
-  id: number;
+export interface PhunkSha {
   sha: string | null;
-  phunkId: string | null;
+  phunkId: number;
+}
+
+export interface CuratedItem {
+  name: string;
+  image: string;
+  attributes: {k: string, v: string}[];
+  collectionSlug: string;
+  tokenId: number | null;
+  sha: string;
 }
 
 export interface User {

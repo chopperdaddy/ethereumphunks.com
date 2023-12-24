@@ -5,9 +5,6 @@ import { goerli, mainnet } from 'viem/chains';
 
 import punkDataAbi from '../abi/PunkData.json';
 import pointsAbi from '../abi/Points.json';
-import { etherPhunksMarketAbi } from '../abi/EtherPhunksMarket';
-
-import { StandardMerkleTree } from '@openzeppelin/merkle-tree';
 
 import dotenv from 'dotenv';
 dotenv.config();
@@ -41,12 +38,14 @@ export class Web3Service {
     const createdAt = new Date(ts * 1000);
 
     const txArray = block.transactions.filter((txn) => txn.input !== '0x');
-    const txns = await Promise.all(txArray.map(async (tx) => {
-      return {
-        transaction: tx,
-        receipt: await this.client.getTransactionReceipt({ hash: tx.hash }),
-      };
-    }));
+    const txns = await Promise.all(
+      txArray.map(async (tx) => {
+        return {
+          transaction: tx,
+          receipt: await this.client.getTransactionReceipt({ hash: tx.hash }),
+        };
+      })
+    );
 
     return { txns, createdAt };
   }

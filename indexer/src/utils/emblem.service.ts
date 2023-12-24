@@ -26,7 +26,7 @@ export class EmblemService {
 
     for (let i = 0; i < 10000; i++) {
       try {
-        const phunk = await this.sbSvc.getPhunkById(`${i}`);
+        const phunk = await this.sbSvc.getEthscriptionByTokenId(`${i}`);
         const id = phunk.hashId;
 
         const attributes = attributesObj[i]

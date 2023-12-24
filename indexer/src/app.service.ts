@@ -34,7 +34,7 @@ export class AppService {
       await this.utilSvc.delay(3000);
 
       const jobs = await this.blockSvc.getJobCounts();
-      console.log(jobs);
+      // console.log(jobs);
 
       await this.blockSvc.pauseQueue();
 
