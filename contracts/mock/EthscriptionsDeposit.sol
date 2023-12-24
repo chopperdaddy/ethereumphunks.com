@@ -5,7 +5,7 @@ import "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
 import "@openzeppelin/contracts/utils/Pausable.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
-import "./EthscriptionsEscrower.sol";
+import "../contracts/EthscriptionsEscrower.sol";
 
 contract EthscriptionsDepositooor is EthscriptionsEscrower, Ownable, Pausable {
 
