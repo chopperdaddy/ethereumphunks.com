@@ -37,13 +37,15 @@
       justify-content: space-between;
 
       .crumbs {
-        a {
+        button {
           padding: 0 1rem 0 0;
 
           font-weight: 300;
           font-size: 1.8rem;
           color: rgba(var(--highlight), 1);
           text-decoration: none;
+
+          background: none;
         }
 
         .number {

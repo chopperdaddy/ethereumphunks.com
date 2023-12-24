@@ -1,6 +1,6 @@
 import { DataState } from './data.state';
 import { Phunk } from './db';
-import { MarketTypes, Sort, Sorts } from './pipes';
+import { MarketType, Sort, Sorts } from './pipes';
 import { Theme } from './theme';
 
 export interface GlobalState {
@@ -25,45 +25,74 @@ export interface AppState {
   activeTraitFilters: TraitFilter;
   eventTypeFilter: EventType;
 
-  scrollPositions: { [navigationId: number]: number },
+  scrollPositions: { [navigationId: number]: number };
 
-  marketType: MarketTypes;
+  marketType: MarketType;
+  marketSlug: string;
+
   activeSort: Sort;
-  // activeFilters: any;
 
   blockNumber: number;
-  transactions: Transaction[];
+  notifications: Notification[];
   cooldowns: Cooldown[];
 
   notifHoverState: { [notificationId: string]: boolean };
-};
+}
 
 export interface Cooldown {
-  phunkId: number;
+  hashId: string;
   startBlock: number;
 }
 
-export interface Transaction {
+export interface Notification {
   id: number;
+  slug?: string;
+
   type: 'wallet' | 'pending' | 'complete' | 'error' | 'event';
   function: TxFunction;
 
-  phunkId: number;
+  hashId: string;
+  tokenId?: number | null;
 
   isBatch?: boolean;
-  phunkIds?: number[];
+  hashIds?: string[];
 
   isNotification?: boolean;
   dismissed?: boolean;
 
   hash?: string | null;
   detail?: any;
-};
+  value?: number | null;
+}
 
-export type TxFunction = 'sendToEscrow' | 'phunkNoLongerForSale' | 'offerPhunkForSale' | 'withdrawBidForPhunk' | 'acceptBidForPhunk' | 'buyPhunk' | 'enterBidForPhunk' | 'transferPhunk' | 'withdrawPhunk' | 'purchased';
+export type TxFunction =
+  | 'sendToEscrow'
+  | 'phunkNoLongerForSale'
+  | 'offerPhunkForSale'
+  | 'withdrawBidForPhunk'
+  | 'acceptBidForPhunk'
+  | 'buyPhunk'
+  | 'enterBidForPhunk'
+  | 'transferPhunk'
+  | 'withdrawPhunk'
+  | 'purchased';
 
-export interface TraitFilter { [key: string]: string };
+export interface TraitFilter {
+  [key: string]: string;
+}
 
-export interface TxFilterItem { label: string, value: EventType };
+export interface TxFilterItem {
+  label: string;
+  value: EventType;
+}
 
-export type EventType = 'All' | 'created' | 'transfer' | 'escrow' | 'PhunkOffered' | 'PhunkBidEntered' | 'PhunkBidWithdrawn' | 'PhunkBought' | 'PhunkOfferWithdrawn';
+export type EventType =
+  | 'All'
+  | 'created'
+  | 'transfer'
+  | 'escrow'
+  | 'PhunkOffered'
+  | 'PhunkBidEntered'
+  | 'PhunkBidWithdrawn'
+  | 'PhunkBought'
+  | 'PhunkOfferWithdrawn';

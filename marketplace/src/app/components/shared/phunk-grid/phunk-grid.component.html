@@ -32,6 +32,7 @@
   }
 
   <ng-template #phunkItem let-phunk let-i="index">
+
     <div
       class="item"
       (waIntersectionObservee)="onIntersection($event)"
@@ -60,17 +61,18 @@
 
       <a
         class="item-link"
-        [routerLink]="['/', 'details', phunk.tokenId]">
+        [routerLink]="['/', 'details', phunk.hashId]">
 
         <div class="image-wrapper">
+          <!-- dataSvc.staticUrl + '/images/phunk' + (phunk.tokenId | tokenIdParse) + '.png' -->
           <img
-            [lazyLoad]="dataSvc.staticUrl + '/images/phunk' + (phunk.tokenId | tokenIdParse) + '.svg'"
+            [lazyLoad]="phunk | imagePipe"
             [defaultImage]="'assets/loadingphunk.png'"
             width="50"
             height="50"
           />
         </div>
-
+        <!-- {{ phunk.slug }} -->
         @if (showLabels && viewType === 'market') {
           <div class="labels-wrapper">
             <div class="label">#{{ phunk.tokenId }}</div>

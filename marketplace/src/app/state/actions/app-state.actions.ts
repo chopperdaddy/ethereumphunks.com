@@ -2,8 +2,8 @@ import { Phunk } from '@/models/db';
 
 import { createAction, props } from '@ngrx/store';
 
-import { MarketTypes, Sort, Sorts } from '@/models/pipes';
-import { AppState, EventType, Transaction } from '@/models/global-state';
+import { MarketType, Sort } from '@/models/pipes';
+import { AppState, EventType, Notification } from '@/models/global-state';
 
 export const setConnected = createAction(
   '[App State] Set Wallet Connected',
@@ -35,7 +35,12 @@ export const setEventTypeFilter = createAction(
 
 export const setMarketType = createAction(
   '[Market] Set Market Type',
-  props<{ marketType: MarketTypes }>()
+  props<{ marketType: MarketType }>()
+);
+
+export const setMarketSlug = createAction(
+  '[Market] Set Market slug',
+  props<{ marketSlug: AppState['marketSlug'] }>()
 );
 
 export const setActiveSort = createAction(
@@ -82,23 +87,23 @@ export const setTheme = createAction(
   props<{ theme: AppState['theme'] }>()
 );
 
-export const clearTransactions = createAction(
-  '[App State] Clear Transactions',
+export const clearNotifications = createAction(
+  '[App State] Clear Notifications',
 );
 
-export const upsertTransaction = createAction(
-  '[App State] Upsert Transaction',
-  props<{ transaction: Transaction }>()
+export const upsertNotification = createAction(
+  '[App State] Upsert Notification',
+  props<{ notification: Notification }>()
 );
 
-export const removeTransaction = createAction(
-  '[App State] Remove Transaction',
-  props<{ txId: Transaction['id'] }>()
+export const removeNotification = createAction(
+  '[App State] Remove Notification',
+  props<{ txId: Notification['id'] }>()
 );
 
-export const setTransactions = createAction(
-  '[App State] Set Transactions',
-  props<{ transactions: Transaction[] }>()
+export const setNotifications = createAction(
+  '[App State] Set Notifications',
+  props<{ notifications: Notification[] }>()
 );
 
 export const setIsMobile = createAction(
@@ -122,7 +127,7 @@ export const addCooldown = createAction(
 
 export const removeCooldown = createAction(
   '[App State] Remove Cooldown',
-  props<{ phunkId: number }>()
+  props<{ hashId: string }>()
 );
 
 export const newBlock = createAction(

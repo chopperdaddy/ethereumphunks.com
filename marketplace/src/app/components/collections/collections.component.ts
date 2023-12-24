@@ -4,6 +4,7 @@ import { DataService } from '@/services/data.service';
 import { AsyncPipe, NgTemplateOutlet } from '@angular/common';
 import { map, tap } from 'rxjs';
 import { RouterLink } from '@angular/router';
+import { PhunkGridComponent } from '../shared/phunk-grid/phunk-grid.component';
 
 @Component({
   selector: 'app-collections',
@@ -11,14 +12,16 @@ import { RouterLink } from '@angular/router';
   imports: [
     AsyncPipe,
     NgTemplateOutlet,
-    RouterLink
+    RouterLink,
+
+    PhunkGridComponent
   ],
   templateUrl: './collections.component.html',
   styleUrl: './collections.component.scss'
 })
 export class CollectionsComponent {
 
-  collections$ = this.dataSvc.fetchCollections().pipe(
+  collections$ = this.dataSvc.fetchCollectionsWithAssets().pipe(
     tap(collections => console.log(collections)),
   );
 

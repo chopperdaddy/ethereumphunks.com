@@ -46,7 +46,7 @@ export class HeaderComponent {
   activeMultiplier$ = this.store.select(appStateSelectors.selectActiveMultiplier);
   menuActive$ = this.store.select(appStateSelectors.selectMenuActive);
   theme$ = this.store.select(appStateSelectors.selectTheme);
-  notifications$ = this.store.select(appStateSelectors.selectTransactions).pipe(
+  notifications$ = this.store.select(appStateSelectors.selectNotifications).pipe(
     map((res) => res.filter((tx) => !tx.dismissed && tx.isNotification).length),
   );
 

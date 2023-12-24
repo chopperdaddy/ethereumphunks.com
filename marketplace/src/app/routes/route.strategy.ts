@@ -8,7 +8,7 @@ export class CustomReuseStrategy implements RouteReuseStrategy {
 
   shouldDetach(route: ActivatedRouteSnapshot): boolean {
     const path = route.routeConfig?.path;
-    return path === ''; // || !!path?.startsWith('details');
+    return path === '' || path === 'curated/:slug';
   }
 
   store(route: ActivatedRouteSnapshot, handle: DetachedRouteHandle): void {

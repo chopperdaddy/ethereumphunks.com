@@ -6,11 +6,10 @@ export const environment = {
   explorerUrl: 'https://goerli.etherscan.io',
 
   pointsAddress: '0x8974D44dAD885699155c17934E6d33135d85380F'.toLowerCase(),
-  marketAddress: '0x53A699992a217C6a802A8986634064De2E213E1C'.toLowerCase(),
+  marketAddress: '0x4BF1499Ade02e7270De34F097Eafd6C374b4d1F3'.toLowerCase(),
   auctionAddress: '0xc6a824D8cce7c946A3F35879694b9261A36fc823'.toLowerCase(),
   donationsAddress: '0x5795Af0D8eD22a8C013031B355b5F472867D345F'.toLowerCase(),
-
-  staticUrl: 'https://punkcdn.com/data',
+  staticUrl: 'https://kcbuycbhynlmsrvoegzp.supabase.co/storage/v1/object/public',
 
   // Local
   // supabaseUrl: 'http://localhost:8000',

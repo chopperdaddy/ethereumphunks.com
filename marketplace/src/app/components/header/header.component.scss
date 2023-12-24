@@ -244,12 +244,8 @@
     }
 
     &.active {
-      // background-color: rgba(var(--base-color), 0);
-
       .connect-menu {
-
         button {
-
           &.multiplier {
             opacity: 0;
             pointer-events: none;
@@ -290,11 +286,28 @@
 
       .user-tools {
         padding: 0;
+
         .connect-menu {
           position: relative;
 
-          a {
+          button {
 
+            &.points {
+              font-size: 1.2rem;
+            }
+
+            &.menu {
+              padding: .5rem;
+            }
+
+            &.multiplier {
+              position: fixed;
+              top: calc(var(--header-height) + 1rem);
+              right: 1.5rem;
+            }
+          }
+
+          a {
             app-address {
               font-size: 1rem;
             }

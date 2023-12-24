@@ -71,31 +71,35 @@
     }
   }
 
-  .grid {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
+  app-phunk-grid {
 
-    .item {
-      display: flex;
-      align-items: flex-end;
-      justify-content: center;
-
-      background-color: rgba(var(--pink), 1);
-
-      .item-image {
-        width: 6rem;
-        height: 6rem;
-
-        img {
-          display: block;
-          width: 100%;
-          height: 100%;
-          object-fit: cover;
-          image-rendering: pixelated;
-        }
-      }
-    }
   }
+
+  // .grid {
+  //   display: grid;
+  //   grid-template-columns: repeat(5, 1fr);
+
+  //   .item {
+  //     display: flex;
+  //     align-items: flex-end;
+  //     justify-content: center;
+
+  //     background-color: rgba(var(--pink), 1);
+
+  //     .item-image {
+  //       width: 6rem;
+  //       height: 6rem;
+
+  //       img {
+  //         display: block;
+  //         width: 100%;
+  //         height: 100%;
+  //         object-fit: cover;
+  //         image-rendering: pixelated;
+  //       }
+  //     }
+  //   }
+  // }
 
   &:last-child {
     margin-right: 0;

@@ -17,7 +17,7 @@ import { WalletAddressDirective } from '@/directives/wallet-address.directive';
 import { Sorts } from '@/models/pipes';
 import { TokenIdParsePipe } from '@/pipes/token-id-parse.pipe';
 
-import { GlobalState } from '@/models/global-state';
+import { GlobalState, Notification } from '@/models/global-state';
 import { Phunk } from '@/models/db';
 
 import { DataService } from '@/services/data.service';
@@ -215,64 +215,48 @@ export class MarketComponent {
     canTransfer.forEach((phunk: Phunk) => selected[phunk.hashId] = phunk);
     this.selected = selected;
 
-    const phunkIds = Object.values(selected).map((phunk: Phunk) => phunk.tokenId);
+    const hashIds = Object.values(selected).map((phunk: Phunk) => phunk.hashId);
     const hexString = Object.keys(selected).map(hashId => hashId?.substring(2)).join('');
 
     const hex = `0x${hexString}`;
     if (hex === '0x') return;
 
+    let notification: Notification = {
+      id: Date.now(),
+      type: 'wallet',
+      function: 'sendToEscrow',
+      hashId: hashIds[0],
+      hashIds,
+      isBatch: true,
+    }
+
     try {
-      this.store.dispatch(appStateActions.upsertTransaction({
-        transaction: {
-          id: Date.now(),
-          type: 'wallet',
-          function: 'sendToEscrow',
-          phunkId: phunkIds[0],
-          phunkIds,
-          isBatch: true,
-        }
-      }));
+      this.store.dispatch(appStateActions.upsertNotification({ notification }));
 
       const hash = await this.web3Svc.transferPhunk(hex, this.escrowAddress);
-
-      this.store.dispatch(appStateActions.upsertTransaction({
-        transaction: {
-          id: Date.now(),
-          type: 'pending',
-          function: 'sendToEscrow',
-          phunkId: phunkIds[0],
-          phunkIds,
-          isBatch: true,
-          hash,
-        }
-      }));
+      notification = {
+        ...notification,
+        type: 'pending',
+        hash,
+      };
+      this.store.dispatch(appStateActions.upsertNotification({ notification }));
 
       const receipt = await this.web3Svc.pollReceipt(hash!);
-      this.store.dispatch(appStateActions.upsertTransaction({
-        transaction: {
-          id: Date.now(),
-          type: 'complete',
-          function: 'sendToEscrow',
-          phunkId: phunkIds[0],
-          phunkIds,
-          isBatch: true,
-          hash: receipt.transactionHash,
-        }
-      }));
+      notification = {
+        ...notification,
+        type: 'complete',
+        hash: receipt.transactionHash,
+      };
+      this.store.dispatch(appStateActions.upsertNotification({ notification }));
       this.clearSelectedAndClose();
     } catch (err) {
       console.log(err);
-      this.store.dispatch(appStateActions.upsertTransaction({
-        transaction: {
-          id: Date.now(),
-          type: 'error',
-          function: 'sendToEscrow',
-          phunkId: phunkIds[0],
-          phunkIds,
-          isBatch: true,
-          detail: err,
-        }
-      }));
+      notification = {
+        ...notification,
+        type: 'error',
+        detail: err,
+      };
+      this.store.dispatch(appStateActions.upsertNotification({ notification }));
     }
   }
 
@@ -286,60 +270,44 @@ export class MarketComponent {
     inEscrow.forEach((phunk: Phunk) => selected[phunk.hashId] = phunk);
     this.selected = selected;
 
-    const phunkIds = Object.values(selected).map((phunk: Phunk) => phunk.tokenId);
+    const hashIds = Object.values(selected).map((phunk: Phunk) => phunk.hashId);
+
+    let notification: Notification = {
+      id: Date.now(),
+      type: 'wallet',
+      function: 'withdrawPhunk',
+      hashId: hashIds[0],
+      hashIds,
+      isBatch: true,
+    };
 
     try {
-      this.store.dispatch(appStateActions.upsertTransaction({
-        transaction: {
-          id: Date.now(),
-          type: 'wallet',
-          function: 'withdrawPhunk',
-          phunkId: phunkIds[0],
-          phunkIds,
-          isBatch: true,
-        }
-      }));
+      this.store.dispatch(appStateActions.upsertNotification({ notification }));
 
       const hash = await this.web3Svc.withdrawBatch(Object.keys(selected));
-
-      this.store.dispatch(appStateActions.upsertTransaction({
-        transaction: {
-          id: Date.now(),
-          type: 'pending',
-          function: 'withdrawPhunk',
-          phunkId: phunkIds[0],
-          phunkIds,
-          isBatch: true,
-          hash,
-        }
-      }));
+      notification = {
+        ...notification,
+        type: 'pending',
+        hash,
+      };
+      this.store.dispatch(appStateActions.upsertNotification({ notification }));
 
       const receipt = await this.web3Svc.pollReceipt(hash!);
-      this.store.dispatch(appStateActions.upsertTransaction({
-        transaction: {
-          id: Date.now(),
-          type: 'complete',
-          function: 'withdrawPhunk',
-          phunkId: phunkIds[0],
-          phunkIds,
-          isBatch: true,
-          hash: receipt.transactionHash,
-        }
-      }));
+      notification = {
+        ...notification,
+        type: 'complete',
+        hash: receipt.transactionHash,
+      };
+      this.store.dispatch(appStateActions.upsertNotification({ notification }));
       this.clearSelectedAndClose();
     } catch (err) {
       console.log(err);
-      this.store.dispatch(appStateActions.upsertTransaction({
-        transaction: {
-          id: Date.now(),
-          type: 'error',
-          function: 'withdrawPhunk',
-          phunkId: phunkIds[0],
-          phunkIds,
-          isBatch: true,
-          detail: err,
-        }
-      }));
+      notification = {
+        ...notification,
+        type: 'error',
+        detail: err,
+      };
+      this.store.dispatch(appStateActions.upsertNotification({ notification }));
     }
   }
 
@@ -361,76 +329,56 @@ export class MarketComponent {
 
     if (!this.bulkListingForm.value.listingPhunks) return;
     const hashIds = this.bulkListingForm.value.listingPhunks.map((phunk: any) => phunk.hashId);
-    const phunkIds = this.bulkListingForm.value.listingPhunks.map((phunk: any) => phunk.phunkId as number) || [];
 
     if (!hashIds?.length) return;
     if (!this.transferAddress.value) return;
+
+    let notification: Notification = {
+      id: Date.now(),
+      type: 'wallet',
+      function: 'transferPhunk',
+      hashId: hashIds[0],
+      hashIds,
+      isBatch: true,
+    };
 
     try {
       let toAddress: string | null = this.transferAddress.value;
       toAddress = await this.web3Svc.verifyAddressOrEns(toAddress);
       if (!toAddress) throw new Error('Invalid address');
 
-      this.store.dispatch(appStateActions.upsertTransaction({
-        transaction: {
-          id: Date.now(),
-          type: 'wallet',
-          function: 'transferPhunk',
-          phunkId: phunkIds[0],
-          phunkIds,
-          isBatch: true,
-        }
-      }));
+      this.store.dispatch(appStateActions.upsertNotification({ notification }));
 
       this.closeModal();
 
       const hash = await this.web3Svc.batchTransferPhunks(hashIds, toAddress);
-
-      this.store.dispatch(appStateActions.upsertTransaction({
-        transaction: {
-          id: Date.now(),
-          type: 'pending',
-          function: 'transferPhunk',
-          phunkId: phunkIds[0],
-          phunkIds,
-          isBatch: true,
-          hash,
-        }
-      }));
+      notification = {
+        ...notification,
+        type: 'pending',
+        hash,
+      };
+      this.store.dispatch(appStateActions.upsertNotification({ notification }));
 
       const receipt = await this.web3Svc.pollReceipt(hash!);
-      // this.setTransactionCompleteMessage(receipt);
-      this.store.dispatch(appStateActions.upsertTransaction({
-        transaction: {
-          id: Date.now(),
-          type: 'complete',
-          function: 'transferPhunk',
-          phunkId: phunkIds[0],
-          phunkIds,
-          isBatch: true,
-          hash: receipt.transactionHash,
-        }
-      }));
+      notification = {
+        ...notification,
+        type: 'complete',
+        hash: receipt.transactionHash,
+      };
+      this.store.dispatch(appStateActions.upsertNotification({ notification }));
       this.clearSelectedAndClose();
     } catch (err) {
       console.log(err);
-
-      this.store.dispatch(appStateActions.upsertTransaction({
-        transaction: {
-          id: Date.now(),
-          type: 'error',
-          function: 'transferPhunk',
-          phunkId: phunkIds[0],
-          phunkIds,
-          isBatch: true,
-          detail: err,
-        }
-      }));
+      notification = {
+        ...notification,
+        type: 'error',
+        detail: err,
+      };
+      this.store.dispatch(appStateActions.upsertNotification({ notification }));
     }
   }
 
   async submitBatchListing(): Promise<void> {
-
     if (!this.bulkListingForm.value.listingPhunks) return;
 
     const newListings = this.bulkListingForm.value.listingPhunks
@@ -439,68 +387,51 @@ export class MarketComponent {
     if (!newListings.length) return;
 
     const listings = newListings.map((phunk: any) => ({ hashId: phunk.hashId, listPrice: phunk.listPrice }))|| [];
-    const phunkIds = newListings.map((phunk: any) => phunk.phunkId as number) || [];
+    const hashIds = newListings.map((phunk: any) => phunk.hashId) || [];
+
+    if (!hashIds?.length) return;
+
+    let notification: Notification = {
+      id: Date.now(),
+      type: 'wallet',
+      function: 'offerPhunkForSale',
+      hashId: hashIds[0],
+      hashIds,
+      isBatch: true,
+    };
 
     try {
-      this.store.dispatch(appStateActions.upsertTransaction({
-        transaction: {
-          id: Date.now(),
-          type: 'wallet',
-          function: 'offerPhunkForSale',
-          phunkId: phunkIds[0],
-          phunkIds,
-          isBatch: true,
-        }
-      }));
-
+      this.store.dispatch(appStateActions.upsertNotification({ notification }));
       this.closeModal();
 
       const hash = await this.web3Svc.batchOfferPhunkForSale(
         listings.map(phunk => phunk.hashId),
         listings.map(phunk => phunk.listPrice)
       );
-
-      this.store.dispatch(appStateActions.upsertTransaction({
-        transaction: {
-          id: Date.now(),
-          type: 'pending',
-          function: 'offerPhunkForSale',
-          phunkId: phunkIds[0],
-          phunkIds,
-          isBatch: true,
-          hash,
-        }
-      }));
+      notification = {
+        ...notification,
+        type: 'pending',
+        hash,
+      };
+      this.store.dispatch(appStateActions.upsertNotification({ notification }));
 
       const receipt = await this.web3Svc.pollReceipt(hash!);
-      // this.setTransactionCompleteMessage(receipt);
-      this.store.dispatch(appStateActions.upsertTransaction({
-        transaction: {
-          id: Date.now(),
-          type: 'complete',
-          function: 'offerPhunkForSale',
-          phunkId: phunkIds[0],
-          phunkIds,
-          isBatch: true,
-          hash: receipt.transactionHash,
-        }
-      }));
+      notification = {
+        ...notification,
+        type: 'complete',
+        hash: receipt.transactionHash,
+      };
+      this.store.dispatch(appStateActions.upsertNotification({ notification }));
 
       this.clearSelectedAndClose();
     } catch (err) {
       console.log(err);
-
-      this.store.dispatch(appStateActions.upsertTransaction({
-        transaction: {
-          id: Date.now(),
-          type: 'error',
-          function: 'offerPhunkForSale',
-          phunkId: phunkIds[0],
-          phunkIds,
-          isBatch: true,
-          detail: err,
-        }
-      }));
+      notification = {
+        ...notification,
+        type: 'error',
+        detail: err,
+      };
+      this.store.dispatch(appStateActions.upsertNotification({ notification }));
     }
   }
 

@@ -17,9 +17,11 @@ import { WeiToEthPipe } from '@/pipes/wei-to-eth.pipe';
 import { CalcPipe } from '@/pipes/calculate.pipe';
 import { FormatCashPipe } from '@/pipes/format-cash.pipe';
 
-import { GlobalState, TxFilterItem } from '@/models/global-state';
+import { EventType, GlobalState, TxFilterItem } from '@/models/global-state';
 
 import * as dataStateSelectors from '@/state/selectors/data-state.selectors';
+import * as dataStateActions from '@/state/actions/data-state.actions';
+
 import * as appStateActions from '@/state/actions/app-state.actions';
 
 @Component({
@@ -58,19 +60,17 @@ export class RecentActivityComponent {
     // { label: 'Offer Withdrawn', value: 'PhunkOfferWithdrawn' },
   ];
 
-  _activeTxFilter: string = this.txFilters[0].value;
-  // private activeTxFilter = new BehaviorSubject<TxFilterItem>(this.txFilters[0]);
-  // activeTxFilter$ = this.activeTxFilter.asObservable();
+  _activeTxFilter: EventType = this.txFilters[0].value;
 
   labels: any = {
     PhunkBidEntered: 'New bid of',
     PhunkBidWithdrawn: 'Bid withdrawn',
-    // PhunkNoLongerForSale: 'Offer withdrawn',
     PhunkOffered: 'Offered for',
     PhunkBought: 'Bought for',
     transfer: 'Transferred to',
     created: 'Created by',
     // escrow: 'Escrowed by',
+    // PhunkNoLongerForSale: 'Offer withdrawn',
   };
 
   events$ = this.store.select(dataStateSelectors.selectEvents);
@@ -79,7 +79,9 @@ export class RecentActivityComponent {
   constructor(
     private store: Store<GlobalState>,
     public dataSvc: DataService
-  ) {}
+  ) {
+    this.store.dispatch(appStateActions.setEventTypeFilter({ eventTypeFilter: this._activeTxFilter }));
+  }
 
   trackByFn(i: number, item: any): string {
     return item.tokenId;
@@ -87,7 +89,5 @@ export class RecentActivityComponent {
 
   setActiveTxFilter(filter: TxFilterItem): void {
     this.store.dispatch(appStateActions.setEventTypeFilter({ eventTypeFilter: filter.value }));
-    // console.log('setActiveTxFilter', filter);
-    // this.activeTxFilter.next(filter);
   }
 }

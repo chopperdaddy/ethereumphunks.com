@@ -1,5 +1,13 @@
 import { Phunk } from './db';
 
+export interface Collection {
+  slug: string;
+  singleName: string;
+  name?: string;
+  description?: string;
+  image?: string;
+}
+
 export interface DataState {
   usd: number | null;
   events: any[] | null;
@@ -11,6 +19,9 @@ export interface DataState {
   ownedPhunks: Phunk[] | null;
   userOpenBids: Phunk[] | null;
   activeMarketRouteData: Phunk[] | null;
+
   txHistory: any[] | null;
   leaderboard: any[] | null;
+  collections: any[] | null;
+  activeCollection: Collection | null;
 }

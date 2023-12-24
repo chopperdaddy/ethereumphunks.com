@@ -19,6 +19,7 @@ export interface Auction {
 }
 
 export interface Phunk {
+  slug: string
   hashId: string
   tokenId: number
   createdAt: Date
@@ -35,6 +36,9 @@ export interface Phunk {
   bid?: Bid | null
 
   auction?: Auction | null
+
+  singleName?: string | null
+  collectionName?: string | null
 }
 
 export interface Bid {
@@ -51,7 +55,7 @@ export interface Event {
   from: string
   hashId: string
   id: number
-  phunkId: number | null
+  tokenId?: number | null
   to: string
   txHash: string
   txId: string

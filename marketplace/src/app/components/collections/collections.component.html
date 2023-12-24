@@ -15,15 +15,14 @@
         <ng-container *ngTemplateOutlet="menuIcon"></ng-container>
       </div>
     </a>
-    <div class="grid">
-      @for (asset of collection.ethscriptions_goerli; track $index) {
-        <div class="item">
-          <div class="item-image">
-            <img [src]="asset.data" />
-          </div>
-        </div>
-      }
-    </div>
+
+    <app-phunk-grid
+      [phunkData]="collection.previews || []"
+      [viewType]="'preview'"
+      [limit]="25"
+      [marketType]="'owned'"
+      [activeSort]="'price-low'"
+    />
   </div>
 }
 

@@ -6,6 +6,9 @@
     <app-recent-activity />
   </section>
 
+  <!-- {{ collectionSlug$ | async | json }}<br /><br />
+  {{ activeCollection$ | async | json }} -->
+
   @defer {
     @if ((ownedPhunks$ | async); as ownedData) {
       @if (ownedData.length) {
@@ -18,7 +21,7 @@
                 <p i18n>Showing owned EtherPhunks,
                   <a
                     class="highlight"
-                    [routerLink]="['/', 'market', 'owned']"
+                    [routerLink]="['market', 'owned']"
                     [queryParams]="{ address }">
 
                     ({{ ownedData.length | number }}) view all.
@@ -49,7 +52,7 @@
               <p i18n>The lowest price EtherPhunk currently for sale is <span class="bold">Ξ{{ ethPrice | number : '1.2-2' }} ({{ (ethPrice * ((usd$ | async) || 0)) | currency }} USD)</span>.</p>
             }
 
-            <p i18n>Showing lowest price offers, <a class="highlight" [routerLink]="['/', 'market', 'listings']">({{ listings.length | number }}) view all.</a></p>
+            <p i18n>Showing lowest price offers, <a class="highlight" [routerLink]="['market', 'listings']">({{ listings.length | number }}) view all.</a></p>
           </div>
         }
 
@@ -75,7 +78,7 @@
             @if ((bids | calc : 'totalBidsValue'); as ethPrice) {
               <p i18n>Total value of all current bids is <span class="bold">Ξ{{ ethPrice | number : '1.2-2' }} ({{ (ethPrice * ((usd$ | async) || 0)) | currency }} USD)</span>.</p>
             }
-            <p i18n>Showing top bids, <a class="highlight" [routerLink]="['/', 'market', 'bids']">({{ bids.length | number }}) view all.</a></p>
+            <p i18n>Showing top bids, <a class="highlight" [routerLink]="['market', 'bids']">({{ bids.length | number }}) view all.</a></p>
           </div>
         }
 
@@ -95,7 +98,7 @@
 
         @if ((allPhunks$ | async); as allPhunks) {
           <div class="section-stats-wrapper">
-            <p i18n><a class="highlight" [routerLink]="['/', 'market', 'all']">View all 10,000 EtherPhunks.</a></p>
+            <p i18n><a class="highlight" [routerLink]="['market', 'all']">View all 10,000 EtherPhunks.</a></p>
           </div>
         }
 

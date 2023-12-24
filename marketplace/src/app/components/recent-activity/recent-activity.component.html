@@ -21,10 +21,9 @@
         [routerLink]="['/', 'details', event.tokenId]"
         class="event-item"
         [class]="event.type | lowercase">
-
         <div class="image-wrapper">
           <img
-            [lazyLoad]="dataSvc.staticUrl + '/images/phunk' + (event.tokenId | tokenIdParse) + '.svg'"
+            [lazyLoad]="dataSvc.staticUrl + '/images/' + event.slug + '_' + event.tokenId + '.png'"
             [defaultImage]="'assets/loadingphunk.png'"
             width="160"
             height="160"

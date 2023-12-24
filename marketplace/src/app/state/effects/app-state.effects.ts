@@ -1,24 +1,21 @@
 import { Injectable } from '@angular/core';
 import { HttpParams } from '@angular/common/http';
 import { Location } from '@angular/common';
-import { Router } from '@angular/router';
 
 import { Store } from '@ngrx/store';
-import { ROUTER_NAVIGATION, getRouterSelectors } from '@ngrx/router-store';
+import { ROUTER_NAVIGATION, RouterNavigationAction, getRouterSelectors } from '@ngrx/router-store';
 
 import { Actions, createEffect, ofType } from '@ngrx/effects';
 
 import { Web3Service } from '@/services/web3.service';
 import { DataService } from '@/services/data.service';
 import { ThemeService } from '@/services/theme.service';
-import { NavigationTrackerService } from '@/services/nav.service';
 
-import { Phunk } from '@/models/db';
-import { MarketTypes } from '@/models/pipes';
+import { MarketType  } from '@/models/pipes';
 import { DataState } from '@/models/data.state';
-import { Cooldown, GlobalState, Transaction } from '@/models/global-state';
+import { Cooldown, GlobalState, Notification } from '@/models/global-state';
 
-import { EMPTY, concatMap, delay, distinctUntilChanged, filter, from, map, mergeMap, of, switchMap, tap, withLatestFrom } from 'rxjs';
+import { EMPTY, concatMap, delay, filter, from, map, mergeMap, of, switchMap, tap, withLatestFrom } from 'rxjs';
 
 import * as appStateActions from '@/state/actions/app-state.actions';
 import * as appStateSelectors from '@/state/selectors/app-state.selectors';
@@ -31,38 +28,68 @@ export class AppStateEffects {
 
   setMarketTypeFromRoute$ = createEffect(() => this.actions$.pipe(
     ofType(ROUTER_NAVIGATION),
-    tap((_) => this.store.dispatch(appStateActions.setMenuActive({ menuActive: false }))),
-    withLatestFrom(
-      this.store.select(getRouterSelectors().selectQueryParams),
-      this.store.select(getRouterSelectors().selectRouteParams),
-    ),
-    tap(([action, queryParams, routeParams]) => {
-      console.log({ action, queryParams, routeParams })
-      const marketType = routeParams['marketType'];
-      if (!marketType) {
-        this.store.dispatch(appStateActions.clearActiveTraitFilters());
-        this.store.dispatch(dataStateActions.clearActiveMarketRouteData());
-      }
-    }),
-    filter(([_, queryParams, routeParams]) => !!routeParams['marketType']),
-    mergeMap(([_, queryParams, routeParams]) => {
-      queryParams = { ...queryParams };
-      if (queryParams.address) delete queryParams.address;
+    withLatestFrom(this.store.select(getRouterSelectors().selectRouteParams)),
+    mergeMap(([action, routeParams]) => {
+      // console.log({ action, routeParams });
       return [
-        appStateActions.setMarketType({ marketType: routeParams['marketType'] as MarketTypes }),
-        appStateActions.setActiveTraitFilters({ activeTraitFilters: queryParams }),
+        // Set market type from route
+        appStateActions.setMarketType({ marketType: routeParams['marketType'] }),
+        // Set collection from route
+        appStateActions.setMarketSlug({ marketSlug: routeParams['slug'] || 'ethereum-phunks' })
       ];
     }),
   ));
 
+  routerNavigation$ = createEffect(() => this.actions$.pipe(
+    ofType(ROUTER_NAVIGATION),
+    tap((_) => {
+      // UI related nav side effects
+      this.store.dispatch(appStateActions.setMenuActive({ menuActive: false }))
+    }),
+    withLatestFrom(
+      this.store.select(getRouterSelectors().selectQueryParams),
+      this.store.select(getRouterSelectors().selectRouteParams),
+      this.store.select(getRouterSelectors().selectCurrentRoute),
+    ),
+    tap(([action, queryParams, routeParams, currentRoute]) => {
+      const marketType = routeParams['marketType'] as MarketType;
+      // console.log({ action, queryParams, routeParams });
+
+      if (!marketType) {
+        this.store.dispatch(appStateActions.clearActiveTraitFilters());
+        this.store.dispatch(dataStateActions.clearActiveMarketRouteData());
+      }
+
+      const isIndex =
+        !currentRoute?.url?.length
+        || (currentRoute?.url[0]?.path === 'curated' && currentRoute?.url?.length === 2);
+      const slug = routeParams['slug'] || 'ethereum-phunks';
+
+      // console.log({ currentRoute, isIndex, slug });
+      // If we're on the default or slugged landing page
+      if (isIndex && slug) {
+        // this.store.dispatch(dataStateActions.fetchOwnedPhunks());
+        // this.store.dispatch(dataStateActions.fetchMarketData());
+        // this.store.dispatch(dataStateActions.fetchAllPhunks());
+      }
+    }),
+    filter(([_, queryParams, routeParams]) => !!routeParams['marketType']),
+    map(([_, queryParams, routeParams]) => {
+      queryParams = { ...queryParams };
+      if (queryParams.address) delete queryParams.address;
+      return appStateActions.setActiveTraitFilters({ activeTraitFilters: queryParams });
+    }),
+  ));
+
+  // Set active market data based on market type
   onMarketTypeChanged$ = createEffect(() => this.actions$.pipe(
     ofType(appStateActions.setMarketType),
-    // distinctUntilChanged(),
     withLatestFrom(
-      this.store.select(getRouterSelectors().selectQueryParam('address'))
+      this.store.select(appStateSelectors.selectMarketType),
+      this.store.select(getRouterSelectors().selectQueryParam('address')),
     ),
-    switchMap(([action, queryAddress]) => {
-      const marketType = action.marketType;
+    switchMap(([action, marketType, queryAddress]) => {
+
       if (!marketType) return from([]);
 
       if (queryAddress) {
@@ -81,7 +108,9 @@ export class AppStateEffects {
       if (marketType === 'all') return this.store.select(dataStateSelectors.selectAllPhunks);
       if (marketType === 'listings') return this.store.select(dataStateSelectors.selectListings);
       if (marketType === 'bids') return this.store.select(dataStateSelectors.selectBids);
-      return this.store.select(dataStateSelectors.selectMarketData);
+
+      // Default to listings
+      return this.store.select(dataStateSelectors.selectListings);
     }),
     map((data: DataState['activeMarketRouteData']) => dataStateActions.setActiveMarketRouteData({ activeMarketRouteData: data })),
   ));
@@ -90,10 +119,11 @@ export class AppStateEffects {
     ofType(appStateActions.setWalletAddress),
     tap((action) => {
       const address = action.walletAddress;
-      const transactions = JSON.parse(localStorage.getItem(`EtherPhunks_transactions__${address}`) || '[]').filter(
-        (txn: Transaction) => txn.type === 'complete' || txn.type === 'event'
+      const notifications = JSON.parse(
+        localStorage.getItem(`EtherPhunks_txns__${address}`) || '[]')
+          .filter((txn: Notification) => txn.type === 'complete' || txn.type === 'event'
       );
-      this.store.dispatch(appStateActions.setTransactions({ transactions }));
+      this.store.dispatch(appStateActions.setNotifications({ notifications }));
       this.store.dispatch(appStateActions.checkHasWithdrawal());
       this.store.dispatch(appStateActions.fetchUserPoints());
       this.store.dispatch(dataStateActions.fetchOwnedPhunks());
@@ -139,7 +169,7 @@ export class AppStateEffects {
   fetchActiveMultiplier$ = createEffect(() => this.actions$.pipe(
     ofType(appStateActions.fetchActiveMultiplier),
     switchMap(() => from(this.web3Svc.getMultiplier())),
-    map((activeMultiplier) => appStateActions.setActiveMultiplier({ activeMultiplier }))
+    map((activeMultiplier) => appStateActions.setActiveMultiplier({ activeMultiplier: Number(activeMultiplier) }))
   ));
 
   menuActive$ = createEffect(() => this.actions$.pipe(
@@ -213,31 +243,31 @@ export class AppStateEffects {
     tap(([action, cooldowns]) => this.setCooldowns(action, cooldowns)),
   ), { dispatch: false });
 
-  onTransactionEvent$ = createEffect(() => this.actions$.pipe(
+  onNotificationEvent$ = createEffect(() => this.actions$.pipe(
     ofType(
-      appStateActions.upsertTransaction,
-      appStateActions.removeTransaction
+      appStateActions.upsertNotification,
+      appStateActions.removeNotification
     ),
     withLatestFrom(
-      this.store.select(appStateSelectors.selectTransactions),
+      this.store.select(appStateSelectors.selectNotifications),
       this.store.select(appStateSelectors.selectWalletAddress),
     ),
-    tap(([_, transactions, address]) => localStorage.setItem(
-      `EtherPhunks_transactions__${address}`,
-      JSON.stringify(transactions.filter((txn: Transaction) => txn.type === 'complete' || txn.type === 'event')))
+    tap(([_, notifications, address]) => localStorage.setItem(
+      `EtherPhunks_txns__${address}`,
+      JSON.stringify(notifications.filter((txn: Notification) => txn.type === 'complete' || txn.type === 'event')))
     ),
     concatMap(([action]) =>
-      action.type === '[App State] Upsert Transaction'
+      action.type === '[App State] Upsert Notification'
       && (
-        action.transaction.type === 'complete'
-        || action.transaction.type === 'error'
+        action.notification.type === 'complete'
+        || action.notification.type === 'error'
       ) ?
       of(action).pipe(
         delay(5000),
         withLatestFrom(this.store.select(appStateSelectors.selectNotifHoverState)),
         tap(([action, notifHoverState]) => {
-          if (!notifHoverState[action.transaction.id]) {
-            this.store.dispatch(appStateActions.removeTransaction({ txId: action.transaction.id }));
+          if (!notifHoverState[action.notification.id]) {
+            this.store.dispatch(appStateActions.removeNotification({ txId: action.notification.id }));
           }
         })
       ) :
@@ -282,27 +312,15 @@ export class AppStateEffects {
     private web3Svc: Web3Service,
     private dataSvc: DataService,
     private location: Location,
-    private themeSvc: ThemeService,
-    private router: Router,
-    private navSvc: NavigationTrackerService
+    private themeSvc: ThemeService
   ) {}
-
-  checkUserEvent(newData: any, address: string): boolean {
-    const userMatches = Object.values(newData).filter((item: any) => item === address);
-    return !!userMatches.length;
-  }
-
-  checkHashIdEvent(newData: any, singlePhunk: Phunk): boolean {
-    if (!singlePhunk) return false;
-    return newData.hashId === singlePhunk.hashId;
-  }
 
   setCooldowns(action: any, cooldowns: Cooldown[]) {
     const currentBlock = action.blockNumber;
     for (const cooldown of cooldowns) {
       const cooldownEnd = cooldown.startBlock + this.web3Svc.maxCooldown;
       if (currentBlock >= cooldownEnd) {
-        this.store.dispatch(appStateActions.removeCooldown({ phunkId: cooldown.phunkId }));
+        this.store.dispatch(appStateActions.removeCooldown({ hashId: cooldown.hashId }));
       }
     }
     localStorage.setItem('EtherPhunks_cooldowns', JSON.stringify(cooldowns));

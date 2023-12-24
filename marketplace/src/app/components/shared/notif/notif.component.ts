@@ -1,17 +1,23 @@
 import { Component, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
+
 import { Store } from '@ngrx/store';
+import { TimeagoModule } from 'ngx-timeago';
 
 import { PhunkImageComponent } from '@/components/shared/phunk-image/phunk-image.component';
 import { WalletAddressDirective } from '@/directives/wallet-address.directive';
 
+import { NotifPipe } from './notif.pipe';
+
 import { environment } from 'src/environments/environment';
 
-import { GlobalState, Transaction } from '@/models/global-state';
+import { GlobalState, Notification } from '@/models/global-state';
 
 import * as appStateActions from '@/state/actions/app-state.actions';
-import { TimeagoModule } from 'ngx-timeago';
+import * as dataStateSelectors from '@/state/selectors/data-state.selectors';
+import { map, tap } from 'rxjs';
+
 
 @Component({
   selector: 'app-notif',
@@ -23,7 +29,9 @@ import { TimeagoModule } from 'ngx-timeago';
 
     PhunkImageComponent,
 
-    WalletAddressDirective
+    WalletAddressDirective,
+
+    NotifPipe
   ],
   templateUrl: './notif.component.html',
   styleUrls: ['./notif.component.scss'],
@@ -34,76 +42,27 @@ import { TimeagoModule } from 'ngx-timeago';
 })
 export class NotifComponent {
 
-  @Input() txn: Transaction | undefined;
+  @Input() txn: Notification | undefined;
   @Input() dismissible: boolean = true;
   @Input() isMenu: boolean = false;
 
   env = environment;
 
-  titles: any = {
-    sendToEscrow: 'Send to Escrow',
-    phunkNoLongerForSale: 'Delist EtherPhunk',
-    offerPhunkForSale: 'Offer EtherPhunk For Sale',
-    withdrawBidForPhunk: 'Withdraw Bid For EtherPhunk',
-    acceptBidForPhunk: 'Accept Bid For EtherPhunk',
-    buyPhunk: 'Buy EtherPhunk',
-    enterBidForPhunk: 'Enter Bid For EtherPhunk',
-    transferPhunk: 'Transfer EtherPhunk',
-    withdrawPhunk: 'Withdraw EtherPhunk from Escrow',
-    purchased: 'Your EtherPhunk Sold!',
-    batch: {
-      sendToEscrow: 'Send <span class="highlight">%length%</span> EtherPhunks to Escrow',
-      phunkNoLongerForSale: 'Delist <span class="highlight">%length%</span> EtherPhunks',
-      offerPhunkForSale: 'Offer <span class="highlight">%length%</span> EtherPhunks For Sale',
-      withdrawBidForPhunk: 'Withdraw Bid For <span class="highlight">%length%</span> EtherPhunks',
-      acceptBidForPhunk: 'Accept Bid For <span class="highlight">%length%</span> EtherPhunks',
-      buyPhunk: 'Buy <span class="highlight">%length%</span> EtherPhunks',
-      enterBidForPhunk: 'Enter Bid For <span class="highlight">%length%</span> EtherPhunks',
-      transferPhunk: 'Transfer <span class="highlight">%length%</span> EtherPhunks',
-      withdrawPhunk: 'Withdraw <span class="highlight">%length%</span> EtherPhunks from Escrow',
-    }
-  };
-
-  classes: any = {
-    sendToEscrow: 'escrow',
-    phunkNoLongerForSale: 'sale',
-    offerPhunkForSale: 'sale',
-    withdrawBidForPhunk: 'bid',
-    acceptBidForPhunk: 'bid',
-    buyPhunk: 'sale',
-    enterBidForPhunk: 'bid',
-    transferPhunk: 'transfer',
-    withdrawPhunk: 'escrow',
-    purchased: 'purchased'
-  };
-
-  transactionTypes: any = {
-    event: {
-      message: 'EtherPhunk #%phunkId%'
-    },
-    wallet: {
-      message: '<strong>Please submit</strong> the transaction using your connected Ethereum wallet.'
-    },
-    pending: {
-      title: {},
-      message: 'Your transaction is <strong>being processed</strong> on the Ethereum network.'
-    },
-    complete: {
-      title: {},
-      message: 'Your transaction is <strong>complete</strong>.'
-    },
-    error: {
-      title: {},
-      message: 'There was an <strong>error</strong> with your transaction.'
-    }
-  };
+  collections$ = this.store.select(dataStateSelectors.selectCollections).pipe(
+    map((res) => {
+      const obj: any = {};
+      res?.forEach((coll: any) => obj[coll.slug] = coll);
+      return Object.keys(obj).length ? obj : null;
+    }),
+    // tap(collections => console.log('collections', collections)),
+  );
 
   constructor(
     private store: Store<GlobalState>
   ) {}
 
-  dismiss(txn: Transaction) {
-    this.store.dispatch(appStateActions.removeTransaction({ txId: txn.id }));
+  dismiss(txn: Notification) {
+    this.store.dispatch(appStateActions.removeNotification({ txId: txn.id }));
   }
 
   onMouseEnter(notificationId: string) {

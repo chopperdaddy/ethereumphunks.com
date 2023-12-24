@@ -1,7 +1,7 @@
-import { Component, Inject } from '@angular/core';
+import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
-import { IntersectionObserverModule, IntersectionObserverService } from '@ng-web-apis/intersection-observer';
+import { IntersectionObserverModule } from '@ng-web-apis/intersection-observer';
 
 import { Store } from '@ngrx/store';
 import { TimeagoModule } from 'ngx-timeago';
@@ -22,9 +22,9 @@ import { TokenIdParsePipe } from '@/pipes/token-id-parse.pipe';
 import { GlobalState } from '@/models/global-state';
 
 import * as dataStateActions from '@/state/actions/data-state.actions';
+import * as dataStateSelectors from '@/state/selectors/data-state.selectors';
 
 import * as appStateSelectors from '@/state/selectors/app-state.selectors';
-import * as dataStateSelectors from '@/state/selectors/data-state.selectors';
 
 @Component({
   standalone: true,
@@ -43,9 +43,6 @@ import * as dataStateSelectors from '@/state/selectors/data-state.selectors';
     CalcPipe,
     TokenIdParsePipe
   ],
-  providers: [
-    // IntersectionObserverService,
-  ],
   selector: 'app-index',
   templateUrl: './index.component.html',
   styleUrls: ['./index.component.scss']
@@ -53,34 +50,21 @@ import * as dataStateSelectors from '@/state/selectors/data-state.selectors';
 
 export class IndexComponent {
 
-  randomPhunks: string[] = [ '7209', ...Array.from({length: 9}, () => `${Math.floor(Math.random() * 10000)}`)];
-
   walletAddress$ = this.store.select(appStateSelectors.selectWalletAddress);
-  allPhunks$ = this.store.select(dataStateSelectors.selectAllPhunks);
-  // marketData$ = this.store.select(state => state.appState.marketData);
+  collectionSlug$ = this.store.select(appStateSelectors.selectMarketSlug);
+  activeCollection$ = this.store.select(dataStateSelectors.selectActiveCollection);
 
   ownedPhunks$ = this.store.select(dataStateSelectors.selectOwnedPhunks);
   listings$ = this.store.select(dataStateSelectors.selectListings);
   bids$ = this.store.select(dataStateSelectors.selectBids);
+  allPhunks$ = this.store.select(dataStateSelectors.selectAllPhunks);
+
   isMobile$ = this.store.select(appStateSelectors.selectIsMobile);
   usd$ = this.store.select(dataStateSelectors.selectUsd);
 
   constructor(
-    // @Inject(IntersectionObserverService) entries$: IntersectionObserverService,
     private store: Store<GlobalState>,
     public themeSvc: ThemeService,
     public dataSvc: DataService,
-  ) {
-    // this.store.dispatch(dataStateActions.fetchMarketData());
-    // this.store.dispatch(dataStateActions.fetchAllPhunks());
-
-    // entries$.subscribe(entries => {
-    //   console.log('entries', entries);
-    // })
-  }
-
-  onIntersection($event: any): void {
-    // console.log('onIntersection', $event);
-    // this.store.dispatch(appStateActions.setIsVisible({ isVisible: visible }));
-  }
+  ) {}
 }

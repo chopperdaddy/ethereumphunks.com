@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { Store } from '@ngrx/store';
 
-import { GlobalState, Transaction } from '@/models/global-state';
+import { GlobalState, Notification } from '@/models/global-state';
 
 import { PhunkImageComponent } from '@/components/shared/phunk-image/phunk-image.component';
 import { NotifComponent } from '../shared/notif/notif.component';
@@ -32,15 +32,15 @@ export type TxFunction = 'sendToEscrow' | 'phunkNoLongerForSale' | 'offerPhunkFo
 })
 export class TxModalComponent {
 
-  transactions$ = this.store.select(appStateSelectors.selectTransactions).pipe(
-    map((txns: Transaction[]) => [...txns].sort((a, b) => b.id - a.id))
+  transactions$ = this.store.select(appStateSelectors.selectNotifications).pipe(
+    map((txns: Notification[]) => [...txns].sort((a, b) => b.id - a.id))
   );
 
   constructor(
     private store: Store<GlobalState>
   ) {}
 
-  trackByFn(index: number, item: Transaction) {
+  trackByFn(index: number, item: Notification) {
     return item.id;
   }
 }

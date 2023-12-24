@@ -1,5 +1,5 @@
 import { CommonModule, Location } from '@angular/common';
-import { Component, ElementRef, Input, SimpleChanges, ViewChild } from '@angular/core';
+import { Component, ElementRef, Inject, Input, SimpleChanges, ViewChild } from '@angular/core';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 
@@ -10,6 +10,8 @@ import { Phunk } from '@/models/db';
 import { firstValueFrom, tap } from 'rxjs';
 import { HttpClient } from '@angular/common/http';
 import { TokenIdParsePipe } from '@/pipes/token-id-parse.pipe';
+
+import { HISTORY } from '@ng-web-apis/common';
 
 @Component({
   standalone: true,
@@ -41,6 +43,7 @@ export class BreadcrumbsComponent {
   ctx!: CanvasRenderingContext2D | null;
 
   constructor(
+    @Inject(HISTORY) public history: History,
     private http: HttpClient,
     private tokenIdParsePipe: TokenIdParsePipe,
     public location: Location,
@@ -143,7 +146,7 @@ export class BreadcrumbsComponent {
 
   async getPunkImage(): Promise<string | undefined> {
     if (!this.phunk) return;
-    const imgUrl = this.dataSvc.staticUrl + '/images/phunk' + this.tokenIdParsePipe.transform(this.phunk.tokenId) + '.svg';
+    const imgUrl = this.dataSvc.staticUrl + '/images/' + this.phunk.slug + '_' + this.phunk.tokenId + '.svg';
     const svg = await firstValueFrom(this.http.get(imgUrl, { responseType: 'text' }));
     return svg;
   }

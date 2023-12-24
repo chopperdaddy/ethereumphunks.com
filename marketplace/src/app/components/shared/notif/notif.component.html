@@ -1,20 +1,28 @@
 @if (txn) {
-  <div class="txn-item {{ classes[txn.function] }} {{ txn.type }}" [class.is-menu]="isMenu">
+  @if ((collections$ | async); as collections) {
+    <div
+      class="txn-item {{ txn.type }} {{ txn | notifText : collections : 'class' }}"
+      [class.is-menu]="isMenu">
 
-    @if (dismissible) {
-      <button class="dismiss" (click)="dismiss(txn)">x</button>
-    }
+      @if (dismissible) {
+        <button class="dismiss" (click)="dismiss(txn)">x</button>
+      }
 
-    @if (txn.isBatch && txn.phunkIds) {
-      <div class="batch-image">
-        @for (phunkId of txn.phunkIds; track phunkId) {
-          <app-phunk-image [color]="txn.type === 'event'" [tokenId]="phunkId" />
-        }
-      </div>
+      @if (txn.isBatch && txn.hashIds) {
+        <div class="batch-image">
+          @for (hashId of txn.hashIds; track hashId) {
+            <app-phunk-image [color]="txn.type === 'event'" [hashId]="hashId" />
+          }
+        </div>
+      } @else {
+        <a [routerLink]="['/', 'details', txn.hashId]">
+          <app-phunk-image [color]="txn.type === 'event'" [hashId]="txn.hashId" />
+        </a>
+      }
 
       <div class="txn-info">
-        <h4 [innerHTML]="titles.batch[txn.function].replace('%length%', txn.phunkIds.length)"></h4>
-        <p [innerHTML]="transactionTypes[txn.type].message?.replace('%phunkId%', txn.phunkId)"></p>
+        <h4 [innerHTML]="txn | notifText : collections : 'title'"></h4>
+        <p [innerHTML]="txn | notifText : collections : 'body'"></p>
 
         <div class="footer">
           @if (txn.hash) {
@@ -31,32 +39,8 @@
           }
         </div>
       </div>
-    } @else {
-      <a [routerLink]="['/', 'details', txn.phunkId]">
-        <app-phunk-image [color]="txn.type === 'event'" [tokenId]="txn.phunkId" />
-      </a>
-
-      <div class="txn-info">
-        <h4>{{ titles[txn.function] }}</h4>
-        <p [innerHTML]="transactionTypes[txn.type].message?.replace('%phunkId%', txn.phunkId)"></p>
-
-        <div class="footer">
-          @if (txn.hash) {
-            <a class="hash" [href]="env.explorerUrl + '/tx/' + txn.hash" target="_blank">
-              <app-address [address]="txn.hash"></app-address>
-              <ng-template [ngTemplateOutlet]="externalIcon"></ng-template>
-            </a>
-          }
-          @if (txn.type === 'error') {
-            <span class="error">{{ txn.detail.shortMessage || txn.detail.message || txn.detail }}</span>
-          }
-          @if (!dismissible) {
-            <div class="timestamp">{{ txn.id | timeago : true }}</div>
-          }
-        </div>
-      </div>
-    }
-  </div>
+    </div>
+  }
 }
 
 <ng-template #externalIcon>

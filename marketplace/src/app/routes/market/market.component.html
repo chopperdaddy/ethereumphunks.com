@@ -144,7 +144,7 @@
 
               <div class="selected">
                 <img
-                  [lazyLoad]="dataSvc.staticUrl + '/images/phunk' + (phunk.value.phunkId | tokenIdParse) + '.svg'"
+                  [lazyLoad]="dataSvc.staticUrl + '/images/phunk' + (phunk.value.phunkId | tokenIdParse) + '.png'"
                   [defaultImage]="'assets/loadingphunk.png'"
                   width="50"
                   height="50"
@@ -185,7 +185,7 @@
         @for (phunk of selectedPhunksFormArray.controls; track phunk; let i = $index) {
           <div class="image">
             <img
-              [lazyLoad]="dataSvc.staticUrl + '/images/phunk' + (phunk.value.phunkId | tokenIdParse) + '.svg'"
+              [lazyLoad]="dataSvc.staticUrl + '/images/phunk' + (phunk.value.phunkId | tokenIdParse) + '.png'"
               [defaultImage]="'assets/loadingphunk.png'"
             />
           </div>

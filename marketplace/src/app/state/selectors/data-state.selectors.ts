@@ -63,3 +63,13 @@ export const selectLeaderboard = createSelector(
   selectDataState,
   (appState: DataState) => appState.leaderboard
 );
+
+export const selectCollections = createSelector(
+  selectDataState,
+  (appState: DataState) => appState.collections
+);
+
+export const selectActiveCollection = createSelector(
+  selectDataState,
+  (appState: DataState) => appState.activeCollection
+);

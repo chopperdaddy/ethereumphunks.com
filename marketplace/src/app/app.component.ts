@@ -53,10 +53,11 @@ export class AppComponent {
   ) {
 
     this.store.dispatch(appStateActions.setTheme({ theme: 'initial' }));
-    this.store.dispatch(appStateActions.setEventTypeFilter({ eventTypeFilter: 'All' }));
 
     this.store.dispatch(appStateActions.fetchActiveMultiplier());
     this.store.dispatch(dataStateActions.fetchLeaderboard());
+
+    this.store.dispatch(dataStateActions.fetchCollections());
 
     // this.store.dispatch(dataStateActions.fetchMarketData());
     // this.store.dispatch(dataStateActions.fetchAllPhunks({ limit: 30 }));

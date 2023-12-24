@@ -28,10 +28,10 @@
 
     <div class="crumbs-wrapper">
       <div class="crumbs">
-        <a i18n href="/" [routerLink]="['/']">
+        <button (click)="history.back()">
 
-          Ethereum Phunks
-        </a>
+          {{ phunk.collectionName }}
+        </button>
         <span class="divider">/</span>
         <span class="number">{{ phunk.tokenId }}</span>
       </div>
@@ -52,12 +52,7 @@
 
     <div class="crumbs-wrapper">
       <div class="crumbs">
-        <a i18n href="/" [routerLink]="['/']">
-
-          Ethereum Phunks
-        </a>
-        <span class="divider">/</span>
-        <span class="number">0000</span>
+        <span class="divider">Loading...</span>
       </div>
 
       <div class="save-pfp"></div>

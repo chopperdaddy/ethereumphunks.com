@@ -9,7 +9,7 @@ import { IntersectionObserverModule } from '@ng-web-apis/intersection-observer';
 
 import { ViewType } from '@/models/view-types';
 import { Phunk } from '@/models/db';
-import { MarketTypes, Sort, Sorts } from '@/models/pipes';
+import { MarketType, Sort, Sorts } from '@/models/pipes';
 import { GlobalState } from '@/models/global-state';
 
 import { DataService } from '@/services/data.service';
@@ -19,13 +19,12 @@ import { WeiToEthPipe } from '@/pipes/wei-to-eth.pipe';
 import { FormatCashPipe } from '@/pipes/format-cash.pipe';
 import { SortPipe } from '@/pipes/sort.pipe';
 import { PropertiesPipe } from '@/pipes/properties';
+import { ImagePipe } from '@/pipes/image.pipe';
 
 import { environment } from 'src/environments/environment';
 
 import * as dataStateSelectors from '@/state/selectors/data-state.selectors';
 import * as appStateSelectors from '@/state/selectors/app-state.selectors';
-
-import { filter, map, tap } from 'rxjs';
 
 let PAGE_SIZE = 36;
 
@@ -43,7 +42,8 @@ let PAGE_SIZE = 36;
     WeiToEthPipe,
     FormatCashPipe,
     SortPipe,
-    PropertiesPipe
+    PropertiesPipe,
+    ImagePipe,
   ],
   host:  {
     '[class.selectable]': 'selectable',
@@ -59,7 +59,7 @@ export class PhunkGridComponent implements OnChanges {
 
   escrowAddress = environment.marketAddress;
 
-  @Input() marketType!: MarketTypes;
+  @Input() marketType!: MarketType;
   @Input() activeSort!: Sort['value'];
 
   @Input() phunkData!: Phunk[] | null;

@@ -24,6 +24,11 @@ export const selectMarketType = createSelector(
   (appState: AppState) => appState.marketType
 );
 
+export const selectMarketSlug = createSelector(
+  selectAppState,
+  (appState: AppState) => appState.marketSlug
+);
+
 export const selectActiveSort = createSelector(
   selectAppState,
   (appState: AppState) => appState.activeSort
@@ -74,9 +79,9 @@ export const selectTheme = createSelector(
   (appState: AppState) => appState.theme
 );
 
-export const selectTransactions = createSelector(
+export const selectNotifications = createSelector(
   selectAppState,
-  (appState: AppState) => appState.transactions
+  (appState: AppState) => appState.notifications
 );
 
 export const selectIsMobile = createSelector(

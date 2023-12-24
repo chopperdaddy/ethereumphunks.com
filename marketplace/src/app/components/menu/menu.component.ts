@@ -6,7 +6,7 @@ import { Store } from '@ngrx/store';
 import { IntersectionObserverModule } from '@ng-web-apis/intersection-observer';
 
 import { Phunk } from '@/models/db';
-import { GlobalState, Transaction } from '@/models/global-state';
+import { GlobalState, Notification } from '@/models/global-state';
 
 import { Web3Service } from '@/services/web3.service';
 
@@ -62,7 +62,7 @@ export class MenuComponent {
   activeMenuNav$ = this.store.select(appStateSelectors.selectActiveMenuNav);
 
   listedPhunks$ = this.store.select(dataStateSelectors.selectOwnedPhunks).pipe(
-    tap((owned: Phunk[] | null) => this.createOwnedStats(owned)),
+    // tap((owned: Phunk[] | null) => this.createOwnedStats(owned)),
     map((res) => res?.filter((phunk: Phunk) => phunk.listing)),
   );
 
@@ -71,8 +71,8 @@ export class MenuComponent {
     tap((bids: Phunk[] | null) => this.createBidStats(bids))
   );
 
-  transactions$ = this.store.select(appStateSelectors.selectTransactions).pipe(
-    map((txns: Transaction[]) => [...txns].sort((a, b) => b.id - a.id))
+  transactions$ = this.store.select(appStateSelectors.selectNotifications).pipe(
+    map((txns: Notification[]) => [...txns].sort((a, b) => b.id - a.id))
   );
 
   isMobile$ = this.store.select(appStateSelectors.selectIsMobile);
@@ -92,8 +92,6 @@ export class MenuComponent {
     private web3Svc: Web3Service,
     private el: ElementRef,
   ) {
-    this.store.dispatch(dataStateActions.fetchUserOpenBids());
-
     this.menuActive$.pipe(
       switchMap((active) => {
         return this.activeMenuNav$.pipe(

@@ -1,5 +1,7 @@
-import { ChangeDetectionStrategy, Component, Input, OnChanges, OnInit, SimpleChanges } from '@angular/core';
+import { Component, Input, OnChanges, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
+
+import { Web3Service } from '@/services/web3.service';
 
 import { HttpClient } from '@angular/common/http';
 
@@ -8,7 +10,8 @@ import { environment } from 'src/environments/environment';
 import svgson, { INode } from 'svgson';
 import tinycolor from 'tinycolor2';
 
-import { firstValueFrom, from, map, switchMap, tap } from 'rxjs';
+import { catchError, firstValueFrom, from, map, of, switchMap, tap } from 'rxjs';
+import { hexToString } from 'viem';
 
 @Component({
   selector: 'app-phunk-image',
@@ -19,34 +22,44 @@ import { firstValueFrom, from, map, switchMap, tap } from 'rxjs';
 })
 export class PhunkImageComponent implements OnChanges {
 
+  @Input() hashId!: string;
   @Input() tokenId!: number;
   @Input() color: boolean = true;
 
   phunkImgSrc!: string | null;
 
-  constructor(private http: HttpClient) {}
+  constructor(
+    private http: HttpClient,
+    private web3Svc: Web3Service,
+  ) {}
 
   ngOnChanges(changes: SimpleChanges): void {
-    if (changes.tokenId && changes.tokenId.currentValue !== changes.tokenId.previousValue) {
-      this.phunkImgSrc = null;
-    }
+    if (this.hashId) this.getPhunkByHashId(this.hashId);
+    else if (this.tokenId || this.tokenId === 0) this.getPhunkByTokenId(this.tokenId);
+  }
 
-    const tokenId = this.formatNumber(this.tokenId.toString());
-    const url = `${environment.staticUrl}/images/phunk${tokenId}.svg`;
+  async getPhunkByTokenId(tokenId: number): Promise<any> {
+    const url = `${environment.staticUrl}/images/ethereum-phunks_${tokenId}.svg`;
 
-    firstValueFrom(
+    const svg = await firstValueFrom(
       this.http.get(url, { responseType: 'text' }).pipe(
         // tap(data => console.log(data)),
         switchMap(data => from(svgson.parse(data))),
         map(data => this.color ? data : this.stripColors(data)),
-        map(data => this.convertToBase64(data))
+        map(data => this.convertToBase64(data)),
+        catchError((err) => {
+          console.error(err);
+          return of(null);
+        })
       )
-    ).then(svg => {
-      this.phunkImgSrc = svg;
-    }).catch(err => {
-      console.log(err);
-      this.phunkImgSrc = null;
-    });
+    );
+
+    this.phunkImgSrc = svg;
+  }
+
+  async getPhunkByHashId(hashId: string): Promise<any> {
+    const tx = await this.web3Svc.getTransaction(hashId);
+    this.phunkImgSrc = hexToString(tx.input);
   }
 
   stripColors(node: INode): INode {

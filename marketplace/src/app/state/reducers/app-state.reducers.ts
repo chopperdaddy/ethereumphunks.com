@@ -24,12 +24,14 @@ export const initialState: AppState = {
   scrollPositions: {},
 
   marketType: 'all',
+  marketSlug: 'ethereum-phunks',
+
   activeSort: { label: 'Price Low', value: 'price-low' },
 
   eventTypeFilter: 'All',
 
   blockNumber: -1,
-  transactions: [],
+  notifications: [],
   cooldowns: JSON.parse(localStorage.getItem('EtherPhunks_cooldowns') || '[]'),
 
   notifHoverState: {},
@@ -138,6 +140,15 @@ export const appStateReducer: ActionReducer<AppState, Action> = createReducer(
     // console.log('setMarketType', setMarketType);
     return setMarketType
   }),
+  // Set the collection
+  on(actions.setMarketSlug, (state, { marketSlug }) => {
+    const setMarketSlug = {
+      ...state,
+      marketSlug
+    };
+    // console.log('setCollection', setCollection);
+    return setMarketSlug;
+  }),
   // Set the active sort
   on(actions.setActiveSort, (state, { activeSort }) => {
     const setActiveSort = {
@@ -179,39 +190,39 @@ export const appStateReducer: ActionReducer<AppState, Action> = createReducer(
     // console.log('setTheme', setTheme);
     return setTheme
   }),
-  on(actions.removeTransaction, (state, { txId }) => {
+  on(actions.removeNotification, (state, { txId }) => {
     const removeTransaction = {
       ...state,
-      transactions: state.transactions.map(tx => tx.id === txId ? { ...tx, dismissed: true } : tx)
+      notifications: state.notifications.map(tx => tx.id === txId ? { ...tx, dismissed: true } : tx)
     };
     // console.log('removeTransaction', removeTransaction);
     return removeTransaction
   }),
-  on(actions.upsertTransaction, (state, { transaction }) => {
-    const txns = [...state.transactions];
-    const index = txns.findIndex(tx => tx.phunkId === transaction.phunkId);
-    if (index > -1) txns.splice(index, 1, transaction);
-    else txns.push(transaction);
+  on(actions.upsertNotification, (state, { notification }) => {
+    const txns = [...state.notifications];
+    const index = txns.findIndex(tx => tx.hashId === notification.hashId);
+    if (index > -1) txns.splice(index, 1, notification);
+    else txns.push(notification);
 
-    const upsertTransaction = {
+    const upsertNotification = {
       ...state,
-      transactions: txns
+      notifications: txns
     };
     // console.log('upsertTransaction', upsertTransaction);
-    return upsertTransaction
+    return upsertNotification
   }),
-  on(actions.clearTransactions, (state) => {
+  on(actions.clearNotifications, (state) => {
     const clearTransactions = {
       ...state,
-      transactions: []
+      notifications: []
     };
     // console.log('clearTransactions', clearTransactions);
     return clearTransactions
   }),
-  on(actions.setTransactions, (state, { transactions }) => {
+  on(actions.setNotifications, (state, { notifications }) => {
     const setTransactions = {
       ...state,
-      transactions
+      notifications
     };
     // console.log('setTransactions', setTransactions);
     return setTransactions
@@ -232,10 +243,10 @@ export const appStateReducer: ActionReducer<AppState, Action> = createReducer(
     // console.log('setCooldowns', setCooldowns);
     return setCooldowns
   }),
-  on(actions.removeCooldown, (state, { phunkId }) => {
+  on(actions.removeCooldown, (state, { hashId }) => {
     const setCooldowns = {
       ...state,
-      cooldowns: state.cooldowns.filter(cooldown => cooldown.phunkId !== phunkId)
+      cooldowns: state.cooldowns.filter(cooldown => cooldown.hashId !== hashId)
     };
     // console.log('setCooldowns', setCooldowns);
     return setCooldowns

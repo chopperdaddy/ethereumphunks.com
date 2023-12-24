@@ -4,7 +4,7 @@ import { createAction, props } from '@ngrx/store';
 import { Phunk } from '@/models/db';
 
 import { RealtimePostgresChangesPayload } from '@supabase/supabase-js';
-import { DataState } from '@/models/data.state';
+import { Collection, DataState } from '@/models/data.state';
 
 export const resetDataState = createAction(
   '[Data State] Reset Data State'
@@ -26,8 +26,7 @@ export const setEvents = createAction(
 );
 
 export const fetchAllPhunks = createAction(
-  '[Data State] Fetch All Phunks',
-  props<{ limit: number }>()
+  '[Data State] Fetch All Phunks'
 );
 
 export const setAllPhunks = createAction(
@@ -54,7 +53,7 @@ export const clearSinglePhunk = createAction(
 );
 
 export const fetchMarketData = createAction(
-  '[Data State] Fetch Market Data'
+  '[Data State] Fetch Market Data',
 );
 
 export const setMarketData = createAction(
@@ -63,7 +62,7 @@ export const setMarketData = createAction(
 );
 
 export const fetchOwnedPhunks = createAction(
-  '[Data State] Fetch Owned Phunks'
+  '[Data State] Fetch Owned Phunks',
 );
 
 export const fetchTxHistory = createAction(
@@ -99,20 +98,6 @@ export const clearActiveMarketRouteData = createAction(
   '[Data State] Clear Active Market Route Data',
 );
 
-export const setListings = createAction(
-  '[Market] Set Listings',
-  props<{ listings: Phunk[] }>()
-);
-
-export const setBids = createAction(
-  '[Market] Set Bids',
-  props<{ bids: Phunk[] }>()
-);
-
-export const fetchUserOpenBids = createAction(
-  '[Data State] Fetch User Open Bids'
-);
-
 export const setUserOpenBids = createAction(
   '[Data State] Set User Open Bids',
   props<{ userOpenBids: Phunk[] }>()
@@ -125,4 +110,18 @@ export const fetchLeaderboard = createAction(
 export const setLeaderboard = createAction(
   '[Data State] Set Leaderboard',
   props<{ leaderboard: any[] }>()
+);
+
+export const fetchCollections = createAction(
+  '[Data State] Fetch Collections'
+);
+
+export const setCollections = createAction(
+  '[Data State] Set Collections',
+  props<{ collections: any[] }>()
+);
+
+export const setActiveCollection = createAction(
+  '[Data State] Set Active Collection',
+  props<{ activeCollection: Collection }>()
 );

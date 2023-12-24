@@ -112,7 +112,9 @@ export class Web3Service {
     this.blockWatcher = getPublicClient().watchBlockNumber({
       emitOnBegin: true,
       onBlockNumber: (blockNumber) => {
-        this.store.dispatch(appStateActions.newBlock({ blockNumber: Number(blockNumber) }));
+        const currentBlock = Number(blockNumber);
+        console.log('onBlockNumber', {blockNumber, currentBlock});
+        this.store.dispatch(appStateActions.newBlock({ blockNumber: currentBlock }));
       }
     });
   }
@@ -183,10 +185,10 @@ export class Web3Service {
     return await this.transferPhunk(tokenId, marketAddress as `0x${string}`);
   }
 
-  async withdrawPhunk(tokenId: string): Promise<string | undefined> {
-    const escrowed = await this.isInEscrow(tokenId);
+  async withdrawPhunk(hashId: string): Promise<string | undefined> {
+    const escrowed = await this.isInEscrow(hashId);
     if (!escrowed) throw new Error('Phunk not in escrow');
-    return await this.marketContractInteraction('withdrawPhunk', [tokenId]);
+    return await this.marketContractInteraction('withdrawPhunk', [hashId]);
   }
 
   async withdrawBatch(hashIds: string[]): Promise<string | undefined> {
@@ -241,7 +243,7 @@ export class Web3Service {
     return transaction;
   }
 
-  async offerPhunkForSale(tokenId: string, value: number, toAddress?: string | null): Promise<string | undefined> {
+  async offerPhunkForSale(hashId: string, value: number, toAddress?: string | null): Promise<string | undefined> {
     // console.log('offerPhunkForSale', tokenId, value, toAddress);
 
     const weiValue = value * 1e18;
@@ -249,10 +251,10 @@ export class Web3Service {
       if (!isAddress(toAddress)) throw new Error('Invalid address');
       return this.marketContractInteraction(
         'offerPhunkForSaleToAddress',
-        [tokenId, weiValue, toAddress]
+        [hashId, weiValue, toAddress]
       );
     }
-    return this.marketContractInteraction('offerPhunkForSale', [tokenId, weiValue]);
+    return this.marketContractInteraction('offerPhunkForSale', [hashId, weiValue]);
   }
 
   async batchOfferPhunkForSale(hashIds: string[], listPrices: number[]): Promise<string | undefined> {
@@ -308,8 +310,8 @@ export class Web3Service {
     return;
   }
 
-  async phunkNoLongerForSale(tokenId: string): Promise<string | undefined> {
-    return this.marketContractInteraction('phunkNoLongerForSale', [tokenId]);
+  async phunkNoLongerForSale(hashId: string): Promise<string | undefined> {
+    return this.marketContractInteraction('phunkNoLongerForSale', [hashId]);
   }
 
   async transferPhunk(hashId: string, toAddress: string): Promise<string | undefined> {
@@ -336,25 +338,25 @@ export class Web3Service {
     return await this.transferPhunk(`0x${hash}`, toAddress);
   }
 
-  async enterBidForPhunk(tokenId: string, value: number): Promise<string | undefined> {
+  async enterBidForPhunk(hashId: string, value: number): Promise<string | undefined> {
     const weiValue = this.ethToWei(value);
-    return this.marketContractInteraction('enterBidForPhunk', [tokenId], weiValue as any);
+    return this.marketContractInteraction('enterBidForPhunk', [hashId], weiValue as any);
   }
 
-  async withdrawBidForPhunk(tokenId: string): Promise<string | undefined> {
-    return this.marketContractInteraction('withdrawBidForPhunk', [tokenId]);
+  async withdrawBidForPhunk(hashId: string): Promise<string | undefined> {
+    return this.marketContractInteraction('withdrawBidForPhunk', [hashId]);
   }
 
-  async acceptBidForPhunk(tokenId: string, minPrice: string): Promise<string | undefined> {
+  async acceptBidForPhunk(hashId: string, minPrice: string): Promise<string | undefined> {
     // We need to make sure this get's added.
     // Once added, this loop will run through as mm knows it's on the network.
     // for (let i = 0; i < 11; i++) await this.addFlashbotsNetwork();
 
-    return this.marketContractInteraction('acceptBidForPhunk', [tokenId, minPrice]);
+    return this.marketContractInteraction('acceptBidForPhunk', [hashId, minPrice]);
   }
 
-  async buyPhunk(tokenId: string, value: string): Promise<string | undefined> {
-    return this.marketContractInteraction('buyPhunk', [tokenId], value as any);
+  async buyPhunk(hashId: string, value: string): Promise<string | undefined> {
+    return this.marketContractInteraction('buyPhunk', [hashId], value as any);
   }
 
   async withdraw(): Promise<any> {
@@ -389,7 +391,17 @@ export class Web3Service {
   // TXNS //////////////////////////
   //////////////////////////////////
 
-  async getTransaction(hash: string): Promise<any> {}
+  async getTransaction(hash: string): Promise<any> {
+    const publicClient = getPublicClient();
+    const transaction = await publicClient?.getTransaction({ hash: hash as `0x${string}` });
+    return transaction;
+  }
+
+  async getTransactionReceipt(hash: string): Promise<TransactionReceipt> {
+    const publicClient = getPublicClient();
+    const receipt = await publicClient?.getTransactionReceipt({ hash: hash as `0x${string}` });
+    return receipt;
+  }
 
   pollReceipt(hash: string): Promise<TransactionReceipt> {
     let resolved = false;

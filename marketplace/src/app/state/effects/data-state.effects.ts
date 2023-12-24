@@ -14,42 +14,47 @@ import * as appStateSelectors from '@/state/selectors/app-state.selectors';
 import * as dataStateActions from '@/state/actions/data-state.actions';
 import * as dataStateSelectors from '@/state/selectors/data-state.selectors';
 
-import { asyncScheduler, catchError, filter, forkJoin, from, map, mergeMap, of, switchMap, tap, throttleTime, withLatestFrom } from 'rxjs';
+import { asyncScheduler, catchError, filter, map, of, switchMap, tap, throttleTime, withLatestFrom } from 'rxjs';
 
-import { environment } from 'src/environments/environment';
+import { Web3Service } from '@/services/web3.service';
 
 @Injectable()
 export class DataStateEffects {
 
+  // When the database is updated
   dbEventTriggered$ = createEffect(() => this.actions$.pipe(
     ofType(dataStateActions.dbEventTriggered),
     withLatestFrom(
       this.store.select(dataStateSelectors.selectSinglePhunk)
     ),
-    tap(([action, singlePhunk]) => {
+    map(([action, singlePhunk]) => {
+      // Check if the event is for the active phunk
       const newEvent = action.payload.new as Event;
       this.checkEventIsActiveSinglePhunk(newEvent, singlePhunk);
+      return newEvent;
     }),
     // Start with the throttle
     throttleTime(3000, asyncScheduler, {
       leading: true, // emit the first value immediately
       trailing: true // emit the last value in the window
     }),
-    map(([action]) => action.payload.new as Event),
     withLatestFrom(
       this.store.select(appStateSelectors.selectWalletAddress),
-      this.store.select(dataStateSelectors.selectSinglePhunk),
-      this.store.select(dataStateSelectors.selectOwnedPhunks),
       this.store.select(appStateSelectors.selectEventTypeFilter),
     ),
-    tap(([newData, address, singlePhunk, ownedPhunks, eventTypeFilter]) => {
+    tap(([newData, address, eventTypeFilter]) => {
+      // Check if the event involved the active user
+      this.checkEventForPurchaseFromUser(newData, address);
 
+      // Fetch market data
       // this.store.dispatch(dataStateActions.fetchOwnedPhunks());
       // this.store.dispatch(dataStateActions.fetchMarketData());
 
-      this.checkEventForPurchaseFromUser(newData, address);
-      this.store.dispatch(appStateActions.setEventTypeFilter({ eventTypeFilter }));
+      // Update points
       this.store.dispatch(appStateActions.fetchUserPoints());
+
+      // Reset the event type filter (triggers a fetch of events)
+      this.store.dispatch(appStateActions.setEventTypeFilter({ eventTypeFilter }));
     }),
   ), { dispatch: false });
 
@@ -74,21 +79,59 @@ export class DataStateEffects {
     tap(([_, blockNumber]) => localStorage.setItem('EtherPhunks_currentBlock', JSON.stringify(blockNumber))),
   ), { dispatch: false });
 
+  fetchMarketData$ = createEffect(() => this.actions$.pipe(
+    ofType(dataStateActions.fetchMarketData),
+    switchMap((action) => {
+      return this.store.select(appStateSelectors.selectMarketSlug).pipe(
+        tap((slug) => console.log('fetchMarketData', slug)),
+        filter((slug) => !!slug),
+        switchMap((slug) => this.dataSvc.fetchMarketData(slug)),
+      )
+    }),
+    map((marketData) => dataStateActions.setMarketData({ marketData }))
+  ));
+
+  fetchCollections$ = createEffect(() => this.actions$.pipe(
+    ofType(dataStateActions.fetchCollections),
+    switchMap(() => this.dataSvc.fetchCollections()),
+    map((collections) => dataStateActions.setCollections({ collections })),
+  ));
+
+  setCollections$ = createEffect(() => this.actions$.pipe(
+    ofType(dataStateActions.setCollections),
+    switchMap((action) => {
+      return this.store.select(appStateSelectors.selectMarketSlug).pipe(
+        map((slug) => {
+          // console.log({slug})
+          const coll = action.collections.find((c) => c.slug === slug);
+          // console.log({coll})
+          if (!coll) return dataStateActions.setActiveCollection({ activeCollection: action.collections[0] });
+          return dataStateActions.setActiveCollection({ activeCollection: coll });
+        })
+      );
+    }),
+  ));
+
   fetchEvents$ = createEffect(() => this.actions$.pipe(
     ofType(appStateActions.setEventTypeFilter),
-    // tap((action) => console.log('fetchEvents', action)),
-    switchMap((action) => this.dataSvc.fetchEvents(24, action.eventTypeFilter)),
+    withLatestFrom(this.store.select(appStateSelectors.selectMarketSlug)),
+    switchMap(([action, slug]) => this.dataSvc.fetchEvents(24, action.eventTypeFilter, slug)),
     map((events) => dataStateActions.setEvents({ events })),
   ));
 
-  fetchTxHistory$ = createEffect(() => this.actions$.pipe(
-    ofType(dataStateActions.fetchTxHistory),
-    filter((action) => !!action.hashId),
-    switchMap((action) => this.dataSvc.fetchSingleTokenEvents(action.hashId)),
-    map((txHistory) => dataStateActions.setTxHistory({ txHistory })),
+  setUserOpenBids$ = createEffect(() => this.actions$.pipe(
+    ofType(dataStateActions.setMarketData),
+    switchMap((action) => {
+      return this.store.select(appStateSelectors.selectWalletAddress).pipe(
+        map((address) => {
+          return dataStateActions.setUserOpenBids({
+            userOpenBids: action.marketData?.filter((item) => item.bid && item.bid?.fromAddress === address) || []
+          });
+        })
+      );
+    })
   ));
 
-  // FIXME: Type change
   fetchAllPhunks$ = createEffect(() => this.actions$.pipe(
     ofType(dataStateActions.fetchAllPhunks),
     switchMap(() => this.dataSvc.getAttributes()),
@@ -96,6 +139,7 @@ export class DataStateEffects {
       // console.log('attributes', attributes);
       return Object.keys(attributes).map((k) => {
         return {
+          slug: 'ethereum-phunks',
           hashId: '',
           tokenId: Number(k),
           createdAt: new Date(),
@@ -109,53 +153,20 @@ export class DataStateEffects {
     map((phunks) => dataStateActions.setAllPhunks({ allPhunks: phunks })),
   ));
 
-  fetchMarketData$ = createEffect(() => this.actions$.pipe(
-    ofType(dataStateActions.fetchMarketData),
-    switchMap((action) => this.dataSvc.fetchMarketData()),
-    map((marketData: Phunk[]) => {
-      const listingsData = marketData.filter((item: any) => item.listing && item.listing.value !== '0');
-      const bidsData = marketData.filter((item: any) => item.bid && item.bid.value !== '0');
-      return { marketData, listingsData, bidsData };
-    }),
-    // tap((res) => console.log('fetchMarketData', res)),
-    mergeMap(({ marketData, listingsData, bidsData }) => {
-      return [
-        dataStateActions.setMarketData({ marketData }),
-        dataStateActions.setListings({ listings: listingsData }),
-        dataStateActions.setBids({ bids: bidsData })
-      ];
-    })
+  fetchOwnedPhunks$ = createEffect(() => this.actions$.pipe(
+    ofType(dataStateActions.fetchOwnedPhunks),
+    withLatestFrom(
+      this.store.select(appStateSelectors.selectWalletAddress),
+      this.store.select(appStateSelectors.selectMarketSlug),
+    ),
+    filter(([_, address]) => !!address),
+    switchMap(([_, address, slug]) => this.dataSvc.fetchOwned(address, slug)),
+    map((phunks) => dataStateActions.setOwnedPhunks({ ownedPhunks: phunks })),
   ));
 
   fetchSinglePhunk$ = createEffect(() => this.actions$.pipe(
     ofType(dataStateActions.fetchSinglePhunk),
-    tap(() => this.store.dispatch(dataStateActions.clearSinglePhunk())),
-    // delay(1000),
     switchMap((action) => this.dataSvc.fetchSinglePhunk(action.phunkId)),
-    map((phunk: Phunk) => {
-      const newPhunk = { ...phunk } as Phunk;
-      newPhunk.isEscrowed = phunk?.owner === environment.marketAddress;
-      newPhunk.attributes = [];
-      return newPhunk;
-    }),
-    switchMap((res: Phunk) => forkJoin([
-      this.dataSvc.addAttributes([res]),
-      from(Promise.all([
-        this.dataSvc.getListingFromHashId(res.hashId),
-        this.dataSvc.getBidFromHashId(res.hashId),
-      ]))
-    ])),
-    map(([[res], [listing, bid]]) => ({
-      ...res,
-      listing,
-      bid,
-      attributes: [ ...(res.attributes || []) ].sort((a: Attribute, b: Attribute) => {
-        if (a.k === "Sex") return -1;
-        if (b.k === "Sex") return 1;
-        return 0;
-      }),
-    })),
-    // tap((res) => console.log('fetchSinglePhunk', res)),
     map((phunk) => dataStateActions.setSinglePhunk({ phunk })),
   ));
 
@@ -167,26 +178,25 @@ export class DataStateEffects {
     map(([action, phunk]) => dataStateActions.fetchSinglePhunk({ phunkId: `${phunk!.hashId}` })),
   ));
 
-  fetchOwnedPhunks$ = createEffect(() => this.actions$.pipe(
-    ofType(dataStateActions.fetchOwnedPhunks),
-    withLatestFrom(this.store.select(appStateSelectors.selectWalletAddress)),
-    filter(([_, address]) => !!address),
-    switchMap(([_, address]) => this.dataSvc.fetchOwned(address)),
-    map((phunks) => dataStateActions.setOwnedPhunks({ ownedPhunks: phunks })),
+  fetchTxHistory$ = createEffect(() => this.actions$.pipe(
+    ofType(dataStateActions.fetchTxHistory),
+    filter((action) => !!action.hashId),
+    switchMap((action) => this.dataSvc.fetchSingleTokenEvents(action.hashId)),
+    map((txHistory) => dataStateActions.setTxHistory({ txHistory })),
   ));
 
-  fetchUserOpenBids$ = createEffect(() => this.actions$.pipe(
-    ofType(dataStateActions.fetchUserOpenBids),
-    switchMap(() => this.store.select(appStateSelectors.selectWalletAddress).pipe(
-      filter((address) => !!address),
-      switchMap((address) => this.store.select(dataStateSelectors.selectBids).pipe(
-        // tap((phunks) => console.log('fetchUserOpenBids', phunks)),
-        map((phunks) => phunks?.filter((phunk) => phunk.bid?.fromAddress === address) || []),
-        // tap((phunks) => console.log('fetchUserOpenBids', phunks)),
-      )),
-    )),
-    map((userOpenBids) => dataStateActions.setUserOpenBids({ userOpenBids })),
-  ));
+  // fetchUserOpenBids$ = createEffect(() => this.actions$.pipe(
+  //   ofType(dataStateActions.fetchUserOpenBids),
+  //   switchMap(() => this.store.select(appStateSelectors.selectWalletAddress).pipe(
+  //     filter((address) => !!address),
+  //     switchMap((address) => this.store.select(dataStateSelectors.selectBids).pipe(
+  //       // tap((phunks) => console.log('fetchUserOpenBids', phunks)),
+  //       map((phunks) => phunks?.filter((phunk) => phunk.bid?.fromAddress === address) || []),
+  //       // tap((phunks) => console.log('fetchUserOpenBids', phunks)),
+  //     )),
+  //   )),
+  //   map((userOpenBids) => dataStateActions.setUserOpenBids({ userOpenBids })),
+  // ));
 
   fetchLeaderboard$ = createEffect(() => this.actions$.pipe(
     ofType(dataStateActions.fetchLeaderboard),
@@ -198,6 +208,7 @@ export class DataStateEffects {
     private store: Store<GlobalState>,
     private actions$: Actions,
     private dataSvc: DataService,
+    private web3Svc: Web3Service
   ) {}
 
   checkEventForPurchaseFromUser(event: Event, userAddress: string) {
@@ -205,15 +216,17 @@ export class DataStateEffects {
     if (event.type === 'PhunkBought' && event.from.toLowerCase() === userAddress?.toLowerCase()) {
       // This phunk was bought FROM the active user.
       // We can notify them of this purchase
-      this.store.dispatch(appStateActions.upsertTransaction({
-        transaction: {
+      this.store.dispatch(appStateActions.upsertNotification({
+        notification: {
           id: event.blockTimestamp ? new Date(event.blockTimestamp).getTime() : Date.now(),
           type: 'event',
           function: 'purchased',
-          phunkId: event.phunkId!,
+          hashId: event.hashId!,
+          tokenId: event.tokenId,
           hash: event.txHash,
           isNotification: true,
           detail: event,
+          value: Number(this.web3Svc.weiToEth(event.value)),
         }
       }));
     }
@@ -224,24 +237,6 @@ export class DataStateEffects {
     if (event.hashId === singlePhunk.hashId) {
       this.store.dispatch(dataStateActions.refreshSinglePhunk());
       this.store.dispatch(dataStateActions.fetchTxHistory({ hashId: event.hashId }));
-    }
-  }
-
-  checkEventIsOrWasOwnedPhunk(event: Event, ownedPhunks: Phunk[], address: string) {
-    console.log('checkEventIsOrWasOwnedPhunk', event, ownedPhunks, address);
-    if (
-      event.from === address
-      || event.to === address
-      || ownedPhunks.find((phunk) => phunk.tokenId === event.phunkId)
-    ) {
-      this.store.dispatch(dataStateActions.fetchOwnedPhunks());
-    }
-  }
-
-  checkIsOrWasOwnedPhunk(event: Event, ownedPhunks: Phunk[]) {
-    const ownedPhunk = ownedPhunks.find((phunk) => phunk.tokenId === event.phunkId);
-    if (ownedPhunk) {
-      this.store.dispatch(dataStateActions.fetchOwnedPhunks());
     }
   }
 }

@@ -1,1 +1,1 @@
-export type ViewType = 'compact' | 'market' | 'medium' | 'large' | 'menu';
+export type ViewType = 'compact' | 'market' | 'medium' | 'large' | 'menu' | 'preview';

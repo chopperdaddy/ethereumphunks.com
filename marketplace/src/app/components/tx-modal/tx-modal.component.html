@@ -1,7 +1,7 @@
 @if ((transactions$ | async); as txns) {
   @if (txns.length) {
     <div class="txns">
-      @for (txn of txns; track txn.phunkId) {
+      @for (txn of txns; track txn.hashId) {
         @if (!txn.dismissed) {
           <app-notif [txn]="txn" />
         }

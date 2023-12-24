@@ -2,6 +2,7 @@ import { DataState } from '@/models/data.state';
 import { Action, ActionReducer, createReducer, on } from '@ngrx/store';
 
 import * as actions from '../actions/data-state.actions';
+import { Phunk } from '@/models/db';
 
 export const initialState: DataState = {
   usd: null,
@@ -16,6 +17,8 @@ export const initialState: DataState = {
   activeMarketRouteData: null,
   txHistory: null,
   leaderboard: null,
+  collections: null,
+  activeCollection: null,
 }
 
 export const dataStateReducer: ActionReducer<DataState, Action> = createReducer(
@@ -87,27 +90,11 @@ export const dataStateReducer: ActionReducer<DataState, Action> = createReducer(
     const setMarketData = {
       ...state,
       marketData,
+      listings: marketData.filter((item: Phunk) => item.listing && item.listing.minValue !== '0'),
+      bids: marketData.filter((item: Phunk) => item.bid && item.bid.value !== '0'),
     };
     // console.log('setMarketData', setMarketData);
     return setMarketData
-  }),
-  // Set the listings
-  on(actions.setListings, (state, { listings }) => {
-    const setListings = {
-      ...state,
-      listings,
-    };
-    // console.log('setListings', setListings);
-    return setListings
-  }),
-  // Set the bids
-  on(actions.setBids, (state, { bids }) => {
-    const setBids = {
-      ...state,
-      bids,
-    };
-    // console.log('setBids', setBids);
-    return setBids
   }),
   // Set the owned phunks
   on(actions.setOwnedPhunks, (state, { ownedPhunks }) => {
@@ -152,5 +139,21 @@ export const dataStateReducer: ActionReducer<DataState, Action> = createReducer(
     };
     // console.log('setLeaderboard', setLeaderboard);
     return setLeaderboard
+  }),
+  on(actions.setCollections, (state, { collections }) => {
+    const setCollections = {
+      ...state,
+      collections,
+    };
+    // console.log('setCollections', setCollections);
+    return setCollections
+  }),
+  on(actions.setActiveCollection, (state, { activeCollection }) => {
+    const setActiveCollection = {
+      ...state,
+      activeCollection,
+    };
+    // console.log('setActiveCollection', setActiveCollection);
+    return setActiveCollection
   }),
 );
