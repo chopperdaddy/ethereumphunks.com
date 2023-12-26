@@ -7,18 +7,14 @@ import Bull, { Queue } from 'bull';
 import dotenv from 'dotenv';
 dotenv.config();
 
-const chain: 'mainnet' | 'goerli' = process.env.CHAIN_ID === '5' ? 'goerli' : 'mainnet';
+const chain: 'mainnet' | 'goerli' = process.env.CHAIN_ID === '1' ? 'mainnet' : 'goerli';
 
 @Injectable()
 export class BlockService {
 
   constructor(
-    @InjectQueue('blockProcessingQueue') private readonly queue: Queue
-  ) {
-    this.queue.on('completed', async (job) => {
-      await this.saveBlockNumber(job.data.blockNum);
-    });
-  }
+    @InjectQueue(`blockProcessingQueue_${chain}`) private readonly queue: Queue
+  ) {}
 
   async addBlockToQueue(blockNum: number, timestamp: number) {
     const jobId = `block_${blockNum}__${chain}`;
@@ -26,45 +22,16 @@ export class BlockService {
 
     const existingJob = await this.queue.getJob(jobId);
     if (existingJob) {
-      Logger.error('❌', `Block ${blockNum} already in queue`);
-      return;
+      await existingJob.remove();
+      Logger.error('⚠️', `Updated existing job for block ${blockNum}`);
     }
 
     await this.queue.add(
-      'blockNumQueue',
-      {
-        blockNum,
-        chain,
-        timestamp,
-        retryCount: 0,
-        maxRetries,
-      },
-      {
-        jobId,
-        removeOnComplete: true,
-        removeOnFail: true,
-      }
+      `blockNumQueue_${chain}`,
+      { blockNum, chain, timestamp, retryCount: 0, maxRetries, },
+      { jobId, removeOnComplete: true, removeOnFail: true, }
     );
     if (blockNum % 1000 === 0) Logger.debug(`Added block ${blockNum} to queue`);
-  }
-
-  async getOrCreateBlockFile(block: number): Promise<number> {
-    return Number(process.env.ORIGIN_BLOCK_GOERLI);
-    // let newBlock = block;
-    // try {
-    //   const blockFromFile = await readFile(`lastBlock-${chain}.txt`, 'utf8');
-    //   if (!blockFromFile) await writeFile(`lastBlock-${chain}.txt`, newBlock.toString());
-    //   if (blockFromFile) newBlock = Number(blockFromFile.toString());
-    //   return newBlock;
-    // } catch (err) {
-    //   Logger.error(err.message);
-    //   return newBlock;
-    // }
-  }
-
-  async saveBlockNumber(block: number): Promise<void> {
-    // await writeFile(`lastBlock-${chain}.txt`, block.toString());
-    // Logger.log(`Saved block ${block} to file`);
   }
 
   async pauseQueue() {

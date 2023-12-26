@@ -12,6 +12,11 @@ import { Web3Service } from 'src/services/web3.service';
 import { SupabaseService } from 'src/services/supabase.service';
 import { TimeService } from 'src/utils/time.service';
 
+import dotenv from 'dotenv';
+dotenv.config();
+
+const chain: 'mainnet' | 'goerli' = process.env.CHAIN_ID === '1' ? 'mainnet' : 'goerli';
+
 @Module({
   imports: [
     BullModule.forRoot({
@@ -21,7 +26,7 @@ import { TimeService } from 'src/utils/time.service';
       }
     }),
     BullModule.registerQueue({
-      name: 'blockProcessingQueue'
+      name: `blockProcessingQueue_${chain}`
     }),
   ],
   providers: [

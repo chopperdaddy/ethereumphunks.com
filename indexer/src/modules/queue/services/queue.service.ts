@@ -3,26 +3,31 @@ import { InjectQueue, OnQueueActive, OnQueueCompleted, OnQueueError, OnQueueEven
 
 // import { UtilityService } from 'src/services/utility.service';
 import { ProcessingService } from 'src/services/processing.service';
-
-import { Job, Queue } from 'bull';
 import { UtilityService } from 'src/utils/utility.service';
 
+import { Job, Queue } from 'bull';
+
+import dotenv from 'dotenv';
+dotenv.config();
+
+const chain: 'mainnet' | 'goerli' = process.env.CHAIN_ID === '1' ? 'mainnet' : 'goerli';
+
 @Injectable()
-@Processor('blockProcessingQueue')
+@Processor(`blockProcessingQueue_${chain}`)
 export class QueueService {
 
-  @Process({ name: 'blockNumQueue', concurrency: 1 })
+  @Process({ name: `blockNumQueue_${chain}`, concurrency: 1 })
   async handleBlockNumberQueue(job: Job<any>) {
     const { blockNum } = job.data;
     await this.processSvc.processBlock(blockNum);
   }
 
-  @OnQueueCompleted({ name: 'blockNumQueue' })
+  @OnQueueCompleted({ name: `blockNumQueue_${chain}` })
   async onCompleted(job: Job<any>) {
     // Logger.debug(`Completed job ${job.id}`);
   }
 
-  @OnQueueFailed({ name: 'blockNumQueue' })
+  @OnQueueFailed({ name: `blockNumQueue_${chain}` })
   async onFailed(job: Job<any>, error: Error) {
     Logger.error('❌', `Failed job ${job.id} with error ${error}`);
     this.queue.pause();
@@ -45,19 +50,19 @@ export class QueueService {
     // Logger.debug(`Waiting job ${jobId}`);
   }
 
-  @OnQueueError({ name: 'blockNumQueue' })
+  @OnQueueError({ name: `blockNumQueue_${chain}` })
   async onError(error: Error) {
     // Logger.error(`Error ${error}`);
   }
 
-  @OnQueueActive({ name: 'blockNumQueue' })
+  @OnQueueActive({ name: `blockNumQueue_${chain}` })
   async onActive(job: Job<any>) {
     // When a job is proccessing
     // Logger.debug(`Active job ${job.id}`);
   }
 
   constructor(
-    @InjectQueue('blockProcessingQueue') private readonly queue: Queue,
+    @InjectQueue(`blockProcessingQueue_${chain}`) private readonly queue: Queue,
     private readonly utilSvc: UtilityService,
     private readonly processSvc: ProcessingService
     // private readonly appSvc: AppService

@@ -10,7 +10,8 @@ import { TimeService } from 'src/utils/time.service';
 
 import { esip1Abi, esip2Abi } from 'src/abi/EthscriptionsProtocol';
 
-import { etherPhunksMarketAbi } from 'src/abi/EtherPhunksMarket';
+import etherPhunksMarketAbi from 'src/abi/EtherPhunksMarket.json';
+import etherPhunksMarketProxyAbi from 'src/abi/EtherPhunksMarketProxy.json';
 import etherPhunksAuctionHouseAbi from 'src/abi/EtherPhunksAuctionHouse.json';
 
 import * as esips from 'src/constants/EthscriptionsProtocol';
@@ -44,45 +45,53 @@ export class ProcessingService {
 
   // Method to start fetching and processing blocks from the network
   async startBackfill(startBlock: number): Promise<void> {
-    let blockNum: number = await this.blockSvc.getOrCreateBlockFile(startBlock);
-
     const latestBlock = await this.web3Svc.getBlock();
     const latestBlockNum = Number(latestBlock.number);
 
-    while (blockNum < latestBlockNum) {
-      await this.addBlockToQueue(blockNum, new Date().getTime());
-      blockNum++;
+    while (startBlock < latestBlockNum) {
+      await this.addBlockToQueue(startBlock, new Date().getTime());
+      startBlock++;
     }
   }
 
   async startPolling(): Promise<void> {
-    // Watch for new blocks and add them to the queue
-    this.web3Svc.client.watchBlocks({
-      onBlock: async (block) => {
-        const blockNum = Number(block.number);
-        const timestamp = new Date(Number(block.timestamp) * 1000).getTime();
-        await this.addBlockToQueue(blockNum, timestamp);
-      },
-      onError: (error) => {
-        console.log(error);
-        // We should probably pause the indexer here
-        // and wait for the node to come back online
-        // and go back one block
-      }
+    return new Promise((resolve, reject) => {
+      // Watch for new blocks and add them to the queue
+      const unwatch = this.web3Svc.client.watchBlocks({
+        onBlock: async (block) => {
+          try {
+            const blockNum = Number(block.number);
+            const timestamp = new Date(Number(block.timestamp) * 1000).getTime();
+            await this.addBlockToQueue(blockNum, timestamp);
+          } catch (error) {
+            unwatch();
+            reject(error); // Reject the promise on error
+          }
+        },
+        onError: (error) => {
+          console.log(error);
+          unwatch(); // Unwatch the blocks
+          reject(error); // Reject the promise on error
+        }
+      });
     });
   }
 
   async processBlock(blockNum: number): Promise<void> {
     const { txns, createdAt } = await this.web3Svc.getBlockTransactions(blockNum);
-    const timeAgo = this.timeSvc.howLongAgo(createdAt as any);
 
-    Logger.log(`Processing block ${blockNum} (${this.web3Svc.chain}) ➖ ${timeAgo}`);
+    // Log the block
+    const timeAgo = this.timeSvc.howLongAgo(createdAt as any);
+    Logger.log(`Processing block ${blockNum} (${this.web3Svc.chain}) ➖  ${timeAgo}`);
+
+    // Process the transactions
     const events = await this.processTransactions(txns, createdAt);
 
-    if (events.length) {
-      await this.sbSvc.addEvents(events);
-      // console.log(JSON.stringify(events));
-    }
+    // Add the events to the database
+    if (events.length) await this.sbSvc.addEvents(events);
+
+    // Update the block in db
+    if (blockNum % 10 === 0) this.sbSvc.updateLastBlock(blockNum, createdAt);
   }
 
   async retryBlock(blockNum: number): Promise<void> {
@@ -226,7 +235,9 @@ export class ProcessingService {
 
       // Filter logs for EtherPhunk Marketplace events
       const marketplaceLogs = receipt.logs.filter(
-        (log: any) => log.address?.toLowerCase() === this.web3Svc.marketAddress.toLowerCase()
+        (log: any) => this.web3Svc.marketAddress.filter(
+          (addr) => addr.toLowerCase() === log.address.toLowerCase()
+        )?.length
       );
       if (marketplaceLogs.length) {
         Logger.debug(
@@ -499,13 +510,21 @@ export class ProcessingService {
 
     const events = [];
     for (const log of marketplaceLogs) {
-      if (log.address.toLowerCase() !== this.web3Svc.marketAddress) continue;
+      if (!this.web3Svc.marketAddress.includes(log.address?.toLowerCase())) continue;
 
-      const decoded = decodeEventLog({
-        abi: etherPhunksMarketAbi,
-        data: log.data,
-        topics: log.topics,
-      });
+      // console.log({marketplaceLogs, transaction, createdAt});
+
+      let decoded: DecodeEventLogReturnType;
+      try {
+        decoded = decodeEventLog({
+          abi: etherPhunksMarketProxyAbi,
+          data: log.data,
+          topics: log.topics,
+        });
+      } catch (error) {
+        console.log(error);
+        continue;
+      }
 
       const event = await this.processEtherPhunkMarketplaceEvent(
         transaction,
@@ -550,7 +569,7 @@ export class ProcessingService {
       }
 
       await this.sbSvc.removeListing(hashId);
-      this.distributePoints(fromAddress);
+      // this.distributePoints(fromAddress);
 
       return {
         txId: txn.hash + log.logIndex,
@@ -641,75 +660,75 @@ export class ProcessingService {
     }
   }
 
-  async processAuctionHouseEvents(
-    auctionHouseLogs: any[],
-    transaction: Transaction,
-    createdAt: Date
-  ): Promise<void> {
-    for (const log of auctionHouseLogs) {
+  // async processAuctionHouseEvents(
+  //   auctionHouseLogs: any[],
+  //   transaction: Transaction,
+  //   createdAt: Date
+  // ): Promise<void> {
+  //   for (const log of auctionHouseLogs) {
 
-      if (log.address.toLowerCase() !== this.web3Svc.auctionAddress) continue;
+  //     if (log.address.toLowerCase() !== this.web3Svc.auctionAddress) continue;
 
-      const decoded = decodeEventLog({
-        abi: etherPhunksAuctionHouseAbi,
-        data: log.data,
-        topics: log.topics,
-      });
+  //     const decoded = decodeEventLog({
+  //       abi: etherPhunksAuctionHouseAbi,
+  //       data: log.data,
+  //       topics: log.topics,
+  //     });
 
-      await this.processAuctionHouseEvent(transaction, createdAt, decoded, log);
-    }
-  }
+  //     await this.processAuctionHouseEvent(transaction, createdAt, decoded, log);
+  //   }
+  // }
 
-  async processAuctionHouseEvent(
-    txn: Transaction,
-    createdAt: Date,
-    decoded: DecodeEventLogReturnType,
-    log: Log
-  ): Promise<void> {
-    const { eventName } = decoded;
-    const { args } = decoded as any;
+  // async processAuctionHouseEvent(
+  //   txn: Transaction,
+  //   createdAt: Date,
+  //   decoded: DecodeEventLogReturnType,
+  //   log: Log
+  // ): Promise<void> {
+  //   const { eventName } = decoded;
+  //   const { args } = decoded as any;
 
-    if (!eventName || !args) return;
+  //   if (!eventName || !args) return;
 
-    const hashId = args.hashId;
-    if (!hashId) return;
+  //   const hashId = args.hashId;
+  //   if (!hashId) return;
 
-    const phunkExists = await this.sbSvc.checkEthscriptionExistsByHashId(hashId);
-    if (!phunkExists) return;
+  //   const phunkExists = await this.sbSvc.checkEthscriptionExistsByHashId(hashId);
+  //   if (!phunkExists) return;
 
-    if (eventName === 'AuctionSettled') {
-      await this.sbSvc.settleAuction(args);
-    }
+  //   if (eventName === 'AuctionSettled') {
+  //     await this.sbSvc.settleAuction(args);
+  //   }
 
-    if (eventName === 'AuctionCreated') {
-      await this.sbSvc.createAuction(args, createdAt);
-    }
+  //   if (eventName === 'AuctionCreated') {
+  //     await this.sbSvc.createAuction(args, createdAt);
+  //   }
 
-    if (eventName === 'AuctionBid') {
-      await this.sbSvc.createAuctionBid(args, txn, createdAt);
-    }
+  //   if (eventName === 'AuctionBid') {
+  //     await this.sbSvc.createAuctionBid(args, txn, createdAt);
+  //   }
 
-    if (eventName === 'AuctionExtended') {
-      await this.sbSvc.extendAuction(args);
-    }
+  //   if (eventName === 'AuctionExtended') {
+  //     await this.sbSvc.extendAuction(args);
+  //   }
 
-    // event AuctionCreated(bytes32 indexed hashId, address owner, uint256 auctionId, uint256 startTime, uint256 endTime);
-    // event AuctionBid(bytes32 indexed hashId, uint256 auctionId, address sender, uint256 value, bool extended);
-    // event AuctionExtended(bytes32 indexed hashId, uint256 auctionId, uint256 endTime);
-    // event AuctionSettled(bytes32 indexed hashId, uint256 auctionId, address winner, uint256 amount);
-    // event AuctionTimeBufferUpdated(uint256 timeBuffer);
-    // event AuctionDurationUpdated(uint256 duration);
-    // event AuctionReservePriceUpdated(uint256 reservePrice);
-    // event AuctionMinBidIncrementPercentageUpdated(uint256 minBidIncrementPercentage);
-  }
+  //   // event AuctionCreated(bytes32 indexed hashId, address owner, uint256 auctionId, uint256 startTime, uint256 endTime);
+  //   // event AuctionBid(bytes32 indexed hashId, uint256 auctionId, address sender, uint256 value, bool extended);
+  //   // event AuctionExtended(bytes32 indexed hashId, uint256 auctionId, uint256 endTime);
+  //   // event AuctionSettled(bytes32 indexed hashId, uint256 auctionId, address winner, uint256 amount);
+  //   // event AuctionTimeBufferUpdated(uint256 timeBuffer);
+  //   // event AuctionDurationUpdated(uint256 duration);
+  //   // event AuctionReservePriceUpdated(uint256 reservePrice);
+  //   // event AuctionMinBidIncrementPercentageUpdated(uint256 minBidIncrementPercentage);
+  // }
 
-  async distributePoints(fromAddress: `0x${string}`): Promise<void> {
-    try {
-      const points = await this.web3Svc.getPoints(fromAddress);
-      await this.sbSvc.updateUserPoints(fromAddress, Number(points));
-      Logger.log(`Updated user points to ${points}`, fromAddress);
-    } catch (error) {
-      console.log(error);
-    }
-  }
+  // async distributePoints(fromAddress: `0x${string}`): Promise<void> {
+  //   try {
+  //     const points = await this.web3Svc.getPoints(fromAddress);
+  //     await this.sbSvc.updateUserPoints(fromAddress, Number(points));
+  //     Logger.log(`Updated user points to ${points}`, fromAddress);
+  //   } catch (error) {
+  //     console.log(error);
+  //   }
+  // }
 }

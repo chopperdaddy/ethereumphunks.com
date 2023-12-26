@@ -1,7 +1,11 @@
 import { Injectable, Logger } from '@nestjs/common';
 
-import { ProcessingService } from './services/processing.service';
 import { BlockService } from './modules/queue/services/block.service';
+
+import { SupabaseService } from './services/supabase.service';
+import { ProcessingService } from './services/processing.service';
+import { Web3Service } from './services/web3.service';
+
 import { UtilityService } from './utils/utility.service';
 
 import { StandardMerkleTree } from '@openzeppelin/merkle-tree';
@@ -11,8 +15,8 @@ import * as MerkleTree from './abi/tree.json'
 import dotenv from 'dotenv';
 dotenv.config();
 
-const chain: 'mainnet' | 'goerli' = process.env.CHAIN_ID === '5' ? 'goerli' : 'mainnet';
-const startBlock = Number(chain === 'goerli' ? process.env.ORIGIN_BLOCK_GOERLI : process.env.ORIGIN_BLOCK_MAINNET);
+const chain: 'mainnet' | 'goerli' = process.env.CHAIN_ID === '1' ? 'mainnet' : 'goerli';
+const originBlock = Number(chain === 'mainnet' ? process.env.ORIGIN_BLOCK_MAINNET : process.env.ORIGIN_BLOCK_GOERLI);
 
 @Injectable()
 export class AppService {
@@ -20,34 +24,36 @@ export class AppService {
   constructor(
     private readonly blockSvc: BlockService,
     private readonly processSvc: ProcessingService,
-    private readonly utilSvc: UtilityService
+    private readonly sbSvc: SupabaseService,
+    private readonly utilSvc: UtilityService,
+    private readonly web3Svc: Web3Service
   ) {
     this.blockSvc.clearQueue().then(() => {
       Logger.debug('Queue Cleared', chain.toUpperCase());
       this.startIndexer();
     });
+
+    console.log(this.web3Svc.marketAddress);
   }
 
   // Start Indexer //
   async startIndexer() {
+
     try {
-      await this.utilSvc.delay(3000);
-
-      const jobs = await this.blockSvc.getJobCounts();
-      // console.log(jobs);
-
+      await this.utilSvc.delay(10000);
       await this.blockSvc.pauseQueue();
+
+      const startBlock = await this.sbSvc.getLastBlock(Number(process.env.CHAIN_ID)) || originBlock;
 
       Logger.debug('Starting Backfill', chain.toUpperCase());
       await this.processSvc.startBackfill(startBlock);
       await this.blockSvc.resumeQueue();
 
       Logger.debug('Starting Block Watcher', chain.toUpperCase());
-      this.processSvc.startPolling();
+      await this.processSvc.startPolling();
+
     } catch (error) {
       Logger.error(error);
-      // Pause indexer for 30 seconds and try again
-      await this.utilSvc.delay(30000);
       this.startIndexer();
     }
   }

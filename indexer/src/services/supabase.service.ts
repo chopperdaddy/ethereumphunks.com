@@ -36,11 +36,31 @@ export class SupabaseService {
 
   constructor(
     private readonly utilSvc: UtilityService
-  ) {
-    // this.getUnminted().then((phunks) => {
-    // //   // Logger.log(`Loaded ${phunks.length} phunks`);
-    // //   // console.log(phunks);
-    // });
+  ) {}
+
+  async updateLastBlock(blockNumber: number, createdAt: Date): Promise<void> {
+    const response = await supabase
+      .from('blocks')
+      .upsert({
+        network: process.env.CHAIN_ID,
+        blockNumber,
+        createdAt,
+      });
+
+    const { error } = response;
+    if (error) throw error;
+  }
+
+  async getLastBlock(network: number): Promise<any> {
+    const response = await supabase
+      .from('blocks')
+      .select('*')
+      .eq('network', network);
+
+    const { data, error } = response;
+    if (error) throw error;
+    if (data?.length) return data[0]?.blockNumber;
+    return null;
   }
 
   async removeBid(hashId: string): Promise<void> {

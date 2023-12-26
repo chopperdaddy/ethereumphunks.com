@@ -12,15 +12,15 @@ dotenv.config();
 @Injectable()
 export class Web3Service {
 
-  marketAddress = (process.env.MARKET_ADDRESS).toLowerCase();
-  auctionAddress = (process.env.AUCTION_ADDRESS).toLowerCase();
-  pointsAddress = (process.env.POINTS_ADDRESS).toLowerCase();
+  chain: 'mainnet' | 'goerli' = process.env.CHAIN_ID === '1' ? 'mainnet' : 'goerli';
+  rpcURL: string = this.chain === 'mainnet' ? process.env.RPC_URL_MAINNET : process.env.RPC_URL_GOERLI;
 
-  chain: 'mainnet' | 'goerli' = process.env.CHAIN_ID === '5' ? 'goerli' : 'mainnet';
-  rpcURL: string = this.chain === 'goerli' ? process.env.RPC_URL_GOERLI : process.env.RPC_URL_MAINNET;
+  marketAddress: string[] = JSON.parse(
+    this.chain === 'mainnet' ? process.env.MARKET_ADDRESS_MAINNET : process.env.MARKET_ADDRESS_GOERLI
+  ).map((address: string) => address.toLowerCase());
 
   public client = createPublicClient({
-    chain: this.chain === 'goerli' ? goerli : mainnet,
+    chain: this.chain === 'mainnet' ? mainnet : goerli,
     transport: http(this.rpcURL)
   });
 
@@ -69,15 +69,15 @@ export class Web3Service {
   // EtherPhunks smart contract interactions ////////////////////////////////////
   ///////////////////////////////////////////////////////////////////////////////
 
-  async getPoints(address: `0x${string}`): Promise<number> {
-    const points = await this.client.readContract({
-      address: this.pointsAddress as `0x${string}`,
-      abi: pointsAbi,
-      functionName: 'points',
-      args: [`${address}`],
-    });
-    return points as number;
-  }
+  // async getPoints(address: `0x${string}`): Promise<number> {
+  //   const points = await this.client.readContract({
+  //     address: this.pointsAddress as `0x${string}`,
+  //     abi: pointsAbi,
+  //     functionName: 'points',
+  //     args: [`${address}`],
+  //   });
+  //   return points as number;
+  // }
 
   ///////////////////////////////////////////////////////////////////////////////
   // Punk data contract interactions ////////////////////////////////////////////

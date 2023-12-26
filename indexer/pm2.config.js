@@ -6,6 +6,7 @@ module.exports = {
       env: {
         NODE_ENV: "dev",
         CHAIN_ID: "5",
+        PORT: "3000",
       },
     },
     {
@@ -14,6 +15,7 @@ module.exports = {
       env: {
         NODE_ENV: "prod",
         CHAIN_ID: "1",
+        PORT: "3001",
       },
     }
   ],
