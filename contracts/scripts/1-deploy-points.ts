@@ -5,7 +5,7 @@ const contractName = 'Points';
 async function deployPoints() {
   const [signer] = await hre.ethers.getSigners();
 
-  console.log('=====================================================================');
+  console.log('\n\n=====================================================================');
   console.log(`Deploying ${contractName} contract with the account:`, signer.address);
 
   const ContractFactory = await hre.ethers.getContractFactory(contractName);
