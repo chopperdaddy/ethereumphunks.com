@@ -2,17 +2,6 @@
   {
     "inputs": [
       {
-        "internalType": "address",
-        "name": "_initialPointsAddress",
-        "type": "address"
-      }
-    ],
-    "stateMutability": "nonpayable",
-    "type": "constructor"
-  },
-  {
-    "inputs": [
-      {
         "internalType": "uint256",
         "name": "additionalBlocksNeeded",
         "type": "uint256"
@@ -21,30 +10,97 @@
     "name": "AdditionalCooldownRequired",
     "type": "error"
   },
-  { "inputs": [], "name": "EnforcedPause", "type": "error" },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "target",
+        "type": "address"
+      }
+    ],
+    "name": "AddressEmptyCode",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "EnforcedPause",
+    "type": "error"
+  },
   {
     "inputs": [],
     "name": "EthscriptionAlreadyReceivedFromSender",
     "type": "error"
   },
-  { "inputs": [], "name": "EthscriptionNotDeposited", "type": "error" },
-  { "inputs": [], "name": "ExpectedPause", "type": "error" },
-  { "inputs": [], "name": "InvalidEthscriptionLength", "type": "error" },
+  {
+    "inputs": [],
+    "name": "EthscriptionNotDeposited",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "ExpectedPause",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "FailedInnerCall",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "InvalidEthscriptionLength",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "InvalidInitialization",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "NotInitializing",
+    "type": "error"
+  },
   {
     "inputs": [
-      { "internalType": "address", "name": "owner", "type": "address" }
+      {
+        "internalType": "address",
+        "name": "owner",
+        "type": "address"
+      }
     ],
     "name": "OwnableInvalidOwner",
     "type": "error"
   },
   {
     "inputs": [
-      { "internalType": "address", "name": "account", "type": "address" }
+      {
+        "internalType": "address",
+        "name": "account",
+        "type": "address"
+      }
     ],
     "name": "OwnableUnauthorizedAccount",
     "type": "error"
   },
-  { "inputs": [], "name": "ReentrancyGuard__ReentrantCall", "type": "error" },
+  {
+    "inputs": [],
+    "name": "ReentrancyGuardReentrantCall",
+    "type": "error"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "uint64",
+        "name": "version",
+        "type": "uint64"
+      }
+    ],
+    "name": "Initialized",
+    "type": "event"
+  },
   {
     "anonymous": false,
     "inputs": [
@@ -272,18 +328,35 @@
     "name": "ethscriptions_protocol_TransferEthscriptionForPreviousOwner",
     "type": "event"
   },
-  { "stateMutability": "nonpayable", "type": "fallback" },
+  {
+    "stateMutability": "nonpayable",
+    "type": "fallback"
+  },
   {
     "inputs": [],
     "name": "ETHSCRIPTION_TRANSFER_COOLDOWN_BLOCKS",
-    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
     "stateMutability": "view",
     "type": "function"
   },
   {
     "inputs": [
-      { "internalType": "bytes32", "name": "phunkId", "type": "bytes32" },
-      { "internalType": "uint256", "name": "minPrice", "type": "uint256" }
+      {
+        "internalType": "bytes32",
+        "name": "phunkId",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "uint256",
+        "name": "minPrice",
+        "type": "uint256"
+      }
     ],
     "name": "acceptBidForPhunk",
     "outputs": [],
@@ -292,7 +365,29 @@
   },
   {
     "inputs": [
-      { "internalType": "bytes32[]", "name": "phunkIds", "type": "bytes32[]" },
+      {
+        "internalType": "bytes32[]",
+        "name": "phunkIds",
+        "type": "bytes32[]"
+      },
+      {
+        "internalType": "uint256[]",
+        "name": "minSalePricesInWei",
+        "type": "uint256[]"
+      }
+    ],
+    "name": "batchBuyPhunk",
+    "outputs": [],
+    "stateMutability": "payable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32[]",
+        "name": "phunkIds",
+        "type": "bytes32[]"
+      },
       {
         "internalType": "uint256[]",
         "name": "minSalePricesInWei",
@@ -306,17 +401,40 @@
   },
   {
     "inputs": [
-      { "internalType": "address", "name": "previousOwner", "type": "address" },
-      { "internalType": "bytes32", "name": "ethscriptionId", "type": "bytes32" }
+      {
+        "internalType": "address",
+        "name": "previousOwner",
+        "type": "address"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "ethscriptionId",
+        "type": "bytes32"
+      }
     ],
     "name": "blocksRemainingUntilValidTransfer",
-    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
     "stateMutability": "view",
     "type": "function"
   },
   {
     "inputs": [
-      { "internalType": "bytes32", "name": "phunkId", "type": "bytes32" }
+      {
+        "internalType": "bytes32",
+        "name": "phunkId",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "uint256",
+        "name": "minSalePriceInWei",
+        "type": "uint256"
+      }
     ],
     "name": "buyPhunk",
     "outputs": [],
@@ -324,8 +442,25 @@
     "type": "function"
   },
   {
+    "inputs": [],
+    "name": "contractVersion",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
     "inputs": [
-      { "internalType": "bytes32", "name": "phunkId", "type": "bytes32" }
+      {
+        "internalType": "bytes32",
+        "name": "phunkId",
+        "type": "bytes32"
+      }
     ],
     "name": "enterBidForPhunk",
     "outputs": [],
@@ -334,18 +469,43 @@
   },
   {
     "inputs": [
-      { "internalType": "bytes[]", "name": "data", "type": "bytes[]" }
+      {
+        "internalType": "address",
+        "name": "_initialPointsAddress",
+        "type": "address"
+      }
+    ],
+    "name": "initialize",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes[]",
+        "name": "data",
+        "type": "bytes[]"
+      }
     ],
     "name": "multicall",
     "outputs": [
-      { "internalType": "bytes[]", "name": "results", "type": "bytes[]" }
+      {
+        "internalType": "bytes[]",
+        "name": "results",
+        "type": "bytes[]"
+      }
     ],
     "stateMutability": "nonpayable",
     "type": "function"
   },
   {
     "inputs": [
-      { "internalType": "bytes32", "name": "phunkId", "type": "bytes32" },
+      {
+        "internalType": "bytes32",
+        "name": "phunkId",
+        "type": "bytes32"
+      },
       {
         "internalType": "uint256",
         "name": "minSalePriceInWei",
@@ -359,13 +519,21 @@
   },
   {
     "inputs": [
-      { "internalType": "bytes32", "name": "phunkId", "type": "bytes32" },
+      {
+        "internalType": "bytes32",
+        "name": "phunkId",
+        "type": "bytes32"
+      },
       {
         "internalType": "uint256",
         "name": "minSalePriceInWei",
         "type": "uint256"
       },
-      { "internalType": "address", "name": "toAddress", "type": "address" }
+      {
+        "internalType": "address",
+        "name": "toAddress",
+        "type": "address"
+      }
     ],
     "name": "offerPhunkForSaleToAddress",
     "outputs": [],
@@ -375,7 +543,13 @@
   {
     "inputs": [],
     "name": "owner",
-    "outputs": [{ "internalType": "address", "name": "", "type": "address" }],
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
     "stateMutability": "view",
     "type": "function"
   },
@@ -389,32 +563,76 @@
   {
     "inputs": [],
     "name": "paused",
-    "outputs": [{ "internalType": "bool", "name": "", "type": "bool" }],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [{ "internalType": "address", "name": "", "type": "address" }],
-    "name": "pendingWithdrawals",
-    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [{ "internalType": "bytes32", "name": "", "type": "bytes32" }],
-    "name": "phunkBids",
     "outputs": [
-      { "internalType": "bool", "name": "hasBid", "type": "bool" },
-      { "internalType": "bytes32", "name": "phunkId", "type": "bytes32" },
-      { "internalType": "address", "name": "bidder", "type": "address" },
-      { "internalType": "uint256", "name": "value", "type": "uint256" }
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
     ],
     "stateMutability": "view",
     "type": "function"
   },
   {
     "inputs": [
-      { "internalType": "bytes32", "name": "phunkId", "type": "bytes32" }
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "name": "pendingWithdrawals",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      }
+    ],
+    "name": "phunkBids",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "hasBid",
+        "type": "bool"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "phunkId",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "address",
+        "name": "bidder",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "value",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "phunkId",
+        "type": "bytes32"
+      }
     ],
     "name": "phunkNoLongerForSale",
     "outputs": [],
@@ -422,14 +640,40 @@
     "type": "function"
   },
   {
-    "inputs": [{ "internalType": "bytes32", "name": "", "type": "bytes32" }],
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      }
+    ],
     "name": "phunksOfferedForSale",
     "outputs": [
-      { "internalType": "bool", "name": "isForSale", "type": "bool" },
-      { "internalType": "bytes32", "name": "phunkId", "type": "bytes32" },
-      { "internalType": "address", "name": "seller", "type": "address" },
-      { "internalType": "uint256", "name": "minValue", "type": "uint256" },
-      { "internalType": "address", "name": "onlySellTo", "type": "address" }
+      {
+        "internalType": "bool",
+        "name": "isForSale",
+        "type": "bool"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "phunkId",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "address",
+        "name": "seller",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "minValue",
+        "type": "uint256"
+      },
+      {
+        "internalType": "address",
+        "name": "onlySellTo",
+        "type": "address"
+      }
     ],
     "stateMutability": "view",
     "type": "function"
@@ -437,7 +681,13 @@
   {
     "inputs": [],
     "name": "pointsAddress",
-    "outputs": [{ "internalType": "address", "name": "", "type": "address" }],
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
     "stateMutability": "view",
     "type": "function"
   },
@@ -450,7 +700,24 @@
   },
   {
     "inputs": [
-      { "internalType": "address", "name": "newOwner", "type": "address" }
+      {
+        "internalType": "address",
+        "name": "_newPointsAddress",
+        "type": "address"
+      }
+    ],
+    "name": "setPointsAddress",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "newOwner",
+        "type": "address"
+      }
     ],
     "name": "transferOwnership",
     "outputs": [],
@@ -466,21 +733,49 @@
   },
   {
     "inputs": [
-      { "internalType": "address", "name": "owner", "type": "address" },
-      { "internalType": "bytes32", "name": "ethscriptionId", "type": "bytes32" }
+      {
+        "internalType": "address",
+        "name": "owner",
+        "type": "address"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "ethscriptionId",
+        "type": "bytes32"
+      }
     ],
     "name": "userEthscriptionDefinitelyNotStored",
-    "outputs": [{ "internalType": "bool", "name": "", "type": "bool" }],
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
     "stateMutability": "view",
     "type": "function"
   },
   {
     "inputs": [
-      { "internalType": "address", "name": "owner", "type": "address" },
-      { "internalType": "bytes32", "name": "ethscriptionId", "type": "bytes32" }
+      {
+        "internalType": "address",
+        "name": "owner",
+        "type": "address"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "ethscriptionId",
+        "type": "bytes32"
+      }
     ],
     "name": "userEthscriptionPossiblyStored",
-    "outputs": [{ "internalType": "bool", "name": "", "type": "bool" }],
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
     "stateMutability": "view",
     "type": "function"
   },
@@ -493,7 +788,11 @@
   },
   {
     "inputs": [
-      { "internalType": "bytes32[]", "name": "phunkIds", "type": "bytes32[]" }
+      {
+        "internalType": "bytes32[]",
+        "name": "phunkIds",
+        "type": "bytes32[]"
+      }
     ],
     "name": "withdrawBatchPhunks",
     "outputs": [],
@@ -502,7 +801,11 @@
   },
   {
     "inputs": [
-      { "internalType": "bytes32", "name": "phunkId", "type": "bytes32" }
+      {
+        "internalType": "bytes32",
+        "name": "phunkId",
+        "type": "bytes32"
+      }
     ],
     "name": "withdrawBidForPhunk",
     "outputs": [],
@@ -511,7 +814,11 @@
   },
   {
     "inputs": [
-      { "internalType": "bytes32", "name": "phunkId", "type": "bytes32" }
+      {
+        "internalType": "bytes32",
+        "name": "phunkId",
+        "type": "bytes32"
+      }
     ],
     "name": "withdrawPhunk",
     "outputs": [],

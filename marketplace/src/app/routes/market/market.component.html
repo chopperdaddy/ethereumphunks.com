@@ -85,10 +85,7 @@
                   <span class="label">Total cost: </span>
                   <span class="value">{{ (selectedValue | weiToEth) | number }}Ξ</span>
                 </div>
-                <button
-                  (click)="batchAction('sweep')"
-                  class="disabled">
-
+                <button (click)="batchAction('sweep')">
                   Buy Selected
                 </button>
               }

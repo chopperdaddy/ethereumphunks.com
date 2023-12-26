@@ -1,0 +1,29 @@
+@import 'abstracts/variables';
+@import 'abstracts/mixins';
+
+:host {
+  position: fixed;
+  z-index: 9999;
+  bottom: 0;
+  right: 0;
+
+  padding: 1rem 3rem 1rem 1rem;
+
+  font-family: $secondary-font-stack;
+  font-size: 1rem;
+  color: rgba(var(--white), .75);
+
+  background-color: rgba(var(--black), 1);
+
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+
+  .label {
+    padding-right: .5rem;
+  }
+
+  .value {
+
+  }
+}

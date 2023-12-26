@@ -28,7 +28,7 @@ const supabase = createClient(supabaseUrl, supabaseKey);
 
 export class DataService {
 
-  public prefix: string = environment.chainId === 1 ? '_mainnet' : '_goerli';
+  public prefix: string = environment.chainId === 1 ? '' : '_goerli';
 
   staticUrl = environment.staticUrl;
   escrowAddress = environment.marketAddress;
@@ -97,8 +97,9 @@ export class DataService {
     address: string,
     slug?: string,
   ): Observable<any[]> {
-    console.log('fetchOwned', {address, slug});
+    // console.log('fetchOwned', {address, slug});
 
+    if (!address) return of([]);
     address = address.toLowerCase();
 
     const qurey = supabase.rpc(
@@ -106,7 +107,7 @@ export class DataService {
       { address, slug }
     );
     return from(qurey).pipe(
-      tap((res) => console.log('fetchOwned', res)),
+      // tap((res) => console.log('fetchOwned', res)),
       map((res: any) => res.data),
       map((res: any[]) => res.map((item: any) => {
         const ethscription = item.ethscription;
@@ -157,8 +158,6 @@ export class DataService {
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   fetchMarketData(slug?: string): Observable<Phunk[]> {
-    console.log('fetchMarketData', {slug});
-
     if (!slug) return of([]);
     return from(
       supabase.rpc(
@@ -175,7 +174,6 @@ export class DataService {
         }
       })),
       switchMap((res: any) => this.addAttributes(res)),
-      tap((res) => console.log('fetchMarketData', res)),
     ) as Observable<any>;
   }
 
@@ -188,14 +186,14 @@ export class DataService {
     type?: EventType,
     slug?: string,
   ): Observable<any> {
-    console.log('fetchEvents', {limit, type, slug});
+    // console.log('fetchEvents', {limit, type, slug});
 
     return from(supabase.rpc('fetch_events', {
       p_limit: limit,
       p_type: type && type !== 'All' ? type : null,
       p_collection_slug: slug
     })).pipe(
-      tap((res) => console.log('fetchEvents', res)),
+      // tap((res) => console.log('fetchEvents', res)),
       map((res: any) => res.data.map((item: any) => ({
         ...item,
         // blockTimestamp: new Date(item.blockTimestamp).getTime(),
@@ -295,31 +293,41 @@ export class DataService {
   async getListingFromHashId(hashId: string | undefined): Promise<Listing | null> {
     if (!hashId) return null;
 
-    const call = await this.web3Svc.readContract('phunksOfferedForSale', [hashId]);
-    if (!call[0]) return null;
+    try {
+      const call = await this.web3Svc.readContract('phunksOfferedForSale', [hashId]);
+      if (!call[0]) return null;
 
-    return {
-      createdAt: new Date(),
-      hashId: call[1],
-      minValue: call[3].toString(),
-      listedBy: call[2],
-      toAddress: call[4],
-      listed: call[0],
-    };
+      return {
+        createdAt: new Date(),
+        hashId: call[1],
+        minValue: call[3].toString(),
+        listedBy: call[2],
+        toAddress: call[4],
+        listed: call[0],
+      };
+    } catch (error) {
+      console.log('getListingFromHashId', error);
+      return null;
+    }
   }
 
   async getBidFromHashId(hashId: string | undefined): Promise<Bid | null> {
     if (!hashId) return null;
 
-    const call = await this.web3Svc.readContract('phunkBids', [hashId]);
-    if (!call[0]) return null;
+    try {
+      const call = await this.web3Svc.readContract('phunkBids', [hashId]);
+      if (!call[0]) return null;
 
-    return {
-      createdAt: new Date(),
-      hashId: call[1],
-      value: call[3].toString(),
-      fromAddress: call[2],
-    };
+      return {
+        createdAt: new Date(),
+        hashId: call[1],
+        value: call[3].toString(),
+        fromAddress: call[2],
+      };
+    } catch (error) {
+      console.log('getBidFromHashId', error);
+      return null;
+    }
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

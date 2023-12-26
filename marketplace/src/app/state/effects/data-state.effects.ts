@@ -14,7 +14,7 @@ import * as appStateSelectors from '@/state/selectors/app-state.selectors';
 import * as dataStateActions from '@/state/actions/data-state.actions';
 import * as dataStateSelectors from '@/state/selectors/data-state.selectors';
 
-import { asyncScheduler, catchError, filter, map, of, switchMap, tap, throttleTime, withLatestFrom } from 'rxjs';
+import { asyncScheduler, catchError, combineLatest, filter, map, of, switchMap, tap, throttleTime, withLatestFrom } from 'rxjs';
 
 import { Web3Service } from '@/services/web3.service';
 
@@ -44,17 +44,17 @@ export class DataStateEffects {
     ),
     tap(([newData, address, eventTypeFilter]) => {
       // Check if the event involved the active user
-      this.checkEventForPurchaseFromUser(newData, address);
+      // this.checkEventForPurchaseFromUser(newData, address);
 
       // Fetch market data
       // this.store.dispatch(dataStateActions.fetchOwnedPhunks());
       // this.store.dispatch(dataStateActions.fetchMarketData());
 
       // Update points
-      this.store.dispatch(appStateActions.fetchUserPoints());
+      // this.store.dispatch(appStateActions.fetchUserPoints());
 
       // Reset the event type filter (triggers a fetch of events)
-      this.store.dispatch(appStateActions.setEventTypeFilter({ eventTypeFilter }));
+      // this.store.dispatch(appStateActions.setEventTypeFilter({ eventTypeFilter }));
     }),
   ), { dispatch: false });
 
@@ -114,8 +114,11 @@ export class DataStateEffects {
 
   fetchEvents$ = createEffect(() => this.actions$.pipe(
     ofType(appStateActions.setEventTypeFilter),
-    withLatestFrom(this.store.select(appStateSelectors.selectMarketSlug)),
-    switchMap(([action, slug]) => this.dataSvc.fetchEvents(24, action.eventTypeFilter, slug)),
+    switchMap((action) => {
+      return this.store.select(appStateSelectors.selectMarketSlug).pipe(
+        switchMap((slug) => this.dataSvc.fetchEvents(24, action.eventTypeFilter, slug)),
+      );
+    }),
     map((events) => dataStateActions.setEvents({ events })),
   ));
 
@@ -132,7 +135,7 @@ export class DataStateEffects {
     })
   ));
 
-  fetchAllPhunks$ = createEffect(() => this.actions$.pipe(
+  fetchAll$ = createEffect(() => this.actions$.pipe(
     ofType(dataStateActions.fetchAllPhunks),
     switchMap(() => this.dataSvc.getAttributes()),
     map((attributes) => {
@@ -153,24 +156,23 @@ export class DataStateEffects {
     map((phunks) => dataStateActions.setAllPhunks({ allPhunks: phunks })),
   ));
 
-  fetchOwnedPhunks$ = createEffect(() => this.actions$.pipe(
-    ofType(dataStateActions.fetchOwnedPhunks),
-    withLatestFrom(
-      this.store.select(appStateSelectors.selectWalletAddress),
-      this.store.select(appStateSelectors.selectMarketSlug),
-    ),
-    filter(([_, address]) => !!address),
-    switchMap(([_, address, slug]) => this.dataSvc.fetchOwned(address, slug)),
+  fetchOwned$ = createEffect(() => this.actions$.pipe(
+    ofType(appStateActions.setWalletAddress),
+    switchMap((action) => {
+      return this.store.select(appStateSelectors.selectMarketSlug).pipe(
+        switchMap((slug) => this.dataSvc.fetchOwned(action.walletAddress, slug)),
+      );
+    }),
     map((phunks) => dataStateActions.setOwnedPhunks({ ownedPhunks: phunks })),
   ));
 
-  fetchSinglePhunk$ = createEffect(() => this.actions$.pipe(
+  fetchSingle$ = createEffect(() => this.actions$.pipe(
     ofType(dataStateActions.fetchSinglePhunk),
     switchMap((action) => this.dataSvc.fetchSinglePhunk(action.phunkId)),
     map((phunk) => dataStateActions.setSinglePhunk({ phunk })),
   ));
 
-  refreshSinglePhunk$ = createEffect(() => this.actions$.pipe(
+  refreshSingle$ = createEffect(() => this.actions$.pipe(
     ofType(dataStateActions.refreshSinglePhunk),
     withLatestFrom(this.store.select(dataStateSelectors.selectSinglePhunk)),
     // tap(([action, phunk]) => console.log('refreshSinglePhunk', action, phunk)),

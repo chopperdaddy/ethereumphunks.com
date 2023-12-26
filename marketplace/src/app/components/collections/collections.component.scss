@@ -2,16 +2,25 @@
 @import 'abstracts/mixins';
 
 :host {
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
-
+  display: block;
   width: 100%;
   // min-height: var(--billboard-height);
-  padding-top: 30rem;
+  padding-top: 20rem;
   background-color: rgba(var(--base-color), 1);
-
   padding-bottom: 3rem;
+}
+
+h2 {
+  color: rgba(var(--black), 1);
+  font-family: $secondary-font-stack;
+  font-size: 3rem;
+}
+
+.collections {
+  display: flex;
+
+  // align-items: flex-end;
+  // justify-content: center;
 }
 
 .collection {

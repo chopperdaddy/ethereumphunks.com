@@ -5,10 +5,11 @@ export const environment = {
   rpcHttpProvider: 'https://eth-goerli.g.alchemy.com/v2/yPJzT7r3rcFmI4ekjA9S7S1SP688b-au',
   explorerUrl: 'https://goerli.etherscan.io',
 
-  pointsAddress: '0x8974D44dAD885699155c17934E6d33135d85380F'.toLowerCase(),
-  marketAddress: '0x53A699992a217C6a802A8986634064De2E213E1C'.toLowerCase(),
+  marketAddress: '0x6f67A6F9a1d334CD105170bCd685C518D5610601'.toLowerCase(),
+  donationsAddress: '0x86a271a5C352efc2851753002b29faB2057f72a6'.toLowerCase(),
+  pointsAddress: '0x117A605D32ca32972487971Dc166C6b4723142Fb'.toLowerCase(),
   auctionAddress: '0xc6a824D8cce7c946A3F35879694b9261A36fc823'.toLowerCase(),
-  donationsAddress: '0x5795Af0D8eD22a8C013031B355b5F472867D345F'.toLowerCase(),
+
   staticUrl: 'https://kcbuycbhynlmsrvoegzp.supabase.co/storage/v1/object/public',
 
   supabaseUrl: 'https://kcbuycbhynlmsrvoegzp.supabase.co',

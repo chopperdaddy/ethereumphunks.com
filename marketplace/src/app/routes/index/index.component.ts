@@ -66,5 +66,8 @@ export class IndexComponent {
     private store: Store<GlobalState>,
     public themeSvc: ThemeService,
     public dataSvc: DataService,
-  ) {}
+  ) {
+    console.log('IndexComponent constructor');
+  }
+
 }

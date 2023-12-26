@@ -12,6 +12,7 @@ import { HeaderComponent } from '@/components/header/header.component';
 import { FooterComponent } from '@/components/footer/footer.component';
 import { MenuComponent } from '@/components/menu/menu.component';
 import { TxModalComponent } from '@/components/tx-modal/tx-modal.component';
+import { StatusBarComponent } from '@/components/status-bar/status-bar.component';
 
 import { Web3Service } from '@/services/web3.service';
 import { DataService } from '@/services/data.service';
@@ -34,7 +35,8 @@ import * as dataStateActions from '@/state/actions/data-state.actions';
     MenuComponent,
     HeaderComponent,
     FooterComponent,
-    TxModalComponent
+    TxModalComponent,
+    StatusBarComponent
   ],
   selector: 'app-root',
   templateUrl: './app.component.html',
@@ -51,17 +53,13 @@ export class AppComponent {
     public themeSvc: ThemeService,
     private router: Router
   ) {
-
     this.store.dispatch(appStateActions.setTheme({ theme: 'initial' }));
 
-    this.store.dispatch(appStateActions.fetchActiveMultiplier());
-    this.store.dispatch(dataStateActions.fetchLeaderboard());
-
     this.store.dispatch(dataStateActions.fetchCollections());
+    this.store.dispatch(dataStateActions.fetchLeaderboard());
+    this.store.dispatch(appStateActions.fetchActiveMultiplier());
 
-    // this.store.dispatch(dataStateActions.fetchMarketData());
-    // this.store.dispatch(dataStateActions.fetchAllPhunks({ limit: 30 }));
-    // setTimeout(() => this.store.dispatch(appStateActions.setMenuActive({ menuActive: true })), 0);
+    this.store.dispatch(dataStateActions.fetchMarketData());
 
     this.router.events.pipe(
       ////////////////////////

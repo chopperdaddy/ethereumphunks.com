@@ -1,30 +1,36 @@
-@for (collection of (collections$ | async); track $index) {
-  <div class="collection">
-    <a
-      class="header"
-      [routerLink]="[collection.slug]">
+<div class="inner">
+  <h2>Curated Collections</h2>
 
-      <div class="collection-details">
-        <div class="collection-image">
-          <img [src]="collection.image" alt="{{ collection.name }}" />
-        </div>
-        <div class="title">{{ collection.name }}</div>
+  <div class="collections">
+    @for (collection of (collections$ | async); track $index) {
+      <div class="collection">
+        <a
+          class="header"
+          [routerLink]="[collection.slug]">
+
+          <div class="collection-details">
+            <div class="collection-image">
+              <img [src]="collection.image" alt="{{ collection.name }}" />
+            </div>
+            <div class="title">{{ collection.name }}</div>
+          </div>
+
+          <div class="arrow">
+            <ng-container *ngTemplateOutlet="menuIcon"></ng-container>
+          </div>
+        </a>
+
+        <app-phunk-grid
+          [phunkData]="collection.previews || []"
+          [viewType]="'preview'"
+          [limit]="25"
+          [marketType]="'owned'"
+          [activeSort]="'price-low'"
+        />
       </div>
-
-      <div class="arrow">
-        <ng-container *ngTemplateOutlet="menuIcon"></ng-container>
-      </div>
-    </a>
-
-    <app-phunk-grid
-      [phunkData]="collection.previews || []"
-      [viewType]="'preview'"
-      [limit]="25"
-      [marketType]="'owned'"
-      [activeSort]="'price-low'"
-    />
+    }
   </div>
-}
+</div>
 
 <ng-template #menuIcon>
   <svg height="15" viewBox="0 0 9 15" width="9" xmlns="http://www.w3.org/2000/svg"><path d="m6 6h3v3h-3zm-3-3h3v3h-3zm0 6h3v3h-3zm-3-9h3v3h-3zm0 12h3v3h-3z" fill-rule="evenodd"/></svg>

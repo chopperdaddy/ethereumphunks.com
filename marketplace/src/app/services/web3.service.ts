@@ -264,50 +264,29 @@ export class Web3Service {
 
   async batchBuyPhunks(phunks: Phunk[]): Promise<string | undefined> {
 
-    const abi = [{
-      "inputs": [
-        {
-          "internalType": "bytes32",
-          "name": "phunkId",
-          "type": "bytes32"
-        }
-      ],
-      "name": "buyPhunk",
-      "outputs": [],
-      "stateMutability": "payable",
-      "type": "function"
-    }];
     const walletClient = await getWalletClient();
-    const contract = getContract({
-      abi,
-      address: marketAddress as `0x${string}`,
-      publicClient: getPublicClient(),
-    });
+    const address = walletClient?.account?.address as `0x${string}`;
 
-    const txns = [];
-    let value = 0;
+    const hashIds = [];
+    const minSalePricesInWei = [];
+
+    let total = BigInt(0);
     for (const phunk of phunks) {
-      if (!phunk.listing?.minValue) continue;
+      if (!phunk.listing) continue;
+      if (phunk.prevOwner?.toLowerCase() === address?.toLowerCase()) continue;
 
-      const encodedData = encodeFunctionData({
-        abi,
-        functionName: 'buyPhunk',
-        args: [phunk.hashId],
-      });
-      txns.push(encodedData);
+      hashIds.push(phunk.hashId);
+      minSalePricesInWei.push(BigInt(phunk.listing.minValue));
+      total += BigInt(phunk.listing.minValue);
     }
 
-    console.log('batchBuyPhunks', txns);
+    console.log({hashIds, minSalePricesInWei, total});
 
-    // return await walletClient?.writeContract({
-    //   chain: getNetwork().chain,
-    //   address: marketAddress as `0x${string}`,
-    //   abi: EtherPhunksMarketAbi,
-    //   functionName: 'multicall',
-    //   args: [txns],
-    // });
-
-    return;
+    return this.marketContractInteraction(
+      'batchBuyPhunk',
+      [hashIds, minSalePricesInWei],
+      total as any
+    );
   }
 
   async phunkNoLongerForSale(hashId: string): Promise<string | undefined> {
@@ -356,7 +335,7 @@ export class Web3Service {
   }
 
   async buyPhunk(hashId: string, value: string): Promise<string | undefined> {
-    return this.marketContractInteraction('buyPhunk', [hashId], value as any);
+    return this.marketContractInteraction('buyPhunk', [hashId, value], value as any);
   }
 
   async withdraw(): Promise<any> {

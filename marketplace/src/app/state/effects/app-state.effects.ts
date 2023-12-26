@@ -42,37 +42,11 @@ export class AppStateEffects {
 
   routerNavigation$ = createEffect(() => this.actions$.pipe(
     ofType(ROUTER_NAVIGATION),
-    tap((_) => {
-      // UI related nav side effects
-      this.store.dispatch(appStateActions.setMenuActive({ menuActive: false }))
-    }),
+    tap((_) => this.store.dispatch(appStateActions.setMenuActive({ menuActive: false }))),
     withLatestFrom(
       this.store.select(getRouterSelectors().selectQueryParams),
       this.store.select(getRouterSelectors().selectRouteParams),
-      this.store.select(getRouterSelectors().selectCurrentRoute),
     ),
-    tap(([action, queryParams, routeParams, currentRoute]) => {
-      const marketType = routeParams['marketType'] as MarketType;
-      // console.log({ action, queryParams, routeParams });
-
-      if (!marketType) {
-        this.store.dispatch(appStateActions.clearActiveTraitFilters());
-        this.store.dispatch(dataStateActions.clearActiveMarketRouteData());
-      }
-
-      const isIndex =
-        !currentRoute?.url?.length
-        || (currentRoute?.url[0]?.path === 'curated' && currentRoute?.url?.length === 2);
-      const slug = routeParams['slug'] || 'ethereum-phunks';
-
-      // console.log({ currentRoute, isIndex, slug });
-      // If we're on the default or slugged landing page
-      if (isIndex && slug) {
-        // this.store.dispatch(dataStateActions.fetchOwnedPhunks());
-        // this.store.dispatch(dataStateActions.fetchMarketData());
-        // this.store.dispatch(dataStateActions.fetchAllPhunks());
-      }
-    }),
     filter(([_, queryParams, routeParams]) => !!routeParams['marketType']),
     map(([_, queryParams, routeParams]) => {
       queryParams = { ...queryParams };
@@ -90,7 +64,12 @@ export class AppStateEffects {
     ),
     switchMap(([action, marketType, queryAddress]) => {
 
-      if (!marketType) return from([]);
+      // Likely exited market route so we clear some state
+      if (!marketType) {
+        this.store.dispatch(appStateActions.clearActiveTraitFilters());
+        this.store.dispatch(dataStateActions.clearActiveMarketRouteData());
+        return from([]);
+      }
 
       if (queryAddress) {
         return this.store.select(appStateSelectors.selectWalletAddress).pipe(
@@ -126,7 +105,7 @@ export class AppStateEffects {
       this.store.dispatch(appStateActions.setNotifications({ notifications }));
       this.store.dispatch(appStateActions.checkHasWithdrawal());
       this.store.dispatch(appStateActions.fetchUserPoints());
-      this.store.dispatch(dataStateActions.fetchOwnedPhunks());
+      // this.store.dispatch(dataStateActions.fetchOwnedPhunks());
     }),
   ), { dispatch: false });
 
