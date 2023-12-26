@@ -26,7 +26,7 @@ import "@openzeppelin/contracts-upgradeable/utils/MulticallUpgradeable.sol";
 import "./interfaces/IPoints.sol";
 import "./EthscriptionsEscrower.sol";
 
-contract EtherPhunksMarket is
+contract EtherPhunksMarketV3 is
     Initializable,
     PausableUpgradeable,
     OwnableUpgradeable,
@@ -151,24 +151,23 @@ contract EtherPhunksMarket is
     }
 
     // Allows users to buy an EtherPhunk offered for sale
-    function buyPhunk(bytes32 phunkId) public payable whenNotPaused nonReentrant {
+    function _buyPhunk(
+      bytes32 phunkId,
+      uint minSalePriceInWei
+    ) internal {
         // Get the offer (listing)
         Offer memory offer = phunksOfferedForSale[phunkId];
 
         // Check that the offer is valid
-        if (!offer.isForSale) revert("Phunk is not for sale");
-
+        if (!offer.isForSale) revert("Not for sale");
         // Check if the offer is private
-        if (offer.onlySellTo != address(0x0) && offer.onlySellTo != msg.sender)
-            revert();
-
+        if (offer.onlySellTo != address(0x0) && offer.onlySellTo != msg.sender) revert();
         // Check if correct price
-        if (msg.value != offer.minValue) revert("Not enough ether");
+        if (minSalePriceInWei != offer.minValue) revert("Not enough ether");
+        // Check if the seller is not the buyer
+        if (offer.seller == msg.sender) revert("Seller is buyer");
 
         address seller = offer.seller;
-
-        // Check if the seller is not the buyer
-        if (seller == msg.sender) revert("Seller is buyer");
 
         phunksOfferedForSale[phunkId] = Offer(
             false,
@@ -178,14 +177,14 @@ contract EtherPhunksMarket is
             address(0x0)
         );
 
-        pendingWithdrawals[seller] += msg.value;
+        pendingWithdrawals[seller] += minSalePriceInWei;
 
         // Add points to seller
         _addPoints(seller, 100);
 
-        // Transfer th ethscription
+        // Transfer ethscription
         _transferEthscription(seller, msg.sender, phunkId);
-        emit PhunkBought(phunkId, msg.value, seller, msg.sender);
+        emit PhunkBought(phunkId, minSalePriceInWei, seller, msg.sender);
 
         // Check for the case where there is a bid from the new owner and refund it.
         // Any other bid can stay in place.
@@ -195,6 +194,29 @@ contract EtherPhunksMarket is
             pendingWithdrawals[msg.sender] += bid.value;
             phunkBids[phunkId] = Bid(false, phunkId, address(0x0), 0);
         }
+    }
+
+    function buyPhunk(
+        bytes32 phunkId,
+        uint minSalePriceInWei
+    ) public payable whenNotPaused nonReentrant {
+        _buyPhunk(phunkId, minSalePriceInWei);
+    }
+
+    function batchBuyPhunk(
+        bytes32[] memory phunkIds,
+        uint[] memory minSalePricesInWei
+    ) public payable whenNotPaused nonReentrant {
+        require(phunkIds.length == minSalePricesInWei.length, "Array lengths do not match");
+
+        uint totalSalePrice = 0;
+        for (uint i = 0; i < phunkIds.length; i++) {
+            _buyPhunk(phunkIds[i], minSalePricesInWei[i]);
+            totalSalePrice += minSalePricesInWei[i];
+        }
+
+        // Ensure the total sent Ether matches the total sale price
+        require(msg.value == totalSalePrice, "Incorrect total Ether sent");
     }
 
     // Allows users to enter bids for any EtherPhunk
@@ -216,13 +238,12 @@ contract EtherPhunksMarket is
         bytes32 phunkId,
         uint minPrice
     ) public whenNotPaused nonReentrant {
-        address seller = msg.sender;
-
         require(
-            !userEthscriptionDefinitelyNotStored(seller, phunkId),
+            !userEthscriptionDefinitelyNotStored(msg.sender, phunkId),
             "Sender is not depositor"
         );
 
+        address seller = msg.sender;
         Bid memory bid = phunkBids[phunkId];
 
         // Gas efficient way to check if bid is valid
