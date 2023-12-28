@@ -21,7 +21,7 @@ create table
     "hashId" text not null,
     sha text not null,
     "prevOwner" text null,
-    "collectionSlug" text null,
+    "slug" text null,
     data text null,
     "tokenId" bigint not null default '-1'::bigint,
     constraint phunks_goerli_pkey primary key ("hashId"),

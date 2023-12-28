@@ -32,7 +32,7 @@ BEGIN
     LEFT JOIN public.listings_goerli l ON p."hashId" = l."hashId" AND l."toAddress" = '0x0000000000000000000000000000000000000000'
     LEFT JOIN public.bids_goerli b ON p."hashId" = b."hashId"
     WHERE (p.owner = address OR (p.owner = "marketAddress" AND p."prevOwner" = address))
-          AND p."collectionSlug" = slug
+          AND p.slug = slug
     GROUP BY p."hashId";
 END;
 $$ LANGUAGE plpgsql;

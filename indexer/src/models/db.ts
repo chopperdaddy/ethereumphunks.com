@@ -58,7 +58,7 @@ export interface Ethscription {
   tokenId: number | null;
   ethscriptionNumber?: number | null;
   prevOwner?: string | null;
-  collectionSlug?: string | null;
+  slug?: string | null;
   data?: string | null;
 }
 
@@ -85,7 +85,7 @@ export interface CuratedItem {
   name: string;
   image: string;
   attributes: {k: string, v: string}[];
-  collectionSlug: string;
+  slug: string;
   tokenId: number | null;
   sha: string;
 }

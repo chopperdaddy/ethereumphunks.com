@@ -216,7 +216,7 @@ export class SupabaseService {
           hashId: txn.hash.toLowerCase(),
           data: cleanedString,
           sha: phunkShaData.sha,
-          collectionSlug: 'etherphunks',
+          slug: 'etherphunks',
           tokenId: phunkShaData.phunkId,
         },
       ]);
@@ -250,7 +250,7 @@ export class SupabaseService {
           hashId: txn.hash.toLowerCase(),
           data: cleanedString,
           sha: curatedItem.sha,
-          collectionSlug: curatedItem.collectionSlug,
+          slug: curatedItem.slug,
           tokenId: curatedItem.tokenId,
         },
       ]);
@@ -620,7 +620,7 @@ export class SupabaseService {
 
   async uploadFile(curatedData: CuratedItem): Promise<void> {
     const imageBlob = this.utilSvc.dataURLtoBuffer(curatedData.image);
-    const fileName = `${curatedData.collectionSlug}_${curatedData.tokenId}.png`;
+    const fileName = `${curatedData.slug}_${curatedData.tokenId}.png`;
 
     const { data, error } = await supabase
       .storage.from('images')

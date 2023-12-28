@@ -10,7 +10,7 @@
       { "k": "Neck", "v": "Gold Chain" },
       { "k": "Teeth", "v": "Buck Teeth" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10001,
     "sha": "2d1e120e72fa1cff6144ff5fb4813ff1eba974764822702d64d84263cb6319f9"
   },
@@ -23,7 +23,7 @@
       { "k": "Hair", "v": "Headband" },
       { "k": "Hair", "v": "Purple Hair" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10002,
     "sha": "ab6a51612f7c173aea3c1b29ce1db4ed92c3690f5ebd9442e679eff0ee2864c1"
   },
@@ -38,7 +38,7 @@
       { "k": "Hair", "v": "Beanie" },
       { "k": "Neck", "v": "Gold Chain" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10003,
     "sha": "ce3381c9a67c716b9680f4932af2fefddf7d9618b4257d94aae3083aee7056f1"
   },
@@ -50,7 +50,7 @@
       { "k": "Sex", "v": "Alien" },
       { "k": "Hair", "v": "Hoodie" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10004,
     "sha": "732fdc0ee0514ea6e15e1a180e8d1a02a178a915b028f43bda25eba127a2ccde"
   },
@@ -66,7 +66,7 @@
       { "k": "Emotion", "v": "Smile" },
       { "k": "Beard", "v": "Big Beard" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10005,
     "sha": "6ae424c6508269a943a2e5c56fdabe763eccd71f9b04e9e61f1b7b9144c4f8c9"
   },
@@ -80,7 +80,7 @@
       { "k": "Hair", "v": "Top Hat" },
       { "k": "Neck", "v": "Gold Chain" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10006,
     "sha": "10e834e524e96d49d185c477d3d91c3c5c70c45f4f77b9b4374c98a36f703a22"
   },
@@ -95,7 +95,7 @@
       { "k": "Neck", "v": "Gold Chain" },
       { "k": "Teeth", "v": "Buck Teeth" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10007,
     "sha": "a287331890174b29f995d49500355ae6c9bdd143e5f8154105c27cda3cb07cf2"
   },
@@ -104,7 +104,7 @@
     "image": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAACXBIWXMAAAsSAAALEgHS3X78AAABt0lEQVRIiWL8//8/A80AAwMDAAAA//9ioqnpDAwMAAAAAP//oq0FDAwMAAAAAP//oq0FDAwMAAAAAP//oq0FDAwMAAAAAP//YiGkgJGREWcq+P//PyNezQwMDAAAAAD//8JrAcjwE79/45XHawkDAwMAAAD//8IZRMiGq7JgdwdIHp8PGRgYGAAAAAD//yIYByDDb//5Q0gZdsDAwAAAAAD//yJoASWGMzAwMAAAAAD//6JtKmJgYAAAAAD//8JqAXq4rj10iMGClRVFDTYxDMDAwAAAAAD//wIlNRQMSn0nfv/+P/vBAzANwiAxZD6yGCS1opoBx///MwAAAAD//8Ja2BFKnsgA5AucSZWBgQEAAAD//8IZB7i8f/npU6IsBgMGBgYAAAAA///CagExOZQowMDAAAAAAP//om0qYmBgAAAAAP//ItkCXWlp4hUzMDAAAAAA//8iWNjBALY4IZgQGBgYAAAAAP//ItoCYlMVCmBgYAAAAAD//6IoDgglUQYGBgYAAAAA//+iKIgIpjYGBgYAAAAA//8i2gJiDUQBDAwMAAAAAP//om0yZWBgAAAAAP//AwCMh4cukzg6mgAAAABJRU5ErkJggg==",
     "hashId": "0x67591f380bc58c73e7962fb87faa0ad1147e12a6188de2abdf5666f2fd282630",
     "attributes": [{ "k": "Sex", "v": "Alien" }],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10008,
     "sha": "99cafbd8d406628bddf1591365a9e46cca3f6fd01a7ad3b1b70706494dacba3b"
   },
@@ -119,7 +119,7 @@
       { "k": "Hair", "v": "Do-rag" },
       { "k": "Teeth", "v": "Buck Teeth" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10009,
     "sha": "e2c9565355ac2dc0a23692d9dd384ac8555e212376a3a2841f87b1a68df31b24"
   },
@@ -134,7 +134,7 @@
       { "k": "Hair", "v": "Stringy Hair" },
       { "k": "Beard", "v": "Normal Beard" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10010,
     "sha": "bf9ad0fb5a916d2f2c7e5e2bc31c03e67625e57bdd648f8d6b361a14bc87f074"
   },
@@ -150,7 +150,7 @@
       { "k": "Emotion", "v": "Smile" },
       { "k": "Nose", "v": "Clown Nose" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10011,
     "sha": "ab4193d824afde5905b68a2b2960bed566661facd9305238ea96ee6f75a8cd15"
   },
@@ -166,7 +166,7 @@
       { "k": "Beard", "v": "Shadow Beard" },
       { "k": "Teeth", "v": "Buck Teeth" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10012,
     "sha": "218246bf3e705137ebd97c22a9c7031954517435799f01c6b2e9a83684754b88"
   },
@@ -183,7 +183,7 @@
       { "k": "Neck", "v": "Gold Chain" },
       { "k": "Teeth", "v": "Buck Teeth" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10013,
     "sha": "5bd317653e524d7b07870094f3cfca5e910f0714c2bfb699cac7ed9ef0f1642c"
   },
@@ -199,7 +199,7 @@
       { "k": "Beard", "v": "Luxurious Beard" },
       { "k": "Neck", "v": "Gold Chain" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10014,
     "sha": "dd13235e0e590a76f445722ec61f9ea6141782d4f06f6bb236f1780456aa1039"
   },
@@ -215,7 +215,7 @@
       { "k": "Neck", "v": "Gold Chain" },
       { "k": "Teeth", "v": "Buck Teeth" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10015,
     "sha": "bde6f677fa1e4958f1d0c0c7d3d9830ed5b04000ea27eaf5766e5a127d835e48"
   },
@@ -233,7 +233,7 @@
       { "k": "Beard", "v": "Luxurious Beard" },
       { "k": "Neck", "v": "Gold Chain" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10016,
     "sha": "438b45119cf81015ed8603e09e20f6459dcfd47d128d0d4290badd9c5404c200"
   },
@@ -247,7 +247,7 @@
       { "k": "Beard", "v": "Luxurious Beard" },
       { "k": "Neck", "v": "Gold Chain" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10017,
     "sha": "3b139a6a2b76f08e33aa9adab568d9c1defdcea8acd09a21c7c44c48c02e759b"
   },
@@ -260,7 +260,7 @@
       { "k": "Hair", "v": "Stringy Hair" },
       { "k": "Hair", "v": "Beanie" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10018,
     "sha": "e26fa4b80664ea32aa4a40eb699bf8051f6251d0b750d870308ef8c25df07123"
   },
@@ -274,7 +274,7 @@
       { "k": "Hair", "v": "Purple Hair" },
       { "k": "Hair", "v": "Front Beard Dark" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10019,
     "sha": "e074581b05098144bb920849988f349e4e2cc507f25175b64f262ac0205067d0"
   },
@@ -288,7 +288,7 @@
       { "k": "Emotion", "v": "Smile" },
       { "k": "Beard", "v": "Big Beard" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10020,
     "sha": "0cb7d3d20ab415e03cd794c97f4504f141784e4a97106212033af04d100d8384"
   },
@@ -304,7 +304,7 @@
       { "k": "Neck", "v": "Gold Chain" },
       { "k": "Teeth", "v": "Buck Teeth" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10021,
     "sha": "2eb87704329389bd0342a7af2fd105c7a6907eec39940c1471f05ebcf3d1340f"
   },
@@ -319,7 +319,7 @@
       { "k": "Hair", "v": "Clown Hair Green" },
       { "k": "Beard", "v": "Big Beard" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10022,
     "sha": "e5906fbd0420ac1b8cb496f6cf8370b908939a0358ae9d7f28e011ee3abb8279"
   },
@@ -333,7 +333,7 @@
       { "k": "Hair", "v": "Knitted Cap" },
       { "k": "Hair", "v": "Hoodie" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10023,
     "sha": "56a65a78cc6cd7232499feb64c08bc83883abefc3823fd4b72a395b3e8c5fc12"
   },
@@ -347,7 +347,7 @@
       { "k": "Hair", "v": "Clown Hair Green" },
       { "k": "Hair", "v": "Fedora" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10024,
     "sha": "9ee84aa21b455536f6db6826c15dbee6301f675dde144413d9795bf1d526b770"
   },
@@ -362,7 +362,7 @@
       { "k": "Hair", "v": "Top Hat" },
       { "k": "Nose", "v": "Clown Nose" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10025,
     "sha": "7d21e6164d4cc431eff63cae335a7b3c080c1124eeec2a75871028cc6df44d40"
   },
@@ -379,7 +379,7 @@
       { "k": "Beard", "v": "Front Beard Dark" },
       { "k": "Neck", "v": "Gold Chain" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10026,
     "sha": "cb5549738b11bdbc0acd89822592b384e6a95e039925d02699808f4da21f7806"
   },
@@ -397,7 +397,7 @@
       { "k": "Neck", "v": "Gold Chain" },
       { "k": "Teeth", "v": "Buck Teeth" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10027,
     "sha": "29e88c5a1da7b4386e80b7e732fdc777618c6caee8e969946422be6628f2c76c"
   },
@@ -413,7 +413,7 @@
       { "k": "Hair", "v": "Beanie" },
       { "k": "Neck", "v": "Gold Chain" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10028,
     "sha": "0c78db67a90b0b677f46498186913252ba27e2aac4e9ad864f39a20e7b08dc8e"
   },
@@ -427,7 +427,7 @@
       { "k": "Hair", "v": "Purple Hair" },
       { "k": "Hair", "v": "Cap" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10029,
     "sha": "a4b75d852d19eb6b0b066cce0b7f869c432cff42f645f2f6bc9faec3f76009f1"
   },
@@ -443,7 +443,7 @@
       { "k": "Nose", "v": "Clown Nose" },
       { "k": "Teeth", "v": "Buck Teeth" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10030,
     "sha": "04fd7bb727accd524ed73feb7cab572a3c1d5b637ba7b73c3e1dd5c468b54d10"
   },
@@ -461,7 +461,7 @@
       { "k": "Neck", "v": "Gold Chain" },
       { "k": "Teeth", "v": "Buck Teeth" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10031,
     "sha": "2ed26534687885e55dcd862c41206b642ce7ca03d0deb719d3e827f9755017f9"
   },
@@ -479,7 +479,7 @@
       { "k": "Neck", "v": "Gold Chain" },
       { "k": "Teeth", "v": "Buck Teeth" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10032,
     "sha": "697ebd0041dd0b38a0bd120c9111fc39c6f9fe144b2cee0757478f89f67a8efa"
   },
@@ -488,7 +488,7 @@
     "image": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAACXBIWXMAAAsSAAALEgHS3X78AAAB6klEQVRIiWL8//8/A80AAwMDAAAA//9ioqnpDAwMAAAAAP//oq0FDAwMAAAAAP//oq0FDAwMAAAAAP//oq0FDAwMAAAAAP//YiGkgJGREWcq+P//PyNezQwMDAAAAAD//8JrAchwUxUBvPJ4LWFgYAAAAAD//8IZRMiGKyjIY1UDksfnQwYGBgYAAAAA//8iGAcgwx88eEhIGXbAwMAAAAAA//8iGAcgw0/f+YBVDl/wgQEDAwMAAAD//yJoQYC3G0MAHvnTE1fhlmRgYAAAAAD//yJoAQg8ff4STEtLimOI4QUMDAwAAAAA///CGgfoqWfaqoMM9mY6KGqwiWEABgYGAAAAAP//wlrYIVsACiJ8oHriKtz5gYGBAQAAAP//wpmKcEUsSYCBgQEAAAD//8JqAbKLNmzdBRcHuRaZJggYGBgAAAAA///CWR+gxwO2oAJZDvIpziBiYGAAAAAA//8iqrDDFQ+E4oeBgYEBAAAA//8C2Y4Vg0LKVEUAxPjfmh8GptExTByXGf///2cAAAAA//8iKh+AQGt+GLFKEYCBgQEAAAD//yIYRKB4wBWphJIoAwMDAwAAAP//IjqSsSVbgvUBAwMDAAAA//8iOoiINRAFMDAwAAAAAP//om2VycDAAAAAAP//AwBMAJXRPPymnQAAAABJRU5ErkJggg=",
     "hashId": "0x6f5b48e2fb6375f693368015cff4e919a4ae1168385dce16262943b8a90bee8f",
     "attributes": [{ "k": "Sex", "v": "Ape" }],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10033,
     "sha": "9d1ef4a4127a2d0199de7384b1c91b7a2a122663b2935f9ccd88c5e7d09b16fb"
   },
@@ -501,7 +501,7 @@
       { "k": "Eyes", "v": "Vr" },
       { "k": "Hair", "v": "Wild Hair" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10034,
     "sha": "c73cd48fe22ba33adca80fbc4e314595b483445d9b2b42d8b458b301f8ca15f4"
   },
@@ -516,7 +516,7 @@
       { "k": "Hair", "v": "Beanie" },
       { "k": "Beard", "v": "Big Beard" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10035,
     "sha": "363c50a1d35dfd331f36913e44c4886d79f0f08fc286ecbe2e97089a6609da18"
   },
@@ -534,7 +534,7 @@
       { "k": "Beard", "v": "Mustache" },
       { "k": "Teeth", "v": "Buck Teeth" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10036,
     "sha": "069f63f7afb3d76abf987fdaf05e1991252240a3af8f16b6ea285260ad2984f1"
   },
@@ -547,7 +547,7 @@
       { "k": "Eyes", "v": "Vr" },
       { "k": "Hair", "v": "Cowboy Hat" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10037,
     "sha": "c414fd01e1eb1a7c3da3a258e5d286b27b5fe5fd474199d78f85892bc5ca80a1"
   },
@@ -563,7 +563,7 @@
       { "k": "Emotion", "v": "Frown" },
       { "k": "Beard", "v": "Big Beard" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10038,
     "sha": "ee62f21eaf4e366fe9ddc03f7c75568879b0e4d2b6cc5ddc5e1b3e0eb20446cd"
   },
@@ -579,7 +579,7 @@
       { "k": "Beard", "v": "Luxurious Beard" },
       { "k": "Neck", "v": "Gold Chain" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10039,
     "sha": "5528af7cd466aaf1fced64b886cd2939bb9aa0e2960426fd6bf2ea409f07f962"
   },
@@ -595,7 +595,7 @@
       { "k": "Beard", "v": "Luxurious Beard" },
       { "k": "Neck", "v": "Gold Chain" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10040,
     "sha": "e7c16280eb9f989197ea316f082fcd131bdb6e7f06f853e803cd3052e1f65341"
   },
@@ -610,7 +610,7 @@
       { "k": "Hair", "v": "Clown Hair Green" },
       { "k": "Beard", "v": "Luxurious Beard" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10041,
     "sha": "e91e1802e35e1a04fab6bc4e073364d3a8dc9ea20109523c57df92d26ac20e8a"
   },
@@ -627,7 +627,7 @@
       { "k": "Neck", "v": "Gold Chain" },
       { "k": "Teeth", "v": "Buck Teeth" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10042,
     "sha": "ef5c1543fbe0767db4c101236f2ce7dd7f05e087f450952f37e0949e8b880598"
   },
@@ -642,7 +642,7 @@
       { "k": "Hair", "v": "Mohawk Dark" },
       { "k": "Neck", "v": "Gold Chain" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10043,
     "sha": "29200692fbdce4b6167e9f9749402f6001fdf82491d44dbcfbffc1a936f65b17"
   },
@@ -657,7 +657,7 @@
       { "k": "Emotion", "v": "Smile" },
       { "k": "Neck", "v": "Gold Chain" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10044,
     "sha": "e1d4e10224aa64a0dffc0e8d2d97b23bebe1752e88f177dd40e016ed90c0d0e2"
   },
@@ -672,7 +672,7 @@
       { "k": "Hair", "v": "Cap Forward" },
       { "k": "Beard", "v": "Big Beard" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10045,
     "sha": "4e38576013ec30ae6d4d4ec3416fd68344563b8dfb701d9467452ea243800a1a"
   },
@@ -688,7 +688,7 @@
       { "k": "Beard", "v": "Mustache" },
       { "k": "Neck", "v": "Gold Chain" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10046,
     "sha": "713925a1b6d3b2d9b1f6d35c7d0392adde00a6fbe4f1b6f1c1ac91c0c8f64099"
   },
@@ -704,7 +704,7 @@
       { "k": "Hair", "v": "Cap" },
       { "k": "Neck", "v": "Gold Chain" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10047,
     "sha": "86ac02c6b0c8f00d62dce43d1c890a47286b2562d4afa1448d86609515fc3889"
   },
@@ -718,7 +718,7 @@
       { "k": "Hair", "v": "Top Hat" },
       { "k": "Beard", "v": "Luxurious Beard" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10048,
     "sha": "0702f7fb6fdd2a74f9eb483da481e581df4f1274fdaa2204ed192b2f1335dfa5"
   },
@@ -734,7 +734,7 @@
       { "k": "Neck", "v": "Gold Chain" },
       { "k": "Teeth", "v": "Buck Teeth" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10049,
     "sha": "6ce1edca01481448564567c88833f66dc4e2b48e96269a4d8f1876e7c0dce0a4"
   },
@@ -750,7 +750,7 @@
       { "k": "Beard", "v": "Big Beard" },
       { "k": "Teeth", "v": "Buck Teeth" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10050,
     "sha": "7e47358bfeec4c6043c3cb5dd73f1c5c0607a394fc1fb100b5acf646e642afd5"
   },
@@ -763,7 +763,7 @@
       { "k": "Eyes", "v": "3d Glasses" },
       { "k": "Hair", "v": "Beanie" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10051,
     "sha": "0ea7c14f86b0a794087d950e2ae667791a2ed999552d9581472c91fc5dfe49dd"
   },
@@ -772,7 +772,7 @@
     "image": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAACXBIWXMAAAsSAAALEgHS3X78AAABt0lEQVRIiWL8//8/A80AAwMDAAAA//9ioqnpDAwMAAAAAP//oq0FDAwMAAAAAP//oq0FDAwMAAAAAP//oq0FDAwMAAAAAP//YiGkgJGREWcq+P//PyNezQwMDAAAAAD//8JrAcjw2kWZeOXxWsLAwAAAAAD//8IZRMiGy0nJY1UDksfnQwYGBgYAAAAA//8iGAcgwx89e0hIGXbAwMAAAAAA//8iaAElhjMwMDAAAAAA//+ibSpiYGAAAAAA//8imIpA4OGFV2Ba3kAMQwwvYGBgAAAAAP//wmoBeupZ2LeWAZRUsInhBQwMDAAAAAD//8Ja2KFbAHItsuuRxZrjpuPODwwMDAAAAAD//8IZByCNMIBuOC4xDMDAwAAAAAD//8JqAT4XgSxGthwvYGBgAAAAAP//IiqSkQG+nI0BGBgYAAAAAP//om0yZWBgAAAAAP//IskHyEFDlE8YGBgAAAAA//8iyYK4omCiIxcMGBgYAAAAAP//IimI0A0nlEQZGBgYAAAAAP//ItoH2FIOwfqAgYEBAAAA//8iKYiIMRAFMDAwAAAAAP//om0qYmBgAAAAAP//AwCVGlDPIkNB2gAAAABJRU5ErkJggg==",
     "hashId": "0x952d27eea4a5378520b2b78cc23e63fea117db72385d205cfee0272ee8beb3e7",
     "attributes": [{ "k": "Sex", "v": "Zombie" }],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10052,
     "sha": "a989ff7bdc68d4a060fe6dd92445b6448a9806bb67306d21c438cb574443a388"
   },
@@ -785,7 +785,7 @@
       { "k": "Eyes", "v": "Regular Shades" },
       { "k": "Hair", "v": "Shaved Head" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10053,
     "sha": "e70c7816511be6dc4a2afa678ad4f4f0f86ff1c20eeb7ad618efb7409106ff42"
   },
@@ -799,7 +799,7 @@
       { "k": "Hair", "v": "Wild Hair" },
       { "k": "Hair", "v": "Cowboy Hat" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10054,
     "sha": "3bdc1abf8829085f04aac79a924f5e5e62a53957f9bb05f83f80cbc209fbf309"
   },
@@ -818,7 +818,7 @@
       { "k": "Neck", "v": "Gold Chain" },
       { "k": "Teeth", "v": "Buck Teeth" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10055,
     "sha": "c9084027ebab83eff5bedb7faeeff44db71831ac1b701c7432ed07f7268c2f47"
   },
@@ -835,7 +835,7 @@
       { "k": "Beard", "v": "Shadow Beard" },
       { "k": "Neck", "v": "Gold Chain" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10056,
     "sha": "eb281ffdc8e384671b125efd28046f3024a0fbdfc36f9b63c7d26be04adbefe9"
   },
@@ -849,7 +849,7 @@
       { "k": "Hair", "v": "Crazy Hair" },
       { "k": "Beard", "v": "Normal Black Beard" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10057,
     "sha": "2b8ab855e448c9b403f770f134926a95ded43bc451b2824742c7df7e2d091a98"
   },
@@ -866,7 +866,7 @@
       { "k": "Beard", "v": "Shadow Beard" },
       { "k": "Neck", "v": "Gold Chain" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10058,
     "sha": "e70a4a080ec934ead3cabd5d0556ff022eb833a85c17129e5df46372cd8b32e8"
   },
@@ -881,7 +881,7 @@
       { "k": "Hair", "v": "Knitted Cap" },
       { "k": "Beard", "v": "Big Beard" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10059,
     "sha": "e1acdd06e77cce5345be2fe5b2e35ce94caaf1ba589f79acf81ab65f196e2ac2"
   },
@@ -897,7 +897,7 @@
       { "k": "Beard", "v": "Shadow Beard" },
       { "k": "Neck", "v": "Gold Chain" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10060,
     "sha": "78d3fa972ff4066090d367e312b4dca38f24bacee023679fe3691629a6cff258"
   },
@@ -911,7 +911,7 @@
       { "k": "Hair", "v": "Beanie" },
       { "k": "Beard", "v": "Muttonchops" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10061,
     "sha": "542690fe05bfc8aef2ab29b0ef0b6d8de0a6f6e6097f32b34e42e32649e90988"
   },
@@ -927,7 +927,7 @@
       { "k": "Hair", "v": "Police Cap" },
       { "k": "Beard", "v": "Normal Beard Black" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10062,
     "sha": "9ae33759c699a7341b5fde28ec5b27ef95f4dd4a88ca2c4109ab9adcb3218937"
   },
@@ -942,7 +942,7 @@
       { "k": "Hair", "v": "Headband" },
       { "k": "Beard", "v": "Mustache" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10063,
     "sha": "ea4b0a37218ce50a1170c96e3b3588cc3dad2b708728aca2f0b08158ab3b7787"
   },
@@ -960,7 +960,7 @@
       { "k": "Neck", "v": "Gold Chain" },
       { "k": "Teeth", "v": "Buck Teeth" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10064,
     "sha": "4dee1f134038a3a44ca3f2dd08f3b48b1a76cd6db539b99ad7e80bcd10ba8a83"
   },
@@ -976,7 +976,7 @@
       { "k": "Beard", "v": "Front Beard Dark" },
       { "k": "Teeth", "v": "Buck Teeth" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10065,
     "sha": "6f6b47c2005454f781deb3803d56c3d6812bd1a872314b39cf463778462fe0f1"
   },
@@ -992,7 +992,7 @@
       { "k": "Beard", "v": "Mustache" },
       { "k": "Neck", "v": "Gold Chain" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10066,
     "sha": "a0f6786ec8cc3aa68854d57c7b97d06492da91e14dedf1fd99fe33145e6c146b"
   },
@@ -1009,7 +1009,7 @@
       { "k": "Neck", "v": "Gold Chain" },
       { "k": "Teeth", "v": "Buck Teeth" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10067,
     "sha": "9442f9f3d07ac8e80a4914206e0dcb2d4357d30d12b429b9483a0280cbdf699f"
   },
@@ -1028,7 +1028,7 @@
       { "k": "Neck", "v": "Gold Chain" },
       { "k": "Teeth", "v": "Buck Teeth" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10068,
     "sha": "de1cc8c672c8a2ae7f09662620f1402beb46bf7f8712a1de4cb8b536f636e0f2"
   },
@@ -1042,7 +1042,7 @@
       { "k": "Hair", "v": "Vampire Hair" },
       { "k": "Beard", "v": "Mustache" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10069,
     "sha": "90fecc805dd23e340a434390e94f1cce244d852e1f715514239889ebbc945152"
   },
@@ -1060,7 +1060,7 @@
       { "k": "Neck", "v": "Gold Chain" },
       { "k": "Teeth", "v": "Buck Teeth" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10070,
     "sha": "59e4bb3aef4e2ecd4b8794da5cb6345a08d265e359355700253fc240f3f76a84"
   },
@@ -1078,7 +1078,7 @@
       { "k": "Beard", "v": "Hnadlebars" },
       { "k": "Teeth", "v": "Buck Teeth" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10071,
     "sha": "24b390490c0beb304f3528d5c8c9f1a1c0068a308ec9f82deaa5558a67cb5f12"
   },
@@ -1093,7 +1093,7 @@
       { "k": "Hair", "v": "Clown Hair Green" },
       { "k": "Hair", "v": "Police Cap" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10072,
     "sha": "c4333ec7dd8105382964d286afdeb5d4d8abe3c7c18ffbc9125324d71f4ce9ca"
   },
@@ -1108,7 +1108,7 @@
       { "k": "Beard", "v": "Mustache" },
       { "k": "Neck", "v": "Gold Chain" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10073,
     "sha": "6df2489334eff358510ac6756c46e72c9c63b9e290479f2ed3a2da9159c95f21"
   },
@@ -1122,7 +1122,7 @@
       { "k": "Hair", "v": "Wild Hair" },
       { "k": "Hair", "v": "Cowboy Hat" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10074,
     "sha": "f74765cc493d5e7fb1837a540d3d0c6ac3324e0023cb7b8c1216d4fb983c872f"
   },
@@ -1139,7 +1139,7 @@
       { "k": "Neck", "v": "Gold Chain" },
       { "k": "Teeth", "v": "Buck Teeth" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10075,
     "sha": "c16978b35c2e38ab89b0f716ea6661ca056cadbd50cacded2c3f57fbc326e9f8"
   },
@@ -1155,7 +1155,7 @@
       { "k": "Beard", "v": "Luxurious Beard" },
       { "k": "Neck", "v": "Gold Chain" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10076,
     "sha": "81e20b9b5eca78312094a32e172c1ecdd6c9ab5e4d4a8236bd9f98b8dab0ccab"
   },
@@ -1169,7 +1169,7 @@
       { "k": "Hair", "v": "Fedora" },
       { "k": "Beard", "v": "Mustache" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10077,
     "sha": "509e4f5262ae2854e1a2eb02451b55efe32612030e06634c9fc95d536b517151"
   },
@@ -1185,7 +1185,7 @@
       { "k": "Emotion", "v": "Smile" },
       { "k": "Neck", "v": "Gold Chain" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10078,
     "sha": "55ba930e66886d56b7b88df7295b228ba423967f02ec029c16a6bad49ea4fea7"
   },
@@ -1199,7 +1199,7 @@
       { "k": "Eyes", "v": "Eye Mask" },
       { "k": "Hair", "v": "Beanie" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10079,
     "sha": "9e62efccbac646319239ce38c0f3cbd4640dbf31f447dd49a2f6d1b4433d2bcf"
   },
@@ -1216,7 +1216,7 @@
       { "k": "Neck", "v": "Gold Chain" },
       { "k": "Teeth", "v": "Buck Teeth" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10080,
     "sha": "de7e6688256797697445e5879ba892fdeafab026fc88cdcd5a2ad63df94a9c10"
   },
@@ -1233,7 +1233,7 @@
       { "k": "Neck", "v": "Gold Chain" },
       { "k": "Teeth", "v": "Buck Teeth" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10081,
     "sha": "d55a29d5b3c92fc1ab3d59d6cc52dbe234492c9701ad559ba7efeb6db5795c8c"
   },
@@ -1248,7 +1248,7 @@
       { "k": "Emotion", "v": "Frown" },
       { "k": "Beard", "v": "Luxurious Beard" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10082,
     "sha": "b4dfa5ecdf633924546b9f0d4560457c841f946f865293b107ca1093e88cfa35"
   },
@@ -1263,7 +1263,7 @@
       { "k": "Hair", "v": "Purple Hair" },
       { "k": "Beard", "v": "Big Beard" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10083,
     "sha": "d75cb4bb9f2925f8c7f85eafea70a46ee0a30a22c1c3d4feb396f5f86a6506b7"
   },
@@ -1280,7 +1280,7 @@
       { "k": "Face", "v": "Spots" },
       { "k": "Neck", "v": "Gold Chain" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10084,
     "sha": "832529ecd706395b30d9627e998496fd7158dc0f9630229b7bb25e12d444839e"
   },
@@ -1295,7 +1295,7 @@
       { "k": "Hair", "v": "Crazy Hair" },
       { "k": "Emotion", "v": "Smile" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10085,
     "sha": "6ceac3981b01656fee36119ce87370e4cd03640202cf447118d352471a26fcc4"
   },
@@ -1311,7 +1311,7 @@
       { "k": "Beard", "v": "Mustache" },
       { "k": "Neck", "v": "Gold Chain" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10086,
     "sha": "12e22ca59fd0b0f3245c1050aaaf9b00b0bd15e9dffc7976072d75f2b47a3bdd"
   },
@@ -1326,7 +1326,7 @@
       { "k": "Hair", "v": "Headband" },
       { "k": "Face", "v": "Spots" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10087,
     "sha": "306baffd78077585300b56f19afce40cc35f8ea542b04d67e3074d291a59dd96"
   },
@@ -1342,7 +1342,7 @@
       { "k": "Beard", "v": "Big Beard" },
       { "k": "Neck", "v": "Gold Chain" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10088,
     "sha": "f1207a50f0b23cc1c801a75bcf4e87affac6ca149cc39a10b1312145214d0759"
   },
@@ -1359,7 +1359,7 @@
       { "k": "Beard", "v": "Frond Beard Dark" },
       { "k": "Neck", "v": "Gold Chain" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10089,
     "sha": "94235d83ab5d987beda0cc552de2e5791e7299b997fe7d64fe08de209ae9046f"
   },
@@ -1375,7 +1375,7 @@
       { "k": "Hair", "v": "Top Hat" },
       { "k": "Emotion", "v": "Smile" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10090,
     "sha": "d2df02bd4e3f2f822bd290591f5bde90a0a1737bdb9dda365d97a2d7f2b24fa5"
   },
@@ -1390,7 +1390,7 @@
       { "k": "Hair", "v": "Purple Hair" },
       { "k": "Beard", "v": "Big Beard" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10091,
     "sha": "38b462caa66091df635cd3268e2dafc65b6e2d50323d5a1eaeb76a417977cbb6"
   },
@@ -1407,7 +1407,7 @@
       { "k": "Neck", "v": "Gold Chain" },
       { "k": "Teeth", "v": "Buck Teeth" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10092,
     "sha": "c94ef57af72f84aa8989f6ffd88874a2ea166316ae6d1f062a6669f14cec8fab"
   },
@@ -1422,7 +1422,7 @@
       { "k": "Neck", "v": "Gold Chain" },
       { "k": "Teeth", "v": "Buck Teeth" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10093,
     "sha": "5cbeec831817f4146fff2cb090c9d965232a794ce5948f385b617a1ad825f7b6"
   },
@@ -1439,7 +1439,7 @@
       { "k": "Face", "v": "Spots" },
       { "k": "Teeth", "v": "Buck Teeth" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10094,
     "sha": "ce0e696bc439549423ed0d59f52f4b2f55f567d1bde170141b27b4a1a03a0d09"
   },
@@ -1455,7 +1455,7 @@
       { "k": "Hair", "v": "Top Hat" },
       { "k": "Beard", "v": "Handlebars" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10095,
     "sha": "0e62e28c7ca8f92d1990a315058ab965d607b51c8de5c4e34755846267907402"
   },
@@ -1472,7 +1472,7 @@
       { "k": "Beard", "v": "Luxurious Beard" },
       { "k": "Neck", "v": "Gold Chain" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10096,
     "sha": "792871dc58ff8a205e37525ff88d7075e8ade3560e09143b3c05ba18340190da"
   },
@@ -1488,7 +1488,7 @@
       { "k": "Beard", "v": "Front Beard Dark" },
       { "k": "Neck", "v": "Gold Chain" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10097,
     "sha": "97ddb84c221e21b933e371a6b7803ef318fc8630aca8c29f034bd63066ea70de"
   },
@@ -1508,7 +1508,7 @@
       { "k": "Face", "v": "Spots" },
       { "k": "Neck", "v": "Gold Chain" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10098,
     "sha": "2c4c1d40cc602175e14ae322657481515c010b7d0c32176a08b9a448a956c061"
   },
@@ -1525,7 +1525,7 @@
       { "k": "Neck", "v": "Gold Chain" },
       { "k": "Teeth", "v": "Buck Teeth" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10099,
     "sha": "fa36134da55eb31a0c2a8b615bb7e0632a3a429abe9e1a27a1a338e92ded1a2a"
   },
@@ -1541,7 +1541,7 @@
       { "k": "Beard", "v": "Luxurious Beard" },
       { "k": "Neck", "v": "Gold Chain" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10100,
     "sha": "3ccfff3dbbfcc0809d0e4e719315b70b6ebe3847bf5c4ad71a3202264cd50c29"
   },
@@ -1556,7 +1556,7 @@
       { "k": "Neck", "v": "Gold Chain" },
       { "k": "Teeth", "v": "Buck Teeth" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10101,
     "sha": "03bb41f21fb99dccdc1e69ba52efb0f1529fc5f1cb2348e21a605e50950cba45"
   },
@@ -1573,7 +1573,7 @@
       { "k": "Beard", "v": "Luxurious Beard" },
       { "k": "Neck", "v": "Gold Chain" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10102,
     "sha": "1acbeb13f0c2ad046c76c834ef0a6916044d28da696eaa3de0a012c7dcb2ce0a"
   },
@@ -1590,7 +1590,7 @@
       { "k": "Beard", "v": "Front Beard Dark" },
       { "k": "Neck", "v": "Gold Chain" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10103,
     "sha": "49de5f0e7b4aba9389349aee13407b01a46ba4ab01dd008392c302d4a5bcb483"
   },
@@ -1606,7 +1606,7 @@
       { "k": "Beard", "v": "Luxurious Beard" },
       { "k": "Neck", "v": "Gold Chain" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10104,
     "sha": "f4c36c6dac2b64c5b182818c01c1a9abae188c2dfcf52637e41a9ea5b58b1258"
   },
@@ -1622,7 +1622,7 @@
       { "k": "Beard", "v": "Mustache" },
       { "k": "Teeth", "v": "Buck Teeth" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10105,
     "sha": "545319a9c59fa3fa3daee8269b2fc0bf5cf91d6cdbc08939e5b50646634a86ad"
   },
@@ -1636,7 +1636,7 @@
       { "k": "Hair", "v": "Hoodie" },
       { "k": "Emotion", "v": "Smile" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10106,
     "sha": "b4ff0233eaceab1309c854747d1eb5d2ad8e6eb2df04f3b6e8c38a4ab6b66091"
   },
@@ -1654,7 +1654,7 @@
       { "k": "Beard", "v": "Mustache" },
       { "k": "Face", "v": "Spots" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10107,
     "sha": "b695a4a821cc80022abd4b51b3d0698514699b50fb6d55d7138d8fcc4ed49703"
   },
@@ -1671,7 +1671,7 @@
       { "k": "Beard", "v": "Big Beard" },
       { "k": "Neck", "v": "Gold Chain" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10108,
     "sha": "db5ac02c46cad051df3fec21b0fa061ef93c2e225204eb87e1ee854989a064bf"
   },
@@ -1688,7 +1688,7 @@
       { "k": "Emotion", "v": "Smile" },
       { "k": "Neck", "v": "Gold Chain" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10109,
     "sha": "0a6f368b53b82ca288a9004b0adfe21caac875dfc1e5cf50881470d81ef5a4ca"
   },
@@ -1702,7 +1702,7 @@
       { "k": "Hair", "v": "Clown Hair Green" },
       { "k": "Nose", "v": "Clown Nose" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10110,
     "sha": "9c07344d9aeb7ef9b77394799e9033cb0a7b80bb8a1b35b75d1ff0feda820d8b"
   },
@@ -1717,7 +1717,7 @@
       { "k": "Hair", "v": "Police Cap" },
       { "k": "Nose", "v": "Clown Nose" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10111,
     "sha": "947e2e1a93753faf229750fdc476cdd33e1d5afb19d193d8e1569a54ef028906"
   },
@@ -1734,7 +1734,7 @@
       { "k": "Beard", "v": "Normal Beard" },
       { "k": "Face", "v": "Spots" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10112,
     "sha": "dc54722792fa81c9933d58b18889acf1036ecb5cc58f42278ecfc9cac3e8e812"
   },
@@ -1750,7 +1750,7 @@
       { "k": "Beard", "v": "Big Beard" },
       { "k": "Teeth", "v": "Buck Teeth" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10113,
     "sha": "2013345d17051d538515725e50c06a8522da7fe49f600fb4a7f183e1209f8f1a"
   },
@@ -1766,7 +1766,7 @@
       { "k": "Beard", "v": "Normal Beard Black" },
       { "k": "Neck", "v": "Gold Chain" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10114,
     "sha": "14652311a03d01bc18b92836444bd94d399c282755581b4b1d1709d92f2df04e"
   },
@@ -1782,7 +1782,7 @@
       { "k": "Beard", "v": "Shadow Beard" },
       { "k": "Neck", "v": "Gold Chain" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10115,
     "sha": "c30d5ff12652e8500a3f6ba81ab37a817438f524e2818f06242138fff25dd5d0"
   },
@@ -1797,7 +1797,7 @@
       { "k": "Beard", "v": "Shadow Beard" },
       { "k": "Beard", "v": "Mustache" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10116,
     "sha": "e9200b6b936a0bd1063672909b56b4bb1231d655f131b8b81ee87d66ae99fc3b"
   },
@@ -1811,7 +1811,7 @@
       { "k": "Hair", "v": "Fedora" },
       { "k": "Beard", "v": "Shadow Beard" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10117,
     "sha": "bede19a17248be5ef57787e98a79f968ff095e67ff22184cac6262fd8a309de7"
   },
@@ -1826,7 +1826,7 @@
       { "k": "Hair", "v": "Cowboy Hat" },
       { "k": "Beard", "v": "Big Beard" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10118,
     "sha": "a6ad8de42e91fbfee861b0b628d75b0621e8046a6845605caff8fc5e8c254aa3"
   },
@@ -1842,7 +1842,7 @@
       { "k": "Beard", "v": "Mustache" },
       { "k": "Face", "v": "Spots" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10119,
     "sha": "6863c192683ca6ef3bffe53ae9d5b020cd7b28af498d525f796e30e6fab459cb"
   },
@@ -1857,7 +1857,7 @@
       { "k": "Beard", "v": "Shadow Beard" },
       { "k": "Neck", "v": "Gold Chain" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10120,
     "sha": "651d213fd858f70322cf8a0a917056802f722033bc1a2f3b2ae1b3a35dd77b65"
   },
@@ -1875,7 +1875,7 @@
       { "k": "Neck", "v": "Gold Chain" },
       { "k": "Teeth", "v": "Buck Teeth" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10121,
     "sha": "9d08f33727966d365aa37a56ed908f88ae7f979000c0fd26ad755ff9cade6355"
   },
@@ -1888,7 +1888,7 @@
       { "k": "Hair", "v": "Beanie" },
       { "k": "Beard", "v": "Mustache" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10122,
     "sha": "3c9b47d5f6a082d42eef741cab88af95c0f6dbf0e958c18d8881695a529301bc"
   },
@@ -1905,7 +1905,7 @@
       { "k": "Beard", "v": "Mustache" },
       { "k": "Nose", "v": "Clown Nose" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10123,
     "sha": "f289c77c83d357f7c51cb6c9e495780c21aef7ae791a114cde8e8b711e8b92ad"
   },
@@ -1920,7 +1920,7 @@
       { "k": "Emotion", "v": "Smile" },
       { "k": "Beard", "v": "Big Beard" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10124,
     "sha": "992dca1e42a2af6996981d8e120bf246d2a532d1d6438d59044ea0d59c6eb0eb"
   },
@@ -1940,7 +1940,7 @@
       { "k": "Cheeks", "v": "Rosy Cheeks" },
       { "k": "Teeth", "v": "Buck Teeth" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10125,
     "sha": "0b799fef484a2e64004cd2a702311ee326b190d88b452152e2bbf437d55a0891"
   },
@@ -1956,7 +1956,7 @@
       { "k": "Hair", "v": "Fedora" },
       { "k": "Beard", "v": "Mustache" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10126,
     "sha": "23707e570eeeb3fcc7c9af6a5a3c7afe67451dc5376e37ea1ed9aa2f26eace54"
   },
@@ -1972,7 +1972,7 @@
       { "k": "Beard", "v": "Mustache" },
       { "k": "Neck", "v": "Gold Chain" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10127,
     "sha": "9f58f3557ed2549201fb2844f57088853416094c531897b0df67565a6816f749"
   },
@@ -1989,7 +1989,7 @@
       { "k": "Beard", "v": "Luxurious Beard" },
       { "k": "Neck", "v": "Gold Chain" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10128,
     "sha": "c95400e22b8716974aeaedd83bf6606faf43ee294969656ece30327599af465b"
   },
@@ -2006,7 +2006,7 @@
       { "k": "Beard", "v": "Shadow Beard" },
       { "k": "Beard", "v": "Handlebars" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10129,
     "sha": "04204d41e07a2a770f59dfb1ed6614c18e67980b69b083aba5290c6e95d54e33"
   },
@@ -2023,7 +2023,7 @@
       { "k": "Beard", "v": "Shadow Beard" },
       { "k": "Neck", "v": "Gold Chain" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10130,
     "sha": "e54f4c9140e4a6df8d0818ee019f8929aef132a2e936455e10577f9392f423a3"
   },
@@ -2044,7 +2044,7 @@
       { "k": "Cheeks", "v": "Rosy Cheeks" },
       { "k": "Teeth", "v": "Buck Teeth" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10131,
     "sha": "9d7cb344f8f993771b322231990890ac94ec57111312d6b694ce48e4b793f2c6"
   },
@@ -2060,7 +2060,7 @@
       { "k": "Beard", "v": "Mustache" },
       { "k": "Face", "v": "Spots" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10132,
     "sha": "21bc75ba218dddc1a1f70231133e3ad1fc4a8eeaa73c81f76ad89c833d2dcf75"
   },
@@ -2074,7 +2074,7 @@
       { "k": "Hair", "v": "Cowboy Hat" },
       { "k": "Beard", "v": "Big Beard" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10133,
     "sha": "3e2333ab8e539977b73c85de172f02db553d9c4d268e0d250cb13b0a8d90ef19"
   },
@@ -2088,7 +2088,7 @@
       { "k": "Hair", "v": "Headband" },
       { "k": "Beard", "v": "Mustache" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10134,
     "sha": "36996986c8b4a19dda926df4499671f29bf3fd513da9c7297413c61796d7c07c"
   },
@@ -2103,7 +2103,7 @@
       { "k": "Beard", "v": "Big Beard" },
       { "k": "Teeth", "v": "Buck Teeth" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10135,
     "sha": "786f7b145cbe5d4342e68226a84b8c9ddeb69b6f95a941ba94343e86c8043245"
   },
@@ -2118,7 +2118,7 @@
       { "k": "Beard", "v": "Mustache" },
       { "k": "Teeth", "v": "Buck Teeth" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10136,
     "sha": "5b14e53f8f55c24aa3cf8f838fd8af106daa471b2392c37120e8a69aa95f65dd"
   },
@@ -2133,7 +2133,7 @@
       { "k": "Beard", "v": "Shadow Beard" },
       { "k": "Beard", "v": "Mustache" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10137,
     "sha": "5280788599111be18e25c648abe8a0e540d29b4a3c82db53028559411f5939be"
   },
@@ -2149,7 +2149,7 @@
       { "k": "Beard", "v": "Mustache" },
       { "k": "Teeth", "v": "Buck Teeth" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10138,
     "sha": "521018e81c314537fe5104c415c8dda05381c89aaa9b5c57b39471d465071c5e"
   },
@@ -2165,7 +2165,7 @@
       { "k": "Beard", "v": "Normal Beard Black" },
       { "k": "Teeth", "v": "Buck Teeth" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10139,
     "sha": "dc24a4364d19bb59eb7b8477751aed91d9868f4ff439bedae770ac2e6e3055e0"
   },
@@ -2180,7 +2180,7 @@
       { "k": "Beard", "v": "Shadow Beard" },
       { "k": "Teeth", "v": "Buck Teeth" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10140,
     "sha": "c4a2d0f4674f00d9942ea029c02db71560bbf9960bd9e23a6508dfccd2fb1986"
   },
@@ -2195,7 +2195,7 @@
       { "k": "Beard", "v": "Mustache" },
       { "k": "Teeth", "v": "Buck Teeth" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10141,
     "sha": "1f7689536a0e5064a08bf773c72a6e2299e3c70d116ce9ba48d6ffb2d0e8e7b1"
   },
@@ -2210,7 +2210,7 @@
       { "k": "Beard", "v": "Shadow Beard" },
       { "k": "Beard", "v": "Mustache" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10142,
     "sha": "05533699ef9fafbb9510d985bf534753c9f4f139273f7a7baddf589489e3c049"
   },
@@ -2226,7 +2226,7 @@
       { "k": "Beard", "v": "Normal Beard" },
       { "k": "Neck", "v": "Gold Chain" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10143,
     "sha": "66d380cf1c44391bb3480c4a270d7fb145de69a4051d0f699516cebaf7854c2b"
   },
@@ -2243,7 +2243,7 @@
       { "k": "Face", "v": "Spots" },
       { "k": "Neck", "v": "Gold Chain" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10144,
     "sha": "cc94b7a11027fcc7068f85702400d658f733c5b3106007681fbeff83e981235c"
   },
@@ -2260,7 +2260,7 @@
       { "k": "Beard", "v": "Mustache" },
       { "k": "Face", "v": "Spots" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10145,
     "sha": "450cc343adbd20441c38fa2c956094517380677fa0abfddd4c11504812d51cf0"
   },
@@ -2278,7 +2278,7 @@
       { "k": "Beard", "v": "Mustache" },
       { "k": "Teeth", "v": "Buck Teeth" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10146,
     "sha": "0317cc58fcd24941cb9d68670cab750f80ff60ae87f8290120a0e7bf33ae5181"
   },
@@ -2298,7 +2298,7 @@
       { "k": "Beard", "v": "Mustache" },
       { "k": "Neck", "v": "Gold Chain" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10147,
     "sha": "a8dee3066125e7c4f4b041c1c070bc9483fc0f66f50ff73bd72723d319021dda"
   },
@@ -2314,7 +2314,7 @@
       { "k": "Beard", "v": "Shadow Beard" },
       { "k": "Beard", "v": "Mustache" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10148,
     "sha": "8293ded36461e9edda8d4d25ee43309f4e75138c755fea379a4b82a78b8a4639"
   },
@@ -2329,7 +2329,7 @@
       { "k": "Face", "v": "Spots" },
       { "k": "Beard", "v": "Mustache" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10149,
     "sha": "0906cd3c9922658511a626011b1bd7a090effec31cf99e587065cea8999fb368"
   },
@@ -2346,7 +2346,7 @@
       { "k": "Beard", "v": "Handlebars" },
       { "k": "Nose", "v": "Clown Nose" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10150,
     "sha": "2391d4340844fea66ac1dff2b64e8b216f755a32c4adb60b25b4655b105ac356"
   },
@@ -2363,7 +2363,7 @@
       { "k": "Beard", "v": "Handlebars" },
       { "k": "Teeth", "v": "Buck Teeth" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10151,
     "sha": "84af343068470bf26cc93b95246f908674882f93256cc7f63fd915dd75747d59"
   },
@@ -2377,7 +2377,7 @@
       { "k": "Hair", "v": "Top Hat" },
       { "k": "Beard", "v": "Normal Beard Black" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10152,
     "sha": "4c83f590476b895d9e349f6c8f3284c60eae06c82c2a38b3dfb98243bd035f74"
   },
@@ -2393,7 +2393,7 @@
       { "k": "Beard", "v": "Mustache" },
       { "k": "Face", "v": "Spots" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10153,
     "sha": "f2b5dcfc98dab23415948c6fccb3f687ccdcb3135a7f0fbee545848e1ddedec0"
   },
@@ -2408,7 +2408,7 @@
       { "k": "Emotion", "v": "Smile" },
       { "k": "Beard", "v": "Normal Beard" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10154,
     "sha": "f41f4aa6017e0b079ff24f1226088bc32e45cae6d4f846b160132e4235587417"
   },
@@ -2423,7 +2423,7 @@
       { "k": "Beard", "v": "Normal Beard" },
       { "k": "Beard", "v": "Mustache" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10155,
     "sha": "1533cc339c5981764aa55d30cd2432cb0fde89da357a5b3ca6a95c36b60f3116"
   },
@@ -2441,7 +2441,7 @@
       { "k": "Beard", "v": "Shadow Beard" },
       { "k": "Teeth", "v": "Buck Teeth" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10156,
     "sha": "d47aab0f48c0aa6cb23468150226b887ca469a1db41b3a25a46bc48e7b16ecad"
   },
@@ -2457,7 +2457,7 @@
       { "k": "Hair", "v": "Beanie" },
       { "k": "Beard", "v": "Big Beard" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10157,
     "sha": "e4298d66a8ff747190e6f1ec418ba4d09a3869d09ee91ce43138ed66a3791fd5"
   },
@@ -2476,7 +2476,7 @@
       { "k": "Cheeks", "v": "Rosy Cheeks" },
       { "k": "Teeth", "v": "Buck Teeth" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10158,
     "sha": "854903e8231cd6e1726559467d69aa5437fbeb1555700f83992603f437d32edd"
   },
@@ -2494,7 +2494,7 @@
       { "k": "Beard", "v": "Front Beard Dark" },
       { "k": "Teeth", "v": "Buck Teeth" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10159,
     "sha": "4a741067b497499451b107143cb4278b74248a899a0d9146f87aa6b1b94ab065"
   },
@@ -2510,7 +2510,7 @@
       { "k": "Beard", "v": "Chinstrap" },
       { "k": "Beard", "v": "Mustache" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10160,
     "sha": "f2a16702d195557cb5692686ebfa5eeab6d6fcd06ebe04612a61b0253d03baf0"
   },
@@ -2526,7 +2526,7 @@
       { "k": "Hair", "v": "Do-rag" },
       { "k": "Beard", "v": "Luxurious Beard" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10161,
     "sha": "ac8bc704227010a9c2366facfb86d13173bc7610b2d2d36d55c14237d6ae35cd"
   },
@@ -2543,7 +2543,7 @@
       { "k": "Beard", "v": "Mustache" },
       { "k": "Nose", "v": "Clown Nose" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10162,
     "sha": "89b8243f58d1892b3fc1ad3d27a68bcfd32fcb858138fb4edf872e48d9013627"
   },
@@ -2560,7 +2560,7 @@
       { "k": "Face", "v": "Spots" },
       { "k": "Teeth", "v": "Buck Teeth" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10163,
     "sha": "277ca0809d2fee20d08f82fdc9c40ff574bd965d3d730ff87ccb3a5c418de3c2"
   },
@@ -2576,7 +2576,7 @@
       { "k": "Beard", "v": "Normal Beard" },
       { "k": "Teeth", "v": "Buck Teeth" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10164,
     "sha": "e1fc659fb0904a20ee29105482b5db4daa929ceb6c7d6142da7b1011033d1f53"
   },
@@ -2597,7 +2597,7 @@
       { "k": "Face", "v": "Spots" },
       { "k": "Teeth", "v": "Buck Teeth" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10165,
     "sha": "4c73eae88b793b43f5d4507edbee0579aa8dd138a0a08a5f73db7428e3e5ceb5"
   },
@@ -2613,7 +2613,7 @@
       { "k": "Beard", "v": "Chinstrap" },
       { "k": "Teeth", "v": "Buck Teeth" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10166,
     "sha": "5591ca17f20427166f09a6145fd203a948f66143f6545171b47c3e1d5e5307cd"
   },
@@ -2629,7 +2629,7 @@
       { "k": "Emotion", "v": "Smile" },
       { "k": "Beard", "v": "Normal Beard" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10167,
     "sha": "35b8bd3f83a67726c9e6ded9f2135f33c96c149fe94559e82deec56396a7d5e1"
   },
@@ -2645,7 +2645,7 @@
       { "k": "Beard", "v": "Chinstrap" },
       { "k": "Beard", "v": "Mustache" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10168,
     "sha": "6895e262fb0fe02040a27e6d1ea172c949f49705162877e6b84a56e85df67473"
   },
@@ -2662,7 +2662,7 @@
       { "k": "Beard", "v": "Mustache" },
       { "k": "Neck", "v": "Gold Chain" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10169,
     "sha": "a55aaf6ea1c3a1c4b6029edc8784e873aa5a508abb5777b569fdc5ae036a2bd7"
   },
@@ -2679,7 +2679,7 @@
       { "k": "Face", "v": "Spots" },
       { "k": "Teeth", "v": "Buck Teeth" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10170,
     "sha": "6ff0303d264a15c7786d03dd66b0392dc5c1fcb5134c14862bbd5dd953b03228"
   },
@@ -2693,7 +2693,7 @@
       { "k": "Hair", "v": "Stringy Hair" },
       { "k": "Hair", "v": "Cap" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10171,
     "sha": "22f6cbd670d8969b09ba506168ae2c69cd850d6b1f66c12c48b286142898d87d"
   },
@@ -2708,7 +2708,7 @@
       { "k": "Hair", "v": "Cowboy Hat" },
       { "k": "Beard", "v": "Luxurious Beard" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10172,
     "sha": "445b7cd299e4c68aef7144f89289edf1031f7c8a2229091c17cd2e2fc0098bc5"
   },
@@ -2724,7 +2724,7 @@
       { "k": "Beard", "v": "Muttonchops" },
       { "k": "Face", "v": "Spots" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10173,
     "sha": "3724fa23573bb01261a40e14437b6b8718bff1167a1f782a8b3ea1f814f0ebcb"
   },
@@ -2743,7 +2743,7 @@
       { "k": "Beard", "v": "Mustache" },
       { "k": "Teeth", "v": "Buck Teeth" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10174,
     "sha": "34293ff5dbd7f01c8814acb00e3094d2b5cf52e03297301c4774e6131621e733"
   },
@@ -2759,7 +2759,7 @@
       { "k": "Hair", "v": "Headband" },
       { "k": "Nose", "v": "Clown Nose" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10175,
     "sha": "5f7e2891ea327d4bbe26a4ba769853a2c2d2ba357076affb2cb178c4a0ef8c9d"
   },
@@ -2773,7 +2773,7 @@
       { "k": "Hair", "v": "Beanie" },
       { "k": "Beard", "v": "Chinstrap" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10176,
     "sha": "000b1678b1f8fd960c958ac366b2e3b0bc60fe1ae2c2707a2412354340ec1e57"
   },
@@ -2790,7 +2790,7 @@
       { "k": "Beard", "v": "Normal Beard" },
       { "k": "Nose", "v": "Clown Nose" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10177,
     "sha": "dd82cb8801dbce25f18f9e39c09aaf219e10841d3cc7e3128028470ccae5a98b"
   },
@@ -2807,7 +2807,7 @@
       { "k": "Emotion", "v": "Smile" },
       { "k": "Neck", "v": "Gold Chain" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10178,
     "sha": "9de56b323c64aa21b887c17654a3f6c90d77c1323cf139ce91e65d8b49f9e25d"
   },
@@ -2822,7 +2822,7 @@
       { "k": "Emotion", "v": "Smile" },
       { "k": "Beard", "v": "Normal Beard" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10179,
     "sha": "91bef4b2686ce47e38d5c7f270fb219e01c2bd2b478bb029fcd63decdedd82e8"
   },
@@ -2838,7 +2838,7 @@
       { "k": "Face", "v": "Mole" },
       { "k": "Neck", "v": "Gold Chain" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10180,
     "sha": "191fb39e26625957a43c98f11b5d8d54a52c64d2d8b76be21ef063150995d396"
   },
@@ -2852,7 +2852,7 @@
       { "k": "Hair", "v": "Wild Hair" },
       { "k": "Nose", "v": "Clown Nose" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10181,
     "sha": "bd4323eaab52e7c57790ba0bf99f353ab53aa4cbe019cc5b74af1812db4fdc3b"
   },
@@ -2867,7 +2867,7 @@
       { "k": "Emotion", "v": "Frown" },
       { "k": "Beard", "v": "Normal Beard" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10182,
     "sha": "d47f15386c83253a19712cad28829ce879f5193e9849868f379d4ef5b5a3e840"
   },
@@ -2881,7 +2881,7 @@
       { "k": "Hair", "v": "Knitted Cap" },
       { "k": "Beard", "v": "Big Beard" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10183,
     "sha": "dbf0f100a25ebf237e07819e82525b8b47c6eb9133ec05ef4bd3ff0782d6a355"
   },
@@ -2900,7 +2900,7 @@
       { "k": "Nose", "v": "Clown Nose" },
       { "k": "Teeth", "v": "Buck Teeth" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10184,
     "sha": "1d7b26be68135fdb3ddb55db74b7a55c21d8fbb0cfa4967981dd9b916fb566f6"
   },
@@ -2916,7 +2916,7 @@
       { "k": "Beard", "v": "Big Beard" },
       { "k": "Teeth", "v": "Buck Teeth" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10185,
     "sha": "1dcdea63db0a4f9cb02126512c0789914db93b99aead6ff57a56395a231e1d7e"
   },
@@ -2935,7 +2935,7 @@
       { "k": "Neck", "v": "Gold Chain" },
       { "k": "Teeth", "v": "Buck Teeth" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10186,
     "sha": "259260c36fff461188eab65a1fa7f9e4d1e6e342ca3e91a14c6594f20a205b7d"
   },
@@ -2953,7 +2953,7 @@
       { "k": "Face", "v": "Spots" },
       { "k": "Teeth", "v": "Buck Teeth" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10187,
     "sha": "922426bd9860ebae939156f82d2ffe33acc4249025dec5bb09e65f615814fc8f"
   },
@@ -2969,7 +2969,7 @@
       { "k": "Beard", "v": "Muttonchops" },
       { "k": "Teeth", "v": "Buck Teeth" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10188,
     "sha": "c272c29e97e16ea68e4cf97b5ad42d1a9a36169d8126bd1d8a095f44d192b41e"
   },
@@ -2989,7 +2989,7 @@
       { "k": "Face", "v": "Spots" },
       { "k": "Neck", "v": "Gold Chain" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10189,
     "sha": "087eec4ad63c75f28e2ad43f331d468700d071661ab997a8bc31e9c329cee3b1"
   },
@@ -3009,7 +3009,7 @@
       { "k": "Neck", "v": "Gold Chain" },
       { "k": "Teeth", "v": "Buck Teeth" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10190,
     "sha": "c4b83c65918ccd339ffdd6b30b43d665a0d4900991851fe5aa171395efc30211"
   },
@@ -3026,7 +3026,7 @@
       { "k": "Beard", "v": "Mustache" },
       { "k": "Face", "v": "Spots" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10191,
     "sha": "46b97b0e741b87ef4b28e464f817de95b7c79eec469d5ebb558aa5c985403dbf"
   },
@@ -3045,7 +3045,7 @@
       { "k": "Neck", "v": "Gold Chain" },
       { "k": "Cheeks", "v": "Rosy Cheeks" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10192,
     "sha": "d9d98f591008461592b5583efb62b611a4158f33a8308cda3ac990696a7502df"
   },
@@ -3062,7 +3062,7 @@
       { "k": "Face", "v": "Spots" },
       { "k": "Cheeks", "v": "Rosy Cheeks" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10193,
     "sha": "e27de3dda17237b2f2a804e81273239a64ee1e7ef25a5da9ba500d87ec3ea781"
   },
@@ -3078,7 +3078,7 @@
       { "k": "Beard", "v": "Shadow Beard" },
       { "k": "Neck", "v": "Gold Chain" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10194,
     "sha": "f2cdf9754e9e303315955d7ac7e98c760ad488f06c0aba3cfb834b0a2e81bcc1"
   },
@@ -3096,7 +3096,7 @@
       { "k": "Face", "v": "Spots" },
       { "k": "Teeth", "v": "Buck Teeth" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10195,
     "sha": "b93a8012111948c93bf02ccbef7496b98acf83cd794e623e387c2898271bb6a7"
   },
@@ -3109,7 +3109,7 @@
       { "k": "Eyes", "v": "Vr" },
       { "k": "Hair", "v": "Police Cap" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10196,
     "sha": "be89ef0b69663707f39d493f42da6ea1892e52f0a00d35e4e80f9826d61b80c5"
   },
@@ -3121,7 +3121,7 @@
       { "k": "Sex", "v": "Male" },
       { "k": "Eyes", "v": "Vr" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10197,
     "sha": "fbf820cd9e43464679d0b750acb66e42143e1705eef9f5d2eaa934eadd2f1dcf"
   },
@@ -3133,7 +3133,7 @@
       { "k": "Sex", "v": "Male" },
       { "k": "Emotion", "v": "Smile" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10198,
     "sha": "6a4415859167c886884749722c4c6efcd7584f36c45088f89df0fbc67e50e85d"
   },
@@ -3149,7 +3149,7 @@
       { "k": "Lips", "v": "Black Lipstick" },
       { "k": "Neck", "v": "Gold Chain" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10199,
     "sha": "87b937a51d52fc297ac08b924e38971558e7d51934eb01fed28049ebcf225d91"
   },
@@ -3164,7 +3164,7 @@
       { "k": "Hair", "v": "Tiara" },
       { "k": "Lips", "v": "Purple Lipstick" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10200,
     "sha": "ff994ed1bd57c9434b669b40e950770c58a11f92c957fbca97ae23ac6c3ecff1"
   },
@@ -3180,7 +3180,7 @@
       { "k": "Lips", "v": "Purple Lipstick" },
       { "k": "Neck", "v": "Gold Chain" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10201,
     "sha": "34e6e2dbf5debf55d2f97a11b0868f023e1db4b31c2830d124cd47cff8384e07"
   },
@@ -3197,7 +3197,7 @@
       { "k": "Neck", "v": "Gold Chain" },
       { "k": "Cheeks", "v": "Rosy Cheeks" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10202,
     "sha": "ef38ea48abcfdebaae8a66d40bbcd722e59414adbbacac660a4b80d876e69735"
   },
@@ -3213,7 +3213,7 @@
       { "k": "Lips", "v": "Hot Lipstick" },
       { "k": "Neck", "v": "Gold Chain" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10203,
     "sha": "2bbdf98097b8b86c07a3693dce8d03679487cda4b29e3f8145a08924e0f34171"
   },
@@ -3231,7 +3231,7 @@
       { "k": "Neck", "v": "Gold Chain" },
       { "k": "Cheeks", "v": "Rosy Cheeks" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10204,
     "sha": "57a5b36f42cd99bfd272bb7e2529bf012b0ca16b5f5f9650ecce9abd84ed3152"
   },
@@ -3248,7 +3248,7 @@
       { "k": "Neck", "v": "Gold Chain" },
       { "k": "Cheeks", "v": "Rosy Cheeks" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10205,
     "sha": "e7a8c26f729bb09791a33fdc83ef50808c059a81182e5d82e08509cbb4bd1678"
   },
@@ -3264,7 +3264,7 @@
       { "k": "Lips", "v": "Hot Lipstick" },
       { "k": "Neck", "v": "Gold Chain" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10206,
     "sha": "ce31d88a879cca1e20e55de3ae63b1f39704b5647bec16d3423faa9a80a4c544"
   },
@@ -3280,7 +3280,7 @@
       { "k": "Hair", "v": "Tiara" },
       { "k": "Lips", "v": "Hot Lipstick" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10207,
     "sha": "d4e395cee06edc6fbddac295a175e5b6a3abe298369cf26220ea6f1bfe084243"
   },
@@ -3295,7 +3295,7 @@
       { "k": "Neck", "v": "Choker" },
       { "k": "Teeth", "v": "Buck Teeth" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10208,
     "sha": "81c25fef0830272730c663cc6edf387bb58efda417d956efe6de35c7b0470e49"
   },
@@ -3312,7 +3312,7 @@
       { "k": "Lips", "v": "Purple Lipstick" },
       { "k": "Neck", "v": "Gold Chain" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10209,
     "sha": "1ce3a3c3aa10a7a1ae2fb8564e1807ac6098ab41b2745218c760c09d8d3d2585"
   },
@@ -3327,7 +3327,7 @@
       { "k": "Hair", "v": "Orange Side" },
       { "k": "Lips", "v": "Purple Lipstick" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10210,
     "sha": "e2d67820c549416029c8869846ae9705cb1b143cedf1929900dbfff29e1467a1"
   },
@@ -3346,7 +3346,7 @@
       { "k": "Neck", "v": "Gold Chain" },
       { "k": "Neck", "v": "Choker" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10211,
     "sha": "e0342c5da87f53ffd0080771738339376163bf99881d8691db9846b2b71cb91a"
   },
@@ -3364,7 +3364,7 @@
       { "k": "Neck", "v": "Gold Chain" },
       { "k": "Neck", "v": "Choker" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10212,
     "sha": "9934fa45fbe974574651cb197e0608cb0e20cbbfd371c8a9d4d76314ead48a05"
   },
@@ -3379,7 +3379,7 @@
       { "k": "Hair", "v": "Cap" },
       { "k": "Lips", "v": "Black Lipstick" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10213,
     "sha": "0b3a502a5fb0abfd2cefa7f3d715ad4c2682e9e4448bad7fbd3b268ff995680e"
   },
@@ -3395,7 +3395,7 @@
       { "k": "Lips", "v": "Purple Lipstick" },
       { "k": "Cheeks", "v": "Rosy Cheeks" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10214,
     "sha": "1dd160ce98fd693c016148e3eb4527890a56816a0ff66c96343516511886950b"
   },
@@ -3411,7 +3411,7 @@
       { "k": "Hair", "v": "Knitted Cap" },
       { "k": "Lips", "v": "Hot Lipstick" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10015,
     "sha": "2414af92c4883b2dcafe7f9ac4ef2a7e228bf4724394bc10947ae23a5f28fa6c"
   },
@@ -3428,7 +3428,7 @@
       { "k": "Lips", "v": "Black Lipstick" },
       { "k": "Cheeks", "v": "Rosy Cheeks" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10216,
     "sha": "085fd4ca73cfb241ebca8da4faac0369157641f4b6a0481157c39da36896717b"
   },
@@ -3444,7 +3444,7 @@
       { "k": "Lips", "v": "Purple Lipstick" },
       { "k": "Neck", "v": "Gold Chain" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10217,
     "sha": "431bfa5c6e6ab6ad3963ceb5110a5f950f32202ae6364fab266b780e44e4c65e"
   },
@@ -3460,7 +3460,7 @@
       { "k": "Lips", "v": "Hot Lipstick" },
       { "k": "Neck", "v": "Gold Chain" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10218,
     "sha": "343b3b98774d0d8a28d0d8b6f01fe458f75c57de7f48ac67e451693f8a3d72d8"
   },
@@ -3475,7 +3475,7 @@
       { "k": "Hair", "v": "Bandana" },
       { "k": "Lips", "v": "Hot Lipstick" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10219,
     "sha": "c4919fe02e65be97537c86b796ddd121c2093b4074d02a11a1664edefa892791"
   },
@@ -3490,7 +3490,7 @@
       { "k": "Lips", "v": "Purple Lipstick" },
       { "k": "Cheeks", "v": "Rosy Cheeks" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10220,
     "sha": "6ca897a9b3c2c6183140367e6375f4db55b385aa8c251c2ffd5e177f037d57a5"
   },
@@ -3508,7 +3508,7 @@
       { "k": "Neck", "v": "Silver Chain" },
       { "k": "Cheeks", "v": "Rosy Cheeks" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10221,
     "sha": "47c8c7957d814d5c9974a8a20b2575c8639b23fa548e5a32c4a62e1a3a97c34c"
   },
@@ -3522,7 +3522,7 @@
       { "k": "Hair", "v": "Pilot Helmet" },
       { "k": "Lips", "v": "Black Lipstick" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10222,
     "sha": "42f6374c63fd4b665e23d32aa98dd90df3769e818109d7ab373e54e2f18e5efa"
   },
@@ -3536,7 +3536,7 @@
       { "k": "Hair", "v": "Headband" },
       { "k": "Lips", "v": "Purple Lipstick" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10223,
     "sha": "998eb0cf3a24892a53205960e077c85aea3a599ec24be288ec51ba6a09ae21ef"
   },
@@ -3551,7 +3551,7 @@
       { "k": "Lips", "v": "Hot Lipstick" },
       { "k": "Cheeks", "v": "Rosy Cheeks" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10224,
     "sha": "dec2dd7fecbb0f8427721424ad076e950431c4aef30f802886680e8930b22fb9"
   },
@@ -3566,7 +3566,7 @@
       { "k": "Hair", "v": "Pilot Helmet" },
       { "k": "Lips", "v": "Hot Lipstick" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10225,
     "sha": "b2b36d670eb0ad5641814c36e0a4ba7d98c596e37a0ad43c628f40e15c2c393f"
   },
@@ -3584,7 +3584,7 @@
       { "k": "Neck", "v": "Choker" },
       { "k": "Cheeks", "v": "Rosy Cheeks" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10226,
     "sha": "6f952a0cf52245f64d2184e6fef4b2e999f4e6b4117a4f9763303cc2c0379815"
   },
@@ -3600,7 +3600,7 @@
       { "k": "Hair", "v": "Headband" },
       { "k": "Lips", "v": "Hot Lipstick" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10227,
     "sha": "52d00285a32ccfbd19b657fa25c99bc72ec9c235e8521586f7388d5c113f3d6d"
   },
@@ -3616,7 +3616,7 @@
       { "k": "Hair", "v": "Headband" },
       { "k": "Lips", "v": "Purple Lipstick" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10228,
     "sha": "72e4881b85ec0af3913dbfcf1b5ee5edb1f3446cd2126960b03f0d2a48cca408"
   },
@@ -3633,7 +3633,7 @@
       { "k": "Lips", "v": "Hot Lipstick" },
       { "k": "Cheeks", "v": "Rosy Cheeks" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10229,
     "sha": "0fbf946ffcfc107ccd5f79386effc3769497976a8cb3cb316af7bf1b5f5504c5"
   },
@@ -3649,7 +3649,7 @@
       { "k": "Lips", "v": "Hot Lipstick" },
       { "k": "Cheeks", "v": "Rosy Cheeks" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10230,
     "sha": "3c0f90f95a3c23ea2cf306a23a23b66b35ebc7c550d1f308f64aef4bd3d3b8ba"
   },
@@ -3667,7 +3667,7 @@
       { "k": "Lips", "v": "Purple Lipstick" },
       { "k": "Cheeks", "v": "Rosy Cheeks" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10231,
     "sha": "474499b48b2bd9c2c019c148885d69a4ad51b86bfa83d9b9597fe18ba2fc185e"
   },
@@ -3682,7 +3682,7 @@
       { "k": "Hair", "v": "Bandana" },
       { "k": "Lips", "v": "Purple Lipstick" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10232,
     "sha": "6bb21e3dc686ee18e3e40bb4e1e77430b518b1683b0277dce8dcbbe1d94894f0"
   },
@@ -3700,7 +3700,7 @@
       { "k": "Neck", "v": "Silver Chain" },
       { "k": "Neck", "v": "Choker" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10233,
     "sha": "0b9be0eedc456e12f2f4a76388520799f2a9d0204a7ee6df6c886bae7c090116"
   },
@@ -3718,7 +3718,7 @@
       { "k": "Neck", "v": "Gold Chain" },
       { "k": "Neck", "v": "Choker" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10234,
     "sha": "a99b38d45809a9ccaf4edc183abdd620eb23a5f320366b3efb63549f5c270167"
   },
@@ -3736,7 +3736,7 @@
       { "k": "Neck", "v": "Gold Chain" },
       { "k": "Cheeks", "v": "Rosy Cheeks" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10235,
     "sha": "7d60d0472bfa65a3f12f72a68ad013f74f3a611c9dbf591258cf6176cb541df3"
   },
@@ -3754,7 +3754,7 @@
       { "k": "Neck", "v": "Gold Chain" },
       { "k": "Cheeks", "v": "Rosy Cheeks" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10236,
     "sha": "32053ac2837d5637531781fbff711f56ac34b022bfd127cdb676014b1a420b29"
   },
@@ -3770,7 +3770,7 @@
       { "k": "Lips", "v": "Purple Lipstick" },
       { "k": "Neck", "v": "Silver Chain" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10237,
     "sha": "4c06cd351eb56c8d701403bc2e7bb45456e082e272f319579f86c1736e292415"
   },
@@ -3788,7 +3788,7 @@
       { "k": "Lips", "v": "Black Lipstick" },
       { "k": "Cheeks", "v": "Rosy Cheeks" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10238,
     "sha": "383ebd50ec351c1fc344c377637d82b246ae01584cd7d1b6a1635701a3ddaaa0"
   },
@@ -3804,7 +3804,7 @@
       { "k": "Lips", "v": "Purple Lipstick" },
       { "k": "Cheeks", "v": "Rosy Cheeks" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10239,
     "sha": "9773d4089cb0d1f20182c2fe3e0861431fe6f1745cdf4880b65d51b756ea99d3"
   },
@@ -3819,7 +3819,7 @@
       { "k": "Hair", "v": "Bandana" },
       { "k": "Lips", "v": "Purple Lipstick" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10240,
     "sha": "43e2cac8b04e03d0743bb3bf04e2a47d840311cb8b59e6a96cc25b0e76fb0add"
   },
@@ -3834,7 +3834,7 @@
       { "k": "Hair", "v": "Tiara" },
       { "k": "Neck", "v": "Gold Chain" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10241,
     "sha": "9bb6525f7153d2f9cc20e11d0f71314dcb5d835a16f2783b6a47ce73e9971d99"
   },
@@ -3849,7 +3849,7 @@
       { "k": "Hair", "v": "Bandana" },
       { "k": "Lips", "v": "Purple Lipstick" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10242,
     "sha": "6abe51abeba80ba5fe6746e695160ed2116731947c9663f0268470d778e935fc"
   },
@@ -3866,7 +3866,7 @@
       { "k": "Lips", "v": "Purple Lipstick" },
       { "k": "Neck", "v": "Gold Chain" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10243,
     "sha": "29bf7d4046b6881cbc0c882bf724a0105e9daa962d9187a97e4cbe054d393b7c"
   },
@@ -3884,7 +3884,7 @@
       { "k": "Neck", "v": "Gold Chain" },
       { "k": "Cheeks", "v": "Rosy Cheeks" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10244,
     "sha": "8201a4b89877ed054e72e5651b958f4bba6aba5fe0bb1a15bb8bc40a0e3ea397"
   },
@@ -3900,7 +3900,7 @@
       { "k": "Lips", "v": "Black Lipstick" },
       { "k": "Neck", "v": "Gold Chain" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10245,
     "sha": "41ebad0a21d9ec1354a831eeb6358d3ad0f35d88d921fb46467fd3d24319ff17"
   },
@@ -3917,7 +3917,7 @@
       { "k": "Neck", "v": "Gold Chain" },
       { "k": "Cheeks", "v": "Rosy Cheeks" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10246,
     "sha": "24a97a42fbfb16952338639f4276aae06855c4ac14fe6bd5a5d35cee79668dda"
   },
@@ -3933,7 +3933,7 @@
       { "k": "Lips", "v": "Black Lipstick" },
       { "k": "Neck", "v": "Gold Chain" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10247,
     "sha": "f5cee9a87b990ade7227208f615fd3523d298fbe098befab4c56310fe828f1d5"
   },
@@ -3950,7 +3950,7 @@
       { "k": "Lips", "v": "Purple Lipstick" },
       { "k": "Neck", "v": "Gold Chain" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10248,
     "sha": "82a6264dbe069511d59abebf046f50288aba84f0686d0d6951e5f5d88da99bcf"
   },
@@ -3968,7 +3968,7 @@
       { "k": "Neck", "v": "Silver Chain" },
       { "k": "Cheeks", "v": "Rosy Cheeks" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10249,
     "sha": "221d13d391506263959441cd0749f8576853d2b9998438a7bbbf6cbad1210fd0"
   },
@@ -3980,7 +3980,7 @@
       { "k": "Sex", "v": "Female" },
       { "k": "Emotion", "v": "Smile" }
     ],
-    "collectionSlug": "missing-punks",
+    "slug": "missing-punks",
     "tokenId": 10250,
     "sha": "f02277242d8cbc940fa93bbfb8d836692c04ed5eb3b41a5eb1c4680be088cf92"
   }
