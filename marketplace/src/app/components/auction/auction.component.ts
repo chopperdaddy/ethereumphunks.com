@@ -47,7 +47,7 @@ export class AuctionComponent {
   constructor(
     public web3Svc: Web3Service,
   ) {
-    console.log(this.auction)
+    // console.log(this.auction)
   }
 
   async submitBid(): Promise<void> {

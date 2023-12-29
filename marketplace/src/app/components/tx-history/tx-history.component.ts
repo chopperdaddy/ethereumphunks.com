@@ -1,9 +1,8 @@
-import { Component, Input, OnChanges, OnDestroy, SimpleChanges } from '@angular/core';
+import { Component, Input, OnChanges, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { HttpClientModule } from '@angular/common/http';
 
-import { Store } from '@ngrx/store';
 import { LazyLoadImageModule } from 'ng-lazyload-image';
 
 import { WalletAddressDirective } from '@/directives/wallet-address.directive';
@@ -12,15 +11,12 @@ import { WeiToEthPipe } from '@/pipes/wei-to-eth.pipe';
 import { FormatCashPipe } from '@/pipes/format-cash.pipe';
 import { CamelCase2TitleCase } from '@/pipes/cc2tc.pipe';
 
-import { GlobalState } from '@/models/global-state';
+import { DataService } from '@/services/data.service';
 
 import { environment } from 'src/environments/environment';
 import { ZERO_ADDRESS } from '@/constants/utils';
 
-import * as dataStateActions from '@/state/actions/data-state.actions';
-import * as dataStateSelectors from '@/state/selectors/data-state.selectors';
-
-import { map } from 'rxjs';
+import { BehaviorSubject, Subject, catchError, filter, map, of, switchMap, tap } from 'rxjs';
 
 @Component({
   standalone: true,
@@ -42,29 +38,36 @@ import { map } from 'rxjs';
   styleUrls: ['./tx-history.component.scss']
 })
 
-export class TxHistoryComponent implements OnChanges, OnDestroy {
+export class TxHistoryComponent implements OnChanges {
 
   ZERO_ADDRESS = ZERO_ADDRESS;
-  explorerUrl = `https://${environment.chainId === 5 ? 'goerli.' : ''}etherscan.io`;
+  explorerUrl = environment.explorerUrl;
 
   @Input() hashId!: string | undefined;
 
-  tokenSales$ = this.store.select(dataStateSelectors.selectTxHistory).pipe(
-    map((data) => data?.map((tx) => ({
+  private fetchTxHistory = new BehaviorSubject<string | null>(null);
+  fetchTxHistory$ = this.fetchTxHistory.asObservable();
+
+  tokenSales$ = this.fetchTxHistory$.pipe(
+    filter((hashId) => !!hashId),
+    switchMap((hashId) => this.dataSvc.fetchSingleTokenEvents(hashId!)),
+    map((data) => data?.map((tx: any) => ({
       ...tx,
       type: tx.type === 'transfer' && tx.to.toLowerCase() === environment.marketAddress ? 'escrow' : tx.type,
     }))),
+    catchError(error => {
+      console.error('Error fetching transaction history', error);
+      return of([]);
+    })
   );
 
   constructor(
-    private store: Store<GlobalState>,
+    private dataSvc: DataService,
   ) {}
 
   ngOnChanges(changes: SimpleChanges): void {
-    this.store.dispatch(dataStateActions.fetchTxHistory({ hashId: changes.hashId.currentValue }));
-  }
-
-  ngOnDestroy(): void {
-    this.store.dispatch(dataStateActions.clearTxHistory());
+    if (changes.hashId && changes.hashId.currentValue) {
+      this.fetchTxHistory.next(changes.hashId.currentValue);
+    }
   }
 }

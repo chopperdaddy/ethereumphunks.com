@@ -376,6 +376,10 @@ form {
   &.transfer {
     height: auto;
   }
+
+  &.escrow {
+    height: auto;
+  }
 }
 
 .tx-phunks {

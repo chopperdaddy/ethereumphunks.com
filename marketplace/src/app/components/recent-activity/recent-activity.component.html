@@ -18,7 +18,7 @@
   <div class="events-items">
     @for (event of ((events$ | async)); track event.tokenId) {
       <a
-        [routerLink]="['/', 'details', event.tokenId]"
+        [routerLink]="['/', 'details', event.hashId]"
         class="event-item"
         [class]="event.type | lowercase">
         <div class="image-wrapper">

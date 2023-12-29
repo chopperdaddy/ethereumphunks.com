@@ -172,7 +172,7 @@
   }
 
   &.preview {
-    grid-template-columns: repeat(5, calc(100% / 5));
+    grid-template-columns: repeat(10, calc(100% / 10));
 
     .item {
       .image-wrapper {

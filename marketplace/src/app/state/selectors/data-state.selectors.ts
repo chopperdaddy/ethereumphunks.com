@@ -44,11 +44,6 @@ export const selectEvents = createSelector(
   (appState: DataState) => appState.events
 );
 
-export const selectTxHistory = createSelector(
-  selectDataState,
-  (appState: DataState) => appState.txHistory
-);
-
 export const selectUserOpenBids = createSelector(
   selectDataState,
   (appState: DataState) => appState.userOpenBids

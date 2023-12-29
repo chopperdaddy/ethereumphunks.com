@@ -3,7 +3,7 @@
     @if ((activeMarketRouteData$ | async); as phunkData) {
 
       <div class="header-wrapper">
-        <h1 i18n>{{ marketTitles[marketType] }}</h1>
+        <h1 i18n>{{ marketTitles[marketType].replace('%collectionName%', (activeCollection$ | async)?.singleName) }}</h1>
           @if ((route.queryParams | async)?.address; as address) {
             @if (address) {
               <h2>
@@ -122,7 +122,7 @@
 
 <app-slideout [active]="!!(slidseoutActive$ | async)">
   @if (isListingBulk) {
-    <form [formGroup]="bulkListingForm">
+    <form [formGroup]="bulkListingForm" class="list">
       <div class="top-bar">
         <h2 i18n>Bulk List <span class="highlight">{{ bulkListingForm.value.listingPhunks?.length }}</span> EtherPhunks</h2>
         @if (deselected.length) {
@@ -136,20 +136,20 @@
 
       <div class="selected-wrapper">
         <ng-container formArrayName="listingPhunks">
-          @for (phunk of selectedPhunksFormArray.controls; track phunk; let i = $index) {
+          @for (item of selectedPhunksFormArray.controls; track item.value.hashId; let i = $index) {
             <div [formGroupName]="i">
 
               <div class="selected">
                 <img
-                  [lazyLoad]="dataSvc.staticUrl + '/images/phunk' + (phunk.value.phunkId | tokenIdParse) + '.png'"
+                  [lazyLoad]="dataSvc.staticUrl + '/images/' + item.value.slug + '_' + item.value.phunkId + '.png'"
                   [defaultImage]="'assets/loadingphunk.png'"
                   width="50"
                   height="50"
                 />
 
                 <div class="form-group">
-                  <label [for]="phunk.value.phunkId">List Price</label>
-                  <input type="number" [id]="phunk.value.phunkId" placeholder="ETH" formControlName="listPrice">
+                  <label [for]="item.value.phunkId">List Price</label>
+                  <input type="number" [id]="item.value.phunkId" placeholder="ETH" formControlName="listPrice">
                   @if (selectedPhunksFormArray.controls[i].get('listPrice')?.value) {
                     <button tabindex="-1" class="copy" (click)="copyToNext(i)">Copy</button>
                   }
@@ -168,7 +168,7 @@
   } @else if (isTransferingBulk) {
     <form [formGroup]="bulkListingForm" class="transfer">
       <div class="top-bar">
-        <h2 i18n>Bulk transfer <span class="highlight">{{ bulkListingForm.value.listingPhunks?.length }}</span> Phunks</h2>
+        <h2 i18n>Bulk transfer <span class="highlight">{{ bulkListingForm.value.transferPhunks?.length }}</span> Phunks</h2>
         @if (deselected.length) {
           <h3>
             <span class="highlight">
@@ -179,10 +179,10 @@
       </div>
 
       <div class="image-grid-wrapper">
-        @for (phunk of selectedPhunksFormArray.controls; track phunk; let i = $index) {
+        @for (item of selectedPhunksFormArray.controls; track item.value.hashId; let i = $index) {
           <div class="image">
             <img
-              [lazyLoad]="dataSvc.staticUrl + '/images/phunk' + (phunk.value.phunkId | tokenIdParse) + '.png'"
+              [lazyLoad]="dataSvc.staticUrl + '/images/' + item.value.slug + '_' + item.value.phunkId + '.png'"
               [defaultImage]="'assets/loadingphunk.png'"
             />
           </div>
@@ -198,6 +198,35 @@
       <div class="form-actions">
         <button type="reset" (click)="closeModal()">Cancel</button>
         <button type="submit" (click)="submitBatchTransfer()">Transfer All</button>
+      </div>
+    </form>
+  } @else if (isEscrowingBulk) {
+    <form [formGroup]="bulkListingForm" class="escrow">
+      <div class="top-bar">
+        <h2 i18n>Bulk Escrow <span class="highlight">{{ bulkListingForm.value.escrowPhunks?.length }}</span> EtherPhunks</h2>
+        @if (deselected.length) {
+          <h3>
+            <span class="highlight">
+              {{ deselected.length }}
+            </span> Selected EtherPhunks are not eligible to be listed
+          </h3>
+        }
+      </div>
+
+      <div class="image-grid-wrapper">
+        @for (item of selectedPhunksFormArray.controls; track item.value.hashId; let i = $index) {
+          <div class="image">
+            <img
+              [lazyLoad]="dataSvc.staticUrl + '/images/' + item.value.slug + '_' + item.value.phunkId + '.png'"
+              [defaultImage]="'assets/loadingphunk.png'"
+            />
+          </div>
+        }
+      </div>
+
+      <div class="form-actions">
+        <button type="reset" (click)="closeModal()">Cancel</button>
+        <button type="submit" (click)="submitBatchEscrow()">Escrow All</button>
       </div>
     </form>
   }

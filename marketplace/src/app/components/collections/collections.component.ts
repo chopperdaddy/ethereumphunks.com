@@ -22,7 +22,8 @@ import { PhunkGridComponent } from '../shared/phunk-grid/phunk-grid.component';
 export class CollectionsComponent {
 
   collections$ = this.dataSvc.fetchCollectionsWithAssets().pipe(
-    tap(collections => console.log(collections)),
+    map(collections => collections.filter((collection, i) => i !== 0)),
+    // tap(collections => console.log(collections)),
   );
 
   constructor(

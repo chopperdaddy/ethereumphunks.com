@@ -13,7 +13,8 @@ import { Web3Service } from '@/services/web3.service';
 import { PhunkGridComponent } from '@/components/shared/phunk-grid/phunk-grid.component';
 import { TxModalComponent } from '@/components/tx-modal/tx-modal.component';
 import { NotifComponent } from '@/components/shared/notif/notif.component';
-import { LeaderboardComponent } from '../leaderboard/leaderboard.component';
+import { LeaderboardComponent } from '@/components/leaderboard/leaderboard.component';
+import { CollectionsComponent } from '@/components/collections/collections.component';
 
 import { WalletAddressDirective } from '@/directives/wallet-address.directive';
 
@@ -41,6 +42,7 @@ import anime from 'animejs';
     NotifComponent,
     TxModalComponent,
     LeaderboardComponent,
+    CollectionsComponent,
 
     WeiToEthPipe,
 
@@ -56,18 +58,19 @@ export class MenuComponent {
 
   @ViewChild('menuMain') menuMain!: ElementRef;
   @ViewChild('menuLeaderboard') menuLeaderboard!: ElementRef;
+  @ViewChild('menuCurated') menuCurated!: ElementRef;
 
   address$ = this.store.select(appStateSelectors.selectWalletAddress);
   menuActive$ = this.store.select(appStateSelectors.selectMenuActive);
   activeMenuNav$ = this.store.select(appStateSelectors.selectActiveMenuNav);
+  activeCollection$ = this.store.select(dataStateSelectors.selectActiveCollection);
 
   listedPhunks$ = this.store.select(dataStateSelectors.selectOwnedPhunks).pipe(
-    // tap((owned: Phunk[] | null) => this.createOwnedStats(owned)),
-    map((res) => res?.filter((phunk: Phunk) => phunk.listing)),
+    tap((owned: Phunk[] | null) => this.createOwnedStats(owned)),
+    map((owned) => owned?.filter((phunk: Phunk) => !!phunk.listing)),
   );
 
   userOpenBids$ = this.store.select(dataStateSelectors.selectUserOpenBids).pipe(
-    // tap((bids) => console.log({bids})),
     tap((bids: Phunk[] | null) => this.createBidStats(bids))
   );
 
@@ -95,6 +98,7 @@ export class MenuComponent {
     this.menuActive$.pipe(
       switchMap((active) => {
         return this.activeMenuNav$.pipe(
+          // tap(console.log),
           tap((menuNav) => {
             this.menuTimeline = anime.timeline({
               easing: 'cubicBezier(0.85, 0, 0.30, 1.01)',
@@ -110,6 +114,10 @@ export class MenuComponent {
               targets: this.menuLeaderboard?.nativeElement,
               opacity: menuNav === 'leaderboard' ? 1 : 0,
               translateX: menuNav === 'leaderboard' ? '0' : '100%',
+            }, '-=400').add({
+              targets: this.menuCurated?.nativeElement,
+              opacity: menuNav === 'curated' ? 1 : 0,
+              translateX: menuNav === 'curated' ? '0' : '100%',
             }, '-=400');
           })
         );
@@ -136,6 +144,7 @@ export class MenuComponent {
 
     // Count the occurrences of each attribute
     const traitCounts = traits?.reduce((acc: {[key: string]: number}, trait: {k: string, v: string}) => {
+      if (!trait) return acc;
       const key = `${trait.k}:${trait.v}`; // creates a unique key from the k:v pair
       acc[key] = (acc[key] || 0) + 1;
       return acc;

@@ -1,13 +1,10 @@
-<app-splash />
+<app-splash [slug]="(activeCollection$ | async)?.slug" />
 
 <div class="sections-wrapper">
 
   <section class="overview">
     <app-recent-activity />
   </section>
-
-  <!-- {{ collectionSlug$ | async | json }}<br /><br />
-  {{ activeCollection$ | async | json }} -->
 
   @defer {
     @if ((ownedPhunks$ | async); as ownedData) {

@@ -18,7 +18,7 @@ export interface AppState {
 
   isMobile: boolean;
   menuActive: boolean;
-  activeMenuNav: 'main' | 'leaderboard';
+  activeMenuNav: 'main' | 'leaderboard' | 'curated';
   slideoutActive: boolean;
 
   selectedPhunks: Phunk[] | null;

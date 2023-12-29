@@ -1,4 +1,5 @@
 import { Pipe, PipeTransform } from '@angular/core';
+
 import { traits } from '@/constants/traits';
 
 @Pipe({
@@ -8,7 +9,8 @@ import { traits } from '@/constants/traits';
 
 export class TraitCountPipe implements PipeTransform {
 
-  transform(value: string): string {
-    return traits[value];
+  transform(value: string, slug: string): string {
+    console.log(slug)
+    return traits[slug][value];
   }
 }

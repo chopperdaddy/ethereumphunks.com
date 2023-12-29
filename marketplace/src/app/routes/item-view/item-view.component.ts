@@ -207,7 +207,7 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
     if (!this.listPrice.value) return;
 
     const value = this.listPrice.value;
-    let address = this.listToAddress.value;
+    let address = this.listToAddress.value || undefined;
 
     let notification: Notification = {
       id: Date.now(),
@@ -231,10 +231,15 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
         if (!validAddress) throw new Error('Invalid address');
       }
 
+      let hash;
+      if (phunk.isEscrowed) {
+        hash = await this.web3Svc.offerPhunkForSale(hashId, value, address);
+      } else {
+        hash = await this.web3Svc.escrowAndOfferPhunkForSale(hashId, value, address);
+      }
+
       // this.initNotificationMessage();
       this.store.dispatch(appStateActions.upsertNotification({ notification }));
-
-      const hash = await this.web3Svc.offerPhunkForSale(hashId, value, address);
 
       notification = {
         ...notification,

@@ -470,6 +470,11 @@
   {
     "inputs": [
       {
+        "internalType": "uint256",
+        "name": "_contractVersion",
+        "type": "uint256"
+      },
+      {
         "internalType": "address",
         "name": "_initialPointsAddress",
         "type": "address"
@@ -694,19 +699,6 @@
   {
     "inputs": [],
     "name": "renounceOwnership",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "_newPointsAddress",
-        "type": "address"
-      }
-    ],
-    "name": "setPointsAddress",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"

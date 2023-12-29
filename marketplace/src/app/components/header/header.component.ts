@@ -68,7 +68,7 @@ export class HeaderComponent {
     this.toggleMenu$.pipe(
       withLatestFrom(this.menuActive$),
       tap(([click, menuActive]) => {
-        console.log('menuActive', menuActive);
+        // console.log('menuActive', menuActive);
         this.store.dispatch(appStateActions.setMenuActive({ menuActive: !menuActive }));
       })
     ).subscribe();

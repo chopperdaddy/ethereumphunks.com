@@ -1,10 +1,9 @@
 import { enableProdMode, importProvidersFrom, isDevMode } from '@angular/core';
 import { bootstrapApplication } from '@angular/platform-browser';
-import { provideAnimations } from '@angular/platform-browser/animations';
-import { RouteReuseStrategy, provideRouter, withHashLocation, withInMemoryScrolling } from '@angular/router';
+import { RouteReuseStrategy, provideRouter, withHashLocation } from '@angular/router';
 
 import { HttpClientModule } from '@angular/common/http';
-// import { GraphQLModule } from './app/graphql.module';
+
 import { TimeagoClock, TimeagoDefaultClock, TimeagoDefaultFormatter, TimeagoFormatter } from 'ngx-timeago';
 
 import { AppComponent } from './app/app.component';
@@ -30,7 +29,7 @@ import { AppStateEffects } from '@/state/effects/app-state.effects';
 import { DataStateEffects } from '@/state/effects/data-state.effects';
 
 import { TokenIdParsePipe } from '@/pipes/token-id-parse.pipe';
-import { provideServiceWorker } from '@angular/service-worker';
+// import { provideServiceWorker } from '@angular/service-worker';
 
 if (environment.production) enableProdMode();
 
@@ -40,7 +39,7 @@ bootstrapApplication(AppComponent, {
     { provide: TimeagoClock, useClass: TimeagoDefaultClock },
     { provide: WeiToEthPipe, useClass: WeiToEthPipe },
     { provide: TokenIdParsePipe, useClass: TokenIdParsePipe },
-    { provide: DEFAULT_CONFIG, useValue: { name: 'cryptophunksCE' } },
+    { provide: DEFAULT_CONFIG, useValue: { name: 'etherphunks' } },
     { provide: RouteReuseStrategy, useClass: CustomReuseStrategy },
     provideStore({
         appState: appStateReducer,
@@ -57,12 +56,15 @@ bootstrapApplication(AppComponent, {
         trace: true,
         // serialize: false
     }),
-    provideAnimations(),
     provideRouterStore(),
     importProvidersFrom(HttpClientModule),
-    provideRouter(routes, withHashLocation(), withInMemoryScrolling({
-      scrollPositionRestoration: 'top',
-    })),
+    provideRouter(
+      routes,
+      withHashLocation(),
+      // withInMemoryScrolling({
+      //   scrollPositionRestoration: 'top',
+      // }),
+    ),
     // provideServiceWorker('ngsw-worker.js', {
     //     enabled: !isDevMode(),
     //     registrationStrategy: 'registerWhenStable:30000'

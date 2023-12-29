@@ -4,28 +4,23 @@
 :host {
   display: block;
   width: 100%;
-  // min-height: var(--billboard-height);
-  padding-top: 20rem;
-  background-color: rgba(var(--base-color), 1);
-  padding-bottom: 3rem;
 }
 
 h2 {
-  color: rgba(var(--black), 1);
+  color: rgba(var(--base-color), 1);
   font-family: $secondary-font-stack;
-  font-size: 3rem;
+  font-size: 2rem;
+  font-weight: 400;
+  padding-bottom: 2rem;
 }
 
 .collections {
-  display: flex;
 
-  // align-items: flex-end;
-  // justify-content: center;
 }
 
 .collection {
-  min-width: 30rem;
-  margin-right: 3rem;
+  width: 100%;
+  margin-bottom: 3rem;
 
   background-color: rgba(var(--pink), 1);
 
@@ -84,33 +79,7 @@ h2 {
 
   }
 
-  // .grid {
-  //   display: grid;
-  //   grid-template-columns: repeat(5, 1fr);
-
-  //   .item {
-  //     display: flex;
-  //     align-items: flex-end;
-  //     justify-content: center;
-
-  //     background-color: rgba(var(--pink), 1);
-
-  //     .item-image {
-  //       width: 6rem;
-  //       height: 6rem;
-
-  //       img {
-  //         display: block;
-  //         width: 100%;
-  //         height: 100%;
-  //         object-fit: cover;
-  //         image-rendering: pixelated;
-  //       }
-  //     }
-  //   }
-  // }
-
   &:last-child {
-    margin-right: 0;
+    margin-bottom: 0;
   }
 }

@@ -1,7 +1,5 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, Input, OnChanges, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
-
-import { HttpClient } from '@angular/common/http';
 
 import { PhunkImageComponent } from '../shared/phunk-image/phunk-image.component';
 
@@ -16,12 +14,16 @@ import { PhunkImageComponent } from '../shared/phunk-image/phunk-image.component
   templateUrl: './splash.component.html',
   styleUrls: ['./splash.component.scss'],
 })
-export class SplashComponent implements OnInit {
+export class SplashComponent implements OnChanges {
+
+  @Input() slug!: string | null | undefined;
 
   tokenIds: number[] = [];
 
-  ngOnInit(): void {
-    this.tokenIds = this.getRandomNumbers();
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes.slug?.currentValue === 'ethereum-phunks') {
+      this.tokenIds = this.getRandomNumbers();
+    }
   }
 
   getRandomNumbers(): number[] {
@@ -32,5 +34,4 @@ export class SplashComponent implements OnInit {
     }
     return [...numbers];
   }
-
 }

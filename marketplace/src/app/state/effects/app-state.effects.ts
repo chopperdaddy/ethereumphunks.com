@@ -3,7 +3,7 @@ import { HttpParams } from '@angular/common/http';
 import { Location } from '@angular/common';
 
 import { Store } from '@ngrx/store';
-import { ROUTER_NAVIGATION, RouterNavigationAction, getRouterSelectors } from '@ngrx/router-store';
+import { ROUTER_NAVIGATION, getRouterSelectors } from '@ngrx/router-store';
 
 import { Actions, createEffect, ofType } from '@ngrx/effects';
 
@@ -11,11 +11,10 @@ import { Web3Service } from '@/services/web3.service';
 import { DataService } from '@/services/data.service';
 import { ThemeService } from '@/services/theme.service';
 
-import { MarketType  } from '@/models/pipes';
 import { DataState } from '@/models/data.state';
 import { Cooldown, GlobalState, Notification } from '@/models/global-state';
 
-import { EMPTY, concatMap, delay, filter, from, map, mergeMap, of, switchMap, tap, withLatestFrom } from 'rxjs';
+import { EMPTY, concatMap, delay, filter, from, map, of, switchMap, tap, withLatestFrom } from 'rxjs';
 
 import * as appStateActions from '@/state/actions/app-state.actions';
 import * as appStateSelectors from '@/state/selectors/app-state.selectors';
@@ -29,20 +28,19 @@ export class AppStateEffects {
   setMarketTypeFromRoute$ = createEffect(() => this.actions$.pipe(
     ofType(ROUTER_NAVIGATION),
     withLatestFrom(this.store.select(getRouterSelectors().selectRouteParams)),
-    mergeMap(([action, routeParams]) => {
-      // console.log({ action, routeParams });
-      return [
-        // Set market type from route
-        appStateActions.setMarketType({ marketType: routeParams['marketType'] }),
-        // Set collection from route
-        appStateActions.setMarketSlug({ marketSlug: routeParams['slug'] || 'ethereum-phunks' })
-      ];
-    }),
-  ));
+    tap(([action, routeParams]) => {
+      this.store.dispatch(appStateActions.setMarketType({ marketType: routeParams['marketType'] }));
+      this.store.dispatch(appStateActions.setMarketSlug({ marketSlug: routeParams['slug'] || 'ethereum-phunks' }));
+    })
+  ), { dispatch: false });
 
   routerNavigation$ = createEffect(() => this.actions$.pipe(
     ofType(ROUTER_NAVIGATION),
-    tap((_) => this.store.dispatch(appStateActions.setMenuActive({ menuActive: false }))),
+    tap((_) => {
+      this.store.dispatch(appStateActions.setMenuActive({ menuActive: false }));
+      this.store.dispatch(appStateActions.setSlideoutActive({ slideoutActive: false }));
+      this.store.dispatch(appStateActions.setActiveMenuNav({ activeMenuNav: 'main' }));
+    }),
     withLatestFrom(
       this.store.select(getRouterSelectors().selectQueryParams),
       this.store.select(getRouterSelectors().selectRouteParams),
@@ -60,9 +58,10 @@ export class AppStateEffects {
     ofType(appStateActions.setMarketType),
     withLatestFrom(
       this.store.select(appStateSelectors.selectMarketType),
+      this.store.select(getRouterSelectors().selectRouteParam('slug')),
       this.store.select(getRouterSelectors().selectQueryParam('address')),
     ),
-    switchMap(([action, marketType, queryAddress]) => {
+    switchMap(([action, marketType, marketSlug, queryAddress]) => {
 
       // Likely exited market route so we clear some state
       if (!marketType) {
@@ -78,13 +77,14 @@ export class AppStateEffects {
               if (marketType === 'bids') return this.store.select(dataStateSelectors.selectUserOpenBids);
               return this.store.select(dataStateSelectors.selectOwnedPhunks);
             } else {
-              return this.dataSvc.fetchOwned(queryAddress);
+              return this.dataSvc.fetchOwned(queryAddress, marketSlug);
             }
           })
         );
       }
 
       if (marketType === 'all') return this.store.select(dataStateSelectors.selectAllPhunks);
+
       if (marketType === 'listings') return this.store.select(dataStateSelectors.selectListings);
       if (marketType === 'bids') return this.store.select(dataStateSelectors.selectBids);
 

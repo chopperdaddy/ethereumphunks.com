@@ -7,11 +7,11 @@ import { environment } from 'src/environments/environment';
 import { Observable, catchError, filter, of, tap } from 'rxjs';
 
 import PointsAbi from '@/abi/Points.json';
-import DonationsAbi from '@/abi/Donations.json';
-import AuctionAbi from '@/abi/EtherPhunksAuctionHouse.json';
+import DonationsAbi from '@/abi/Contributions.json';
 import EtherPhunksMarketAbi from '@/abi/EtherPhunksMarket.json';
+import AuctionAbi from '@/abi/EtherPhunksAuctionHouse.json';
 
-import { TransactionReceipt, WatchBlockNumberReturnType, decodeFunctionData, encodeFunctionData, formatEther, getContract, isAddress, parseEther } from 'viem';
+import { TransactionReceipt, WatchBlockNumberReturnType, decodeFunctionData, encodeFunctionData, formatEther, getContract, isAddress, numberToBytes, numberToHex, parseEther, zeroAddress } from 'viem';
 import { mainnet, goerli } from 'viem/chains';
 
 import { EIP6963Connector, createWeb3Modal, walletConnectProvider } from '@web3modal/wagmi';
@@ -113,7 +113,6 @@ export class Web3Service {
       emitOnBegin: true,
       onBlockNumber: (blockNumber) => {
         const currentBlock = Number(blockNumber);
-        console.log('onBlockNumber', {blockNumber, currentBlock});
         this.store.dispatch(appStateActions.newBlock({ blockNumber: currentBlock }));
       }
     });
@@ -254,7 +253,27 @@ export class Web3Service {
         [hashId, weiValue, toAddress]
       );
     }
-    return this.marketContractInteraction('offerPhunkForSale', [hashId, weiValue]);
+
+    return this.marketContractInteraction(
+      'offerPhunkForSale',
+      [hashId, weiValue]
+    );
+  }
+
+  async escrowAndOfferPhunkForSale(
+    hashId: string,
+    value: number,
+    toAddress: string = zeroAddress
+  ): Promise<string | undefined> {
+    const weiValue = value * 1e18;
+
+    const sig = '4445504f5349545f414e445f4c4953545f5349474e4154555245000000000000';
+    const bytes32Value = weiValue.toString(16).padStart(64, '0');
+    toAddress = toAddress.toLowerCase().replace('0x', '').padStart(64, '0');
+
+    console.log({hashId, sig, bytes32Value, toAddress});
+
+    return await this.batchTransferPhunks([hashId, sig, bytes32Value, toAddress], marketAddress);
   }
 
   async batchOfferPhunkForSale(hashIds: string[], listPrices: number[]): Promise<string | undefined> {
@@ -313,7 +332,6 @@ export class Web3Service {
     if (!hashIds.length) throw new Error('No phunks selected');
     if (!toAddress) throw new Error('No address provided');
     const hash = hashIds.map((res) => res.replace('0x', '')).join('');
-    console.log('batchTransferPhunks', {hashIds, toAddress});
     return await this.transferPhunk(`0x${hash}`, toAddress);
   }
 

@@ -5,6 +5,12 @@ export const routes: Routes = [
     path: '',
     loadComponent: () => import('./routes/index/index.component').then(mod => mod.IndexComponent),
   },
+  // {
+  //   // create a redirect
+  //   path: 'curated/ethereum-phunks/market/:marketType',
+  //   redirectTo: '/market/:marketType',
+  //   pathMatch: 'full',
+  // },
   {
     path: 'market/:marketType',
     loadComponent: () => import('./routes/market/market.component').then(mod => mod.MarketComponent)
@@ -28,5 +34,5 @@ export const routes: Routes = [
   {
     path: 'curated/:slug/market/:marketType',
     loadComponent: () => import('./routes/market/market.component').then(mod => mod.MarketComponent)
-  }
+  },
 ];

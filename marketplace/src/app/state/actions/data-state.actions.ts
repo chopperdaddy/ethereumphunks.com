@@ -65,20 +65,6 @@ export const fetchOwnedPhunks = createAction(
   '[Data State] Fetch Owned Phunks',
 );
 
-export const fetchTxHistory = createAction(
-  '[Data State] Fetch Tx History',
-  props<{ hashId: string }>()
-);
-
-export const setTxHistory = createAction(
-  '[Data State] Set Tx History',
-  props<{ txHistory: any[] | null }>()
-);
-
-export const clearTxHistory = createAction(
-  '[Data State] Clear Tx History',
-);
-
 export const setOwnedPhunks = createAction(
   '[Data State] Set Owned Phunks',
   props<{ ownedPhunks: Phunk[] }>()
@@ -124,4 +110,8 @@ export const setCollections = createAction(
 export const setActiveCollection = createAction(
   '[Data State] Set Active Collection',
   props<{ activeCollection: Collection }>()
+);
+
+export const triggerDataRefresh = createAction(
+  '[Data State] Trigger Data Refresh'
 );

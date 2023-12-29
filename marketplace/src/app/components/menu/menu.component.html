@@ -1,5 +1,7 @@
-<!-- waIntersectionObserver waIntersectionThreshold="0.5" -->
 <section #menuMain class="main" [style]="{ 'opacity': '0' }">
+
+  <!-- {{ activeCollection$ | async | json }} -->
+
   @if (address$ | async; as address) {
 
     <div class="user-actions">
@@ -14,6 +16,16 @@
     </div>
 
     <div class="menu-items">
+      <div
+        class="curated-button"
+        (click)="navigateMenu('curated')">
+        <span>Curated Collections</span>
+
+        <div class="arrow">
+          <ng-template [ngTemplateOutlet]="arrowIcon" />
+        </div>
+      </div>
+
       @if (leaderboard$ | async; as leaderboard) {
         @if (leaderboard.length) {
           <div
@@ -23,6 +35,7 @@
             <div class="logo-wrapper">
               <ng-template [ngTemplateOutlet]="pointsIcon"></ng-template>
             </div>
+
             <div class="button-content">
               <h4>Points Leaderboard</h4>
               <span class="top-points">
@@ -34,6 +47,7 @@
                 <div class="label">#1 Points holder</div>
               </div>
             </div>
+
             <div class="arrow">
               <ng-template [ngTemplateOutlet]="arrowIcon" />
             </div>
@@ -42,55 +56,61 @@
       }
     </div>
 
-    <div class="stats-wrapper" waIntersectionObserver waIntersectionThreshold="0.5">
-      @if ((userOpenBids$ | async); as bids) {
-        @if (bids.length) {
-          <a
-            class="stat-item bids"
-            [routerLink]="['/', 'market', 'bids']" [queryParams]="{ address }">
+    @if (activeCollection$ | async; as activeCollection) {
+      <div class="stats-wrapper" waIntersectionObserver waIntersectionThreshold="0.5">
+        @if ((userOpenBids$ | async); as bids) {
+          @if (bids.length) {
+            <a
+              class="stat-item bids"
+              [routerLink]="['/', 'curated', activeCollection.slug, 'market', 'bids']"
+              [queryParams]="{ address }">
 
-            <app-phunk-grid
-              [phunkData]="bids || []"
-              [viewType]="'compact'"
-              [showLabels]="false"
-              [limit]="5"
-              [marketType]="'bids'"
-            />
-            <div class="stat">
-              <div class="label"><span>Open</span><span>Bids</span></div>
-              <div class="value">{{ stats.bids | number }}</div>
-            </div>
-            <div class="arrow">
-              <ng-template [ngTemplateOutlet]="arrowIcon" />
-            </div>
-          </a>
+              <app-phunk-grid
+                [phunkData]="bids || []"
+                [viewType]="'compact'"
+                [showLabels]="false"
+                [limit]="5"
+                [marketType]="'bids'"
+              />
+              <div class="stat">
+                <div class="label"><span>Open</span><span>Bids</span></div>
+                <div class="value">{{ stats.bids | number }}</div>
+              </div>
+              <div class="arrow">
+                <ng-template [ngTemplateOutlet]="arrowIcon" />
+              </div>
+            </a>
+          }
         }
-      }
 
-      @if ((listedPhunks$ | async); as listed) {
-        @if (listed.length) {
-          <a
-            class="stat-item listings"
-            [routerLink]="['/', 'market', 'owned']" [queryParams]="{ address }">
+        @if ((listedPhunks$ | async); as listed) {
+          @if (listed.length) {
+            <a
+              class="stat-item listings"
+              [routerLink]="['/', 'curated', activeCollection.slug, 'market', 'owned']"
+              [queryParams]="{ address }">
 
-            <app-phunk-grid
-              [phunkData]="listed || []"
-              [viewType]="'compact'"
-              [showLabels]="false"
-              [limit]="5"
-              [marketType]="'listings'"
-            />
-            <div class="stat">
-              <div class="label"><span>Active</span><span>Listings</span></div>
-              <div class="value">{{ stats.listed | number }}</div>
-            </div>
-            <div class="arrow">
-              <ng-template [ngTemplateOutlet]="arrowIcon" />
-            </div>
-          </a>
+              <app-phunk-grid
+                [phunkData]="listed || []"
+                [viewType]="'compact'"
+                [showLabels]="false"
+                [limit]="5"
+                [marketType]="'listings'"
+              />
+
+              <div class="stat">
+                <div class="label"><span>Active</span><span>Listings</span></div>
+                <div class="value">{{ stats.listed | number }}</div>
+              </div>
+
+              <div class="arrow">
+                <ng-template [ngTemplateOutlet]="arrowIcon" />
+              </div>
+            </a>
+          }
         }
-      }
-    </div>
+      </div>
+    }
 
     @if ((transactions$ | async); as txns) {
       <div class="notifications-wrapper">
@@ -108,14 +128,30 @@
 </section>
 
 <section #menuLeaderboard class="leaderboard" [style]="{ 'opacity': '0' }">
+  <ng-template [ngTemplateOutlet]="sectionHeader" />
+  <app-leaderboard />
+</section>
+
+<section
+  #menuCurated
+  class="curated"
+  [style]="{ 'opacity': '0' }"
+  waIntersectionObserver waIntersectionThreshold="0.5">
+
+  <!-- {{ activeCollection$ | async | json }} -->
+
+  <ng-template [ngTemplateOutlet]="sectionHeader" />
+  <app-collections />
+</section>
+
+<ng-template #sectionHeader>
   <div class="section-header">
     <button (click)="navigateMenu('main')">
       <ng-template [ngTemplateOutlet]="backIcon"></ng-template>
       Back
     </button>
   </div>
-  <app-leaderboard />
-</section>
+</ng-template>
 
 <ng-template #backIcon>
   <svg height="15" viewBox="0 0 9 15" width="9" xmlns="http://www.w3.org/2000/svg"><path d="m6 6h3v3h-3zm-3-3h3v3h-3zm0 6h3v3h-3zm-3-9h3v3h-3zm0 12h3v3h-3z" fill-rule="evenodd"/></svg>

@@ -60,22 +60,6 @@ export const dataStateReducer: ActionReducer<DataState, Action> = createReducer(
     // console.log('setSinglePhunk', setSinglePhunk);
     return setSinglePhunk
   }),
-  on(actions.setTxHistory, (state, { txHistory }) => {
-    const setTxHistory = {
-      ...state,
-      txHistory,
-    };
-    // console.log('setTxHistory', setTxHistory);
-    return setTxHistory
-  }),
-  on(actions.clearTxHistory, (state) => {
-    const clearTxHistory = {
-      ...state,
-      txHistory: null,
-    };
-    // console.log('clearTxHistory', clearTxHistory);
-    return clearTxHistory
-  }),
   // Clear the single phunk
   on(actions.clearSinglePhunk, (state) => {
     const clearSinglePhunk = {

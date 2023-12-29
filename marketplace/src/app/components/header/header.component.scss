@@ -84,6 +84,8 @@
           color: rgba(var(--header-highlight), 1);
           background-color: rgba(var(--header-text), 1);
 
+          height: 3rem;
+
           &.connect {
             font-size: 1.4rem;
             font-weight: 400;
@@ -91,6 +93,7 @@
 
           &.menu {
             position: relative;
+            margin-left: .3rem;
 
             .arrow {
               display: flex;
@@ -112,11 +115,8 @@
 
           &.points {
             position: relative;
-            height: 3rem;
             font-size: 1.4rem;
             font-weight: 400;
-
-            margin-right: .3rem;
 
             svg {
               width: 1.2rem;

@@ -17,10 +17,10 @@
             </a>
           </div>
           @if (phunk.attributes && phunk.attributes.length) {
-          <h2 i18n>One of {{ phunk.attributes[0].v | traitCount }}
+          <h2 i18n>One of {{ phunk.attributes[0].v | traitCount : phunk.slug }}
             <a
               class="highlight"
-              [routerLink]="['/', 'market', 'all']"
+              [routerLink]="['/', 'curated', phunk.slug, 'market', 'all']"
               [queryParams]="getItemQueryParams(phunk.attributes[0])">
 
               {{ phunk.attributes[0].v }}
@@ -43,12 +43,12 @@
                 @if (phunk.isEscrowed) {
                   <!-- Owner -->
                   @if (phunk.prevOwner; as owner) {
-                    <p i18n>This {{ phunk.singleName }} is held in <a [routerLink]="['/', 'market', 'owned']" [queryParams]="{ address: escrowAddress }">escrow</a> for <a [routerLink]="['/', 'market', 'owned']" [queryParams]="{ address: owner }"><app-address [address]="owner" /></a>.</p>
+                    <p i18n>This {{ phunk.singleName }} is held in <a [routerLink]="['/', 'curated', phunk.slug, 'market', 'owned']" [queryParams]="{ address: escrowAddress }">escrow</a> for <a [routerLink]="['/', 'curated', phunk.slug, 'market', 'owned']" [queryParams]="{ address: owner }"><app-address [address]="owner" /></a>.</p>
                   }
                 } @else {
                   <!-- Owner -->
                   @if (phunk.owner; as owner) {
-                    <p i18n>This {{ phunk.singleName }} is owned by <a [routerLink]="['/', 'market', 'owned']" [queryParams]="{ address: owner }"><app-address [address]="owner" /></a>.</p>
+                    <p i18n>This {{ phunk.singleName }} is owned by <a [routerLink]="['/', 'curated', phunk.slug, 'market', 'owned']" [queryParams]="{ address: owner }"><app-address [address]="owner" /></a>.</p>
                   }
                 }
 
@@ -62,7 +62,7 @@
                 <!-- Has bid -->
                 @if (phunk.bid; as bid) {
                   @if (bid.value && bid.fromAddress) {
-                    <p i18n>There is a bid of <span class="bold">{{ bid.value | weiToEth }} ETH</span> ({{ ((bid.value | weiToEth) * ((usd$ | async) || 0)) | currency }}) for this {{ phunk.singleName }} from <a [routerLink]="['/', 'market', 'owned']" [queryParams]="{ address: bid.fromAddress }"><app-address [address]="bid.fromAddress" /></a>.</p>
+                    <p i18n>There is a bid of <span class="bold">{{ bid.value | weiToEth }} ETH</span> ({{ ((bid.value | weiToEth) * ((usd$ | async) || 0)) | currency }}) for this {{ phunk.singleName }} from <a [routerLink]="['/', 'curated', phunk.slug, 'market', 'owned']" [queryParams]="{ address: bid.fromAddress }"><app-address [address]="bid.fromAddress" /></a>.</p>
                   }
                 } @else {
                   <p i18n>There are no bids on this {{ phunk.singleName }}.</p>
@@ -104,6 +104,7 @@
                         <ng-container *ngTemplateOutlet="sellForm; context:{ $implicit: phunk }" />
                       } @else {
                         <ng-container *ngTemplateOutlet="escrowForm; context:{ $implicit: phunk, type: 'list' }" />
+                        <ng-container *ngTemplateOutlet="escrowAndSellForm; context:{ $implicit: phunk }" />
                       }
                     }
 
@@ -155,7 +156,7 @@
                   }
 
                   <!-- Withdraw Bid button -->
-                  @if (((phunk.bid?.fromAddress | lowercase) === (address | lowercase))) {
+                  @if ((phunk.bid?.fromAddress | lowercase) === (address | lowercase)) {
                     <button i18n class="sell" (click)="withdrawBidForPhunk(phunk)">
                       Withdraw Bid
                     </button>
@@ -201,12 +202,12 @@
                   @for (item of phunk.attributes; track item; let i = $index) {
                     @if (i > 1) {
                     <div class="accessory">
-                      <a class="value" [routerLink]="['/', 'market', 'all']" [queryParams]="getItemQueryParams(item)">
+                      <a class="value" [routerLink]="['/', 'curated', phunk.slug, 'market', 'all']" [queryParams]="getItemQueryParams(item)">
                         {{ item.v }}
-                        <span>{{ (+(item.v | traitCount) / 10000) | percent : '1.1-1' }}</span>
+                        <span>{{ (+(item.v | traitCount : phunk.slug) / 10000) | percent : '1.1-1' }}</span>
                       </a>
                       <span class="trait-count">
-                        <span>{{ item.v | traitCount }}</span>
+                        <span>{{ item.v | traitCount : phunk.slug }}</span>
                         {{ phunk.collectionName }} have this.
                       </span>
                     </div>
@@ -218,9 +219,10 @@
           </div>
         </div>
 
-        @defer {
-          <app-tx-history [hashId]="phunk.hashId"></app-tx-history>
-        }
+        <!-- @defer {
+          <app-tx-history [hashId]="phunk.hashId" />
+        } -->
+        <app-tx-history [hashId]="phunk.hashId" />
       </div>
     } @else {
       <div class="details-wrapper">
@@ -310,6 +312,28 @@
     </div>
 
     <div class="form-actions" [class.disabled]="!phunk.isEscrowed">
+      <button i18n type="reset" class="cancel" (click)="closeListing()">Cancel</button>
+      <button i18n type="submit" class="submit" (click)="submitListing(phunk)">Offer {{ phunk.singleName }}</button>
+    </div>
+  </form>
+</ng-template>
+
+<!-- Sell Form -->
+<ng-template #escrowAndSellForm let-phunk>
+  <form class="form-wrapper">
+    <!-- @if (isCooling$ | async) { <ng-template [ngTemplateOutlet]="cooldown" /> } -->
+    <div class="form-group">
+      <label i18n for="list-price">Asking Price in ETH (Ξ)</label>
+      <input #sellPriceInput type="number" id="list-price" [formControl]="listPrice" />
+    </div>
+
+    <div class="form-group">
+      <label i18n for="list-to-address">Offer to Address (0x or ens)</label>
+      <input type="text" id="list-to-address" [placeholder]="'Anyone'" [formControl]="listToAddress" role="presentation"
+        autocomplete="off" />
+    </div>
+
+    <div class="form-actions">
       <button i18n type="reset" class="cancel" (click)="closeListing()">Cancel</button>
       <button i18n type="submit" class="submit" (click)="submitListing(phunk)">Offer {{ phunk.singleName }}</button>
     </div>

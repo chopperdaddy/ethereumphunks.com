@@ -50,6 +50,42 @@ section {
   scrollbar-width: none;
   -webkit-overflow-scrolling: touch;
 
+  .section-header {
+    margin-bottom: 3rem;
+
+    button {
+      width: 100%;
+      margin-bottom: .5rem;
+      height: 3rem;
+
+      font-size: 1.2rem;
+      font-weight: normal;
+      font-family: $secondary-font-stack;
+
+      background-color: rgba(var(--background), 1);
+
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+
+      svg {
+        width: 1rem;
+        height: 1rem;
+        margin-right: 1rem;
+        transform: rotate(180deg);
+
+        path {
+          fill: rgba(var(--highlight), 1);
+        }
+      }
+
+      &.disabled {
+        opacity: .5;
+        pointer-events: none;
+      }
+    }
+  }
+
   &::-webkit-scrollbar {
     display: none;
   }
@@ -162,6 +198,35 @@ section {
         &:last-child {
           margin-bottom: 0;
         }
+      }
+    }
+
+    .curated-button {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+
+      padding: 1.5rem 1.5rem 1.2rem;
+      margin-bottom: 3rem;
+
+      font-family: $secondary-font-stack;
+      color: rgba(var(--black), 1);
+      font-size: 1.6rem;
+
+      background-color: rgba(var(--transferred-color), 1);
+      box-shadow: -.3rem .3rem 0 0 rgba(var(--pink), 1);
+
+      cursor: pointer;
+
+      .arrow {
+        svg {
+          width: 1rem;
+          height: 2rem;
+        }
+      }
+
+      &:active {
+        transform: translate(0, 1px);
       }
     }
 
@@ -348,46 +413,14 @@ section {
   &.leaderboard {
     transform: translateX(100%);
 
-    .section-header {
-      margin-bottom: 3rem;
-
-      button {
-        width: 100%;
-        margin-bottom: .5rem;
-        height: 3rem;
-
-        font-size: 1.2rem;
-        font-weight: normal;
-        font-family: $secondary-font-stack;
-
-        background-color: rgba(var(--background), 1);
-
-        display: flex;
-        align-items: center;
-        justify-content: flex-start;
-
-        svg {
-          width: 1rem;
-          height: 1rem;
-          margin-right: 1rem;
-          transform: rotate(180deg);
-
-          path {
-            fill: rgba(var(--highlight), 1);
-          }
-        }
-
-        &.disabled {
-          opacity: .5;
-          pointer-events: none;
-        }
-      }
-    }
-
     app-leaderboard {
       grid-area: leaderboard;
       padding-bottom: 4rem;
     }
+  }
+
+  &.curated {
+    transform: translateX(100%);
   }
 
   @media (max-width: $mobile) {
