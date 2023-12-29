@@ -668,9 +668,9 @@
     rustbn.js "~0.2.0"
 
 "@nomicfoundation/hardhat-chai-matchers@^2.0.0":
-  version "2.0.2"
-  resolved "https://registry.yarnpkg.com/@nomicfoundation/hardhat-chai-matchers/-/hardhat-chai-matchers-2.0.2.tgz#a0e5dbca43ba9560c096da162c0e3245303479d1"
-  integrity sha512-9Wu9mRtkj0U9ohgXYFbB/RQDa+PcEdyBm2suyEtsJf3PqzZEEjLUZgWnMjlFhATMk/fp3BjmnYVPrwl+gr8oEw==
+  version "2.0.3"
+  resolved "https://registry.yarnpkg.com/@nomicfoundation/hardhat-chai-matchers/-/hardhat-chai-matchers-2.0.3.tgz#f4c074d39b74bd283c99e2c2bf143e3cef51ae18"
+  integrity sha512-A40s7EAK4Acr8UP1Yudgi9GGD9Cca/K3LHt3DzmRIje14lBfHtg9atGQ7qK56vdPcTwKmeaGn30FzxMUfPGEMw==
   dependencies:
     "@types/chai-as-promised" "^7.1.3"
     chai-as-promised "^7.1.1"
@@ -1429,9 +1429,9 @@ available-typed-arrays@^1.0.5:
   integrity sha512-DMD0KiN46eipeziST1LPP/STfDU0sufISXmjSgvVsoU2tqxctQeASejWcfNtxYKqETM1UxQ8sp2OrSBWpHY6sw==
 
 axios@^1.4.0, axios@^1.5.1:
-  version "1.6.2"
-  resolved "https://registry.yarnpkg.com/axios/-/axios-1.6.2.tgz#de67d42c755b571d3e698df1b6504cde9b0ee9f2"
-  integrity sha512-7i24Ri4pmDRfJTR7LDBhsOTtcm+9kjX5WiY1X3wIisx6G9So3pfMkEiU7emUBe46oceVImccTEM3k6C5dbVW8A==
+  version "1.6.3"
+  resolved "https://registry.yarnpkg.com/axios/-/axios-1.6.3.tgz#7f50f23b3aa246eff43c54834272346c396613f4"
+  integrity sha512-fWyNdeawGam70jXSVlKl+SUNVcL6j6W79CuSIPfi6HnDUmSCH6gyUys/HrqHeA/wU0Az41rRgean494d0Jb+ww==
   dependencies:
     follow-redirects "^1.15.0"
     form-data "^4.0.0"
@@ -2671,9 +2671,9 @@ hardhat-log-remover@^2.0.2:
   integrity sha512-TvEWOisQmZUZ7Mlb7s4XYS/MxgZzjFJSjDI8v3uTcrD6aaXy1QtomW6D6WNsISEWtwwRlSntOGpHQwFjrz2MCw==
 
 hardhat@^2.17.4:
-  version "2.19.3"
-  resolved "https://registry.yarnpkg.com/hardhat/-/hardhat-2.19.3.tgz#fe3b28b889e34a074ea5b740c227e3c8d4ce56e8"
-  integrity sha512-zUvfILiu1O7W1a+t5E1nCJ6z1danRLNizQkSEQCCgDYcRx13AGXtH1MVZajKmdLmXIjKAPReTp/8JQQ4ZHaX3g==
+  version "2.19.4"
+  resolved "https://registry.yarnpkg.com/hardhat/-/hardhat-2.19.4.tgz#5112c30295d8be2e18e55d847373c50483ed1902"
+  integrity sha512-fTQJpqSt3Xo9Mn/WrdblNGAfcANM6XC3tAEi6YogB4s02DmTf93A8QsGb8uR0KR8TFcpcS8lgiW4ugAIYpnbrQ==
   dependencies:
     "@ethersproject/abi" "^5.1.2"
     "@metamask/eth-sig-util" "^4.0.0"
@@ -4606,9 +4606,9 @@ v8-compile-cache-lib@^3.0.1:
   integrity sha512-wa7YjyUGfNZngI/vtK0UHAN+lgDCxBPCylVXGp0zu59Fz5aiGtNXaq3DhIov063MorB+VfufLh3JlF2KdTK3xg==
 
 viem@^1.14.0:
-  version "1.21.0"
-  resolved "https://registry.yarnpkg.com/viem/-/viem-1.21.0.tgz#38b78895d750ca51b9f7caed17de3cbfcbdcb4ec"
-  integrity sha512-d5CSflyvoQYT8aeAANX0x7DLuW/GEBs5lh3pZRbNIxTdb/XNLHiEcuB8I262oqAgxfBTA+94kry9ISzAsHKFhA==
+  version "1.21.1"
+  resolved "https://registry.yarnpkg.com/viem/-/viem-1.21.1.tgz#f0996347fd339b1590dd82e379f18e1ae96bbcf5"
+  integrity sha512-4Tb2f73FTGN+6PRPmgmKmlIfy/ENS4iU1KKfOPhUA37pZMmVw2rxN0QXMHB4OMa1ZVBlbpde1eG33vyj0L8YeQ==
   dependencies:
     "@adraffy/ens-normalize" "1.10.0"
     "@noble/curves" "1.2.0"

@@ -5,7 +5,8 @@ import hre, { upgrades } from 'hardhat';
 
 const contractName = 'EtherPhunksMarket';
 
-const _pointsAddress = '0x117A605D32ca32972487971Dc166C6b4723142Fb';
+const _version = 1;
+const _pointsAddress = '';
 
 export async function deployMarket() {
   const [signer] = await hre.ethers.getSigners();
@@ -15,11 +16,7 @@ export async function deployMarket() {
   console.log('=====================================================================');
 
   const ContractFactory = await hre.ethers.getContractFactory(contractName);
-
-  const args = [ _pointsAddress ];
-
-  // const deploymentTransaction = await ContractFactory.getDeployTransaction();
-  // const estimatedGas = await ethers.provider.estimateGas(deploymentTransaction);
+  const args = [ _version, _pointsAddress ];
 
   // Deploy upgradeable contract
   const contract = await upgrades.deployProxy(

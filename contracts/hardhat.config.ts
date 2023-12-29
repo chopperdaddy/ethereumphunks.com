@@ -8,7 +8,7 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 const config: HardhatUserConfig = {
-  defaultNetwork: 'goerli',
+  defaultNetwork: 'mainnet',
   solidity: {
     version: '0.8.20',
     settings: {
@@ -25,17 +25,17 @@ const config: HardhatUserConfig = {
     artifacts: './artifacts',
   },
   networks: {
-    goerli: {
-      url: 'http://goerli-geth.dappnode:8545',
-      chainId: 5,
-      from: process.env.MAINNET_ADDRESS as string,
-      accounts: [`0x${process.env.MAINNET_PK}`],
-    },
     mainnet: {
       url: 'http://geth.dappnode:8545',
       chainId: 1,
       from: process.env.MAINNET_ADDRESS as string,
       accounts: [`0x${process.env.MAINNET_PK}`],
+    },
+    goerli: {
+      url: 'http://goerli-geth.dappnode:8545',
+      chainId: 5,
+      from: process.env.GOERLI_ADDRESS as string,
+      accounts: [`0x${process.env.GOERLI_PK}`],
     },
   },
   etherscan: {
