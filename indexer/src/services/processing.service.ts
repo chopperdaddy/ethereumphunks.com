@@ -10,19 +10,15 @@ import { TimeService } from 'src/utils/time.service';
 
 import { esip1Abi, esip2Abi } from 'src/abi/EthscriptionsProtocol';
 
-import etherPhunksMarketAbi from 'src/abi/EtherPhunksMarket.json';
 import etherPhunksMarketProxyAbi from 'src/abi/EtherPhunksMarketProxy.json';
 import etherPhunksAuctionHouseAbi from 'src/abi/EtherPhunksAuctionHouse.json';
 
 import * as esips from 'src/constants/EthscriptionsProtocol';
 
-import { CuratedItem, Ethscription, Event, PhunkSha } from 'src/models/db';
+import { Ethscription, Event, PhunkSha } from 'src/models/db';
 
 import { DecodeEventLogReturnType, FormattedTransaction, Log, Transaction, TransactionReceipt, decodeEventLog, hexToString, zeroAddress } from 'viem';
 
-// Curated collections
-import curatedMissingPunks from 'src/collections/missing-punks.json';
-import curatedMissingPhunks from 'src/collections/missing-phunks.json';
 
 import crypto from 'crypto';
 import dotenv from 'dotenv';
@@ -159,28 +155,6 @@ export class ProcessingService {
         continue;
       }
 
-      // Check if possible curated creation
-      const possibleCurated = cleanedString.startsWith('data:image/png;base64,');
-      if (possibleCurated) {
-        const sha = crypto.createHash('sha256').update(cleanedString).digest('hex');
-
-        // Check if the sha exists as a key in the curated collection
-        const curatedData = [
-          ...curatedMissingPhunks,
-          ...curatedMissingPunks
-        ].filter((item) => item.sha === sha)[0];
-        if (!curatedData) continue;
-
-        // Check if its a duplicate (already been inscribed)
-        const isDuplicate = await this.sbSvc.checkEthscriptionExistsBySha(sha);
-        if (isDuplicate) continue;
-
-        Logger.debug('Processing curated ethscription', transaction.hash);
-        const event = await this.processCuratedCreationEvent(transaction as Transaction, createdAt, curatedData);
-        events.push(event);
-        continue;
-      }
-
       // Check if possible transfer
       const possibleTransfer = input.substring(2).length === SEGMENT_SIZE;
       if (possibleTransfer) {
@@ -195,7 +169,7 @@ export class ProcessingService {
 
       // Check if possible batch transfer
       const possibleBatchTransfer = input.substring(2).length % SEGMENT_SIZE === 0;
-      if (possibleBatchTransfer) {
+      if (!possibleTransfer && possibleBatchTransfer) {
         const eventArr = await this.processEsip5(
           transaction as Transaction,
           createdAt
@@ -284,33 +258,6 @@ export class ProcessingService {
       hashId,
       from,
       to: to || zeroAddress,
-      blockHash: txn.blockHash,
-      txIndex: txn.transactionIndex,
-      txHash: txn.hash,
-      blockNumber: Number(txn.blockNumber),
-      blockTimestamp: createdAt,
-      value: BigInt(0).toString(),
-    };
-  }
-
-  async processCuratedCreationEvent(
-    txn: Transaction,
-    createdAt: Date,
-    curatedItem: CuratedItem
-  ): Promise<Event> {
-    const { from, to, hash: hashId } = txn;
-
-    await this.sbSvc.addCurated(txn, createdAt, curatedItem);
-    Logger.log('Added curated', `${hashId.toLowerCase()}`);
-    await this.sbSvc.uploadFile(curatedItem);
-    Logger.log('Uploaded curated file', `${hashId.toLowerCase()}`);
-
-    return {
-      txId: txn.hash + txn.transactionIndex,
-      type: 'created',
-      hashId: hashId.toLowerCase(),
-      from: from.toLowerCase(),
-      to: (to || zeroAddress).toLowerCase(),
       blockHash: txn.blockHash,
       txIndex: txn.transactionIndex,
       txHash: txn.hash,

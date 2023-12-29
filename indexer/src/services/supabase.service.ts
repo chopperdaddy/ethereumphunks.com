@@ -17,7 +17,6 @@ import {
   Bid,
   BidResponse,
   PhunkSha,
-  CuratedItem,
   EthscriptionResponse,
   Ethscription,
 } from 'src/models/db';
@@ -33,10 +32,6 @@ const supabase = createClient(supabaseUrl, serviceRole);
 @Injectable()
 export class SupabaseService {
   suffix = process.env.CHAIN_ID === '1' ? '' : '_goerli';
-
-  constructor(
-    private readonly utilSvc: UtilityService
-  ) {}
 
   async updateLastBlock(blockNumber: number, createdAt: Date): Promise<void> {
     const response = await supabase
@@ -218,40 +213,6 @@ export class SupabaseService {
           sha: phunkShaData.sha,
           slug: 'etherphunks',
           tokenId: phunkShaData.phunkId,
-        },
-      ]);
-
-    const { error } = response;
-    if (error) throw error.message;
-  }
-
-  async addCurated(
-    txn: Transaction,
-    createdAt: Date,
-    curatedItem: CuratedItem
-  ): Promise<void> {
-
-    const stringData = hexToString(txn.input?.toString() as `0x${string}`);
-    const cleanedString = stringData.replace(/\x00/g, '');
-
-    // Get or create the users
-    await Promise.all([
-      this.getOrCreateUser(txn.from, createdAt),
-      this.getOrCreateUser(txn.to, createdAt)
-    ]);
-
-    const response: EthscriptionResponse = await supabase
-      .from('ethscriptions' + this.suffix)
-      .insert([
-        {
-          createdAt,
-          creator: txn.from.toLowerCase(),
-          owner: txn.to.toLowerCase(),
-          hashId: txn.hash.toLowerCase(),
-          data: cleanedString,
-          sha: curatedItem.sha,
-          slug: curatedItem.slug,
-          tokenId: curatedItem.tokenId,
         },
       ]);
 
@@ -612,23 +573,6 @@ export class SupabaseService {
     // console.log('Merkle Root:', tree.root);
 
     // await writeFile('tree.json', JSON.stringify(cleanPhunks));
-  }
-
-  ////////////////////////////////////////////////////////////////////////////////
-  // Images //////////////////////////////////////////////////////////////////////
-  ////////////////////////////////////////////////////////////////////////////////
-
-  async uploadFile(curatedData: CuratedItem): Promise<void> {
-    const imageBlob = this.utilSvc.dataURLtoBuffer(curatedData.image);
-    const fileName = `${curatedData.slug}_${curatedData.tokenId}.png`;
-
-    const { data, error } = await supabase
-      .storage.from('images')
-      .upload(fileName, imageBlob)
-
-    if (error) {
-      Logger.error('Error uploading image:', error);
-    }
   }
 }
 

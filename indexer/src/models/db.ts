@@ -83,7 +83,6 @@ export interface PhunkSha {
 
 export interface CuratedItem {
   name: string;
-  image: string;
   attributes: {k: string, v: string}[];
   slug: string;
   tokenId: number | null;
