@@ -8,7 +8,7 @@ export const environment = {
   pointsAddress: '0xd21B8CFEd94F121C6F5520F849e12f656E5D05fD'.toLowerCase(),
   donationsAddress: '0x51a9c3882a39A65daf1f20Ec4360e701f0900769'.toLowerCase(),
   marketAddress: '0xCd8Ec38A9ff21CF3F2c21d06fE7904dE3c3a52a3'.toLowerCase(),
-  auctionAddress: '0xc6a824D8cce7c946A3F35879694b9261A36fc823'.toLowerCase(),
+  // auctionAddress: '0xc6a824D8cce7c946A3F35879694b9261A36fc823'.toLowerCase(),
 
   staticUrl: 'https://kcbuycbhynlmsrvoegzp.supabase.co/storage/v1/object/public',
 

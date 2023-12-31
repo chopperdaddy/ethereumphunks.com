@@ -30,8 +30,8 @@ import { Phunk } from '@/models/db';
 
 const marketAddress = environment.marketAddress;
 const pointsAddress = environment.pointsAddress;
-const auctionAddress = environment.auctionAddress;
-const donationsAddress = environment.donationsAddress;
+// const auctionAddress = environment.auctionAddress;
+// const donationsAddress = environment.donationsAddress;
 
 const projectId = 'd183619f342281fd3f3ff85716b6016a';
 
@@ -131,11 +131,12 @@ export class Web3Service {
     if (!address) return;
     address = address.toLowerCase();
 
+    await this.switchNetwork();
+
     this.store.dispatch(appStateActions.setWalletAddress({ walletAddress: address }));
     this.store.dispatch(appStateActions.setConnected({ connected: true }));
 
     this.startBlockWatcher();
-    this.switchNetwork();
   }
 
   async disconnectWeb3(): Promise<void> {

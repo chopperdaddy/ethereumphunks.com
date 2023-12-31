@@ -24,9 +24,11 @@ import { ImagePipe } from '@/pipes/image.pipe';
 import { environment } from 'src/environments/environment';
 
 import * as dataStateSelectors from '@/state/selectors/data-state.selectors';
+import * as dataStateActions from '@/state/actions/data-state.actions';
+
 import * as appStateSelectors from '@/state/selectors/app-state.selectors';
 
-let PAGE_SIZE = 36;
+let PAGE_SIZE = 50;
 
 @Component({
   selector: 'app-phunk-grid',
@@ -65,7 +67,6 @@ export class PhunkGridComponent implements OnChanges {
   @Input() phunkData!: Phunk[] | null;
   @Input() viewType: ViewType = 'market';
   @Input() limit: number = 110;
-  @Input() currentPage: number = 1;
   @Input() showLabels: boolean = true;
   @Input() observe: boolean = false;
 
@@ -152,9 +153,12 @@ export class PhunkGridComponent implements OnChanges {
           return;
         }
 
-        if (index > this.limit - PAGE_SIZE) {
+        console.log({ index, prevIndex: this.prevIndex, limit: this.limit });
+
+        // if (index > this.limit - PAGE_SIZE) {
           this.limit += PAGE_SIZE;
-        }
+          this.store.dispatch(dataStateActions.paginateAll({ limit: this.limit }));
+        // }
       }
     });
   }

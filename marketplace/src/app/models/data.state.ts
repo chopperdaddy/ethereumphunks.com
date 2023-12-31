@@ -3,6 +3,7 @@ import { Phunk } from './db';
 export interface Collection {
   slug: string;
   singleName: string;
+  supply: number;
   name?: string;
   description?: string;
   image?: string;

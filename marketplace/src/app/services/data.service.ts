@@ -11,7 +11,7 @@ import { EventType, GlobalState } from '@/models/global-state';
 import { Attribute, Bid, Event, Listing, Phunk } from '@/models/db';
 
 import { createClient } from '@supabase/supabase-js'
-import { Observable, of, BehaviorSubject, from, forkJoin } from 'rxjs';
+import { Observable, of, BehaviorSubject, from, forkJoin, firstValueFrom } from 'rxjs';
 import { map, switchMap, tap } from 'rxjs/operators';
 
 import { environment } from 'src/environments/environment';
@@ -192,18 +192,13 @@ export class DataService {
     type?: EventType,
     slug?: string,
   ): Observable<any> {
-    // console.log('fetchEvents', {limit, type, slug});
-
     return from(supabase.rpc('fetch_events' + this.prefix, {
       p_limit: limit,
       p_type: type && type !== 'All' ? type : null,
       p_collection_slug: slug
     })).pipe(
-      // tap((res) => console.log('fetchEvents', res)),
-      map((res: any) => res.data.map((item: any) => ({
-        ...item,
-        // blockTimestamp: new Date(item.blockTimestamp).getTime(),
-      }))),
+      tap((res) => console.log('fetchEvents', res)),
+      map((res: any) => res.data),
     );
   }
 
@@ -218,11 +213,11 @@ export class DataService {
       .order('blockTimestamp', { ascending: false });
 
     return from(response).pipe(
-      // tap((res) => console.log('fetchSingleTokenEvents', res)),
       map((res: any) => res.data.map((item: any) => ({
         ...item,
         ...item[`ethscriptions${this.prefix}`],
       }))),
+      tap((res) => console.log('fetchSingleTokenEvents', res)),
     );
   }
 
@@ -343,6 +338,27 @@ export class DataService {
     }
   }
 
+  async checkConsensus(
+    hashId: string,
+    owner: string,
+    prevOwner: string
+  ): Promise<boolean> {
+    if (!hashId || !owner) return false;
+    return await firstValueFrom(
+      this.http.get(`https://${this.prefix.replace('_', '-')}api.ethscriptions.com/api/ethscriptions/${hashId}`).pipe(
+        map((res: any) => {
+          if (!res) return false;
+          if (res.current_owner.toLowerCase() !== owner.toLowerCase()) return false;
+          if (
+            (res.previous_owner && prevOwner) &&
+            res.previous_owner.toLowerCase() !== prevOwner.toLowerCase()
+          ) return false;
+          return true;
+        }),
+      )
+    )
+  }
+
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   // CHECKS ////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -386,12 +402,13 @@ export class DataService {
     const query = supabase
       .from('collections' + this.prefix)
       .select('*')
-      .order('id', { ascending: false });
+      .order('id', { ascending: false })
+      .eq('active', true);
 
     return from(query).pipe(map((res: any) => res.data));
   }
 
-  fetchCollectionsWithAssets(limit: number = 20): Observable<any[]> {
+  fetchCollectionsWithAssets(limit: number = 10): Observable<any[]> {
     const query = supabase
       .rpc(
         'fetch_collections_with_previews' + this.prefix,
@@ -401,6 +418,23 @@ export class DataService {
     return from(query).pipe(
       map((res: any) => res.data.map((item: any) => ({ ...item.ethscription }))),
     );
+  }
+
+  async fetchAll(
+    slug: string,
+    from: number,
+    to: number
+  ) {
+    const query = supabase
+      .from('ethscriptions' + this.prefix)
+      .select('tokenId, hashId, sha')
+      .eq('slug', slug)
+      .order('tokenId', { ascending: true })
+      .range(from, to);
+
+    const { data, error } = await query;
+    if (error) throw error;
+    return data;
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

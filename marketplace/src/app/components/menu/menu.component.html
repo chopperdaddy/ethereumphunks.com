@@ -3,7 +3,6 @@
   <!-- {{ activeCollection$ | async | json }} -->
 
   @if (address$ | async; as address) {
-
     <div class="user-actions">
       <button
         (click)="withdraw()"
@@ -14,48 +13,50 @@
       </button>
       <button (click)="disconnect()">Disconnect</button>
     </div>
+  }
 
-    <div class="menu-items">
-      <div
-        class="curated-button"
-        (click)="navigateMenu('curated')">
-        <span>Curated Collections</span>
+  <div class="menu-items">
+    <div
+      class="curated-button"
+      (click)="navigateMenu('curated')">
+      <span>Curated Collections</span>
 
-        <div class="arrow">
-          <ng-template [ngTemplateOutlet]="arrowIcon" />
-        </div>
+      <div class="arrow">
+        <ng-template [ngTemplateOutlet]="arrowIcon" />
       </div>
-
-      @if (leaderboard$ | async; as leaderboard) {
-        @if (leaderboard.length) {
-          <div
-            (click)="navigateMenu('leaderboard')"
-            class="leaderboard-button">
-
-            <div class="logo-wrapper">
-              <ng-template [ngTemplateOutlet]="pointsIcon"></ng-template>
-            </div>
-
-            <div class="button-content">
-              <h4>Points Leaderboard</h4>
-              <span class="top-points">
-                <div class="value">{{ leaderboard[0]?.points }}</div>
-                <div class="label">Points</div>
-              </span>
-              <div class="top-holder">
-                <app-address [address]="leaderboard[0]?.address" />
-                <div class="label">#1 Points holder</div>
-              </div>
-            </div>
-
-            <div class="arrow">
-              <ng-template [ngTemplateOutlet]="arrowIcon" />
-            </div>
-          </div>
-        }
-      }
     </div>
 
+    @if (leaderboard$ | async; as leaderboard) {
+      @if (leaderboard.length) {
+        <div
+          (click)="navigateMenu('leaderboard')"
+          class="leaderboard-button">
+
+          <div class="logo-wrapper">
+            <ng-template [ngTemplateOutlet]="pointsIcon"></ng-template>
+          </div>
+
+          <div class="button-content">
+            <h4>Points Leaderboard</h4>
+            <span class="top-points">
+              <div class="value">{{ leaderboard[0]?.points }}</div>
+              <div class="label">Points</div>
+            </span>
+            <div class="top-holder">
+              <app-address [address]="leaderboard[0]?.address" />
+              <div class="label">#1 Points holder</div>
+            </div>
+          </div>
+
+          <div class="arrow">
+            <ng-template [ngTemplateOutlet]="arrowIcon" />
+          </div>
+        </div>
+      }
+    }
+  </div>
+
+  @if (address$ | async; as address) {
     @if (activeCollection$ | async; as activeCollection) {
       <div class="stats-wrapper" waIntersectionObserver waIntersectionThreshold="0.5">
         @if ((userOpenBids$ | async); as bids) {

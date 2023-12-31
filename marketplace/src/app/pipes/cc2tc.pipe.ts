@@ -13,6 +13,7 @@ export class CamelCase2TitleCase implements PipeTransform {
       .replace(/([A-Z])/g, ' $1') // Insert a space before each capital letter
       .trim() // Remove any leading or trailing spaces
       .replace(/\b\w/g, (char: string) => char.toUpperCase()) // Capitalize the first letter of each word
-      .replace(/([a-zA-Z])([A-Z])/g, '$1 $2'); // Make sure there is a space between words
+      .replace('Phunk', '')
+      .replace(/([a-zA-Z])([A-Z])/g, '$1 $2') // Make sure there is a space between words
   }
 }

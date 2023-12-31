@@ -25,6 +25,7 @@ import * as dataStateActions from '@/state/actions/data-state.actions';
 import * as dataStateSelectors from '@/state/selectors/data-state.selectors';
 
 import * as appStateSelectors from '@/state/selectors/app-state.selectors';
+import { tap } from 'rxjs';
 
 @Component({
   standalone: true,
@@ -57,7 +58,9 @@ export class IndexComponent {
   ownedPhunks$ = this.store.select(dataStateSelectors.selectOwnedPhunks);
   listings$ = this.store.select(dataStateSelectors.selectListings);
   bids$ = this.store.select(dataStateSelectors.selectBids);
-  allPhunks$ = this.store.select(dataStateSelectors.selectAllPhunks);
+  allPhunks$ = this.store.select(dataStateSelectors.selectAllPhunks).pipe(
+    // tap((res) => console.log(res))
+  );
 
   isMobile$ = this.store.select(appStateSelectors.selectIsMobile);
   usd$ = this.store.select(dataStateSelectors.selectUsd);

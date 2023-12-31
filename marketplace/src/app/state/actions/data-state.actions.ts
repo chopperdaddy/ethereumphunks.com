@@ -34,6 +34,11 @@ export const setAllPhunks = createAction(
   props<{ allPhunks: Phunk[] }>()
 );
 
+export const paginateAll = createAction(
+  '[Data State] Paginate All',
+  props<{ limit: number }>()
+);
+
 export const fetchSinglePhunk = createAction(
   '[Data State] Fetch Single Phunk',
   props<{ phunkId: string }>()

@@ -103,7 +103,7 @@
                       @if (phunk.isEscrowed) {
                         <ng-container *ngTemplateOutlet="sellForm; context:{ $implicit: phunk }" />
                       } @else {
-                        <ng-container *ngTemplateOutlet="escrowForm; context:{ $implicit: phunk, type: 'list' }" />
+                        <!-- <ng-container *ngTemplateOutlet="escrowForm; context:{ $implicit: phunk, type: 'list' }" /> -->
                         <ng-container *ngTemplateOutlet="escrowAndSellForm; context:{ $implicit: phunk }" />
                       }
                     }
@@ -219,10 +219,10 @@
           </div>
         </div>
 
-        <!-- @defer {
+        @defer {
           <app-tx-history [hashId]="phunk.hashId" />
-        } -->
-        <app-tx-history [hashId]="phunk.hashId" />
+        }
+        <!-- <app-tx-history [hashId]="phunk.hashId" /> -->
       </div>
     } @else {
       <div class="details-wrapper">
@@ -321,6 +321,7 @@
 <!-- Sell Form -->
 <ng-template #escrowAndSellForm let-phunk>
   <form class="form-wrapper">
+    <!-- {{ (notification$ | async) | json }} -->
     <!-- @if (isCooling$ | async) { <ng-template [ngTemplateOutlet]="cooldown" /> } -->
     <div class="form-group">
       <label i18n for="list-price">Asking Price in ETH (Ξ)</label>
@@ -337,6 +338,8 @@
       <button i18n type="reset" class="cancel" (click)="closeListing()">Cancel</button>
       <button i18n type="submit" class="submit" (click)="submitListing(phunk)">Offer {{ phunk.singleName }}</button>
     </div>
+
+    <p class="small">Offering your item for sale will send it to our contract to be held in escrow. You can withdraw it at any time.</p>
   </form>
 </ng-template>
 
@@ -356,7 +359,6 @@
     </button>
   </div>
 </ng-template>
-
 
 <ng-template #cooldown>
   <div class="cooldown-wrapper">

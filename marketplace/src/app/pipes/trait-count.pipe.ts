@@ -10,7 +10,6 @@ import { traits } from '@/constants/traits';
 export class TraitCountPipe implements PipeTransform {
 
   transform(value: string, slug: string): string {
-    console.log(slug)
     return traits[slug][value];
   }
 }

@@ -16,7 +16,9 @@ import { DataService } from '@/services/data.service';
 import { environment } from 'src/environments/environment';
 import { ZERO_ADDRESS } from '@/constants/utils';
 
-import { BehaviorSubject, Subject, catchError, filter, map, of, switchMap, tap } from 'rxjs';
+import { BehaviorSubject, catchError, filter, map, of, switchMap } from 'rxjs';
+import { Store } from '@ngrx/store';
+import { GlobalState } from '@/models/global-state';
 
 @Component({
   standalone: true,
@@ -50,7 +52,9 @@ export class TxHistoryComponent implements OnChanges {
 
   tokenSales$ = this.fetchTxHistory$.pipe(
     filter((hashId) => !!hashId),
-    switchMap((hashId) => this.dataSvc.fetchSingleTokenEvents(hashId!)),
+    switchMap((hashId) => {
+      return this.dataSvc.fetchSingleTokenEvents(hashId!);
+    }),
     map((data) => data?.map((tx: any) => ({
       ...tx,
       type: tx.type === 'transfer' && tx.to.toLowerCase() === environment.marketAddress ? 'escrow' : tx.type,
@@ -62,6 +66,7 @@ export class TxHistoryComponent implements OnChanges {
   );
 
   constructor(
+    private store: Store<GlobalState>,
     private dataSvc: DataService,
   ) {}
 

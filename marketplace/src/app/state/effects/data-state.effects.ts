@@ -14,7 +14,7 @@ import * as appStateSelectors from '@/state/selectors/app-state.selectors';
 import * as dataStateActions from '@/state/actions/data-state.actions';
 import * as dataStateSelectors from '@/state/selectors/data-state.selectors';
 
-import { asyncScheduler, catchError, filter, map, mergeMap, of, switchMap, tap, throttleTime, withLatestFrom } from 'rxjs';
+import { asyncScheduler, catchError, filter, from, map, mergeMap, of, switchMap, tap, throttleTime, withLatestFrom } from 'rxjs';
 
 import { Web3Service } from '@/services/web3.service';
 
@@ -98,26 +98,6 @@ export class DataStateEffects {
     map((events) => dataStateActions.setEvents({ events })),
   ));
 
-  fetchAll$ = createEffect(() => this.actions$.pipe(
-    ofType(dataStateActions.fetchAllPhunks),
-    switchMap(() => this.dataSvc.getAttributes('ethereum-phunks')),
-    map((attributes) => {
-      return Object.keys(attributes).map((k) => {
-        return {
-          slug: 'ethereum-phunks',
-          hashId: '',
-          tokenId: Number(k),
-          createdAt: new Date(),
-          owner: '',
-          prevOwner: '',
-
-          attributes: (attributes as any)[k] as Attribute[],
-        };
-      });
-    }),
-    map((phunks) => dataStateActions.setAllPhunks({ allPhunks: phunks })),
-  ));
-
   fetchMarketData$ = createEffect(() => this.actions$.pipe(
     ofType(
       dataStateActions.fetchMarketData,
@@ -130,6 +110,54 @@ export class DataStateEffects {
       )
     }),
     map((marketData) => dataStateActions.setMarketData({ marketData }))
+  ));
+
+  fetchAll$ = createEffect(() => this.actions$.pipe(
+    ofType(dataStateActions.setMarketData),
+    withLatestFrom(this.store.select(appStateSelectors.selectMarketSlug)),
+    switchMap(([action, marketSlug]) => {
+      return from(this.dataSvc.fetchAll(marketSlug, 0, 110)).pipe(
+        switchMap((all) => {
+          return this.dataSvc.getAttributes(marketSlug).pipe(
+            map((attributes) => {
+              return all.map((phunk) => ({
+                ...phunk,
+                attributes: attributes[phunk.sha]
+              }));
+            })
+          )
+        }),
+      )
+    }),
+    map((phunks: any) => dataStateActions.setAllPhunks({ allPhunks: phunks }))
+  ));
+
+  paginateAll$ = createEffect(() => this.actions$.pipe(
+    ofType(dataStateActions.paginateAll),
+    withLatestFrom(
+      this.store.select(appStateSelectors.selectMarketSlug),
+      this.store.select(appStateSelectors.selectMarketType),
+      this.store.select(dataStateSelectors.selectAllPhunks),
+    ),
+    filter(([action, marketSlug, marketType, all]) => marketType === 'all'),
+    tap(([action, marketSlug, marketType, all]) => {
+      console.log({ action, marketSlug, marketType, all });
+    }),
+    switchMap(([action, marketSlug, marketType, all]) => {
+      return from(this.dataSvc.fetchAll(marketSlug, all?.length || 0, action.limit)).pipe(
+        switchMap((newPhunks) => {
+          return this.dataSvc.getAttributes(marketSlug).pipe(
+            map((attributes) => {
+              return newPhunks.map((phunk) => ({
+                ...phunk,
+                attributes: attributes[phunk.sha]
+              }));
+            })
+          )
+        }),
+        map((newPhunks: any) => dataStateActions.setAllPhunks({ allPhunks: [...(all || []), ...newPhunks] }))
+      )
+    }),
   ));
 
   fetchOwned$ = createEffect(() => this.actions$.pipe(

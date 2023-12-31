@@ -113,7 +113,7 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
     filter((transactions) => !!transactions),
     switchMap((transactions) => this.singlePhunk$.pipe(
       filter((phunk) => !!phunk),
-      map((phunk) => transactions.filter((tx) => tx?.hashId === phunk?.hashId && tx.type === 'pending')?.length > 0),
+      map((phunk) => transactions.filter((tx) => tx?.hashId === phunk?.hashId && (tx.type === 'pending' || tx.type === 'wallet'))?.length > 0),
     )),
   );
 
@@ -219,6 +219,8 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
       value,
     };
 
+    this.store.dispatch(appStateActions.upsertNotification({ notification }));
+
     try {
 
       if (address) {
@@ -289,8 +291,9 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
       tokenId: phunk.tokenId,
     };
 
+    this.store.dispatch(appStateActions.upsertNotification({ notification }));
+
     try {
-      this.store.dispatch(appStateActions.upsertNotification({ notification }));
 
       const tokenId = phunk.hashId;
       const hash = await this.web3Svc.sendEthscriptionToContract(tokenId);
@@ -337,8 +340,9 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
       tokenId: phunk.tokenId,
     };
 
+    this.store.dispatch(appStateActions.upsertNotification({ notification }));
+
     try {
-      this.store.dispatch(appStateActions.upsertNotification({ notification }));
 
       const hash = await this.web3Svc.phunkNoLongerForSale(hashId);
 
@@ -384,8 +388,9 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
       tokenId: phunk.tokenId,
     };
 
+    this.store.dispatch(appStateActions.upsertNotification({ notification }));
+
     try {
-      this.store.dispatch(appStateActions.upsertNotification({ notification }));
 
       const hash = await this.web3Svc.withdrawBidForPhunk(hashId);
 
@@ -664,9 +669,9 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
     return { [item.k.replace(/ /g, '-').toLowerCase()]: item.v.replace(/ /g, '-').toLowerCase() };
   }
 
-  async sendToAuction(hashId: string) {
-    const proof = await firstValueFrom(this.dataSvc.fetchProofs(hashId));
-    console.log(proof);
-    await this.web3Svc.transferPhunk(proof, environment.auctionAddress);
-  }
+  // async sendToAuction(hashId: string) {
+  //   const proof = await firstValueFrom(this.dataSvc.fetchProofs(hashId));
+  //   console.log(proof);
+  //   await this.web3Svc.transferPhunk(proof, environment.auctionAddress);
+  // }
 }

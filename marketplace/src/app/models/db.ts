@@ -25,10 +25,10 @@ export interface Phunk {
   createdAt: Date
   owner: string
   prevOwner: string | null
+  sha: string
 
   creator?: string | null
   data?: string | null
-  sha?: string
 
   isEscrowed?: boolean;
   attributes?: Attribute[]

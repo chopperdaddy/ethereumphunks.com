@@ -4,17 +4,27 @@
 
       <div class="header-wrapper">
         <h1 i18n>{{ marketTitles[marketType].replace('%collectionName%', (activeCollection$ | async)?.singleName) }}</h1>
-          @if ((route.queryParams | async)?.address; as address) {
-            @if (address) {
-              <h2>
-                by
-                <a [href]="env.explorerUrl + '/address/' + address" target="_blank">
-                  <app-address [address]="address" class="highlight" />
-                </a>
-              </h2>
-            }
+        @if ((route.queryParams | async)?.address; as address) {
+          @if (address) {
+            <h2>
+              by
+              <a [href]="env.explorerUrl + '/address/' + address" target="_blank">
+                <app-address [address]="address" class="highlight" />
+              </a>
+            </h2>
           }
-        <h3>{{ phunkData.length | number }} Phunks Total</h3>
+        }
+
+        @if (marketType === 'all') {
+          @if ((activeCollection$ | async); as activeCollection) {
+            <h3>{{ activeCollection.supply | number }} Items Total</h3>
+          } @else {
+            <h3>{{ phunkData.length | number }} Items Total</h3>
+          }
+        } @else {
+          <h3>{{ phunkData.length | number }} Items Total</h3>
+        }
+
       </div>
 
       <div class="toolbar-wrapper">
@@ -124,12 +134,12 @@
   @if (isListingBulk) {
     <form [formGroup]="bulkListingForm" class="list">
       <div class="top-bar">
-        <h2 i18n>Bulk List <span class="highlight">{{ bulkListingForm.value.listingPhunks?.length }}</span> EtherPhunks</h2>
+        <h2 i18n>Bulk List <span class="highlight">{{ bulkListingForm.value.listingPhunks?.length }}</span> items</h2>
         @if (deselected.length) {
           <h3>
             <span class="highlight">
               {{ deselected.length }}
-            </span> Selected EtherPhunks are not eligible to be listed
+            </span> Selected items are not eligible to be listed
           </h3>
         }
       </div>
@@ -141,7 +151,7 @@
 
               <div class="selected">
                 <img
-                  [lazyLoad]="dataSvc.staticUrl + '/images/' + item.value.slug + '_' + item.value.phunkId + '.png'"
+                  [lazyLoad]="dataSvc.staticUrl + '/images/' + item.value.sha + '.png'"
                   [defaultImage]="'assets/loadingphunk.png'"
                   width="50"
                   height="50"
@@ -173,16 +183,16 @@
           <h3>
             <span class="highlight">
               {{ deselected.length }}
-            </span> Selected EtherPhunks are not eligible to be transferred
+            </span> Selected items are not eligible to be transferred
           </h3>
         }
       </div>
 
       <div class="image-grid-wrapper">
-        @for (item of selectedPhunksFormArray.controls; track item.value.hashId; let i = $index) {
+        @for (item of selectedPhunksFormArray.controls; track item.value.sha; let i = $index) {
           <div class="image">
             <img
-              [lazyLoad]="dataSvc.staticUrl + '/images/' + item.value.slug + '_' + item.value.phunkId + '.png'"
+              [lazyLoad]="dataSvc.staticUrl + '/images/' + item.value.sha + '.png'"
               [defaultImage]="'assets/loadingphunk.png'"
             />
           </div>
@@ -203,12 +213,12 @@
   } @else if (isEscrowingBulk) {
     <form [formGroup]="bulkListingForm" class="escrow">
       <div class="top-bar">
-        <h2 i18n>Bulk Escrow <span class="highlight">{{ bulkListingForm.value.escrowPhunks?.length }}</span> EtherPhunks</h2>
+        <h2 i18n>Bulk Escrow <span class="highlight">{{ bulkListingForm.value.escrowPhunks?.length }}</span> items</h2>
         @if (deselected.length) {
           <h3>
             <span class="highlight">
               {{ deselected.length }}
-            </span> Selected EtherPhunks are not eligible to be listed
+            </span> Selected items are not eligible to be listed
           </h3>
         }
       </div>
@@ -217,7 +227,7 @@
         @for (item of selectedPhunksFormArray.controls; track item.value.hashId; let i = $index) {
           <div class="image">
             <img
-              [lazyLoad]="dataSvc.staticUrl + '/images/' + item.value.slug + '_' + item.value.phunkId + '.png'"
+              [lazyLoad]="dataSvc.staticUrl + '/images/' + item.value.sha + '.png'"
               [defaultImage]="'assets/loadingphunk.png'"
             />
           </div>

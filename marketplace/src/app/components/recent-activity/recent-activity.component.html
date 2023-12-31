@@ -23,7 +23,7 @@
         [class]="event.type | lowercase">
         <div class="image-wrapper">
           <img
-            [lazyLoad]="dataSvc.staticUrl + '/images/' + event.slug + '_' + event.tokenId + '.png'"
+            [lazyLoad]="dataSvc.staticUrl + '/images/' + event.sha + '.png'"
             [defaultImage]="'assets/loadingphunk.png'"
             width="160"
             height="160"
@@ -50,8 +50,7 @@
 
             @if (event.value !== '0' && event.type !== 'transfer') {
               <span class="value">
-                Ξ{{ event.value | weiToEth }}
-                ({{ ((event.value | weiToEth) * (+event.usd || (usd$ | async) || 0)) | currency }})
+                Ξ{{ event.value | weiToEth }}<br />
               </span>
             }
 

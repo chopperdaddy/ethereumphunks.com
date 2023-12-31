@@ -101,10 +101,15 @@ section {
         color: rgba(var(--text-color), .9);
         font-size: 1.4rem;
         font-weight: 500;
+        display: inline-block;
+        max-width: 12rem;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
 
-        .value {
-
-        }
+        // app-address {
+        //   width: 100%;
+        // }
       }
 
       .date {

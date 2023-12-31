@@ -1,16 +1,23 @@
 
-@if (tokenIds.length) {
 <div class="images-wrapper">
-  @for (tokenId of tokenIds; track tokenId) {
-  <div
-    class="image-wrapper"
-   >
-
-    <app-phunk-image
-      [tokenId]="tokenId"
-      [color]="false"
-    />
-  </div>
-}
+  @for (image of images; track image) {
+    <div class="image-wrapper">
+      <img
+        [lazyLoad]="image"
+        [defaultImage]="'assets/loadingphunk.png'"
+        width="160"
+        height="160"
+      />
+    </div>
+  } @empty {
+    @for (i of [1, 2, 3, 4, 5, 6, 7]; track i) {
+      <div class="image-wrapper">
+        <img
+          src="assets/loadingphunk.png"
+          width="160"
+          height="160"
+        />
+      </div>
+    }
+  }
 </div>
-}

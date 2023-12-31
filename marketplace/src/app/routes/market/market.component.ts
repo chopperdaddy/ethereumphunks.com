@@ -181,7 +181,7 @@ export class MarketComponent {
     const formArray = this.fb.array(deselected.map((phunk: Phunk) => this.fb.group({
       phunkId: [phunk.tokenId],
       hashId: [phunk.hashId],
-      slug: [phunk.slug],
+      sha: [phunk.sha],
       listPrice: [''],
     }))) as FormArray;
 
@@ -203,7 +203,7 @@ export class MarketComponent {
     const formArray = this.fb.array(inEscrow.map((phunk: Phunk) => this.fb.group({
       phunkId: [phunk.tokenId],
       hashId: [phunk.hashId],
-      slug: [phunk.slug],
+      sha: [phunk.sha],
       listPrice: [''],
     }))) as FormArray;
 

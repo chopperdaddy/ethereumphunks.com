@@ -220,8 +220,17 @@ app-phunk-billboard {
 
       &.cooldown,
       &.pending {
-        // pointer-events: none;
-        // mix-blend-mode: saturation;
+        pointer-events: none;
+        opacity: .2;
+      }
+
+      &.cooldown {
+        // button,
+        // a {
+        //   background-color: rgba(var(--highlight), 1);
+        //   color: rgba(var(--background), 1);
+        //   box-shadow: 0 .2rem 0 0 rgba(var(--highlight), 1);
+        // }
       }
     }
 

@@ -21,6 +21,7 @@ import * as appStateSelectors from '@/state/selectors/app-state.selectors';
 
 import * as dataStateActions from '@/state/actions/data-state.actions';
 import * as dataStateSelectors from '@/state/selectors/data-state.selectors';
+import { environment } from 'src/environments/environment';
 
 @Injectable()
 export class AppStateEffects {
@@ -99,7 +100,7 @@ export class AppStateEffects {
     tap((action) => {
       const address = action.walletAddress;
       const notifications = JSON.parse(
-        localStorage.getItem(`EtherPhunks_txns__${address}`) || '[]')
+        localStorage.getItem(`EtherPhunks_txns__${environment.chainId}__${address}`) || '[]')
           .filter((txn: Notification) => txn.type === 'complete' || txn.type === 'event'
       );
       this.store.dispatch(appStateActions.setNotifications({ notifications }));
@@ -232,7 +233,7 @@ export class AppStateEffects {
       this.store.select(appStateSelectors.selectWalletAddress),
     ),
     tap(([_, notifications, address]) => localStorage.setItem(
-      `EtherPhunks_txns__${address}`,
+      `EtherPhunks_txns__${environment.chainId}__${address}`,
       JSON.stringify(notifications.filter((txn: Notification) => txn.type === 'complete' || txn.type === 'event')))
     ),
     concatMap(([action]) =>
