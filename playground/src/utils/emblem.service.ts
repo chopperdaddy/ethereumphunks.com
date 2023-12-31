@@ -15,60 +15,60 @@ export class EmblemService {
     private readonly ethSvc: Web3Service,
     private readonly sbSvc: SupabaseService
   ) {
-    this.buildPhunkEthscriptionsJson();
+    // this.buildPhunkEthscriptionsJson();
   }
 
-  async buildPhunkEthscriptionsJson(): Promise<void> {
-    const inscriptions = [];
-    const attributes = path.join(__dirname, `./_attributes.json`);
-    const attributesJson = await readFile(attributes, 'utf8');
-    const attributesObj = JSON.parse(attributesJson);
+  // async buildPhunkEthscriptionsJson(): Promise<void> {
+  //   const inscriptions = [];
+  //   const attributes = path.join(__dirname, `./_attributes.json`);
+  //   const attributesJson = await readFile(attributes, 'utf8');
+  //   const attributesObj = JSON.parse(attributesJson);
 
-    for (let i = 0; i < 10000; i++) {
-      try {
-        const phunk = await this.sbSvc.getPhunkById(`${i}`);
-        const id = phunk.hashId;
+  //   for (let i = 0; i < 10000; i++) {
+  //     try {
+  //       const phunk = await this.sbSvc.getPhunkById(`${i}`);
+  //       const id = phunk.hashId;
 
-        const attributes = attributesObj[i]
-          .filter((attr) => attr.k !== 'Skintone')
-          .map((attr) => {
-            return {
-              trait_type: attr.k,
-              value: attr.v,
-            };
-          });
+  //       const attributes = attributesObj[i]
+  //         .filter((attr) => attr.k !== 'Skintone')
+  //         .map((attr) => {
+  //           return {
+  //             trait_type: attr.k,
+  //             value: attr.v,
+  //           };
+  //         });
 
-        inscriptions.push({
-          id,
-          meta: {
-            name: `EtherPhunk ${i}`,
-            attributes,
-          },
-          number: i,
-        });
+  //       inscriptions.push({
+  //         id,
+  //         meta: {
+  //           name: `EtherPhunk ${i}`,
+  //           attributes,
+  //         },
+  //         number: i,
+  //       });
 
-        Logger.log(`Processed Phunk ${i}`);
-      } catch (error) {
-        i = i - 1;
-        Logger.error(`Error processing Phunk ${i}`);
-        console.log(error);
-      }
-    }
+  //       Logger.log(`Processed Phunk ${i}`);
+  //     } catch (error) {
+  //       i = i - 1;
+  //       Logger.error(`Error processing Phunk ${i}`);
+  //       console.log(error);
+  //     }
+  //   }
 
-    const json = {
-      name: 'Ethereum Phunks (EtherPhunks)',
-      inscription_icon: '',
-      supply: '10000',
-      slug: 'ether-phunks',
-      description:
-        '10,000 Ethscription-crafted digital artifacts, honoring the original anti-corporate blockchain pioneers. Embrace the decentralized revolution. Be Phree. Be Phunky.',
-      twitter_link: 'https://twitter.com/etherphunks',
-      discord_link: '',
-      website_link: 'https://ethereumphunks.com',
-      background_color: '#C3FF00',
-      inscriptions,
-    };
+  //   const json = {
+  //     name: 'Ethereum Phunks (EtherPhunks)',
+  //     inscription_icon: '',
+  //     supply: '10000',
+  //     slug: 'ether-phunks',
+  //     description:
+  //       '10,000 Ethscription-crafted digital artifacts, honoring the original anti-corporate blockchain pioneers. Embrace the decentralized revolution. Be Phree. Be Phunky.',
+  //     twitter_link: 'https://twitter.com/etherphunks',
+  //     discord_link: '',
+  //     website_link: 'https://ethereumphunks.com',
+  //     background_color: '#C3FF00',
+  //     inscriptions,
+  //   };
 
-    await writeFile('EthereumPhunks.json', JSON.stringify(json), 'utf8');
-  }
+  //   await writeFile('EthereumPhunks.json', JSON.stringify(json), 'utf8');
+  // }
 }

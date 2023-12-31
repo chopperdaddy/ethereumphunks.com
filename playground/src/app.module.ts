@@ -6,6 +6,7 @@ import { AppService } from './app.service';
 import { Web3Service } from './services/web3.service';
 import { SupabaseService } from './services/supabase.service';
 import { UtilityService } from './utils/utility.service';
+import { CollectionService } from './services/collection.service';
 
 @Module({
   imports: [],
@@ -17,6 +18,7 @@ import { UtilityService } from './utils/utility.service';
     Web3Service,
     // Supabase Service handles all interactions with the Supabase database
     SupabaseService,
+    CollectionService,
     // Processing Service handles the logic of processing transactions
     // ProcessingService,
     // Time service gets estimates of block times
