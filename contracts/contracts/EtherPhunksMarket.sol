@@ -103,8 +103,8 @@ contract EtherPhunksMarket is
     }
 
     function batchOfferPhunkForSale(
-        bytes32[] memory phunkIds,
-        uint[] memory minSalePricesInWei
+        bytes32[] calldata phunkIds,
+        uint[] calldata minSalePricesInWei
     ) external nonReentrant {
         require(
             phunkIds.length == minSalePricesInWei.length,

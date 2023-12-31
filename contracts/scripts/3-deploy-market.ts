@@ -1,12 +1,11 @@
 // https://forum.openzeppelin.com/t/openzeppelin-upgrades-step-by-step-tutorial-for-hardhat/3580
-
 import { ethers } from 'hardhat';
 import hre, { upgrades } from 'hardhat';
 
 const contractName = 'EtherPhunksMarket';
 
 const _version = 1;
-const _pointsAddress = '';
+const _pointsAddress = '0x24d667C5195a767819C9313D6ceEC09D0Dc06Cfd';
 
 export async function deployMarket() {
   const [signer] = await hre.ethers.getSigners();
@@ -27,7 +26,6 @@ export async function deployMarket() {
 
   await contract.waitForDeployment();
   const proxyAddress = await contract.getAddress();
-
 
   console.log('\n\n=====================================================================');
   console.log(`${contractName} Proxy deployed to:`, proxyAddress);

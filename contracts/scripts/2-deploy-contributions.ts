@@ -3,8 +3,8 @@ import hre from 'hardhat';
 
 const contractName = 'Contributions';
 
-const _beneficiary = '';
-const _pointsAddress = '';
+const _beneficiary = '0x3d5eEB0046C1B6C7A1DF6EA4eEb02967de4fe087';
+const _pointsAddress = '0x24d667C5195a767819C9313D6ceEC09D0Dc06Cfd';
 
 export async function deployDonations() {
   const [signer] = await hre.ethers.getSigners();
