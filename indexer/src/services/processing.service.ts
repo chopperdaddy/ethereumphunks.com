@@ -11,13 +11,14 @@ import { TimeService } from 'src/utils/time.service';
 import { esip1Abi, esip2Abi } from 'src/abi/EthscriptionsProtocol';
 
 import etherPhunksMarketProxyAbi from 'src/abi/EtherPhunksMarketProxy.json';
+import pointsAbi from 'src/abi/Points.json';
 import etherPhunksAuctionHouseAbi from 'src/abi/EtherPhunksAuctionHouse.json';
 
 import * as esips from 'src/constants/EthscriptionsProtocol';
 
 import { Ethscription, Event, PhunkSha } from 'src/models/db';
 
-import { DecodeEventLogReturnType, FormattedTransaction, Log, Transaction, TransactionReceipt, decodeEventLog, hexToString, zeroAddress } from 'viem';
+import { DecodeEventLogReturnType, FormattedTransaction, Log, Transaction, TransactionReceipt, decodeEventLog, zeroAddress } from 'viem';
 
 
 import crypto from 'crypto';
@@ -132,28 +133,28 @@ export class ProcessingService {
 
       // Get the data from the transaction
       // Remove null bytes from the string
-      const stringData = hexToString(input.toString() as `0x${string}`);
-      const cleanedString = stringData.replace(/\x00/g, '');
+      // const stringData = hexToString(input.toString() as `0x${string}`);
+      // const cleanedString = stringData.replace(/\x00/g, '');
 
       // DISABLED: All 10,000 have been ethscribed
       // Check if possible ethPhunk creation
-      const possibleEthPhunk = cleanedString.startsWith('data:image/svg+xml,');
-      if (possibleEthPhunk) {
-        const sha = crypto.createHash('sha256').update(cleanedString).digest('hex');
+      // const possibleEthPhunk = cleanedString.startsWith('data:image/svg+xml,');
+      // if (possibleEthPhunk) {
+      //   const sha = crypto.createHash('sha256').update(cleanedString).digest('hex');
 
-        // Check if the sha exists in the phunks sha table
-        const phunkSha = await this.sbSvc.checkIsEthPhunk(sha);
-        if (!phunkSha) continue;
+      //   // Check if the sha exists in the phunks sha table
+      //   const phunkSha = await this.sbSvc.checkIsEthPhunk(sha);
+      //   if (!phunkSha) continue;
 
-        // Check if its a duplicate (already been inscribed)
-        const isDuplicate = await this.sbSvc.checkEthscriptionExistsBySha(sha);
-        if (isDuplicate) continue;
+      //   // Check if its a duplicate (already been inscribed)
+      //   const isDuplicate = await this.sbSvc.checkEthscriptionExistsBySha(sha);
+      //   if (isDuplicate) continue;
 
-        Logger.debug('Processing ethscription', transaction.hash);
-        const event = await this.processEtherPhunkCreationEvent(transaction as Transaction, createdAt, phunkSha);
-        events.push(event);
-        continue;
-      }
+      //   Logger.debug('Processing ethscription', transaction.hash);
+      //   const event = await this.processEtherPhunkCreationEvent(transaction as Transaction, createdAt, phunkSha);
+      //   events.push(event);
+      //   continue;
+      // }
 
       // Check if possible transfer
       const possibleTransfer = input.substring(2).length === SEGMENT_SIZE;
@@ -226,6 +227,21 @@ export class ProcessingService {
         if (eventArr?.length) events.push(...eventArr);
       }
 
+      const pointsLogs = receipt.logs.filter(
+        (log: any) => this.web3Svc.pointsAddress.toLowerCase() === log.address.toLowerCase()
+      );
+      if (pointsLogs.length) {
+        Logger.debug(
+          `Processing Points event (${this.web3Svc.chain})`,
+          transaction.hash
+        );
+        await this.processPointsEvent(
+          pointsLogs,
+          transaction,
+          createdAt
+        );
+      }
+
       // Filter logs for EtherPhunk Auction House Events
       // const auctionHouseLogs = receipt.logs.filter(
       //   (log: any) => log.address === this.web3Svc.auctionAddress
@@ -265,6 +281,39 @@ export class ProcessingService {
       blockTimestamp: createdAt,
       value: BigInt(0).toString(),
     };
+  }
+
+  async processPointsEvent(
+    pointsLogs: any[],
+    txn: Transaction,
+    createdAt: Date
+  ): Promise<void> {
+    for (const log of pointsLogs) {
+      const decoded = decodeEventLog({
+        abi: pointsAbi,
+        data: log.data,
+        topics: log.topics,
+      });
+
+      const { eventName } = decoded;
+      const { args } = decoded as any;
+
+      if (!eventName || !args) return;
+      if (eventName === 'PointsAdded') {
+        const { user, amount } = args;
+        await this.distributePoints(user);
+      }
+    }
+  }
+
+  async distributePoints(fromAddress: `0x${string}`): Promise<void> {
+    try {
+      const points = await this.web3Svc.getPoints(fromAddress);
+      await this.sbSvc.updateUserPoints(fromAddress, Number(points));
+      Logger.log(`Updated user points to ${points}`, fromAddress);
+    } catch (error) {
+      console.log(error);
+    }
   }
 
   async processTransferEvent(
@@ -516,7 +565,6 @@ export class ProcessingService {
       }
 
       await this.sbSvc.removeListing(hashId);
-      // this.distributePoints(fromAddress);
 
       return {
         txId: txn.hash + log.logIndex,

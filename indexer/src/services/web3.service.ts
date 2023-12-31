@@ -19,6 +19,8 @@ export class Web3Service {
     this.chain === 'mainnet' ? process.env.MARKET_ADDRESS_MAINNET : process.env.MARKET_ADDRESS_GOERLI
   ).map((address: string) => address.toLowerCase());
 
+  pointsAddress: string = this.chain === 'mainnet' ? process.env.POINTS_ADDRESS_MAINNET : process.env.POINTS_ADDRESS_GOERLI;
+
   public client = createPublicClient({
     chain: this.chain === 'mainnet' ? mainnet : goerli,
     transport: http(this.rpcURL)
@@ -69,15 +71,15 @@ export class Web3Service {
   // EtherPhunks smart contract interactions ////////////////////////////////////
   ///////////////////////////////////////////////////////////////////////////////
 
-  // async getPoints(address: `0x${string}`): Promise<number> {
-  //   const points = await this.client.readContract({
-  //     address: this.pointsAddress as `0x${string}`,
-  //     abi: pointsAbi,
-  //     functionName: 'points',
-  //     args: [`${address}`],
-  //   });
-  //   return points as number;
-  // }
+  async getPoints(address: `0x${string}`): Promise<number> {
+    const points = await this.client.readContract({
+      address: this.pointsAddress as `0x${string}`,
+      abi: pointsAbi,
+      functionName: 'points',
+      args: [`${address}`],
+    });
+    return points as number;
+  }
 
   ///////////////////////////////////////////////////////////////////////////////
   // Punk data contract interactions ////////////////////////////////////////////

@@ -15,7 +15,8 @@ BEGIN
         'previews', json_agg(json_build_object(
             'hashId', e."hashId",
             'tokenId', e."tokenId",
-            'slug', c.slug
+            'slug', c.slug,
+            'sha', e.sha
         )) FILTER (WHERE e."hashId" IS NOT NULL)
     )
     FROM public.collections_goerli c
@@ -26,8 +27,8 @@ BEGIN
         ORDER BY e."createdAt" DESC
         LIMIT preview_limit
     ) e ON true
-    -- WHERE
-    --     (slug IS NULL OR c.slug = slug)
+    WHERE
+        (c.active = TRUE)
     GROUP BY c.slug, c.name, c.image;
 END;
 $$ LANGUAGE plpgsql;
@@ -127,7 +128,8 @@ RETURNS TABLE (
     "blockTimestamp" TIMESTAMP WITH TIME ZONE,
     type TEXT,
     value TEXT,
-    slug TEXT
+    slug TEXT,
+    sha TEXT
 ) AS $$
 DECLARE
     "marketAddress" CONSTANT TEXT := '0x6f67a6f9a1d334cd105170bcd685c518d5610601';  -- market address
@@ -142,7 +144,8 @@ BEGIN
         e."blockTimestamp",
         e.type,
         e.value,
-        eg.slug
+        eg.slug,
+        eg.sha
     FROM
         public.events_goerli e
     INNER JOIN public.ethscriptions_goerli eg ON e."hashId" = eg."hashId"
