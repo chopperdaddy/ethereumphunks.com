@@ -111,10 +111,10 @@ export class EthscribeComponent {
       })
     ).subscribe();
 
-    this.mintCount$ = interval(5000).pipe(
-      startWith(0),
-      switchMap(_ => this.dataSvc.getMintCount()),
-    );
+    // this.mintCount$ = interval(5000).pipe(
+    //   startWith(0),
+    //   switchMap(_ => this.dataSvc.getMintCount()),
+    // );
   }
 
   reset(): void {

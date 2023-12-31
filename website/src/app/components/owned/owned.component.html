@@ -9,7 +9,7 @@
     [class.expanded]="expanded">
 
     <div
-      (click)="setPhunkSelected(phunk.phunkId)"
+      (click)="setPhunkSelected(phunk.tokenId)"
       class="eth-phunk"
       [class.id]="phunk.hashId"
       *ngFor="let phunk of ethPhunks">

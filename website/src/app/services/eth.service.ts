@@ -190,27 +190,27 @@ export class EthService {
         "type": "function"
       }],
       functionName: 'punkImageSvg',
-      args: [`${tokenId}`],
+      args: [Number(tokenId)],
     });
     return punkImage as any;
   }
 
-  async getPunkAttributes(tokenId: string): Promise<any> {
-    const publicClient = getPublicClient();
-    const punkAttributes = await publicClient?.readContract({
-      address: environment.punkDataAddress as `0x${string}`,
-      abi: [{
-        "inputs": [{ "internalType": "uint16", "name": "index", "type": "uint16" }],
-        "name": "punkAttributes",
-        "outputs": [{ "internalType": "string", "name": "text", "type": "string" }],
-        "stateMutability": "view",
-        "type": "function"
-      }],
-      functionName: 'punkAttributes',
-      args: [tokenId],
-    });
-    return punkAttributes as any;
-  }
+  // async getPunkAttributes(tokenId: string): Promise<any> {
+  //   const publicClient = getPublicClient();
+  //   const punkAttributes = await publicClient?.readContract({
+  //     address: environment.punkDataAddress as `0x${string}`,
+  //     abi: [{
+  //       "inputs": [{ "internalType": "uint16", "name": "index", "type": "uint16" }],
+  //       "name": "punkAttributes",
+  //       "outputs": [{ "internalType": "string", "name": "text", "type": "string" }],
+  //       "stateMutability": "view",
+  //       "type": "function"
+  //     }],
+  //     functionName: 'punkAttributes',
+  //     args: [tokenId],
+  //   });
+  //   return punkAttributes as any;
+  // }
 
   async getCurrentBlock(): Promise<number> {
     const blockNum = await getPublicClient().getBlockNumber();

@@ -22,18 +22,18 @@ export class DataService {
     private http: HttpClient,
   ) {}
 
-  async getMintCount(): Promise<number> {
-    const { data, error } = await supabase
-      .rpc('count_ethphunks_goerli');
+  // async getMintCount(): Promise<number> {
+  //   const { data, error } = await supabase
+  //     .rpc('count_ethphunks_goerli');
 
-    if (error) throw error;
-    return data;
-  }
+  //   if (error) throw error;
+  //   return data;
+  // }
 
   async getUserEthPhunks(address: string): Promise<any> {
     if (!address) return [];
 
-    const table = environment.chainId === 1 ? 'phunks' : 'phunks_goerli';
+    const table = environment.chainId === 1 ? 'ethscriptions' : 'ethscriptions_goerli';
     const { data, error } = await supabase
       .from(table)
       .select('*')
