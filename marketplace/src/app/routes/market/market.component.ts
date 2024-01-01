@@ -299,8 +299,8 @@ export class MarketComponent {
 
   async submitBatchTransfer(): Promise<void> {
 
-    if (!this.bulkListingForm.value.listingPhunks) return;
-    const hashIds = this.bulkListingForm.value.listingPhunks.map((phunk: any) => phunk.hashId);
+    if (!this.bulkListingForm.value.transferPhunks) return;
+    const hashIds = this.bulkListingForm.value.transferPhunks.map((phunk: any) => phunk.hashId);
 
     if (!hashIds?.length) return;
     if (!this.transferAddress.value) return;
