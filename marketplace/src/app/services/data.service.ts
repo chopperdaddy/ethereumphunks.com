@@ -341,11 +341,11 @@ export class DataService {
   async checkConsensus(
     hashId: string,
     owner: string,
-    prevOwner: string
+    prevOwner: string | null,
   ): Promise<boolean> {
     if (!hashId || !owner) return false;
     return await firstValueFrom(
-      this.http.get(`https://${this.prefix.replace('_', '-')}api.ethscriptions.com/api/ethscriptions/${hashId}`).pipe(
+      this.http.get(`https://${this.prefix ? (this.prefix.replace('_', '') + '-') : ''}api.ethscriptions.com/api/ethscriptions/${hashId}`).pipe(
         map((res: any) => {
           if (!res) return false;
           if (res.current_owner.toLowerCase() !== owner.toLowerCase()) return false;

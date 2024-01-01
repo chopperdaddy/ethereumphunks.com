@@ -209,6 +209,9 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
     const value = this.listPrice.value;
     let address = this.listToAddress.value || undefined;
 
+    const consensus = await this.dataSvc.checkConsensus(hashId, phunk.owner, phunk.prevOwner);
+    if (!consensus) throw new Error('Consensus not met');
+
     let notification: Notification = {
       id: Date.now(),
       slug: phunk.slug,

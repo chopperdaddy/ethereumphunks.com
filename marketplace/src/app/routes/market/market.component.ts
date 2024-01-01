@@ -224,6 +224,7 @@ export class MarketComponent {
       phunkId: [phunk.tokenId],
       hashId: [phunk.hashId],
       slug: [phunk.slug],
+      sha: [phunk.sha],
       listPrice: [''],
     }))) as FormArray;
 
@@ -313,14 +314,13 @@ export class MarketComponent {
       isBatch: true,
     };
 
+    this.store.dispatch(appStateActions.upsertNotification({ notification }));
+    this.closeModal();
+
     try {
       let toAddress: string | null = this.transferAddress.value;
       toAddress = await this.web3Svc.verifyAddressOrEns(toAddress);
       if (!toAddress) throw new Error('Invalid address');
-
-      this.store.dispatch(appStateActions.upsertNotification({ notification }));
-
-      this.closeModal();
 
       const hash = await this.web3Svc.batchTransferPhunks(hashIds, toAddress);
       notification = {
@@ -371,10 +371,10 @@ export class MarketComponent {
       isBatch: true,
     };
 
-    try {
-      this.store.dispatch(appStateActions.upsertNotification({ notification }));
-      this.closeModal();
+    this.store.dispatch(appStateActions.upsertNotification({ notification }));
+    this.closeModal();
 
+    try {
       const hash = await this.web3Svc.batchOfferPhunkForSale(
         listings.map(phunk => phunk.hashId),
         listings.map(phunk => phunk.listPrice)
@@ -407,6 +407,8 @@ export class MarketComponent {
   }
 
   async submitBatchEscrow(): Promise<void> {
+    if (!this.bulkListingForm.value.escrowPhunks) return;
+
     const selectedHashIds = Object.keys(this.selected);
     const canTransfer = await firstValueFrom(
       this.dataSvc.phunksCanTransfer(selectedHashIds)
@@ -433,9 +435,10 @@ export class MarketComponent {
       isBatch: true,
     }
 
-    try {
-      this.store.dispatch(appStateActions.upsertNotification({ notification }));
+    this.store.dispatch(appStateActions.upsertNotification({ notification }));
+    this.closeModal();
 
+    try {
       const hash = await this.web3Svc.transferPhunk(hex, this.escrowAddress);
       notification = {
         ...notification,
