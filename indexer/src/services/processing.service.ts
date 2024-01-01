@@ -473,8 +473,6 @@ export class ProcessingService {
     const data = input.substring(2);
     if (data.length % SEGMENT_SIZE !== 0) return [];
 
-    console.log(data);
-
     const first64 = '0x' + data.substring(0, SEGMENT_SIZE);
     const exists: boolean = await this.dataSvc.checkEthscriptionExistsByHashId(first64);
     if (!exists) return [];
