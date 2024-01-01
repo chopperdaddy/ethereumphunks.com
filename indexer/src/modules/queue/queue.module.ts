@@ -1,6 +1,6 @@
-
-
 import { Module } from '@nestjs/common';
+import { HttpModule } from '@nestjs/axios';
+
 import { BullModule } from '@nestjs/bull';
 
 import { BlockService } from './services/block.service';
@@ -10,6 +10,7 @@ import { UtilityService } from 'src/utils/utility.service';
 import { ProcessingService } from 'src/services/processing.service';
 import { Web3Service } from 'src/services/web3.service';
 import { SupabaseService } from 'src/services/supabase.service';
+import { DataService } from 'src/services/data.service';
 import { TimeService } from 'src/utils/time.service';
 
 import dotenv from 'dotenv';
@@ -19,6 +20,7 @@ const chain: 'mainnet' | 'goerli' = process.env.CHAIN_ID === '1' ? 'mainnet' : '
 
 @Module({
   imports: [
+    HttpModule,
     BullModule.forRoot({
       redis: {
         host: 'localhost',
@@ -37,7 +39,8 @@ const chain: 'mainnet' | 'goerli' = process.env.CHAIN_ID === '1' ? 'mainnet' : '
     Web3Service,
     SupabaseService,
     UtilityService,
-    TimeService
+    TimeService,
+    DataService,
   ],
   exports: [
     BlockService,

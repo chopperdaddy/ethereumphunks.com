@@ -34,6 +34,12 @@ export class AppService {
     });
 
     console.log(this.web3Svc.marketAddress);
+
+    // this.reIndexBlock(18900944);
+  }
+
+  async reIndexBlock(blockNumber: number) {
+    await this.processSvc.addBlockToQueue(blockNumber, new Date().getTime());
   }
 
   // Start Indexer //

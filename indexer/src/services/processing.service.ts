@@ -4,6 +4,7 @@ import { BlockService } from 'src/modules/queue/services/block.service';
 
 import { Web3Service } from './web3.service';
 import { SupabaseService } from './supabase.service';
+import { DataService } from './data.service';
 
 import { UtilityService } from 'src/utils/utility.service';
 import { TimeService } from 'src/utils/time.service';
@@ -19,7 +20,6 @@ import * as esips from 'src/constants/EthscriptionsProtocol';
 import { Ethscription, Event, PhunkSha } from 'src/models/db';
 
 import { DecodeEventLogReturnType, FormattedTransaction, Log, Transaction, TransactionReceipt, decodeEventLog, zeroAddress } from 'viem';
-
 
 import crypto from 'crypto';
 import dotenv from 'dotenv';
@@ -38,6 +38,7 @@ export class ProcessingService {
     private readonly sbSvc: SupabaseService,
     private readonly utilSvc: UtilityService,
     private readonly timeSvc: TimeService,
+    private readonly dataSvc: DataService,
   ) {}
 
   // Method to start fetching and processing blocks from the network
@@ -235,11 +236,7 @@ export class ProcessingService {
           `Processing Points event (${this.web3Svc.chain})`,
           transaction.hash
         );
-        await this.processPointsEvent(
-          pointsLogs,
-          transaction,
-          createdAt
-        );
+        await this.processPointsEvent(pointsLogs);
       }
 
       // Filter logs for EtherPhunk Auction House Events
@@ -283,11 +280,7 @@ export class ProcessingService {
     };
   }
 
-  async processPointsEvent(
-    pointsLogs: any[],
-    txn: Transaction,
-    createdAt: Date
-  ): Promise<void> {
+  async processPointsEvent(pointsLogs: any[]): Promise<void> {
     for (const log of pointsLogs) {
       const decoded = decodeEventLog({
         abi: pointsAbi,
@@ -480,8 +473,10 @@ export class ProcessingService {
     const data = input.substring(2);
     if (data.length % SEGMENT_SIZE !== 0) return [];
 
+    console.log(data);
+
     const first64 = '0x' + data.substring(0, SEGMENT_SIZE);
-    const exists: Ethscription = await this.sbSvc.checkEthscriptionExistsByHashId(first64);
+    const exists: boolean = await this.dataSvc.checkEthscriptionExistsByHashId(first64);
     if (!exists) return [];
 
     const events = [];

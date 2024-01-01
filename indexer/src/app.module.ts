@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { HttpModule } from '@nestjs/axios';
 
 import { QueueModule } from './modules/queue/queue.module';
 
@@ -8,10 +9,12 @@ import { AppService } from './app.service';
 import { Web3Service } from './services/web3.service';
 import { SupabaseService } from './services/supabase.service';
 import { ProcessingService } from './services/processing.service';
+import { DataService } from './services/data.service';
+
 import { UtilityService } from './utils/utility.service';
 
 @Module({
-  imports: [QueueModule],
+  imports: [QueueModule,HttpModule],
   controllers: [AppController],
   providers: [
     // App Service handles the main logic of the indexer
@@ -22,6 +25,8 @@ import { UtilityService } from './utils/utility.service';
     SupabaseService,
     // Processing Service handles the logic of processing transactions
     ProcessingService,
+    // Data Service handles the logic of processing data
+    DataService,
     // Time service gets estimates of block times
     // TimeService,
     // PG service is for fun
