@@ -209,9 +209,6 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
     const value = this.listPrice.value;
     let address = this.listToAddress.value || undefined;
 
-    const consensus = await this.dataSvc.checkConsensus(hashId, phunk.owner, phunk.prevOwner);
-    if (!consensus) throw new Error('Consensus not met');
-
     let notification: Notification = {
       id: Date.now(),
       slug: phunk.slug,
@@ -225,6 +222,8 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
     this.store.dispatch(appStateActions.upsertNotification({ notification }));
 
     try {
+      const consensus = await this.dataSvc.checkConsensus(hashId, phunk.owner, phunk.prevOwner);
+      if (!consensus) throw new Error('Consensus not met');
 
       if (address) {
         if (address?.endsWith('.eth')) {
@@ -297,6 +296,8 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
     this.store.dispatch(appStateActions.upsertNotification({ notification }));
 
     try {
+      const consensus = await this.dataSvc.checkConsensus(hashId, phunk.owner, phunk.prevOwner);
+      if (!consensus) throw new Error('Consensus not met');
 
       const tokenId = phunk.hashId;
       const hash = await this.web3Svc.sendEthscriptionToContract(tokenId);
@@ -443,9 +444,11 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
     };
 
     try {
-
       if (!value) throw new Error('Invalid value');
       this.store.dispatch(appStateActions.upsertNotification({ notification }));
+
+      const consensus = await this.dataSvc.checkConsensus(hashId, phunk.owner, phunk.prevOwner);
+      if (!consensus) throw new Error('Consensus not met');
 
       const hash = await this.web3Svc.acceptBidForPhunk(hashId, value!);
       notification = {
@@ -492,9 +495,11 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
       value: Number(this.web3Svc.weiToEth(value)),
     };
 
-    try {
+    this.store.dispatch(appStateActions.upsertNotification({ notification }));
 
-      this.store.dispatch(appStateActions.upsertNotification({ notification }));
+    try {
+      const consensus = await this.dataSvc.checkConsensus(hashId, phunk.owner, phunk.prevOwner);
+      if (!consensus) throw new Error('Consensus not met');
 
       const hash = await this.web3Svc.buyPhunk(hashId, value!);
       notification = {
@@ -594,6 +599,9 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
       this.closeTransfer();
       this.store.dispatch(appStateActions.upsertNotification({ notification }));
 
+      const consensus = await this.dataSvc.checkConsensus(hashId, phunk.owner, phunk.prevOwner);
+      if (!consensus) throw new Error('Consensus not met');
+
       const hash = await this.web3Svc.transferPhunk(hashId, toAddress);
       notification = {
         ...notification,
@@ -637,6 +645,9 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
 
     try {
       this.store.dispatch(appStateActions.upsertNotification({ notification }));
+
+      const consensus = await this.dataSvc.checkConsensus(hashId, phunk.owner, phunk.prevOwner);
+      if (!consensus) throw new Error('Consensus not met');
 
       const hash = await this.web3Svc.withdrawPhunk(hashId);
       if (!hash) throw new Error('Could not proccess transaction');

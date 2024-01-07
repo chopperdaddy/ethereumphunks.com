@@ -40,6 +40,9 @@ export class SearchComponent {
 
   async onSubmit($event: any): Promise<void> {
     try {
+
+      console.log('onSubmit', $event);
+
       this.phunkBoxError = false;
       this.phunkBoxLoading = true;
 

@@ -72,8 +72,16 @@
     color: rgba(var(--white), 1);
     text-decoration: none;
 
-    app-address {
+    max-width: 100%;
+    // overflow: hidden;
+    // text-overflow: ellipsis;
+    // white-space: nowrap;
 
+    app-address {
+      max-width: 18rem;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
   }
 

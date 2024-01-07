@@ -1,7 +1,7 @@
 export const environment = {
   env: 'dev-goerli',
   production: false,
-  chainId: 5,
+  chainId: 1,
   rpcHttpProvider: 'http://goerli-geth.dappnode:8545',
   explorerUrl: 'https://goerli.etherscan.io',
 

@@ -244,7 +244,6 @@ export class DataService {
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   fetchSinglePhunk(tokenId: string): Observable<any> {
-    // console.log('fetchSinglePhunk', {tokenId});
 
     let query = supabase
       .from('ethscriptions' + this.prefix)
@@ -285,16 +284,18 @@ export class DataService {
           this.getBidFromHashId(res.hashId),
         ]))
       ])),
-      map(([[res], [listing, bid]]) => ({
-        ...res,
-        listing,
-        bid,
-        attributes: [ ...(res.attributes || []) ].sort((a: Attribute, b: Attribute) => {
-          if (a.k === "Sex") return -1;
-          if (b.k === "Sex") return 1;
-          return 0;
-        }),
-      })),
+      map(([[res], [listing, bid]]) => {
+        return {
+          ...res,
+          listing,
+          bid,
+          attributes: [ ...(res.attributes || []) ].sort((a: Attribute, b: Attribute) => {
+            if (a.k === "Sex") return -1;
+            if (b.k === "Sex") return 1;
+            return 0;
+          }),
+        };
+      }),
     );
   }
 
@@ -346,6 +347,7 @@ export class DataService {
     if (!hashId || !owner) return false;
     return await firstValueFrom(
       this.http.get(`https://${this.prefix ? (this.prefix.replace('_', '') + '-') : ''}api.ethscriptions.com/api/ethscriptions/${hashId}`).pipe(
+        // tap((res: any) => console.log('checkConsensus', res)),
         map((res: any) => {
           if (!res) return false;
           if (res.current_owner.toLowerCase() !== owner.toLowerCase()) return false;
