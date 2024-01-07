@@ -200,7 +200,7 @@
                 <h2 i18n>Attributes</h2>
                 <div class="accessories">
                   @for (item of phunk.attributes; track item; let i = $index) {
-                    @if (i > 1) {
+                    @if (i > 0) {
                     <div class="accessory">
                       <a class="value" [routerLink]="['/', 'curated', phunk.slug, 'market', 'all']" [queryParams]="getItemQueryParams(item)">
                         {{ item.v }}

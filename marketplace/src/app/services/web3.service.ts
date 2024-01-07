@@ -99,7 +99,6 @@ export class Web3Service {
       tap((account) => { if (account.isDisconnected) this.disconnectWeb3(); }),
       filter((account) => account.isConnected),
       tap((account) => this.connectWeb3(account.address as string)),
-      // tap((account) => this.connectWeb3(`0x436196aB0550E73AEEdd1a494C2420DAcA7Fe0Ca`)),
       catchError((err) => {
         this.disconnectWeb3();
         return of(err);

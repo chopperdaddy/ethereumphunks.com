@@ -71,11 +71,11 @@ export class DataService {
   }
 
   getAttributes(slug: string): Observable<any> {
-    return from(this.ngForage.getItem(`${slug}_attributes`)).pipe(
+    return from(this.ngForage.getItem(`${slug}__attributes`)).pipe(
       switchMap((res: any) => {
         if (res) return of(res);
         return this.http.get(`${environment.staticUrl}/data/${slug}_attributes.json`).pipe(
-          tap((res: any) => this.ngForage.setItem(`${slug}_attributes`, res)),
+          tap((res: any) => this.ngForage.setItem(`${slug}__attributes`, res)),
         );
       }),
     );
@@ -296,6 +296,7 @@ export class DataService {
           }),
         };
       }),
+      tap((res) => console.log('fetchSinglePhunk', res)),
     );
   }
 
