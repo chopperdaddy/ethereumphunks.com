@@ -204,7 +204,7 @@
                     <div class="accessory">
                       <a class="value" [routerLink]="['/', 'curated', phunk.slug, 'market', 'all']" [queryParams]="getItemQueryParams(item)">
                         {{ item.v }}
-                        <span>{{ (+(item.v | traitCount : phunk.slug) / 10000) | percent : '1.1-1' }}</span>
+                        <span>{{ (+(item.v | traitCount : phunk.slug) / (phunk.supply || 10000)) | percent : '1.1-1' }}</span>
                       </a>
                       <span class="trait-count">
                         <span>{{ item.v | traitCount : phunk.slug }}</span>

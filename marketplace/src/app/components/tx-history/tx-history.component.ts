@@ -55,10 +55,13 @@ export class TxHistoryComponent implements OnChanges {
     switchMap((hashId) => {
       return this.dataSvc.fetchSingleTokenEvents(hashId!);
     }),
-    map((data) => data?.map((tx: any) => ({
-      ...tx,
-      type: tx.type === 'transfer' && tx.to.toLowerCase() === environment.marketAddress ? 'escrow' : tx.type,
-    }))),
+    map((data) => data?.map((tx: any) => {
+      // if (tx.type === 'transfer' && tx.from.toLowerCase() === environment.marketAddress) console.log(tx);
+      return {
+        ...tx,
+        type: tx.type === 'transfer' && tx.to.toLowerCase() === environment.marketAddress ? 'escrow' : tx.type,
+      };
+    })),
     catchError(error => {
       console.error('Error fetching transaction history', error);
       return of([]);

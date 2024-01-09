@@ -11,13 +11,16 @@ import { EventType, GlobalState } from '@/models/global-state';
 import { Attribute, Bid, Event, Listing, Phunk } from '@/models/db';
 
 import { createClient } from '@supabase/supabase-js'
+
 import { Observable, of, BehaviorSubject, from, forkJoin, firstValueFrom } from 'rxjs';
 import { map, switchMap, tap } from 'rxjs/operators';
+
+import { NgForage } from 'ngforage';
 
 import { environment } from 'src/environments/environment';
 
 import * as dataStateActions from '@/state/actions/data-state.actions';
-import { NgForage } from 'ngforage';
+import * as appStateActions from '@/state/actions/app-state.actions';
 
 const supabaseUrl = environment.supabaseUrl;
 const supabaseKey = environment.supabaseKey;
@@ -62,6 +65,17 @@ export class DataService {
         (payload) => {
           if (!payload) return;
           this.store.dispatch(dataStateActions.dbEventTriggered({ payload }));
+        },
+      ).subscribe();
+
+    supabase
+      .channel('test')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'users' + this.prefix },
+        () => {
+          this.store.dispatch(dataStateActions.fetchLeaderboard());
+          this.store.dispatch(appStateActions.fetchUserPoints());
         },
       ).subscribe();
   }
@@ -213,11 +227,14 @@ export class DataService {
       .order('blockTimestamp', { ascending: false });
 
     return from(response).pipe(
-      map((res: any) => res.data.map((item: any) => ({
-        ...item,
-        ...item[`ethscriptions${this.prefix}`],
-      }))),
-      tap((res) => console.log('fetchSingleTokenEvents', res)),
+      map((res: any) => {
+        return res.data.map((item: any) => {
+          return {
+            ...item,
+            ...item[`ethscriptions${this.prefix}`],
+          };
+        });
+      }),
     );
   }
 
@@ -254,7 +271,7 @@ export class DataService {
         createdAt,
         owner,
         prevOwner,
-        collections${this.prefix}(singleName, slug, name)
+        collections${this.prefix}(singleName,slug,name,supply)
       `)
       .limit(1);
 
@@ -266,7 +283,6 @@ export class DataService {
         return res.data ? res.data[0] : { tokenId };
       }),
       map((phunk: any) => {
-
         let collection = phunk[`collections${this.prefix}`];
         let collectionName = collection?.name;
         delete phunk[`collections${this.prefix}`];
@@ -287,7 +303,7 @@ export class DataService {
       map(([[res], [listing, bid]]) => {
         return {
           ...res,
-          listing,
+          listing: listing?.listedBy.toLowerCase() === res.prevOwner?.toLowerCase() ? listing : null,
           bid,
           attributes: [ ...(res.attributes || []) ].sort((a: Attribute, b: Attribute) => {
             if (a.k === "Sex") return -1;
@@ -352,10 +368,6 @@ export class DataService {
         map((res: any) => {
           if (!res) return false;
           if (res.current_owner.toLowerCase() !== owner.toLowerCase()) return false;
-          if (
-            (res.previous_owner && prevOwner) &&
-            res.previous_owner.toLowerCase() !== prevOwner.toLowerCase()
-          ) return false;
           return true;
         }),
       )

@@ -116,7 +116,7 @@ export class DataStateEffects {
     ofType(dataStateActions.setMarketData),
     withLatestFrom(this.store.select(appStateSelectors.selectMarketSlug)),
     switchMap(([action, marketSlug]) => {
-      return from(this.dataSvc.fetchAll(marketSlug, 0, 110)).pipe(
+      return from(this.dataSvc.fetchAll(marketSlug, 0, 250)).pipe(
         switchMap((all) => {
           return this.dataSvc.getAttributes(marketSlug).pipe(
             map((attributes) => {

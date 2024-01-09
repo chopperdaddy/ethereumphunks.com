@@ -121,9 +121,8 @@ export class BreadcrumbsComponent {
   }
 
   async drawPhunk(): Promise<void> {
-    const svg = await this.getPunkImage();
-    if (!svg) return;
-
+    const dataUrl = await this.getPunkImage();
+    if (!dataUrl) return;
     return new Promise<void>((resolve, reject) => {
       const img = new Image();
       img.onload = () => {
@@ -132,30 +131,31 @@ export class BreadcrumbsComponent {
           0,
           0,
           this.width,
-          this.height,
+          this.height
         );
         resolve();
       };
       img.onerror = err => {
         reject(err);
       };
-      const dataUrl = 'data:image/svg+xml;utf8,' + encodeURIComponent(svg);
       img.src = dataUrl;
     });
   }
 
   async getPunkImage(): Promise<string | undefined> {
     if (!this.phunk) return;
-    const imgUrl = this.dataSvc.staticUrl + '/images/' + this.phunk.slug + '_' + this.phunk.tokenId + '.svg';
-    const svg = await firstValueFrom(this.http.get(imgUrl, { responseType: 'text' }));
-    return svg;
+    const imgUrl = this.dataSvc.staticUrl + '/images/' + this.phunk.sha + '.png';
+    const response = await firstValueFrom(this.http.get(imgUrl, { responseType: 'blob' }));
+    const blob = new Blob([response], { type: 'image/png' });
+    return URL.createObjectURL(blob);
   }
 
   downloadCanvas(): void {
     if (!this.phunk) return;
 
+    const name = this.phunk.singleName?.replace(' ', '-') + '#' + this.phunk.tokenId;
     const link = document.createElement('a');
-    if (window.innerWidth > 800) link.download = 'EthereumPhunk#' + this.phunk.tokenId + '.png';
+    if (window.innerWidth > 800) link.download = name + '.png';
 
     link.target = '_blank';
     link.href = this.pfp.nativeElement.toDataURL('image/png;base64');

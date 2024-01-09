@@ -38,9 +38,20 @@
       (waIntersectionObservee)="onIntersection($event)"
       [class.selected]="selected[phunk.hashId]"
       [attr.data-index]="i"
-      [class.in-escrow]="(marketType === 'owned' && viewType === 'market') && phunk.owner === escrowAddress && !phunk.listing"
-      [class.listing]="(marketType === 'listings' || (marketType === 'owned' && viewType === 'market')) && phunk.listing"
-      [class.bid]="(marketType === 'bids' || (marketType === 'owned' && viewType === 'market')) && phunk.bid">
+      [class.in-escrow]="
+        (marketType === 'owned' && viewType === 'market') &&
+        phunk.owner === escrowAddress && !phunk.listing
+      "
+      [class.listing]="
+        (marketType === 'listings' ||
+        (marketType === 'owned' && viewType === 'market')) &&
+        phunk.listing
+      "
+      [class.bid]="
+        (marketType === 'bids' ||
+        (marketType === 'owned' && viewType === 'market')) &&
+        phunk.bid
+      ">
 
       @if (selectable) {
         <div class="selector">
@@ -78,8 +89,8 @@
             <div class="label">#{{ phunk.tokenId }}</div>
 
             @if (
-              marketType === 'listings'
-              || marketType === 'owned'
+              marketType === 'listings' ||
+              marketType === 'owned'
             ) {
               @if (phunk.listing; as listing) {
                 <p i18n>

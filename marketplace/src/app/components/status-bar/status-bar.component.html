@@ -1,2 +1,4 @@
-<div class="label">Block</div>
-<div class="value">{{ currentBlock$ | async }}</div>
+@if (currentBlock$ | async; as blockNumber) {
+  <div class="label">Block</div>
+  <div class="value">{{ blockNumber }}</div>
+}

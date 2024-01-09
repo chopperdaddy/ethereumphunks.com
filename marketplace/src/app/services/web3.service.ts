@@ -11,7 +11,7 @@ import DonationsAbi from '@/abi/Contributions.json';
 import EtherPhunksMarketAbi from '@/abi/EtherPhunksMarket.json';
 import AuctionAbi from '@/abi/EtherPhunksAuctionHouse.json';
 
-import { TransactionReceipt, WatchBlockNumberReturnType, decodeFunctionData, encodeFunctionData, formatEther, getContract, isAddress, numberToBytes, numberToHex, parseEther, zeroAddress } from 'viem';
+import { TransactionReceipt, WatchBlockNumberReturnType, decodeFunctionData, formatEther, isAddress, parseEther, zeroAddress } from 'viem';
 import { mainnet, goerli } from 'viem/chains';
 
 import { EIP6963Connector, createWeb3Modal, walletConnectProvider } from '@web3modal/wagmi';
@@ -99,6 +99,7 @@ export class Web3Service {
       tap((account) => { if (account.isDisconnected) this.disconnectWeb3(); }),
       filter((account) => account.isConnected),
       tap((account) => this.connectWeb3(account.address as string)),
+      // tap((account) => this.connectWeb3('0x1ba0558b8fac9c6c29dbc84ceaa654b9021937cb')),
       catchError((err) => {
         this.disconnectWeb3();
         return of(err);

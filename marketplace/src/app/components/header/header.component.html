@@ -18,7 +18,10 @@
 
       @if ((connected$ | async)) {
         @if ((walletAddress$ | async); as address) {
-          <a [routerLink]="['/', 'market', 'owned']" [queryParams]="{ address }">
+          <a
+            [routerLink]="['/', 'curated', (activeCollection$ | async)?.slug, 'market', 'owned']"
+            [queryParams]="{ address }">
+
             <app-address [address]="address" />
           </a>
 

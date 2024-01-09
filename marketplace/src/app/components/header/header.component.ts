@@ -17,6 +17,8 @@ import { FormatCashPipe } from '@/pipes/format-cash.pipe';
 import { GlobalState } from '@/models/global-state';
 
 import * as appStateSelectors from '@/state/selectors/app-state.selectors';
+import * as dataStateSelectors from '@/state/selectors/data-state.selectors';
+
 import * as appStateActions from '@/state/actions/app-state.actions';
 
 @Component({
@@ -44,6 +46,7 @@ export class HeaderComponent {
   hasWithdrawal$ = this.store.select(appStateSelectors.selectHasWithdrawal);
   userPoints$ = this.store.select(appStateSelectors.selectUserPoints);
   activeMultiplier$ = this.store.select(appStateSelectors.selectActiveMultiplier);
+  activeCollection$ = this.store.select(dataStateSelectors.selectActiveCollection);
   menuActive$ = this.store.select(appStateSelectors.selectMenuActive);
   theme$ = this.store.select(appStateSelectors.selectTheme);
   notifications$ = this.store.select(appStateSelectors.selectNotifications).pipe(

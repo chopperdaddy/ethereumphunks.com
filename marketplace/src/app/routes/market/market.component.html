@@ -32,16 +32,18 @@
           <div class="left"></div>
 
           <div class="right">
-            <div class="sort-wrapper">
-              <div class="label">Sort:</div>
-              <ng-select
-                [(ngModel)]="activeSortModel"
-                [items]="sorts"
-                (change)="setSort($event)"
-                [searchable]="false"
-                [clearable]="false"
-              />
-            </div>
+            @if (marketType !== 'all') {
+              <div class="sort-wrapper">
+                <div class="label">Sort:</div>
+                <ng-select
+                  [(ngModel)]="activeSortModel"
+                  [items]="sorts"
+                  (change)="setSort($event)"
+                  [searchable]="false"
+                  [clearable]="false"
+                />
+              </div>
+            }
 
             <button
               class="filters-button"
@@ -53,15 +55,15 @@
               Filter by Attribute
             </button>
 
-            @if (
+            <!-- @if (
               (marketType === 'owned'
               && (route.snapshot.queryParams.address | lowercase) === (walletAddress$ | async))
             ) {
-              <!-- || marketType === 'listings' -->
+              || marketType === 'listings'
               <div class="select-buttons">
                 <button (click)="setSelectMiltiple()" [class.active]="selectMutipleActive">Select</button>
                 @if (selectMutipleActive) {
-                   <!-- && marketType !== 'listings' -->
+                   && marketType !== 'listings'
                   <button
                     class="all-none"
                     [class.all]="selectAll"
@@ -71,7 +73,7 @@
                   </button>
                 }
               </div>
-            }
+            } -->
           </div>
         </div>
 

@@ -30,7 +30,7 @@ export const initialState: AppState = {
 
   eventTypeFilter: 'All',
 
-  blockNumber: -1,
+  blockNumber: 0,
   notifications: [],
   cooldowns: JSON.parse(localStorage.getItem('EtherPhunks_cooldowns') || '[]'),
 

@@ -27,6 +27,7 @@ import { RouterModule } from '@angular/router';
 export class LeaderboardComponent {
 
   leaderboard$ = this.store.select(dataStateSelectors.selectLeaderboard);
+  activeCollection$ = this.store.select(dataStateSelectors.selectActiveCollection);
 
   constructor(
     private store: Store<GlobalState>

@@ -36,22 +36,29 @@ export class SearchComponent {
     private store: Store<GlobalState>,
     private router: Router,
     private web3Svc: Web3Service
-  ) { }
+  ) {
+
+    router.events.subscribe((val) => {
+      this.phunkBox.reset();
+    });
+
+  }
 
   async onSubmit($event: any): Promise<void> {
     try {
-
-      console.log('onSubmit', $event);
 
       this.phunkBoxError = false;
       this.phunkBoxLoading = true;
 
       const addressInput  = this.phunkBox?.value?.addressInput?.toLowerCase();
 
+      const is0x = addressInput?.startsWith('0x');
       const isEns = addressInput?.includes('.eth');
-      const isAddress = this.web3Svc.verifyAddress(addressInput);
-      const isTokenId = Number(addressInput) < 10000 && Number(addressInput) > 0;
-      const possibleHashId = addressInput.length === 66;
+      const isAddress = is0x && this.web3Svc.verifyAddress(addressInput);
+      const isTokenId = !is0x && Number(addressInput) > -1;
+      const possibleHashId = is0x && addressInput.length === 66;
+
+      console.log({ isEns, isAddress, isTokenId, possibleHashId });
 
       if (!isEns && !isAddress && !isTokenId && !possibleHashId) throw new Error('Invalid Search Parameters');
 
@@ -65,7 +72,7 @@ export class SearchComponent {
       if (isEns) address = await this.web3Svc.getEnsOwner(addressInput);
       else address = this.web3Svc.verifyAddress(addressInput);
 
-      if (address) this.router.navigate(['/', 'owned'], { queryParams: { address }});
+      if (address) this.router.navigate(['/', 'market', 'owned'], { queryParams: { address }});
       else if (possibleHashId) this.router.navigate(['/', 'details', addressInput]);
       else throw new Error('Invalid Search Parameters');
 

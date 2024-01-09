@@ -39,6 +39,7 @@ export interface Phunk {
 
   singleName?: string | null
   collectionName?: string | null
+  supply?: number | null
 }
 
 export interface Bid {
