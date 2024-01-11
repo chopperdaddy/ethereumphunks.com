@@ -25,4 +25,18 @@ export class DataService {
       )
     );
   }
+
+  checkConsensus(owner: string, hashId: string): any {
+    return firstValueFrom(
+      this.http.get(`https://${prefix}api.ethscriptions.com/api/ethscriptions/${hashId}`).pipe(
+        map(response => {
+          if (response.data?.current_owner?.toLowerCase() === owner.toLowerCase()) return true;
+          return false;
+        }),
+        catchError(error => {
+          return of(false);
+        }),
+      )
+    );
+  }
 }

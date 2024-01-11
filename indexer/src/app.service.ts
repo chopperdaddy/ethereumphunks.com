@@ -12,6 +12,9 @@ import { StandardMerkleTree } from '@openzeppelin/merkle-tree';
 
 import * as MerkleTree from './abi/tree.json'
 
+// import allBlocks from '../allblocks.json';
+// import nogood from '../nogood.json';
+
 import dotenv from 'dotenv';
 dotenv.config();
 
@@ -33,13 +36,17 @@ export class AppService {
       this.startIndexer();
     });
 
-    console.log(this.web3Svc.marketAddress);
+    // console.log(this.web3Svc.marketAddress);
 
-    // this.reIndexBlock(18900944);
-  }
+    // this.blockSvc.clearQueue().then(() => {
+    //   this.reIndex();
+    // });
 
-  async reIndexBlock(blockNumber: number) {
-    await this.processSvc.addBlockToQueue(blockNumber, new Date().getTime());
+    // this.blockSvc.clearQueue().then(async () => {
+    //   Logger.debug('Queue Cleared', chain.toUpperCase());
+
+    //   await this.reIndexTransactions();
+    // });
   }
 
   // Start Indexer //
@@ -79,4 +86,43 @@ export class AppService {
     const tree = StandardMerkleTree.load(MerkleTree as any);
     return tree.root
   }
+
+  // async reIndexTransactions() {
+  //   // Takes an array of transaction hashes
+  //   for (let i = 0; i < nogood.length; i++) {
+
+  //     try {
+  //       const hash = nogood[i] as `0x${string}`;
+  //       console.log(hash);
+
+  //       const [ transaction, receipt ] = await Promise.all([
+  //         this.web3Svc.getTransaction(hash),
+  //         this.web3Svc.getTransactionReceipt(hash),
+  //       ]);
+
+  //       const block = await this.web3Svc.getBlock(transaction.blockNumber);
+  //       const createdAt = new Date(Number(block.timestamp) * 1000);
+
+  //       await this.processSvc.processTransaction(
+  //         transaction,
+  //         receipt,
+  //         createdAt,
+  //       );
+  //     } catch (error) {
+  //       console.log(error);
+  //       break;
+  //     }
+
+  //   }
+  // }
+
+  // async reIndexBlocks() {
+  //   const allBlocks = [];
+  //   const blocks = [...new Set(allBlocks)].sort((a, b) => a - b);
+  //   console.log(blocks);
+  //   for (let i = 0; i < blocks.length; i++) {
+  //     const block = blocks[i];
+  //     await this.processSvc.addBlockToQueue(block, new Date().getTime());
+  //   }
+  // }
 }

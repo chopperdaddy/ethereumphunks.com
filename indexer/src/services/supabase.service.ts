@@ -54,7 +54,7 @@ export class SupabaseService {
 
     const { data, error } = response;
     if (error) throw error;
-    if (data?.length) return data[0]?.blockNumber;
+    if (data?.length) return data[0]?.blockNumber - 10;
     return null;
   }
 
@@ -196,10 +196,13 @@ export class SupabaseService {
     const cleanedString = stringData.replace(/\x00/g, '');
 
     // Get or create the users
-    await Promise.all([
-      this.getOrCreateUser(txn.from, createdAt),
-      this.getOrCreateUser(txn.to, createdAt)
-    ]);
+    if (txn.from === txn.to) await this.getOrCreateUser(txn.from, createdAt);
+    else {
+      await Promise.all([
+        this.getOrCreateUser(txn.from, createdAt),
+        this.getOrCreateUser(txn.to, createdAt)
+      ]);
+    }
 
     const response: EthscriptionResponse = await supabase
       .from('ethscriptions' + this.suffix)
@@ -211,7 +214,7 @@ export class SupabaseService {
           hashId: txn.hash.toLowerCase(),
           data: cleanedString,
           sha: phunkShaData.sha,
-          slug: 'etherphunks',
+          slug: 'ethereum-phunks',
           tokenId: phunkShaData.phunkId,
         },
       ]);
@@ -230,11 +233,15 @@ export class SupabaseService {
     value: bigint,
     logIndex: number
   ): Promise<void> {
+
     // Get or create the users
-    await Promise.all([
-      this.getOrCreateUser(from, createdAt),
-      this.getOrCreateUser(to, createdAt),
-    ]);
+    if (from.toLowerCase() === to.toLowerCase()) await this.getOrCreateUser(from, createdAt);
+    else {
+      await Promise.all([
+        this.getOrCreateUser(from, createdAt),
+        this.getOrCreateUser(to, createdAt)
+      ]);
+    }
 
     const txId = `${txn.hash.toLowerCase()}-${logIndex}`;
     const response: EthscriptionResponse = await supabase
@@ -285,24 +292,25 @@ export class SupabaseService {
 
   async getOrCreateUser(address: string, createdAt?: Date): Promise<User> {
     if (!address) return null;
-    address = address.toLowerCase();
 
     const response: UserResponse = await supabase
       .from('users' + this.suffix)
       .select('*')
-      .eq('address', address);
+      .eq('address', address.toLowerCase());
 
     const { data, error } = response;
+    // console.log({ data, error });
 
     if (error) throw error;
     if (data.length) return data[0];
 
     const newUserResponse: UserResponse = await supabase
       .from('users' + this.suffix)
-      .insert({ address, createdAt: createdAt || new Date() })
+      .insert({ address: address.toLowerCase(), createdAt: createdAt || new Date() })
       .select();
 
     const { data: newUser, error: newError } = newUserResponse;
+    // console.log({ newUser, newError });
 
     if (newError) throw newError.message;
     Logger.log('User created', address);

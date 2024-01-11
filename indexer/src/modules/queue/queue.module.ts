@@ -10,6 +10,8 @@ import { UtilityService } from 'src/utils/utility.service';
 import { ProcessingService } from 'src/services/processing.service';
 import { Web3Service } from 'src/services/web3.service';
 import { SupabaseService } from 'src/services/supabase.service';
+import { CuratedService } from 'src/services/curated.service';
+import { TelegramService } from 'src/services/telegram.service';
 import { DataService } from 'src/services/data.service';
 import { TimeService } from 'src/utils/time.service';
 
@@ -41,6 +43,9 @@ const chain: 'mainnet' | 'goerli' = process.env.CHAIN_ID === '1' ? 'mainnet' : '
     UtilityService,
     TimeService,
     DataService,
+    CuratedService,
+
+    TelegramService
   ],
   exports: [
     BlockService,

@@ -12,6 +12,8 @@ import { ProcessingService } from './services/processing.service';
 import { DataService } from './services/data.service';
 
 import { UtilityService } from './utils/utility.service';
+import { CuratedService } from './services/curated.service';
+import { TelegramService } from './services/telegram.service';
 
 @Module({
   imports: [QueueModule,HttpModule],
@@ -27,6 +29,8 @@ import { UtilityService } from './utils/utility.service';
     ProcessingService,
     // Data Service handles the logic of processing data
     DataService,
+    CuratedService,
+    TelegramService,
     // Time service gets estimates of block times
     // TimeService,
     // PG service is for fun

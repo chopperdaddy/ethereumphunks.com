@@ -5,6 +5,8 @@ import { BlockService } from 'src/modules/queue/services/block.service';
 import { Web3Service } from './web3.service';
 import { SupabaseService } from './supabase.service';
 import { DataService } from './data.service';
+import { CuratedService } from './curated.service';
+import { TelegramService } from './telegram.service';
 
 import { UtilityService } from 'src/utils/utility.service';
 import { TimeService } from 'src/utils/time.service';
@@ -19,9 +21,11 @@ import * as esips from 'src/constants/EthscriptionsProtocol';
 
 import { Ethscription, Event, PhunkSha } from 'src/models/db';
 
-import { DecodeEventLogReturnType, FormattedTransaction, Log, Transaction, TransactionReceipt, decodeEventLog, zeroAddress } from 'viem';
+import { DecodeEventLogReturnType, FormattedTransaction, Log, Transaction, TransactionReceipt, decodeEventLog, hexToString, zeroAddress } from 'viem';
 
 import crypto from 'crypto';
+import { writeFile } from 'fs/promises';
+
 import dotenv from 'dotenv';
 dotenv.config();
 
@@ -39,6 +43,8 @@ export class ProcessingService {
     private readonly utilSvc: UtilityService,
     private readonly timeSvc: TimeService,
     private readonly dataSvc: DataService,
+    private readonly curatedSvc: CuratedService,
+    private readonly telegramSvc: TelegramService
   ) {}
 
   // Method to start fetching and processing blocks from the network
@@ -56,6 +62,9 @@ export class ProcessingService {
     return new Promise((resolve, reject) => {
       // Watch for new blocks and add them to the queue
       const unwatch = this.web3Svc.client.watchBlocks({
+        // blockTag: 'safe',
+        emitMissed: true,
+        includeTransactions: false,
         onBlock: async (block) => {
           try {
             const blockNum = Number(block.number);
@@ -89,7 +98,7 @@ export class ProcessingService {
     if (events.length) await this.sbSvc.addEvents(events);
 
     // Update the block in db
-    if (blockNum % 10 === 0) this.sbSvc.updateLastBlock(blockNum, createdAt);
+    this.sbSvc.updateLastBlock(blockNum, createdAt);
   }
 
   async retryBlock(blockNum: number): Promise<void> {
@@ -126,132 +135,150 @@ export class ProcessingService {
       const transaction = txns[i].transaction as Transaction;
       const receipt = txns[i].receipt as TransactionReceipt;
 
-      const { input } = transaction;
-
-      // Skip any transaction with no input
-      // Skip any transaction that failed
-      if (receipt.status !== 'success') continue;
-
-      // Get the data from the transaction
-      // Remove null bytes from the string
-      // const stringData = hexToString(input.toString() as `0x${string}`);
-      // const cleanedString = stringData.replace(/\x00/g, '');
-
-      // DISABLED: All 10,000 have been ethscribed
-      // Check if possible ethPhunk creation
-      // const possibleEthPhunk = cleanedString.startsWith('data:image/svg+xml,');
-      // if (possibleEthPhunk) {
-      //   const sha = crypto.createHash('sha256').update(cleanedString).digest('hex');
-
-      //   // Check if the sha exists in the phunks sha table
-      //   const phunkSha = await this.sbSvc.checkIsEthPhunk(sha);
-      //   if (!phunkSha) continue;
-
-      //   // Check if its a duplicate (already been inscribed)
-      //   const isDuplicate = await this.sbSvc.checkEthscriptionExistsBySha(sha);
-      //   if (isDuplicate) continue;
-
-      //   Logger.debug('Processing ethscription', transaction.hash);
-      //   const event = await this.processEtherPhunkCreationEvent(transaction as Transaction, createdAt, phunkSha);
-      //   events.push(event);
-      //   continue;
-      // }
-
-      // Check if possible transfer
-      const possibleTransfer = input.substring(2).length === SEGMENT_SIZE;
-      if (possibleTransfer) {
-        Logger.debug(`Processing transfer (${this.web3Svc.chain})`, transaction.hash);
-        const event = await this.processTransferEvent(
-          input,
-          transaction as Transaction,
-          createdAt
-        );
-        if (event) events.push(event);
+      try {
+        const transactionEvents = await this.processTransaction(transaction, receipt, createdAt);
+        if (transactionEvents?.length) events.push(...transactionEvents);
+      } catch (error) {
+        console.log(error);
+        this.telegramSvc.sendMessage(`Error processing transaction: ${transaction.hash}`);
+        await this.retryBlock(Number(transaction.blockNumber));
       }
-
-      // Check if possible batch transfer
-      const possibleBatchTransfer = input.substring(2).length % SEGMENT_SIZE === 0;
-      if (!possibleTransfer && possibleBatchTransfer) {
-        const eventArr = await this.processEsip5(
-          transaction as Transaction,
-          createdAt
-        );
-        if (eventArr?.length) events.push(...eventArr);
-      }
-
-      // Filter logs for ethscription transfers (esip1)
-      const esip1Transfers = receipt.logs.filter(
-        (log: any) => log.topics[0] === esips.TransferEthscriptionSignature
-      );
-      if (esip1Transfers.length) {
-        Logger.debug(
-          `Processing marketplace event (esip1) (${this.web3Svc.chain})`,
-          transaction.hash
-        );
-        const eventArr = await this.processEsip1(
-          esip1Transfers,
-          transaction,
-          createdAt
-        );
-        if (eventArr?.length) events.push(...eventArr);
-      }
-
-      // Filter logs for ethscription transfers (esip2)
-      const esip2Transfers = receipt.logs.filter(
-        (log: any) => log.topics[0] === esips.TransferEthscriptionForPreviousOwnerSignature
-      );
-      if (esip2Transfers.length) {
-        Logger.debug(
-          `Processing marketplace event (esip2) (${this.web3Svc.chain})`,
-          transaction.hash
-        );
-        const eventArr = await this.processEsip2(esip2Transfers, transaction, createdAt);
-        if (eventArr?.length) events.push(...eventArr);
-      }
-
-      // Filter logs for EtherPhunk Marketplace events
-      const marketplaceLogs = receipt.logs.filter(
-        (log: any) => this.web3Svc.marketAddress.filter(
-          (addr) => addr.toLowerCase() === log.address.toLowerCase()
-        )?.length
-      );
-      if (marketplaceLogs.length) {
-        Logger.debug(
-          `Processing EtherPhunk Marketplace event (${this.web3Svc.chain})`,
-          transaction.hash
-        );
-        const eventArr = await this.processEtherPhunkMarketplaceEvents(
-          marketplaceLogs,
-          transaction,
-          createdAt
-        );
-        if (eventArr?.length) events.push(...eventArr);
-      }
-
-      const pointsLogs = receipt.logs.filter(
-        (log: any) => this.web3Svc.pointsAddress.toLowerCase() === log.address.toLowerCase()
-      );
-      if (pointsLogs.length) {
-        Logger.debug(
-          `Processing Points event (${this.web3Svc.chain})`,
-          transaction.hash
-        );
-        await this.processPointsEvent(pointsLogs);
-      }
-
-      // Filter logs for EtherPhunk Auction House Events
-      // const auctionHouseLogs = receipt.logs.filter(
-      //   (log: any) => log.address === this.web3Svc.auctionAddress
-      // );
-      // if (auctionHouseLogs.length) {
-      //   Logger.debug(
-      //     `Processing EtherPhunk Auction House event (${this.web3Svc.chain})`,
-      //     transaction.hash
-      //   );
-      //   await this.processAuctionHouseEvents(auctionHouseLogs, transaction, createdAt);
-      // }
     }
     return events;
+  }
+
+  async processTransaction(
+    transaction: Transaction,
+    receipt: TransactionReceipt,
+    createdAt: Date
+  ): Promise<Event[]> {
+
+    const { input } = transaction;
+
+    // Skip any transaction that failed
+    if (receipt.status !== 'success') return;
+
+    const events: Event[] = [];
+
+    // Get the data from the transaction
+    // Remove null bytes from the string
+    const stringData = hexToString(input.toString() as `0x${string}`);
+    const cleanedString = stringData.replace(/\x00/g, '');
+
+    // DISABLED: All 10,000 have been ethscribed
+    // Check if possible ethPhunk creation
+    const possibleEthPhunk = cleanedString.startsWith('data:image/svg+xml,');
+    if (possibleEthPhunk) {
+      const sha = crypto.createHash('sha256').update(cleanedString).digest('hex');
+
+      // Check if the sha exists in the phunks sha table
+      const phunkSha = await this.sbSvc.checkIsEthPhunk(sha);
+      if (!phunkSha) return;
+
+      // Check if its a duplicate (already been inscribed)
+      const isDuplicate = await this.sbSvc.checkEthscriptionExistsBySha(sha);
+      if (isDuplicate) return
+
+      Logger.debug('Processing ethscription', transaction.hash);
+      const event = await this.processEtherPhunkCreationEvent(transaction as Transaction, createdAt, phunkSha);
+      return [event];
+    }
+
+    // Check if possible transfer
+    const possibleTransfer = input.substring(2).length === SEGMENT_SIZE;
+    if (possibleTransfer) {
+      Logger.debug(`Processing transfer (${this.web3Svc.chain})`, transaction.hash);
+      const event = await this.processTransferEvent(
+        input,
+        transaction as Transaction,
+        createdAt
+      );
+      if (event) events.push(event);
+    }
+
+    // Check if possible batch transfer
+    const possibleBatchTransfer = input.substring(2).length % SEGMENT_SIZE === 0;
+    if (!possibleTransfer && possibleBatchTransfer) {
+      const eventArr = await this.processEsip5(
+        transaction as Transaction,
+        createdAt
+      );
+      if (eventArr?.length) events.push(...eventArr);
+    }
+
+    // Filter logs for ethscription transfers (esip1)
+    const esip1Transfers = receipt.logs.filter(
+      (log: any) => log.topics[0] === esips.TransferEthscriptionSignature
+    );
+    if (esip1Transfers.length) {
+      Logger.debug(
+        `Processing marketplace event (esip1) (${this.web3Svc.chain})`,
+        transaction.hash
+      );
+      const eventArr = await this.processEsip1(
+        esip1Transfers,
+        transaction,
+        createdAt
+      );
+      if (eventArr?.length) events.push(...eventArr);
+    }
+
+    // Filter logs for ethscription transfers (esip2)
+    const esip2Transfers = receipt.logs.filter(
+      (log: any) => log.topics[0] === esips.TransferEthscriptionForPreviousOwnerSignature
+    );
+    if (esip2Transfers.length) {
+      Logger.debug(
+        `Processing marketplace event (esip2) (${this.web3Svc.chain})`,
+        transaction.hash
+      );
+      const eventArr = await this.processEsip2(esip2Transfers, transaction, createdAt);
+      if (eventArr?.length) events.push(...eventArr);
+    }
+
+    // Filter logs for EtherPhunk Marketplace events
+    const marketplaceLogs = receipt.logs.filter(
+      (log: any) => this.web3Svc.marketAddress.filter(
+        (addr) => addr.toLowerCase() === log.address.toLowerCase()
+      )?.length
+    );
+    if (marketplaceLogs.length) {
+      Logger.debug(
+        `Processing EtherPhunk Marketplace event (${this.web3Svc.chain})`,
+        transaction.hash
+      );
+      const eventArr = await this.processEtherPhunkMarketplaceEvents(
+        marketplaceLogs,
+        transaction,
+        createdAt
+      );
+      if (eventArr?.length) events.push(...eventArr);
+    }
+
+    const pointsLogs = receipt.logs.filter(
+      (log: any) => this.web3Svc.pointsAddress.toLowerCase() === log.address.toLowerCase()
+    );
+    if (pointsLogs.length) {
+      Logger.debug(
+        `Processing Points event (${this.web3Svc.chain})`,
+        transaction.hash
+      );
+      await this.processPointsEvent(pointsLogs);
+    }
+
+    return events;
+
+    // Filter logs for EtherPhunk Auction House Events
+    // const auctionHouseLogs = receipt.logs.filter(
+    //   (log: any) => log.address === this.web3Svc.auctionAddress
+    // );
+    // if (auctionHouseLogs.length) {
+    //   Logger.debug(
+    //     `Processing EtherPhunk Auction House event (${this.web3Svc.chain})`,
+    //     transaction.hash
+    //   );
+    //   await this.processAuctionHouseEvents(auctionHouseLogs, transaction, createdAt);
+    // }
   }
 
   async processEtherPhunkCreationEvent(
@@ -546,8 +573,8 @@ export class ProcessingService {
 
     if (!hashId) return;
 
-    const phunkExists = await this.sbSvc.checkEthscriptionExistsByHashId(hashId);
-    if (!phunkExists) return;
+    const phunk = await this.sbSvc.checkEthscriptionExistsByHashId(hashId);
+    if (!phunk) return;
 
     if (eventName === 'PhunkBought') {
       const { phunkId: hashId, fromAddress, toAddress, value } = args;
@@ -631,6 +658,14 @@ export class ProcessingService {
 
     if (eventName === 'PhunkOffered') {
       const { phunkId: hashId, toAddress, minValue } = args;
+
+      // We do this here because the event is emitted after
+      // transfer of ownership. It was not a valid listing.
+      if (txn.from !== phunk.prevOwner) {
+        await writeFile(`./${hashId}.txt`, JSON.stringify({ txn: txn.hash, phunk }));
+        return;
+      }
+
       await this.sbSvc.createListing(txn, createdAt, hashId, toAddress, minValue);
       return {
         txId: txn.hash + log.logIndex,
