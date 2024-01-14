@@ -6,7 +6,7 @@ import { Web3Service } from './web3.service';
 import { SupabaseService } from './supabase.service';
 import { DataService } from './data.service';
 import { CuratedService } from './curated.service';
-import { TelegramService } from './telegram.service';
+import { TelegramService } from '../modules/notifs/services/telegram.service';
 
 import { UtilityService } from 'src/utils/utility.service';
 import { TimeService } from 'src/utils/time.service';

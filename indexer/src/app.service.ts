@@ -35,23 +35,10 @@ export class AppService {
       Logger.debug('Queue Cleared', chain.toUpperCase());
       this.startIndexer();
     });
-
-    // console.log(this.web3Svc.marketAddress);
-
-    // this.blockSvc.clearQueue().then(() => {
-    //   this.reIndex();
-    // });
-
-    // this.blockSvc.clearQueue().then(async () => {
-    //   Logger.debug('Queue Cleared', chain.toUpperCase());
-
-    //   await this.reIndexTransactions();
-    // });
   }
 
   // Start Indexer //
   async startIndexer() {
-
     try {
       await this.utilSvc.delay(10000);
       await this.blockSvc.pauseQueue();

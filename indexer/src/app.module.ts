@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { HttpModule } from '@nestjs/axios';
 
 import { QueueModule } from './modules/queue/queue.module';
+import { NotifsModule } from './modules/notifs/notifs.module';
 
 import { AppController } from './app.controller';
 
@@ -13,10 +14,14 @@ import { DataService } from './services/data.service';
 
 import { UtilityService } from './utils/utility.service';
 import { CuratedService } from './services/curated.service';
-import { TelegramService } from './services/telegram.service';
+import { TelegramService } from './modules/notifs/services/telegram.service';
 
 @Module({
-  imports: [QueueModule,HttpModule],
+  imports: [
+    QueueModule,
+    NotifsModule,
+    HttpModule
+  ],
   controllers: [AppController],
   providers: [
     // App Service handles the main logic of the indexer
