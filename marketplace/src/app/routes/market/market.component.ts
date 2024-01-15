@@ -86,7 +86,7 @@ export class MarketComponent {
   sorts: { label: string, value: Sorts }[] = [
     { label: 'Price Low', value: 'price-low' },
     { label: 'Price High', value: 'price-high' },
-    { label: 'Recent', value: 'recent' },
+    // { label: 'Recent', value: 'recent' },
     { label: 'Token ID', value: 'id' }
   ];
 

@@ -30,7 +30,9 @@ export const initialState: AppState = {
 
   eventTypeFilter: 'All',
 
-  blockNumber: 0,
+  currentBlock: 0,
+  indexerBlock: 0,
+
   notifications: [],
   cooldowns: JSON.parse(localStorage.getItem('EtherPhunks_cooldowns') || '[]'),
 
@@ -251,13 +253,21 @@ export const appStateReducer: ActionReducer<AppState, Action> = createReducer(
     // console.log('setCooldowns', setCooldowns);
     return setCooldowns
   }),
-  on(actions.newBlock, (state, { blockNumber }) => {
-    const setBlockNumber = {
+  on(actions.setCurrentBlock, (state, { currentBlock }) => {
+    const setCurrentBlock = {
       ...state,
-      blockNumber
+      currentBlock
     };
     // console.log('setBlockNumber', setBlockNumber);
-    return setBlockNumber
+    return setCurrentBlock
+  }),
+  on(actions.setIndexerBlock, (state, { indexerBlock }) => {
+    const setIndexerBlock = {
+      ...state,
+      indexerBlock
+    };
+    // console.log('setBlockNumber', setBlockNumber);
+    return setIndexerBlock;
   }),
   on(actions.setNotifHoverState, (state, { notifHoverState }) => {
     const setNotifHoverState = {

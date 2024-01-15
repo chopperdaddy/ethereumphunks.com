@@ -44,10 +44,10 @@ export class DataStateEffects {
   ));
 
   onBlockNumber$ = createEffect(() => this.actions$.pipe(
-    ofType(appStateActions.newBlock),
+    ofType(appStateActions.setCurrentBlock),
     withLatestFrom(this.store.select(appStateSelectors.selectWalletAddress)),
     switchMap(([action, address]) => {
-      const currentBlock = action.blockNumber;
+      const currentBlock = action.currentBlock;
       const storedBlock = localStorage.getItem('EtherPhunks_currentBlock');
       if (storedBlock && (currentBlock - Number(storedBlock)) > 2) {
         return this.dataSvc.fetchMissedEvents(address, Number(storedBlock)).pipe(
@@ -59,7 +59,7 @@ export class DataStateEffects {
       }
       return of([]);
     }),
-    withLatestFrom(this.store.select(appStateSelectors.selectBlockNumber)),
+    withLatestFrom(this.store.select(appStateSelectors.selectCurrentBlock)),
     tap(([_, blockNumber]) => localStorage.setItem('EtherPhunks_currentBlock', JSON.stringify(blockNumber))),
   ), { dispatch: false });
 

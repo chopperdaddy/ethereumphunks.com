@@ -58,7 +58,7 @@ export class DataService {
     this.fetchUSDPrice();
 
     supabase
-      .channel('any')
+      .channel('events')
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'events' + this.prefix },
@@ -69,13 +69,23 @@ export class DataService {
       ).subscribe();
 
     supabase
-      .channel('test')
+      .channel('users')
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'users' + this.prefix },
-        () => {
+        (payload) => {
           this.store.dispatch(dataStateActions.fetchLeaderboard());
           this.store.dispatch(appStateActions.fetchUserPoints());
+        },
+      ).subscribe();
+
+    supabase
+      .channel('blocks')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'blocks' },
+        (payload: any) => {
+          this.store.dispatch(appStateActions.setIndexerBlock({ indexerBlock: payload.new.blockNumber }));
         },
       ).subscribe();
   }
@@ -438,18 +448,28 @@ export class DataService {
   async fetchAll(
     slug: string,
     from: number,
-    to: number
+    to: number,
+    filters?: any,
   ) {
+    // console.log('fetchAll', {slug, from, to, filters});
+    // this.getAttributes(marketSlug)
     const query = supabase
       .from('ethscriptions' + this.prefix)
-      .select('tokenId, hashId, sha')
+      .select(`
+        tokenId,
+        hashId,
+        sha
+      `)
       .eq('slug', slug)
+      // .in('sha', filter ? filter.split(',') : [])
       .order('tokenId', { ascending: true })
       .range(from, to);
 
     const { data, error } = await query;
+    console.log('fetchAll', data, error);
+
     if (error) throw error;
-    return data;
+    return data as any[];
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

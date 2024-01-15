@@ -147,7 +147,7 @@ export class PhunkGridComponent implements OnChanges {
         const target = entry.target as HTMLElement;
         const index = Number(target.dataset.index);
 
-        console.log({ index, prevIndex: this.prevIndex, limit: this.limit });
+        // console.log({ index, prevIndex: this.prevIndex, limit: this.limit });
 
         // If prevIndex hasn't been set yet, initialize it
         if (this.prevIndex === null) {
@@ -158,7 +158,7 @@ export class PhunkGridComponent implements OnChanges {
         // if (index > this.limit - PAGE_SIZE) {
           this.limit += PAGE_SIZE;
 
-          console.log({ index, prevIndex: this.prevIndex, limit: this.limit });
+          // console.log({ index, prevIndex: this.prevIndex, limit: this.limit });
 
           this.store.dispatch(dataStateActions.paginateAll({ limit: this.limit }));
         // }

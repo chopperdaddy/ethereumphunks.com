@@ -2,7 +2,7 @@ export const environment = {
   env: 'dev-mainnet',
   production: false,
   chainId: 1,
-  rpcHttpProvider: 'https://eth-mainnet.g.alchemy.com/v2/DmQk3glk8ycdD_Wvtzoklb02lNCOAcSC',
+  rpcHttpProvider: 'http://geth.dappnode:8545',
   explorerUrl: 'https://etherscan.io',
 
   marketAddress: '0xD3418772623Be1a3cc6B6D45CB46420CEdD9154a'.toLowerCase(),

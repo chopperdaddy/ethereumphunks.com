@@ -89,6 +89,7 @@ export class Web3Service {
     });
 
     this.createListeners();
+    this.startBlockWatcher();
   }
 
   createListeners(): void {
@@ -114,7 +115,7 @@ export class Web3Service {
       emitOnBegin: true,
       onBlockNumber: (blockNumber) => {
         const currentBlock = Number(blockNumber);
-        this.store.dispatch(appStateActions.newBlock({ blockNumber: currentBlock }));
+        this.store.dispatch(appStateActions.setCurrentBlock({ currentBlock }));
       }
     });
   }
@@ -136,8 +137,6 @@ export class Web3Service {
 
     this.store.dispatch(appStateActions.setWalletAddress({ walletAddress: address }));
     this.store.dispatch(appStateActions.setConnected({ connected: true }));
-
-    this.startBlockWatcher();
   }
 
   async disconnectWeb3(): Promise<void> {

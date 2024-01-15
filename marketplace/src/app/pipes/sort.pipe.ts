@@ -36,13 +36,13 @@ export class SortPipe implements PipeTransform {
       sorted = sorted.sort((a, b) => priceComparison(a, b, false));
     }
 
-    if (sort === 'recent') {
-      if (type === 'listings') {
-        sorted = sorted.sort((a, b) => dateToNumber(b.listing?.createdAt) - dateToNumber(a.listing?.createdAt));
-      } else if (type === 'bids') {
-        sorted = sorted.sort((a, b) => dateToNumber(b.bid?.createdAt) - dateToNumber(a.bid?.createdAt));
-      }
-    }
+    // if (sort === 'recent') {
+    //   if (type === 'listings') {
+    //     sorted = sorted.sort((a, b) => dateToNumber(b.listing?.createdAt) - dateToNumber(a.listing?.createdAt));
+    //   } else if (type === 'bids') {
+    //     sorted = sorted.sort((a, b) => dateToNumber(b.bid?.createdAt) - dateToNumber(a.bid?.createdAt));
+    //   }
+    // }
 
     if (sort === 'id') {
       sorted = sorted.sort((a, b) => a.tokenId - b.tokenId);

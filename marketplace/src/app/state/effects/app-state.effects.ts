@@ -218,7 +218,7 @@ export class AppStateEffects {
   ), { dispatch: false });
 
   onNewBlockCheckCooldown$ = createEffect(() => this.actions$.pipe(
-    ofType(appStateActions.newBlock),
+    ofType(appStateActions.setCurrentBlock),
     withLatestFrom(this.store.select(appStateSelectors.selectCooldowns)),
     tap(([action, cooldowns]) => this.setCooldowns(action, cooldowns)),
   ), { dispatch: false });

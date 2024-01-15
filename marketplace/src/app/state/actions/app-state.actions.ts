@@ -130,9 +130,14 @@ export const removeCooldown = createAction(
   props<{ hashId: string }>()
 );
 
-export const newBlock = createAction(
-  '[App State] New Block',
-  props<{ blockNumber: number }>()
+export const setCurrentBlock = createAction(
+  '[App State] Set Current Block',
+  props<{ currentBlock: number }>()
+);
+
+export const setIndexerBlock = createAction(
+  '[App State] Set Indexer Block',
+  props<{ indexerBlock: number }>()
 );
 
 export const mouseUp = createAction(

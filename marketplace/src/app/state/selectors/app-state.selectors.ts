@@ -94,9 +94,14 @@ export const selectCooldowns = createSelector(
   (appState: AppState) => appState.cooldowns
 );
 
-export const selectBlockNumber = createSelector(
+export const selectCurrentBlock = createSelector(
   selectAppState,
-  (appState: AppState) => appState.blockNumber
+  (appState: AppState) => appState.currentBlock
+);
+
+export const selectIndexerBlock = createSelector(
+  selectAppState,
+  (appState: AppState) => appState.indexerBlock
 );
 
 export const selectUserPoints = createSelector(

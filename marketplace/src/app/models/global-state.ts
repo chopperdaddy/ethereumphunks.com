@@ -32,7 +32,9 @@ export interface AppState {
 
   activeSort: Sort;
 
-  blockNumber: number;
+  currentBlock: number;
+  indexerBlock: number;
+
   notifications: Notification[];
   cooldowns: Cooldown[];
 

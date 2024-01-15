@@ -1,4 +1,16 @@
-@if (currentBlock$ | async; as blockNumber) {
-  <div class="label">Block</div>
-  <div class="value">{{ blockNumber }}</div>
+@if (blocks$ | async; as blocks) {
+  <div
+    class="blocks-wrapper"
+    [title]="(blocks[0] - blocks[1]) ? (blocks[0] - blocks[1]) + ' blocks behind' : 'synced'">
+
+    <div class="block">
+      <div class="label">Current</div>
+      <div class="value">{{ blocks[0] || 'waiting..' }}</div>
+    </div>
+
+    <div class="block" [class]="(blocks[0] - blocks[1]) < 4 ? levels[(blocks[0] - blocks[1])] : blocks[1] ? 'bad' : ''">
+      <div class="label">Indexer</div>
+      <div class="value">{{ blocks[1] || 'waiting..' }}</div>
+    </div>
+  </div>
 }
