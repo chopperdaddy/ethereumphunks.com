@@ -34,7 +34,7 @@ export const initialState: AppState = {
   indexerBlock: 0,
 
   notifications: [],
-  cooldowns: JSON.parse(localStorage.getItem('EtherPhunks_cooldowns') || '[]'),
+  cooldowns: JSON.parse(localStorage.getItem('EtherPhunks_cooldowns') || '{}'),
 
   notifHoverState: {},
 };
@@ -238,20 +238,27 @@ export const appStateReducer: ActionReducer<AppState, Action> = createReducer(
     return setIsMobile
   }),
   on(actions.addCooldown, (state, { cooldown }) => {
+    console.log('addCooldown', cooldown);
     const setCooldowns = {
       ...state,
-      cooldowns: [cooldown, ...state.cooldowns]
+      cooldowns: {
+        ...state.cooldowns,
+        ...cooldown
+      }
     };
     // console.log('setCooldowns', setCooldowns);
     return setCooldowns
   }),
-  on(actions.removeCooldown, (state, { hashId }) => {
-    const setCooldowns = {
+  on(actions.setCooldowns, (state, { cooldowns }) => {
+    const removeCooldown = {
       ...state,
-      cooldowns: state.cooldowns.filter(cooldown => cooldown.hashId !== hashId)
+      cooldowns: {
+        ...cooldowns
+      }
     };
-    // console.log('setCooldowns', setCooldowns);
-    return setCooldowns
+    localStorage.setItem('EtherPhunks_cooldowns', JSON.stringify(cooldowns));
+    // console.log('removeCooldown', removeCooldown);
+    return removeCooldown
   }),
   on(actions.setCurrentBlock, (state, { currentBlock }) => {
     const setCurrentBlock = {

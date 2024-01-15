@@ -70,10 +70,7 @@
               <!-- } -->
             </div>
 
-            <div
-              class="actions-wrapper"
-              [class.cooldown]="isCooling$ | async"
-              [class.pending]="hasPendingTx$ | async">
+            <div class="actions-wrapper">
 
               @if ((walletAddress$ | async); as address) {
                 @if (phunk.owner; as owner) {
@@ -83,8 +80,9 @@
                     phunk.isEscrowed &&
                     (phunk.prevOwner | lowercase) !== (address | lowercase)
                   ) {
-                    <button i18n class="buy" (click)="buyPhunk(phunk)">
-                      Buy
+                    <button class="buy" (click)="buyPhunk(phunk)">
+                      <span>Buy</span>
+                      <ng-container *ngTemplateOutlet="pending; context:{ $implicit: 'buyPhunk' }" />
                     </button>
                   }
 
@@ -94,8 +92,9 @@
                     (phunk.prevOwner | lowercase) === (address | lowercase)) ||
                     (owner | lowercase) === (address | lowercase)
                   ) {
-                    <button i18n class="sell" (click)="sellPhunk()" [class.active]="sellActive">
-                      Sell
+                    <button class="sell" (click)="sellPhunk()" [class.active]="sellActive">
+                      <span>Sell</span>
+                      <ng-container *ngTemplateOutlet="pending; context:{ $implicit: 'offerPhunkForSale' }" />
                     </button>
 
                     <!-- Sell Actions -->
@@ -109,16 +108,18 @@
                     }
 
                     @if (phunk.isEscrowed) {
-                      <button i18n class="withdraw" (click)="withdrawPhunk(phunk)">
-                        Withdraw from escrow
+                      <button class="withdraw" (click)="withdrawPhunk(phunk)">
+                        <span>Withdraw from escrow</span>
+                        <ng-container *ngTemplateOutlet="pending; context:{ $implicit: 'withdrawPhunk' }" />
                       </button>
                     }
                   }
 
                   <!-- Transfer -->
                   @if ((owner | lowercase) === (address | lowercase)) {
-                    <button i18n class="transfer" [class.active]="transferActive" (click)="transferPhunkAction()">
-                      Transfer
+                    <button class="transfer" [class.active]="transferActive" (click)="transferPhunkAction()">
+                      <span>Transfer</span>
+                      <ng-container *ngTemplateOutlet="pending; context:{ $implicit: 'transferPhunk' }" />
                     </button>
 
                     <!-- Transfer Actions -->
@@ -135,8 +136,9 @@
                     (owner | lowercase) === (escrowAddress | lowercase) &&
                     (phunk.prevOwner | lowercase) === (address | lowercase)
                   ) {
-                    <button i18n class="sell" (click)="phunkNoLongerForSale(phunk)">
-                      Delist
+                    <button class="sell" (click)="phunkNoLongerForSale(phunk)">
+                      <span>Delist</span>
+                      <ng-container *ngTemplateOutlet="pending; context:{ $implicit: 'phunkNoLongerForSale' }" />
                     </button>
                   }
 
@@ -145,8 +147,9 @@
                     (owner | lowercase) !== (address | lowercase) &&
                     (phunk.prevOwner | lowercase) !== (address | lowercase)
                   ) {
-                    <button i18n [class.active]="bidActive" class="sell" (click)="bidOnPhunk()">
-                      Place Bid
+                    <button [class.active]="bidActive" class="sell" (click)="bidOnPhunk()">
+                      <span>Place Bid</span>
+                      <ng-container *ngTemplateOutlet="pending; context:{ $implicit: 'enterBidForPhunk' }" />
                     </button>
 
                     <!-- Bid Actions -->
@@ -157,8 +160,9 @@
 
                   <!-- Withdraw Bid button -->
                   @if ((phunk.bid?.fromAddress | lowercase) === (address | lowercase)) {
-                    <button i18n class="sell" (click)="withdrawBidForPhunk(phunk)">
-                      Withdraw Bid
+                    <button class="sell" (click)="withdrawBidForPhunk(phunk)">
+                      <span>Withdraw Bid</span>
+                      <ng-container *ngTemplateOutlet="pending; context:{ $implicit: 'withdrawBidForPhunk' }" />
                     </button>
                   }
 
@@ -263,10 +267,28 @@
   </div>
 </div>
 
+<ng-template #pending let-txFunction>
+  @if (pendingTx$ | async; as tx) {
+    @if (tx.function === txFunction) {
+      <img src="/assets/loader-dark.gif" width="15" height="15" alt="" />
+    }
+  }
+</ng-template>
+
+<ng-template #cooldown>
+  @if (isCooling$ | async) {
+    <div class="cooldown-wrapper">
+      <p>{{ web3Svc.maxCooldown }} Block cooldown</p>
+      <img src="/assets/loader-phunk.gif" width="40" height="40" alt="">
+    </div>
+  }
+</ng-template>
+
 <!-- Transfer Form -->
 <ng-template #transferForm let-phunk>
   <form class="form-wrapper">
-    @if (isCooling$ | async) { <ng-template [ngTemplateOutlet]="cooldown" /> }
+    <ng-template [ngTemplateOutlet]="cooldown" />
+
     <div class="form-group">
       <label i18n for="transfer-address">Transfer to address</label>
       <input #transferAddressInput type="text" id="transfer-address" [formControl]="transferAddress"
@@ -283,7 +305,6 @@
 <!-- Bid Form -->
 <ng-template #bidForm let-phunk>
   <form class="form-wrapper">
-    <!-- @if (isCooling$ | async) { <ng-template [ngTemplateOutlet]="cooldown" /> } -->
     <div class="form-group">
       <label i18n for="bid-price">Bid Price (Ξ)</label>
       <input #bidPriceInput type="number" id="bid-price" [formControl]="bidPrice" />
@@ -299,7 +320,8 @@
 <!-- Sell Form -->
 <ng-template #sellForm let-phunk>
   <form class="form-wrapper">
-    <!-- @if (isCooling$ | async) { <ng-template [ngTemplateOutlet]="cooldown" /> } -->
+    <ng-template [ngTemplateOutlet]="cooldown" />
+
     <div class="form-group">
       <label i18n for="list-price">Asking Price in ETH (Ξ)</label>
       <input #sellPriceInput type="number" id="list-price" [formControl]="listPrice" />
@@ -321,8 +343,8 @@
 <!-- Sell Form -->
 <ng-template #escrowAndSellForm let-phunk>
   <form class="form-wrapper">
-    <!-- {{ (notification$ | async) | json }} -->
-    <!-- @if (isCooling$ | async) { <ng-template [ngTemplateOutlet]="cooldown" /> } -->
+    <ng-template [ngTemplateOutlet]="cooldown" />
+
     <div class="form-group">
       <label i18n for="list-price">Asking Price in ETH (Ξ)</label>
       <input #sellPriceInput type="number" id="list-price" [formControl]="listPrice" />
@@ -346,9 +368,8 @@
 <!-- Escrow Form -->
 <ng-template #escrowForm let-phunk let-type="type">
   <div class="form-wrapper">
-    @if (isCooling$ | async) {
-      <ng-template [ngTemplateOutlet]="cooldown" />
-    }
+    <ng-template [ngTemplateOutlet]="cooldown" />
+
     @if (type === 'bid') {
       <p i18n>Your {{ phunk.singleName }} must be held in escrow in order have a bid accepted on it. <span class="small">You'll need to wait the default 4 blocks before accepting the bid once the {{ phunk.singleName }} is in escrow.</span></p>
     } @else if (type === 'list') {
@@ -357,12 +378,5 @@
     <button i18n class="sell" (click)="sendToEscrow(phunk)">
       Send to Escrow
     </button>
-  </div>
-</ng-template>
-
-<ng-template #cooldown>
-  <div class="cooldown-wrapper">
-    <p>{{ web3Svc.maxCooldown }} Block cooldown period</p>
-    <img src="/assets/loader-phunk.gif" width="30" height="30" alt="">
   </div>
 </ng-template>

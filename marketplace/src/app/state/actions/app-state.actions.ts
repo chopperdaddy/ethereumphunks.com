@@ -3,7 +3,7 @@ import { Phunk } from '@/models/db';
 import { createAction, props } from '@ngrx/store';
 
 import { MarketType, Sort } from '@/models/pipes';
-import { AppState, EventType, Notification } from '@/models/global-state';
+import { AppState, Cooldowns, EventType, Notification } from '@/models/global-state';
 
 export const setConnected = createAction(
   '[App State] Set Wallet Connected',
@@ -122,12 +122,12 @@ export const clickEvent = createAction(
 
 export const addCooldown = createAction(
   '[App State] Add Cooldown',
-  props<{ cooldown: AppState['cooldowns'][0] }>()
+  props<{ cooldown: Cooldowns }>()
 );
 
-export const removeCooldown = createAction(
-  '[App State] Remove Cooldown',
-  props<{ hashId: string }>()
+export const setCooldowns = createAction(
+  '[App State] Set Cooldowns',
+  props<{ cooldowns: Cooldowns }>()
 );
 
 export const setCurrentBlock = createAction(

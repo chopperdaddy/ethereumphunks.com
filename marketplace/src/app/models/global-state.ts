@@ -36,14 +36,13 @@ export interface AppState {
   indexerBlock: number;
 
   notifications: Notification[];
-  cooldowns: Cooldown[];
+  cooldowns: Cooldowns;
 
   notifHoverState: { [notificationId: string]: boolean };
 }
 
-export interface Cooldown {
-  hashId: string;
-  startBlock: number;
+export interface Cooldowns {
+  [hashId: string]: number;
 }
 
 export interface Notification {

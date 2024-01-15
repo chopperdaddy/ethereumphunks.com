@@ -25,7 +25,7 @@ export class StatusBarComponent {
     this.store.select(appStateSelectors.selectCurrentBlock),
     this.store.select(appStateSelectors.selectIndexerBlock)
   ]).pipe(
-    tap(([currentBlock, indexerBlock]) => console.log({ currentBlock, indexerBlock })),
+    // tap(([currentBlock, indexerBlock]) => console.log({ currentBlock, indexerBlock })),
   );
 
   levels: any = {

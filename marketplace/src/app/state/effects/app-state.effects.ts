@@ -12,7 +12,7 @@ import { DataService } from '@/services/data.service';
 import { ThemeService } from '@/services/theme.service';
 
 import { DataState } from '@/models/data.state';
-import { Cooldown, GlobalState, Notification } from '@/models/global-state';
+import { Cooldowns, GlobalState, Notification } from '@/models/global-state';
 
 import { EMPTY, concatMap, delay, filter, from, map, of, switchMap, tap, withLatestFrom } from 'rxjs';
 
@@ -220,8 +220,16 @@ export class AppStateEffects {
   onNewBlockCheckCooldown$ = createEffect(() => this.actions$.pipe(
     ofType(appStateActions.setCurrentBlock),
     withLatestFrom(this.store.select(appStateSelectors.selectCooldowns)),
-    tap(([action, cooldowns]) => this.setCooldowns(action, cooldowns)),
-  ), { dispatch: false });
+    map(([action, cooldowns]) => {
+      let cooldownsCopy = { ...cooldowns };
+      Object.keys(cooldowns).forEach(hashId => {
+        if (action.currentBlock >= (cooldowns[hashId] + this.web3Svc.maxCooldown)) {
+          delete cooldownsCopy[hashId];
+        }
+      });
+      return appStateActions.setCooldowns({ cooldowns: cooldownsCopy });
+    })
+  ));
 
   onNotificationEvent$ = createEffect(() => this.actions$.pipe(
     ofType(
@@ -294,15 +302,4 @@ export class AppStateEffects {
     private location: Location,
     private themeSvc: ThemeService
   ) {}
-
-  setCooldowns(action: any, cooldowns: Cooldown[]) {
-    const currentBlock = action.blockNumber;
-    for (const cooldown of cooldowns) {
-      const cooldownEnd = cooldown.startBlock + this.web3Svc.maxCooldown;
-      if (currentBlock >= cooldownEnd) {
-        this.store.dispatch(appStateActions.removeCooldown({ hashId: cooldown.hashId }));
-      }
-    }
-    localStorage.setItem('EtherPhunks_cooldowns', JSON.stringify(cooldowns));
-  }
 }

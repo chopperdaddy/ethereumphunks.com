@@ -105,15 +105,15 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
     filter((cooldowns) => !!cooldowns),
     switchMap((cooldowns) => this.singlePhunk$.pipe(
       filter((phunk) => !!phunk),
-      map((phunk) => cooldowns.filter((cooldown) => cooldown?.hashId === phunk?.hashId)?.length > 0),
+      map((phunk) => cooldowns[phunk?.hashId || ''] > 0),
     )),
   );
 
-  hasPendingTx$ = this.store.select(appStateSelectors.selectNotifications).pipe(
+  pendingTx$ = this.store.select(appStateSelectors.selectNotifications).pipe(
     filter((transactions) => !!transactions),
     switchMap((transactions) => this.singlePhunk$.pipe(
       filter((phunk) => !!phunk),
-      map((phunk) => transactions.filter((tx) => tx?.hashId === phunk?.hashId && (tx.type === 'pending' || tx.type === 'wallet'))?.length > 0),
+      map((phunk) => transactions.filter((tx) => tx?.hashId === phunk?.hashId && (tx.type === 'pending' || tx.type === 'wallet'))[0]),
     )),
   );
 
@@ -171,27 +171,30 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
 
   closeAcceptBid(): void {
     this.acceptbidActive = false;
+    this.clearAll();
   }
 
   closeListing(): void {
     this.sellActive = false;
-    this.listPrice.setValue(undefined);
+    this.clearAll();
   }
 
   closeTransfer(): void {
     this.transferActive = false;
-    this.transferAddress.setValue('');
+    this.clearAll();
   }
 
   closeBid(): void {
     this.bidActive = false;
-    this.bidPrice.setValue(undefined);
+    this.clearAll();
   }
 
-  // withdraw(): void {
-  //   this.closeAll();
-  //   this.withdrawActive = true;
-  // }
+  clearAll(): void {
+    this.listPrice.setValue(undefined);
+    this.bidPrice.setValue(undefined);
+    this.listToAddress.setValue('');
+    this.transferAddress.setValue('');
+  }
 
   closeAll(): void {
     this.closeAcceptBid();
@@ -201,6 +204,7 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
   }
 
   async submitListing(phunk: Phunk): Promise<void> {
+
     const hashId = phunk.hashId;
 
     if (!hashId) throw new Error('Invalid hashId');
@@ -259,12 +263,7 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
         type: 'complete',
         hash: receipt.transactionHash,
       };
-
-      this.store.dispatch(appStateActions.upsertNotification({ notification }));
-
-      this.closeListing();
-
-      this.store.dispatch(appStateActions.addCooldown({ cooldown: { hashId, startBlock: Number(receipt.blockNumber) }}));
+      this.store.dispatch(appStateActions.addCooldown({ cooldown: { [hashId]: Number(receipt.blockNumber) }}));
     } catch (err) {
       console.log(err);
 
@@ -273,9 +272,10 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
         type: 'error',
         detail: err,
       };
-
-      this.store.dispatch(appStateActions.upsertNotification({ notification }));
     }
+
+    this.store.dispatch(appStateActions.upsertNotification({ notification }));
+    this.clearAll();
   }
 
   async sendToEscrow(phunk: Phunk): Promise<void> {
@@ -314,9 +314,8 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
         type: 'complete',
         hash: receipt.transactionHash,
       };
-      this.store.dispatch(appStateActions.upsertNotification({ notification }));
 
-      this.store.dispatch(appStateActions.addCooldown({ cooldown: { hashId, startBlock: Number(receipt.blockNumber) }}));
+      this.store.dispatch(appStateActions.addCooldown({ cooldown: { [hashId]: Number(receipt.blockNumber) }}));
     } catch (err) {
       console.log(err);
 
@@ -325,8 +324,9 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
         type: 'error',
         detail: err,
       };
-      this.store.dispatch(appStateActions.upsertNotification({ notification }));
     }
+
+    this.store.dispatch(appStateActions.upsertNotification({ notification }));
   }
 
   async phunkNoLongerForSale(phunk: Phunk): Promise<void> {
@@ -362,9 +362,8 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
         type: 'complete',
         hash: receipt.transactionHash,
       };
-      this.store.dispatch(appStateActions.upsertNotification({ notification }));
 
-      this.store.dispatch(appStateActions.addCooldown({ cooldown: { hashId, startBlock: Number(receipt.blockNumber) }}));
+      this.store.dispatch(appStateActions.addCooldown({ cooldown: { [hashId]: Number(receipt.blockNumber) }}));
     } catch (err) {
       console.log(err);
 
@@ -373,8 +372,9 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
         type: 'error',
         detail: err,
       };
-      this.store.dispatch(appStateActions.upsertNotification({ notification }));
     }
+
+    this.store.dispatch(appStateActions.upsertNotification({ notification }));
   }
 
   async withdrawBidForPhunk(phunk: Phunk): Promise<void> {
@@ -410,9 +410,8 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
         type: 'complete',
         hash: receipt.transactionHash,
       };
-      this.store.dispatch(appStateActions.upsertNotification({ notification }));
 
-      this.store.dispatch(appStateActions.addCooldown({ cooldown: { hashId, startBlock: Number(receipt.blockNumber) }}));
+      this.store.dispatch(appStateActions.addCooldown({ cooldown: { [hashId]: Number(receipt.blockNumber) }}));
     } catch (err) {
       console.log(err);
 
@@ -421,8 +420,9 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
         type: 'error',
         detail: err,
       };
-      this.store.dispatch(appStateActions.upsertNotification({ notification }));
     }
+
+    this.store.dispatch(appStateActions.upsertNotification({ notification }));
   }
 
   async acceptBidForPhunk(phunk: Phunk): Promise<void> {
@@ -461,9 +461,8 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
         type: 'complete',
         hash: receipt.transactionHash,
       };
-      this.store.dispatch(appStateActions.upsertNotification({ notification }));
 
-      this.store.dispatch(appStateActions.addCooldown({ cooldown: { hashId, startBlock: Number(receipt.blockNumber) }}));
+      this.store.dispatch(appStateActions.addCooldown({ cooldown: { [hashId]: Number(receipt.blockNumber) }}));
     } catch (err) {
       console.log(err);
 
@@ -472,8 +471,9 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
         type: 'error',
         detail: err,
       };
-      this.store.dispatch(appStateActions.upsertNotification({ notification }));
     }
+
+    this.store.dispatch(appStateActions.upsertNotification({ notification }));
   }
 
   async buyPhunk(phunk: Phunk): Promise<void> {
@@ -511,9 +511,8 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
         type: 'complete',
         hash: receipt.transactionHash,
       };
-      this.store.dispatch(appStateActions.upsertNotification({ notification }));
 
-      this.store.dispatch(appStateActions.addCooldown({ cooldown: { hashId, startBlock: Number(receipt.blockNumber) }}));
+      this.store.dispatch(appStateActions.addCooldown({ cooldown: { [hashId]: Number(receipt.blockNumber) }}));
     } catch (err) {
       console.log(err);
 
@@ -522,8 +521,9 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
         type: 'error',
         detail: err,
       };
-      this.store.dispatch(appStateActions.upsertNotification({ notification }));
     }
+
+    this.store.dispatch(appStateActions.upsertNotification({ notification }));
   }
 
   async submitBid(phunk: Phunk): Promise<void> {
@@ -560,9 +560,8 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
         type: 'complete',
         hash: receipt.transactionHash,
       };
-      this.store.dispatch(appStateActions.upsertNotification({ notification }));
 
-      this.store.dispatch(appStateActions.addCooldown({ cooldown: { hashId, startBlock: Number(receipt.blockNumber) }}));
+      this.store.dispatch(appStateActions.addCooldown({ cooldown: { [hashId]: Number(receipt.blockNumber) }}));
     } catch (err) {
       console.log(err);
       notification = {
@@ -570,8 +569,10 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
         type: 'error',
         detail: err,
       };
-      this.store.dispatch(appStateActions.upsertNotification({ notification }));
     }
+
+    this.store.dispatch(appStateActions.upsertNotification({ notification }));
+    this.clearAll();
   }
 
   async transferPhunk(phunk: Phunk, address?: string): Promise<void> {
@@ -611,9 +612,8 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
         type: 'complete',
         hash: receipt.transactionHash,
       };
-      this.store.dispatch(appStateActions.upsertNotification({ notification }));
 
-      this.store.dispatch(appStateActions.addCooldown({ cooldown: { hashId, startBlock: Number(receipt.blockNumber) }}));
+      this.store.dispatch(appStateActions.addCooldown({ cooldown: { [hashId]: Number(receipt.blockNumber) }}));
     } catch (err) {
       console.log(err);
       notification = {
@@ -621,8 +621,10 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
         type: 'error',
         detail: err,
       };
-      this.store.dispatch(appStateActions.upsertNotification({ notification }));
     }
+
+    this.store.dispatch(appStateActions.upsertNotification({ notification }));
+    this.clearAll();
   }
 
   async withdrawPhunk(phunk: Phunk): Promise<void> {
@@ -660,7 +662,7 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
       };
       this.store.dispatch(appStateActions.upsertNotification({ notification }));
 
-      this.store.dispatch(appStateActions.addCooldown({ cooldown: { hashId, startBlock: Number(receipt.blockNumber) }}));
+      this.store.dispatch(appStateActions.addCooldown({ cooldown: { [hashId]: Number(receipt.blockNumber) }}));
     } catch (err) {
       console.log(err);
       notification = {
