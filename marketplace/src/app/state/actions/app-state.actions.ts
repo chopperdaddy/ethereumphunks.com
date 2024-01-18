@@ -1,8 +1,5 @@
-import { Phunk } from '@/models/db';
-
 import { createAction, props } from '@ngrx/store';
 
-import { MarketType, Sort } from '@/models/pipes';
 import { AppState, Cooldowns, EventType, Notification } from '@/models/global-state';
 
 export const setConnected = createAction(
@@ -31,40 +28,6 @@ export const resetAppState = createAction(
 export const setEventTypeFilter = createAction(
   '[Data State] Set Event Type',
   props<{ eventTypeFilter: EventType }>()
-);
-
-export const setMarketType = createAction(
-  '[Market] Set Market Type',
-  props<{ marketType: MarketType }>()
-);
-
-export const setMarketSlug = createAction(
-  '[Market] Set Market slug',
-  props<{ marketSlug: AppState['marketSlug'] }>()
-);
-
-export const setActiveSort = createAction(
-  '[Market] Set Active Sort',
-  props<{ activeSort: Sort }>()
-);
-
-export const addRemoveTraitFilter = createAction(
-  '[Market] Add Trait Filter',
-  props<{ traitFilter: any }>()
-);
-
-export const setActiveTraitFilters = createAction(
-  '[Market] Set Active Trait Filters',
-  props<{ activeTraitFilters: any }>()
-);
-
-export const clearActiveTraitFilters = createAction(
-  '[Market] Clear Active Trait Filters',
-);
-
-export const setSelectedPhunks = createAction(
-  '[Market] Set Selected Phunks',
-  props<{ selectedPhunks: Phunk[] }>()
 );
 
 export const setMenuActive = createAction(

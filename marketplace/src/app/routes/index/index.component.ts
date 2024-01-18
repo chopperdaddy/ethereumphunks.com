@@ -21,11 +21,10 @@ import { TokenIdParsePipe } from '@/pipes/token-id-parse.pipe';
 
 import { GlobalState } from '@/models/global-state';
 
-import * as dataStateActions from '@/state/actions/data-state.actions';
 import * as dataStateSelectors from '@/state/selectors/data-state.selectors';
-
 import * as appStateSelectors from '@/state/selectors/app-state.selectors';
-import { tap } from 'rxjs';
+import * as marketStateSelectors from '@/state/selectors/market-state.selectors';
+import { map } from 'rxjs';
 
 @Component({
   standalone: true,
@@ -52,15 +51,13 @@ import { tap } from 'rxjs';
 export class IndexComponent {
 
   walletAddress$ = this.store.select(appStateSelectors.selectWalletAddress);
-  collectionSlug$ = this.store.select(appStateSelectors.selectMarketSlug);
   activeCollection$ = this.store.select(dataStateSelectors.selectActiveCollection);
 
-  ownedPhunks$ = this.store.select(dataStateSelectors.selectOwnedPhunks);
-  listings$ = this.store.select(dataStateSelectors.selectListings);
-  bids$ = this.store.select(dataStateSelectors.selectBids);
-  allPhunks$ = this.store.select(dataStateSelectors.selectAllPhunks).pipe(
-    // tap((res) => console.log(res))
-  );
+  collectionSlug$ = this.store.select(marketStateSelectors.selectMarketSlug);
+  owned$ = this.store.select(marketStateSelectors.selectOwned);
+  listings$ = this.store.select(marketStateSelectors.selectListings);
+  bids$ = this.store.select(marketStateSelectors.selectBids);
+  all$ = this.store.select(marketStateSelectors.selectAll);
 
   isMobile$ = this.store.select(appStateSelectors.selectIsMobile);
   usd$ = this.store.select(dataStateSelectors.selectUsd);

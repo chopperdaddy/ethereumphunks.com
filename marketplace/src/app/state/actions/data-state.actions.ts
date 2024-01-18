@@ -25,20 +25,6 @@ export const setEvents = createAction(
   props<{ events: any[] }>()
 );
 
-export const fetchAllPhunks = createAction(
-  '[Data State] Fetch All Phunks'
-);
-
-export const setAllPhunks = createAction(
-  '[Data State] Set All Phunks',
-  props<{ allPhunks: Phunk[] }>()
-);
-
-export const paginateAll = createAction(
-  '[Data State] Paginate All',
-  props<{ limit: number }>()
-);
-
 export const fetchSinglePhunk = createAction(
   '[Data State] Fetch Single Phunk',
   props<{ phunkId: string }>()
@@ -57,36 +43,9 @@ export const clearSinglePhunk = createAction(
   '[Data State] Reset Single Phunk',
 );
 
-export const fetchMarketData = createAction(
-  '[Data State] Fetch Market Data',
-);
-
-export const setMarketData = createAction(
-  '[Data State] Set Market Data',
-  props<{ marketData: Phunk[] }>()
-);
-
-export const fetchOwnedPhunks = createAction(
-  '[Data State] Fetch Owned Phunks',
-);
-
-export const setOwnedPhunks = createAction(
-  '[Data State] Set Owned Phunks',
-  props<{ ownedPhunks: Phunk[] }>()
-);
-
 export const dbEventTriggered = createAction(
   '[Data State] DB Event Triggered',
   props<{ payload: RealtimePostgresChangesPayload<{ [key: string]: any; }> }>()
-);
-
-export const setActiveMarketRouteData = createAction(
-  '[Data State] Set Active Market Route Data',
-  props<{ activeMarketRouteData: DataState['activeMarketRouteData'] }>()
-);
-
-export const clearActiveMarketRouteData = createAction(
-  '[Data State] Clear Active Market Route Data',
 );
 
 export const setUserOpenBids = createAction(
@@ -115,8 +74,4 @@ export const setCollections = createAction(
 export const setActiveCollection = createAction(
   '[Data State] Set Active Collection',
   props<{ activeCollection: Collection }>()
-);
-
-export const triggerDataRefresh = createAction(
-  '[Data State] Trigger Data Refresh'
 );

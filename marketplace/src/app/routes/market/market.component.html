@@ -49,8 +49,10 @@
               class="filters-button"
               (click)="filtersVisible = !filtersVisible">
 
-              @if ((activeTraitFilters$ | async); as filtersLength) {
-                <div class="count">{{ filtersLength }}</div>
+              @if ((activeTraitFilters$ | async); as filters) {
+                @if (objectKeys(filters).length) {
+                  <div class="count">{{ objectKeys(filters).length }}</div>
+                }
               }
               Filter by Attribute
             </button>
@@ -118,6 +120,7 @@
           [observe]="true"
           [marketType]="marketType"
           [activeSort]="(activeSort$ | async).value"
+          [traitFilters]="(activeTraitFilters$ | async)"
           [phunkData]="phunkData"
           [selectAll]="selectAll"
           [selectable]="

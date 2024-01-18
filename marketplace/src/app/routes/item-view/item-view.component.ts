@@ -643,8 +643,6 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
     try {
       this.store.dispatch(appStateActions.upsertNotification({ notification }));
 
-      await this.checkConsenus(hashId, phunk.owner, phunk.prevOwner);
-
       const hash = await this.web3Svc.withdrawPhunk(hashId);
       if (!hash) throw new Error('Could not proccess transaction');
       notification = {

@@ -24,6 +24,8 @@ import * as appStateActions from '@/state/actions/app-state.actions';
 import * as dataStateActions from '@/state/actions/data-state.actions';
 import * as dataStateSelectors from '@/state/selectors/data-state.selectors';
 
+import * as marketStateSelectors from '@/state/selectors/market-state.selectors';
+
 import { WeiToEthPipe } from '@/pipes/wei-to-eth.pipe';
 
 import { map, switchMap, tap } from 'rxjs';
@@ -65,7 +67,7 @@ export class MenuComponent {
   activeMenuNav$ = this.store.select(appStateSelectors.selectActiveMenuNav);
   activeCollection$ = this.store.select(dataStateSelectors.selectActiveCollection);
 
-  listedPhunks$ = this.store.select(dataStateSelectors.selectOwnedPhunks).pipe(
+  listedPhunks$ = this.store.select(marketStateSelectors.selectOwned).pipe(
     tap((owned: Phunk[] | null) => this.createOwnedStats(owned)),
     map((owned) => owned?.filter((phunk: Phunk) => !!phunk.listing)),
   );

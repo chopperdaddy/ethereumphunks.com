@@ -21,10 +21,10 @@ export class SortPipe implements PipeTransform {
     };
 
     const priceComparison = (a: Phunk, b: Phunk, isLowToHigh: boolean) => {
-      const aPrice = type === 'listings' ? Number(a.listing?.minValue) : Number(a.bid?.value);
-      const bPrice = type === 'listings' ? Number(b.listing?.minValue) : Number(b.bid?.value);
-      const aVal = aPrice !== undefined ? aPrice : Infinity;
-      const bVal = bPrice !== undefined ? bPrice : Infinity;
+      const aPrice = type === 'bids' ? Number(a.bid?.value || '0') : Number(a.listing?.minValue || '0');
+      const bPrice = type === 'bids' ? Number(b.bid?.value || '0') : Number(b.listing?.minValue || '0');
+      const aVal = aPrice ? aPrice : Infinity;
+      const bVal = bPrice ? bPrice : Infinity;
       return isLowToHigh ? aVal - bVal : bVal - aVal;
     };
 

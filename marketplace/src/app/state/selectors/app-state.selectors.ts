@@ -19,21 +19,6 @@ export const selectHasWithdrawal = createSelector(
   (appState: AppState) => appState.hasWithdrawal
 );
 
-export const selectMarketType = createSelector(
-  selectAppState,
-  (appState: AppState) => appState.marketType
-);
-
-export const selectMarketSlug = createSelector(
-  selectAppState,
-  (appState: AppState) => appState.marketSlug
-);
-
-export const selectActiveSort = createSelector(
-  selectAppState,
-  (appState: AppState) => appState.activeSort
-);
-
 // export const selectActiveFilters = createSelector(
 //   selectAppState,
 //   (appState: AppState) => appState.activeFilters
@@ -47,16 +32,6 @@ export const selectScrollPositions = createSelector(
 export const selectEventTypeFilter = createSelector(
   selectAppState,
   (appState: AppState) => appState.eventTypeFilter
-);
-
-export const selectActiveTraitFilters = createSelector(
-  selectAppState,
-  (appState: AppState) => appState.activeTraitFilters
-);
-
-export const selectSelectedPhunks = createSelector(
-  selectAppState,
-  (appState: AppState) => appState.selectedPhunks
 );
 
 export const selectMenuActive = createSelector(

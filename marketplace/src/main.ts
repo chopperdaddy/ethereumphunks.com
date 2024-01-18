@@ -24,9 +24,11 @@ import { provideStoreDevtools } from '@ngrx/store-devtools';
 
 import { appStateReducer } from '@/state/reducers/app-state.reducers';
 import { dataStateReducer } from '@/state/reducers/data-state.reducers';
+import { marketStateReducer } from '@/state/reducers/market-state.reducers';
 
 import { AppStateEffects } from '@/state/effects/app-state.effects';
 import { DataStateEffects } from '@/state/effects/data-state.effects';
+import { MarketStateEffects } from '@/state/effects/market-state.effects';
 
 import { TokenIdParsePipe } from '@/pipes/token-id-parse.pipe';
 // import { provideServiceWorker } from '@angular/service-worker';
@@ -44,11 +46,13 @@ bootstrapApplication(AppComponent, {
     provideStore({
         appState: appStateReducer,
         dataState: dataStateReducer,
+        marketState: marketStateReducer,
         router: routerReducer
     }),
     provideEffects([
         AppStateEffects,
-        DataStateEffects
+        DataStateEffects,
+        MarketStateEffects
     ]),
     provideStoreDevtools({
         maxAge: 25,

@@ -9,8 +9,9 @@ import { NgSelectModule } from '@ng-select/ng-select';
 import { DataService } from '@/services/data.service';
 import { GlobalState } from '@/models/global-state';
 
-import { addRemoveTraitFilter } from '@/state/actions/app-state.actions';
-import { selectActiveTraitFilters } from '@/state/selectors/app-state.selectors';
+import { addRemoveTraitFilter } from '@/state/actions/market-state.actions';
+import { selectActiveTraitFilters } from '@/state/selectors/market-state.selectors';
+
 import { tap } from 'rxjs';
 
 @Component({

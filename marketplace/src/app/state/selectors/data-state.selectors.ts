@@ -14,31 +14,6 @@ export const selectSinglePhunk = createSelector(
   (appState: DataState) => appState.singlePhunk
 );
 
-export const selectMarketData = createSelector(
-  selectDataState,
-  (appState: DataState) => appState.marketData
-);
-
-export const selectOwnedPhunks = createSelector(
-  selectDataState,
-  (appState: DataState) => appState.ownedPhunks
-);
-
-export const selectAllPhunks = createSelector(
-  selectDataState,
-  (appState: DataState) => appState.allPhunks
-);
-
-export const selectListings = createSelector(
-  selectDataState,
-  (appState: DataState) => appState.listings
-);
-
-export const selectBids = createSelector(
-  selectDataState,
-  (appState: DataState) => appState.bids
-);
-
 export const selectEvents = createSelector(
   selectDataState,
   (appState: DataState) => appState.events
@@ -47,11 +22,6 @@ export const selectEvents = createSelector(
 export const selectUserOpenBids = createSelector(
   selectDataState,
   (appState: DataState) => appState.userOpenBids
-);
-
-export const selectActiveMarketRouteData = createSelector(
-  selectDataState,
-  (appState: DataState) => appState.activeMarketRouteData
 );
 
 export const selectLeaderboard = createSelector(

@@ -18,15 +18,7 @@ export const initialState: AppState = {
   activeMenuNav: 'main',
   slideoutActive: false,
 
-  selectedPhunks: null,
-  activeTraitFilters: {},
-
   scrollPositions: {},
-
-  marketType: 'all',
-  marketSlug: 'ethereum-phunks',
-
-  activeSort: { label: 'Price Low', value: 'price-low' },
 
   eventTypeFilter: 'All',
 
@@ -42,22 +34,18 @@ export const initialState: AppState = {
 export const appStateReducer: ActionReducer<AppState, Action> = createReducer(
   initialState,
   on(actions.resetAppState, () => initialState),
-  // Set the wallet connected
   on(actions.setConnected, (state, { connected }) => {
     const setConnected = {
       ...state,
       connected,
     };
-    // console.log('setConnected', setConnected);
     return setConnected
   }),
-  // Set the wallet address
   on(actions.setWalletAddress, (state, { walletAddress }) => {
     const setWalletAddress = {
       ...state,
       walletAddress: walletAddress.toLowerCase(),
     };
-    // console.log('setWalletAddress', setWalletAddress);
     return setWalletAddress
   }),
   // Set the withdrawal status
@@ -66,7 +54,6 @@ export const appStateReducer: ActionReducer<AppState, Action> = createReducer(
       ...state,
       hasWithdrawal,
     };
-    // console.log('setHasWithdrawal', setHasWithdrawal);
     return setHasWithdrawal
   }),
   on(actions.setUserPoints, (state, { userPoints }) => {
@@ -74,7 +61,6 @@ export const appStateReducer: ActionReducer<AppState, Action> = createReducer(
       ...state,
       userPoints,
     };
-    // console.log('setUserPoints', setUserPoints);
     return setUserPoints
   }),
   on(actions.setActiveMultiplier, (state, { activeMultiplier }) => {
@@ -82,7 +68,6 @@ export const appStateReducer: ActionReducer<AppState, Action> = createReducer(
       ...state,
       activeMultiplier,
     };
-    // console.log('setActiveMultiplier', setActiveMultiplier);
     return setActiveMultiplier
   }),
   on(actions.setEventTypeFilter, (state, { eventTypeFilter }) => {
@@ -90,82 +75,13 @@ export const appStateReducer: ActionReducer<AppState, Action> = createReducer(
       ...state,
       eventTypeFilter,
     };
-    // console.log('setActiveFilters', setActiveFilters);
     return setActiveFilters
-  }),
-  // Set trait filters
-  on(actions.setActiveTraitFilters, (state, { activeTraitFilters }) => {
-    const setActiveTraitFilters = {
-      ...state,
-      activeTraitFilters,
-    };
-    // console.log('setActiveTraitFilters', setActiveTraitFilters);
-    return setActiveTraitFilters
-  }),
-  // Add/remove trait filters
-  on(actions.addRemoveTraitFilter, (state, { traitFilter }) => {
-    let activeTraitFilters = { ...state.activeTraitFilters, };
-
-    if (!traitFilter.value) delete activeTraitFilters[traitFilter.key];
-    else activeTraitFilters[traitFilter.key] = traitFilter.value;
-
-    const addRemoveTraitFilter = {
-      ...state,
-      activeTraitFilters,
-    };
-    // console.log('addRemoveTraitFilter', addRemoveTraitFilter);
-    return addRemoveTraitFilter
-  }),
-  // Clear trait filters
-  on(actions.clearActiveTraitFilters, (state) => {
-    const clearTraitFilters = {
-      ...state,
-      activeTraitFilters: {},
-    };
-    // console.log('clearTraitFilters', clearTraitFilters);
-    return clearTraitFilters
-  }),
-  on(actions.setSelectedPhunks, (state, { selectedPhunks }) => {
-    const setSelectedPhunks = {
-      ...state,
-      selectedPhunks,
-    };
-    // console.log('setSelectedPhunks', setSelectedPhunks);
-    return setSelectedPhunks
-  }),
-  // Set the market type
-  on(actions.setMarketType, (state, { marketType }) => {
-    const setMarketType = {
-      ...state,
-      marketType
-    };
-    // console.log('setMarketType', setMarketType);
-    return setMarketType
-  }),
-  // Set the collection
-  on(actions.setMarketSlug, (state, { marketSlug }) => {
-    const setMarketSlug = {
-      ...state,
-      marketSlug
-    };
-    // console.log('setCollection', setCollection);
-    return setMarketSlug;
-  }),
-  // Set the active sort
-  on(actions.setActiveSort, (state, { activeSort }) => {
-    const setActiveSort = {
-      ...state,
-      activeSort,
-    };
-    // console.log('setActiveSort', setActiveSort);
-    return setActiveSort
   }),
   on(actions.setMenuActive, (state, { menuActive }) => {
     const setMenuActive = {
       ...state,
       menuActive
     };
-    // console.log('setMenuActive', setMenuActive);
     return setMenuActive
   }),
   on(actions.setActiveMenuNav, (state, { activeMenuNav }) => {
@@ -173,7 +89,6 @@ export const appStateReducer: ActionReducer<AppState, Action> = createReducer(
       ...state,
       activeMenuNav
     };
-    // console.log('setActiveMenuNav', setActiveMenuNav);
     return setActiveMenuNav
   }),
   on(actions.setSlideoutActive, (state, { slideoutActive }) => {
@@ -181,7 +96,6 @@ export const appStateReducer: ActionReducer<AppState, Action> = createReducer(
       ...state,
       slideoutActive
     };
-    // console.log('setSlideoutActive', setSlideoutActive);
     return setSlideoutActive
   }),
   on(actions.setTheme, (state, { theme }) => {
@@ -189,7 +103,6 @@ export const appStateReducer: ActionReducer<AppState, Action> = createReducer(
       ...state,
       theme
     };
-    // console.log('setTheme', setTheme);
     return setTheme
   }),
   on(actions.removeNotification, (state, { txId }) => {
@@ -197,7 +110,6 @@ export const appStateReducer: ActionReducer<AppState, Action> = createReducer(
       ...state,
       notifications: state.notifications.map(tx => tx.id === txId ? { ...tx, dismissed: true } : tx)
     };
-    // console.log('removeTransaction', removeTransaction);
     return removeTransaction
   }),
   on(actions.upsertNotification, (state, { notification }) => {
@@ -205,12 +117,10 @@ export const appStateReducer: ActionReducer<AppState, Action> = createReducer(
     const index = txns.findIndex(tx => tx.hashId === notification.hashId);
     if (index > -1) txns.splice(index, 1, notification);
     else txns.push(notification);
-
     const upsertNotification = {
       ...state,
       notifications: txns
     };
-    // console.log('upsertTransaction', upsertTransaction);
     return upsertNotification
   }),
   on(actions.clearNotifications, (state) => {
@@ -218,7 +128,6 @@ export const appStateReducer: ActionReducer<AppState, Action> = createReducer(
       ...state,
       notifications: []
     };
-    // console.log('clearTransactions', clearTransactions);
     return clearTransactions
   }),
   on(actions.setNotifications, (state, { notifications }) => {
@@ -226,7 +135,6 @@ export const appStateReducer: ActionReducer<AppState, Action> = createReducer(
       ...state,
       notifications
     };
-    // console.log('setTransactions', setTransactions);
     return setTransactions
   }),
   on(actions.setIsMobile, (state, { isMobile }) => {
@@ -234,7 +142,6 @@ export const appStateReducer: ActionReducer<AppState, Action> = createReducer(
       ...state,
       isMobile
     };
-    // console.log('setIsMobile', setIsMobile);
     return setIsMobile
   }),
   on(actions.addCooldown, (state, { cooldown }) => {
@@ -246,7 +153,6 @@ export const appStateReducer: ActionReducer<AppState, Action> = createReducer(
         ...cooldown
       }
     };
-    // console.log('setCooldowns', setCooldowns);
     return setCooldowns
   }),
   on(actions.setCooldowns, (state, { cooldowns }) => {
@@ -257,7 +163,6 @@ export const appStateReducer: ActionReducer<AppState, Action> = createReducer(
       }
     };
     localStorage.setItem('EtherPhunks_cooldowns', JSON.stringify(cooldowns));
-    // console.log('removeCooldown', removeCooldown);
     return removeCooldown
   }),
   on(actions.setCurrentBlock, (state, { currentBlock }) => {
@@ -265,7 +170,6 @@ export const appStateReducer: ActionReducer<AppState, Action> = createReducer(
       ...state,
       currentBlock
     };
-    // console.log('setBlockNumber', setBlockNumber);
     return setCurrentBlock
   }),
   on(actions.setIndexerBlock, (state, { indexerBlock }) => {
@@ -273,7 +177,6 @@ export const appStateReducer: ActionReducer<AppState, Action> = createReducer(
       ...state,
       indexerBlock
     };
-    // console.log('setBlockNumber', setBlockNumber);
     return setIndexerBlock;
   }),
   on(actions.setNotifHoverState, (state, { notifHoverState }) => {
@@ -281,7 +184,6 @@ export const appStateReducer: ActionReducer<AppState, Action> = createReducer(
       ...state,
       notifHoverState
     };
-    // console.log('setNotifHoverState', setNotifHoverState);
     return setNotifHoverState
   }),
 );

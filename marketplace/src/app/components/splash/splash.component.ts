@@ -1,13 +1,15 @@
 import { Component, Input, OnChanges, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { HttpClient } from '@angular/common/http';
+
+import { LazyLoadImageModule } from 'ng-lazyload-image';
 
 import { PhunkImageComponent } from '../shared/phunk-image/phunk-image.component';
 
-import svgson, { INode } from 'svgson';
+import { INode, parse, stringify } from 'svgson';
 import tinycolor from 'tinycolor2';
-import { catchError, firstValueFrom, from, map, of, switchMap } from 'rxjs';
-import { HttpClient } from '@angular/common/http';
-import { LazyLoadImageModule } from 'ng-lazyload-image';
+
+import { catchError, filter, firstValueFrom, from, map, of, switchMap, tap } from 'rxjs';
 
 @Component({
   selector: 'app-splash',
@@ -56,8 +58,8 @@ export class SplashComponent implements OnChanges {
 
     return await firstValueFrom(
       this.http.get(url, { responseType: 'text' }).pipe(
-        // tap(data => console.log(data)),
-        switchMap(data => from(svgson.parse(data))),
+        filter(data => !!data),
+        switchMap(data => from(parse(data))),
         map(data => this.stripColors(data)),
         map(data => this.convertToBase64(data)),
         catchError((err) => {
@@ -97,7 +99,7 @@ export class SplashComponent implements OnChanges {
   }
 
   convertToBase64(node: INode): string {
-    const string = svgson.stringify(node);
+    const string = stringify(node);
     const decoded = unescape(encodeURIComponent(string));
     const base64 = btoa(decoded);
     return `data:image/svg+xml;base64,${base64}`;

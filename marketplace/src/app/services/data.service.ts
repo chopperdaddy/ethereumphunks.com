@@ -13,7 +13,7 @@ import { Attribute, Bid, Event, Listing, Phunk } from '@/models/db';
 import { createClient } from '@supabase/supabase-js'
 
 import { Observable, of, BehaviorSubject, from, forkJoin, firstValueFrom } from 'rxjs';
-import { map, switchMap, tap } from 'rxjs/operators';
+import { map, switchMap, tap, withLatestFrom } from 'rxjs/operators';
 
 import { NgForage } from 'ngforage';
 
@@ -88,6 +88,10 @@ export class DataService {
           this.store.dispatch(appStateActions.setIndexerBlock({ indexerBlock: payload.new.blockNumber }));
         },
       ).subscribe();
+
+    // this.fetchStats(90, undefined).subscribe((res: any) => {
+    //   console.log('fetchStats', res);
+    // });
   }
 
   getFloor(): number {
@@ -126,7 +130,7 @@ export class DataService {
   fetchOwned(
     address: string,
     slug: string | undefined,
-  ): Observable<any[]> {
+  ): Observable<Phunk[]> {
     // console.log('fetchOwned', {address, slug});
 
     if (!address) return of([]);
@@ -150,10 +154,10 @@ export class DataService {
             ethscription.phunk.owner === environment.marketAddress
             && ethscription.phunk.prevOwner === address,
           attributes: [],
-        }
+        };
       })),
       switchMap((res: any) => this.addAttributes(slug, res)),
-    ) as Observable<any>;
+    ) as Observable<Phunk[]>;
   }
 
   fetchMissedEvents(address: string, lastBlock: number): Observable<Event[]> {
@@ -221,7 +225,7 @@ export class DataService {
       p_type: type && type !== 'All' ? type : null,
       p_collection_slug: slug
     })).pipe(
-      tap((res) => console.log('fetchEvents', res)),
+      // tap((res) => console.log('fetchEvents', res)),
       map((res: any) => res.data),
     );
   }
@@ -322,7 +326,7 @@ export class DataService {
           }),
         };
       }),
-      tap((res) => console.log('fetchSinglePhunk', res)),
+      // tap((res) => console.log('fetchSinglePhunk', res)),
     );
   }
 
@@ -445,31 +449,101 @@ export class DataService {
     );
   }
 
-  async fetchAll(
+  fetchAll(
     slug: string,
-    from: number,
-    to: number,
+    fromNum: number,
+    toNum: number,
     filters?: any,
-  ) {
-    // console.log('fetchAll', {slug, from, to, filters});
-    // this.getAttributes(marketSlug)
-    const query = supabase
-      .from('ethscriptions' + this.prefix)
+  ): Observable<Phunk[]> {
+    // console.log('fetchAll', { slug, fromNum, toNum, filters });
+
+    let query = supabase
+      .from('ethscriptions')
       .select(`
         tokenId,
+        slug,
         hashId,
-        sha
+        sha,
+        attributes!inner()
       `)
       .eq('slug', slug)
-      // .in('sha', filter ? filter.split(',') : [])
       .order('tokenId', { ascending: true })
-      .range(from, to);
+      .range(fromNum, toNum);
 
-    const { data, error } = await query;
-    console.log('fetchAll', data, error);
+    if (Object.keys(filters).length) {
+      Object.keys(filters).forEach(key => {
+        const value = filters[key];
+        query = query.ilike(`attributes.values->>${key}`, `%${value}%`);
+      });
+    }
 
-    if (error) throw error;
-    return data as any[];
+    return from(query).pipe(
+      // tap((res) => console.log('fetchAll', res)),
+      switchMap((res) => {
+        return this.getAttributes(slug).pipe(
+          map((attributes) => {
+            if (!res.data) return [];
+            return res.data?.map((item: any) => {
+              const ethscription = item[`ethscriptions${this.prefix}`];
+              delete item[`ethscriptions${this.prefix}`];
+              return {
+                ...item,
+                ...ethscription,
+                attributes: attributes[item.sha],
+              } as Phunk;
+            })
+          })
+        )
+      }),
+    );
+
+    // return this.getAttributes(slug).pipe(
+    //   map((res) => {
+    //     const shas: string[] = [];
+    //     Object.keys(res).forEach((sha: string) => {
+    //       const attributes = res[sha];
+    //       const exists = attributes.filter((attribute: any) => {
+    //         const k = attribute.k.toLowerCase().replace(/ /g, '-');
+    //         const v = attribute.v.toLowerCase().replace(/ /g, '-');
+    //         return filters[k] && filters[k] === v;
+    //       });
+    //       if (exists?.length && exists.length === Object.keys(filters)?.length) shas.push(sha);
+    //     });
+    //     return shas;
+    //   }),
+    //   switchMap((shas: string[]) => {
+    //     const query = supabase
+    //       .from('ethscriptions' + this.prefix)
+    //       .select(`
+    //         tokenId,
+    //         hashId,
+    //         sha
+    //       `)
+    //       .eq('slug', slug)
+    //       // .in('sha', shas.length ? shas : [])
+    //       .order('tokenId', { ascending: true })
+    //       .range(fromNum, toNum);
+
+    //     return from(query).pipe(map((res: any) => res.data));
+    //   })
+    // );
+  }
+
+  fetchStats(
+    days: number = 1,
+    slug?: string
+  ): Observable<any> {
+
+    const query = supabase
+      .rpc('get_total_volume', {
+        start_date: new Date(new Date().getTime() - ((1000 * 60 * 60 * 24) * days)),
+        end_date: new Date(),
+        slug_filter: slug,
+      });
+
+    return from(query).pipe(
+      map((res: any) => res.data[0]),
+    )
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

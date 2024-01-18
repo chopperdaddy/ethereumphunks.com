@@ -7,10 +7,11 @@ import { NgxPaginationModule } from 'ngx-pagination';
 import { LazyLoadImageModule } from 'ng-lazyload-image';
 import { IntersectionObserverModule } from '@ng-web-apis/intersection-observer';
 
+import { GlobalState, TraitFilter } from '@/models/global-state';
+import { MarketType } from '@/models/market.state';
 import { ViewType } from '@/models/view-types';
 import { Phunk } from '@/models/db';
-import { MarketType, Sort, Sorts } from '@/models/pipes';
-import { GlobalState } from '@/models/global-state';
+import { Sort } from '@/models/pipes';
 
 import { DataService } from '@/services/data.service';
 
@@ -24,11 +25,9 @@ import { ImagePipe } from '@/pipes/image.pipe';
 import { environment } from 'src/environments/environment';
 
 import * as dataStateSelectors from '@/state/selectors/data-state.selectors';
-import * as dataStateActions from '@/state/actions/data-state.actions';
 
-import * as appStateSelectors from '@/state/selectors/app-state.selectors';
-
-let PAGE_SIZE = 50;
+import * as marketStateSelectors from '@/state/selectors/market-state.selectors';
+import * as marketStateActions from '@/state/actions/market-state.actions';
 
 @Component({
   selector: 'app-phunk-grid',
@@ -64,11 +63,12 @@ export class PhunkGridComponent implements OnChanges {
   @Input() marketType!: MarketType;
   @Input() activeSort!: Sort['value'];
 
-  @Input() phunkData!: Phunk[] | null;
+  @Input() phunkData!: Phunk[];
   @Input() viewType: ViewType = 'market';
-  @Input() limit: number = 110;
+  @Input() limit!: number;
   @Input() showLabels: boolean = true;
   @Input() observe: boolean = false;
+  @Input() traitFilters!: TraitFilter;
 
   @Input() selectable: boolean = false;
   @Input() selectAll: boolean = false;
@@ -79,10 +79,10 @@ export class PhunkGridComponent implements OnChanges {
   limitArr = Array.from({length: this.limit}, (_, i) => i);
 
   usd$ = this.store.select(dataStateSelectors.selectUsd);
-  activeTraitFilters$ = this.store.select(appStateSelectors.selectActiveTraitFilters);
 
   constructor(
     private store: Store<GlobalState>,
+    private el: ElementRef,
     public dataSvc: DataService,
   ) {}
 
@@ -111,7 +111,11 @@ export class PhunkGridComponent implements OnChanges {
     }
   }
 
-  selectPhunk(phunk: Phunk, upsert: boolean = false, remove: boolean = false) {
+  selectPhunk(
+    phunk: Phunk,
+    upsert: boolean = false,
+    remove: boolean = false
+  ) {
     if (remove) {
       const selected = { ...this.selected };
       delete selected[phunk.hashId];
@@ -135,34 +139,27 @@ export class PhunkGridComponent implements OnChanges {
     this.selectedChange.emit(this.selected);
   }
 
-  scrollingDown: boolean = false;
-  prevIndex: number | null = null;
-
   onIntersection($event: IntersectionObserverEntry[]): void {
     if (!this.observe || !this.phunkData) return;
-    if (this.limit >= this.phunkData.length) return;
 
-    $event.forEach((entry) => {
-      if (entry.isIntersecting) {
-        const target = entry.target as HTMLElement;
-        const index = Number(target.dataset.index);
+    // $event.forEach((entry) => {
+    //   if (entry.isIntersecting) {
+    //     const target = entry.target as HTMLElement;
+    //     const index = Number(target.dataset.index);
 
-        // console.log({ index, prevIndex: this.prevIndex, limit: this.limit });
+    //     // console.log({ index, limit: this.limit, length: this.phunkData?.length, el: this.el.nativeElement.children });
 
-        // If prevIndex hasn't been set yet, initialize it
-        if (this.prevIndex === null) {
-          this.prevIndex = index;
-          return;
-        }
+    //     if (
+    //       index >= this.limit - 18 ||
+    //       this.el.nativeElement.children.length < this.limit
+    //     ) {
+    //       this.limit += 50;
 
-        // if (index > this.limit - PAGE_SIZE) {
-          this.limit += PAGE_SIZE;
-
-          // console.log({ index, prevIndex: this.prevIndex, limit: this.limit });
-
-          this.store.dispatch(dataStateActions.paginateAll({ limit: this.limit }));
-        // }
-      }
-    });
+    //       if (!this.phunkData) return;
+    //       if (this.limit < this.phunkData.length) return;
+    //       this.store.dispatch(marketStateActions.paginateAll({ limit: this.limit }));
+    //     }
+    //   }
+    // });
   }
 }

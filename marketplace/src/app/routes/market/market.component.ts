@@ -30,6 +30,8 @@ import { WeiToEthPipe } from '@/pipes/wei-to-eth.pipe';
 import * as appStateSelectors from '@/state/selectors/app-state.selectors';
 import * as appStateActions from '@/state/actions/app-state.actions';
 import * as dataStateSelectors from '@/state/selectors/data-state.selectors';
+import * as marketStateSelectors from '@/state/selectors/market-state.selectors';
+import * as marketStateActions from '@/state/actions/market-state.actions';
 
 import { environment } from 'src/environments/environment';
 
@@ -104,7 +106,6 @@ export class MarketComponent {
 
   selected: { [string: Phunk['hashId']]: Phunk } = {};
   deselected: Phunk[] = [];
-  objectKeys = Object.keys;
   selectedValue: string = '';
 
   selectMutipleActive: boolean = false;
@@ -123,14 +124,6 @@ export class MarketComponent {
 
   activeCollection$ = this.store.select(dataStateSelectors.selectActiveCollection);
   walletAddress$ = this.store.select(appStateSelectors.selectWalletAddress);
-  marketType$ = this.store.select(appStateSelectors.selectMarketType);
-  activeMarketRouteData$ = this.store.select(dataStateSelectors.selectActiveMarketRouteData);
-  activeTraitFilters$ = this.store.select(appStateSelectors.selectActiveTraitFilters).pipe(
-    map((filters: any) => Object.keys(filters).length),
-  );
-  activeSort$ = this.store.select(appStateSelectors.selectActiveSort).pipe(
-    tap((sort: any) => this.activeSortModel = sort)
-  );
   slidseoutActive$ = this.store.select(appStateSelectors.selectSlideoutActive).pipe(
     tap((slideoutActive: boolean) => {
       if (!slideoutActive) {
@@ -141,7 +134,15 @@ export class MarketComponent {
     })
   );
 
+  marketType$ = this.store.select(marketStateSelectors.selectMarketType);
+  activeMarketRouteData$ = this.store.select(marketStateSelectors.selectActiveMarketRouteData);
+  activeTraitFilters$ = this.store.select(marketStateSelectors.selectActiveTraitFilters);
+  activeSort$ = this.store.select(marketStateSelectors.selectActiveSort).pipe(
+    tap((sort: any) => this.activeSortModel = sort)
+  );
+
   ceil = Math.ceil;
+  objectKeys = Object.keys;
 
   constructor(
     private store: Store<GlobalState>,
@@ -152,7 +153,7 @@ export class MarketComponent {
   ) {}
 
   setSort($event: any): void {
-    this.store.dispatch(appStateActions.setActiveSort({ activeSort: $event }));
+    this.store.dispatch(marketStateActions.setActiveSort({ activeSort: $event }));
   }
 
   async batchAction(type: 'transfer' | 'escrow' | 'withdraw' | 'list' | 'sweep'): Promise<void> {

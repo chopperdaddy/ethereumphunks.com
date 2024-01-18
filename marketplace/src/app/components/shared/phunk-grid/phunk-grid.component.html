@@ -1,18 +1,18 @@
 @if (marketType) {
 
-  @if (phunkData) {
-    @for (
-      phunk of phunkData |
-      properties : (activeTraitFilters$ | async) |
-      sort: activeSort : marketType;
-      track phunk.tokenId;
-      let i = $index;
-    ) {
-      @if (i < limit) {
-        <ng-container *ngTemplateOutlet="phunkItem; context:{ $implicit: phunk, index: i }" />
-      }
+  <!-- {{ phunkData | json }} -->
+
+  @for (
+    phunk of phunkData |
+    properties : traitFilters |
+    sort: activeSort : marketType;
+    track phunk.tokenId;
+    let i = $index;
+  ) {
+    @if (!limit || i < limit) {
+      <ng-container *ngTemplateOutlet="phunkItem; context:{ $implicit: phunk, index: i }" />
     }
-  } @else {
+  } @empty {
     @for (i of limitArr; track i) {
       <div class="item-link">
         <div class="item">
@@ -32,7 +32,6 @@
   }
 
   <ng-template #phunkItem let-phunk let-i="index">
-
     <div
       class="item"
       (waIntersectionObservee)="onIntersection($event)"
@@ -75,7 +74,6 @@
         [routerLink]="['/', 'details', phunk.hashId]">
 
         <div class="image-wrapper">
-          <!-- dataSvc.staticUrl + '/images/phunk' + (phunk.tokenId | tokenIdParse) + '.png' -->
           <img
             [lazyLoad]="phunk | imagePipe"
             [defaultImage]="'assets/loadingphunk.png'"
@@ -113,7 +111,6 @@
           </div>
         }
       </a>
-
     </div>
   </ng-template>
 }

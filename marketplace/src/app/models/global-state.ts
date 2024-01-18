@@ -1,11 +1,14 @@
 import { DataState } from './data.state';
+import { MarketState, MarketType } from './market.state';
+
 import { Phunk } from './db';
-import { MarketType, Sort, Sorts } from './pipes';
+import { Sort, Sorts } from './pipes';
 import { Theme } from './theme';
 
 export interface GlobalState {
   appState: AppState;
   dataState: DataState;
+  marketState: MarketState;
 }
 
 export interface AppState {
@@ -21,16 +24,9 @@ export interface AppState {
   activeMenuNav: 'main' | 'leaderboard' | 'curated';
   slideoutActive: boolean;
 
-  selectedPhunks: Phunk[] | null;
-  activeTraitFilters: TraitFilter;
   eventTypeFilter: EventType;
 
   scrollPositions: { [navigationId: number]: number };
-
-  marketType: MarketType;
-  marketSlug: string;
-
-  activeSort: Sort;
 
   currentBlock: number;
   indexerBlock: number;

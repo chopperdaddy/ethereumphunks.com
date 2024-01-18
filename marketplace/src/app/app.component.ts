@@ -19,10 +19,11 @@ import { DataService } from '@/services/data.service';
 import { ThemeService } from '@/services/theme.service';
 
 import { debounceTime, filter, observeOn, scan, tap } from 'rxjs/operators';
-import { asyncScheduler, fromEvent, Observable } from 'rxjs';
+import { asyncScheduler, fromEvent } from 'rxjs';
 
 import * as appStateActions from '@/state/actions/app-state.actions';
 import * as dataStateActions from '@/state/actions/data-state.actions';
+import * as marketStateActions from '@/state/actions/market-state.actions';
 
 @Component({
   standalone: true,
@@ -59,7 +60,7 @@ export class AppComponent {
     this.store.dispatch(dataStateActions.fetchLeaderboard());
     this.store.dispatch(appStateActions.fetchActiveMultiplier());
 
-    this.store.dispatch(dataStateActions.fetchMarketData());
+    this.store.dispatch(marketStateActions.fetchMarketData());
 
     this.router.events.pipe(
       ////////////////////////

@@ -1,6 +1,4 @@
 import { Injectable } from '@angular/core';
-import { HttpParams } from '@angular/common/http';
-import { Location } from '@angular/common';
 
 import { Store } from '@ngrx/store';
 import { ROUTER_NAVIGATION, getRouterSelectors } from '@ngrx/router-store';
@@ -8,32 +6,22 @@ import { ROUTER_NAVIGATION, getRouterSelectors } from '@ngrx/router-store';
 import { Actions, createEffect, ofType } from '@ngrx/effects';
 
 import { Web3Service } from '@/services/web3.service';
-import { DataService } from '@/services/data.service';
 import { ThemeService } from '@/services/theme.service';
 
-import { DataState } from '@/models/data.state';
-import { Cooldowns, GlobalState, Notification } from '@/models/global-state';
+import { GlobalState, Notification } from '@/models/global-state';
 
 import { EMPTY, concatMap, delay, filter, from, map, of, switchMap, tap, withLatestFrom } from 'rxjs';
 
 import * as appStateActions from '@/state/actions/app-state.actions';
 import * as appStateSelectors from '@/state/selectors/app-state.selectors';
 
-import * as dataStateActions from '@/state/actions/data-state.actions';
-import * as dataStateSelectors from '@/state/selectors/data-state.selectors';
+import * as marketStateActions from '@/state/actions/market-state.actions';
+import * as marketStateSelectors from '@/state/selectors/market-state.selectors';
+
 import { environment } from 'src/environments/environment';
 
 @Injectable()
 export class AppStateEffects {
-
-  setMarketTypeFromRoute$ = createEffect(() => this.actions$.pipe(
-    ofType(ROUTER_NAVIGATION),
-    withLatestFrom(this.store.select(getRouterSelectors().selectRouteParams)),
-    tap(([action, routeParams]) => {
-      this.store.dispatch(appStateActions.setMarketType({ marketType: routeParams['marketType'] }));
-      this.store.dispatch(appStateActions.setMarketSlug({ marketSlug: routeParams['slug'] || 'ethereum-phunks' }));
-    })
-  ), { dispatch: false });
 
   routerNavigation$ = createEffect(() => this.actions$.pipe(
     ofType(ROUTER_NAVIGATION),
@@ -50,49 +38,8 @@ export class AppStateEffects {
     map(([_, queryParams, routeParams]) => {
       queryParams = { ...queryParams };
       if (queryParams.address) delete queryParams.address;
-      return appStateActions.setActiveTraitFilters({ activeTraitFilters: queryParams });
+      return marketStateActions.setActiveTraitFilters({ activeTraitFilters: queryParams });
     }),
-  ));
-
-  // Set active market data based on market type
-  onMarketTypeChanged$ = createEffect(() => this.actions$.pipe(
-    ofType(appStateActions.setMarketType),
-    withLatestFrom(
-      this.store.select(appStateSelectors.selectMarketType),
-      this.store.select(getRouterSelectors().selectRouteParam('slug')),
-      this.store.select(getRouterSelectors().selectQueryParam('address')),
-    ),
-    switchMap(([action, marketType, marketSlug, queryAddress]) => {
-
-      // Likely exited market route so we clear some state
-      if (!marketType) {
-        this.store.dispatch(appStateActions.clearActiveTraitFilters());
-        this.store.dispatch(dataStateActions.clearActiveMarketRouteData());
-        return from([]);
-      }
-
-      if (queryAddress) {
-        return this.store.select(appStateSelectors.selectWalletAddress).pipe(
-          switchMap((res) => {
-            if (res && res === queryAddress?.toLowerCase()) {
-              if (marketType === 'bids') return this.store.select(dataStateSelectors.selectUserOpenBids);
-              return this.store.select(dataStateSelectors.selectOwnedPhunks);
-            } else {
-              return this.dataSvc.fetchOwned(queryAddress, marketSlug);
-            }
-          })
-        );
-      }
-
-      if (marketType === 'all') return this.store.select(dataStateSelectors.selectAllPhunks);
-
-      if (marketType === 'listings') return this.store.select(dataStateSelectors.selectListings);
-      if (marketType === 'bids') return this.store.select(dataStateSelectors.selectBids);
-
-      // Default to listings
-      return this.store.select(dataStateSelectors.selectListings);
-    }),
-    map((data: DataState['activeMarketRouteData']) => dataStateActions.setActiveMarketRouteData({ activeMarketRouteData: data })),
   ));
 
   addressChanged$ = createEffect(() => this.actions$.pipe(
@@ -107,26 +54,6 @@ export class AppStateEffects {
       this.store.dispatch(appStateActions.checkHasWithdrawal());
       this.store.dispatch(appStateActions.fetchUserPoints());
       // this.store.dispatch(dataStateActions.fetchOwnedPhunks());
-    }),
-  ), { dispatch: false });
-
-  addTraitFilter$ = createEffect(() => this.actions$.pipe(
-    ofType(appStateActions.addRemoveTraitFilter),
-    withLatestFrom(
-      this.store.select(appStateSelectors.selectActiveTraitFilters),
-      this.store.select(getRouterSelectors().selectQueryParams),
-    ),
-    tap(([action, activeTraitFilters, queryParams]) => {
-      let params: any = {};
-      if (queryParams.address) params.address = queryParams.address;
-      params = { ...params, ...activeTraitFilters };
-
-      let urlParams = new HttpParams();
-      Object.keys(params).map((key) => {
-        if (params[key]) urlParams = urlParams.append(key, params[key]);
-      });
-
-      this.location.go(this.location.path().split('?')[0], urlParams.toString());
     }),
   ), { dispatch: false });
 
@@ -189,34 +116,6 @@ export class AppStateEffects {
     }),
   ), { dispatch: false });
 
-  onClickExternal$ = createEffect(() => this.actions$.pipe(
-    ofType(),
-    // merge(
-    //   this.stateSvc.keyDownEscape$,
-    //   this.stateSvc.documentClick$,
-    //   fromEvent<MouseEvent>(this.modal.nativeElement, 'mousedown'),
-    //   fromEvent<MouseEvent>(this.modal.nativeElement, 'mouseup')
-    // ).pipe(
-    //   filter(() => !(this.el.nativeElement as HTMLElement).classList.contains('sidebar')),
-    //   tap(($event) => {
-
-    //     const modal = this.modal.nativeElement as HTMLElement;
-    //     const target = $event?.target as HTMLElement;
-
-    //     if ($event instanceof KeyboardEvent || (!mouseDownInsideModal && !modal.contains(target))) {
-    //       this.closeModal();
-    //     }
-
-    //     if ($event.type === 'mousedown' && modal.contains(target)) {
-    //       mouseDownInsideModal = true;
-    //     } else if ($event.type === 'mouseup') {
-    //       mouseDownInsideModal = false;
-    //     }
-    //   }),
-    //   takeUntil(this.destroy$)
-    // )
-  ), { dispatch: false });
-
   onNewBlockCheckCooldown$ = createEffect(() => this.actions$.pipe(
     ofType(appStateActions.setCurrentBlock),
     withLatestFrom(this.store.select(appStateSelectors.selectCooldowns)),
@@ -251,6 +150,7 @@ export class AppStateEffects {
         || action.notification.type === 'error'
       ) ?
       of(action).pipe(
+        tap(() => this.store.dispatch(appStateActions.checkHasWithdrawal())),
         delay(5000),
         withLatestFrom(this.store.select(appStateSelectors.selectNotifHoverState)),
         tap(([action, notifHoverState]) => {
@@ -298,8 +198,6 @@ export class AppStateEffects {
     private store: Store<GlobalState>,
     private actions$: Actions,
     private web3Svc: Web3Service,
-    private dataSvc: DataService,
-    private location: Location,
     private themeSvc: ThemeService
   ) {}
 }
