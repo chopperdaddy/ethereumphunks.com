@@ -94,9 +94,9 @@ export class DataService {
     //   console.log('fetchAllWithPagination', res);
     // });
 
-    // this.fetchStats(90, undefined).subscribe((res: any) => {
-    //   console.log('fetchStats', res);
-    // });
+    this.fetchStats(90, undefined).subscribe((res: any) => {
+      console.log('fetchStats', res);
+    });
   }
 
   getFloor(): number {

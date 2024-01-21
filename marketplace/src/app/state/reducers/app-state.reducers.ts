@@ -29,6 +29,10 @@ export const initialState: AppState = {
   cooldowns: JSON.parse(localStorage.getItem('EtherPhunks_cooldowns') || '{}'),
 
   notifHoverState: {},
+
+  searchHistory: JSON.parse(localStorage.getItem('EtherPhunks_searchHistory') || '[]'),
+  searchHistoryActive: false,
+  isSearchResult: false,
 };
 
 export const appStateReducer: ActionReducer<AppState, Action> = createReducer(
@@ -185,5 +189,52 @@ export const appStateReducer: ActionReducer<AppState, Action> = createReducer(
       notifHoverState
     };
     return setNotifHoverState
+  }),
+  on(actions.setSearchHistory, (state, { searchHistory }) => {
+    const setSearchHistory = {
+      ...state,
+      searchHistory
+    };
+    return setSearchHistory
+  }),
+  on(actions.addSearchHistory, (state, { item }) => {
+    let searchHistoryCopy = [ ...state.searchHistory ];
+    const index = searchHistoryCopy.findIndex(itm => itm.value === item.value);
+    if (index > -1) searchHistoryCopy.splice(index, 1);
+    searchHistoryCopy.unshift(item);
+
+    const addSearchHistory = {
+      ...state,
+      searchHistory: searchHistoryCopy
+    };
+    return addSearchHistory
+  }),
+  on(actions.removeSearchHistory, (state, { index }) => {
+    const removeSearchHistory = {
+      ...state,
+      searchHistory: state.searchHistory.filter((_, i) => i !== index)
+    };
+    return removeSearchHistory;
+  }),
+  on(actions.clearSearchHistory, (state) => {
+    const resetSearchHistory = {
+      ...state,
+      searchHistory: []
+    };
+    return resetSearchHistory
+  }),
+  on(actions.setSearchHistoryActive, (state, { searchHistoryActive }) => {
+    const setSearchHistoryActive = {
+      ...state,
+      searchHistoryActive
+    };
+    return setSearchHistoryActive
+  }),
+  on(actions.setIsSearchResult, (state, { isSearchResult }) => {
+    const setIsSearchResult = {
+      ...state,
+      isSearchResult
+    };
+    return setIsSearchResult
   }),
 );

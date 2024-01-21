@@ -93,3 +93,18 @@ export const selectActiveMultiplier = createSelector(
   selectAppState,
   (appState: AppState) => appState.activeMultiplier
 );
+
+export const selectSearchHistory = createSelector(
+  selectAppState,
+  (appState: AppState) => appState.searchHistory
+);
+
+export const selectSearchHistoryActive = createSelector(
+  selectAppState,
+  (appState: AppState) => appState.searchHistoryActive
+);
+
+export const selectIsSearchResult = createSelector(
+  selectAppState,
+  (appState: AppState) => appState.isSearchResult
+);

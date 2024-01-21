@@ -160,12 +160,12 @@ export class PhunkGridComponent implements OnChanges {
         const index = Number(target.dataset.index) + 1;
         const limit = this.limit;
 
-        console.log({
-          children: this.childrenLength(),
-          index,
-          limit,
-          total: this.total,
-        });
+        // console.log({
+        //   children: this.childrenLength(),
+        //   index,
+        //   limit,
+        //   total: this.total,
+        // });
 
         if (index >= (this.childrenLength() - 50)) {
           this.limit = this.limit >= this.total ? this.total : this.childrenLength() + 250;

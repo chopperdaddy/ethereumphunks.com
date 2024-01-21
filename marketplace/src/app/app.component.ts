@@ -1,4 +1,4 @@
-import { Component, Inject } from '@angular/core';
+import { Component, HostListener, Inject } from '@angular/core';
 import { CommonModule, DOCUMENT } from '@angular/common';
 import { NavigationEnd, NavigationStart, Router, RouterModule } from '@angular/router';
 
@@ -106,9 +106,4 @@ export class AppComponent {
   setIsMobile(): void {
     this.store.dispatch(appStateActions.setIsMobile({ isMobile: window.innerWidth < 801 }))
   }
-
-  // @HostListener('document:keydown.escape', ['$event'])
-  // keydownHandler($event: KeyboardEvent) {
-  //   this.stateSvc.setKeydownEscape($event);
-  // }
 }

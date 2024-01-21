@@ -1,6 +1,6 @@
 import { createAction, props } from '@ngrx/store';
 
-import { AppState, Cooldowns, EventType, Notification } from '@/models/global-state';
+import { AppState, Cooldowns, EventType, HistoryItem, Notification } from '@/models/global-state';
 
 export const setConnected = createAction(
   '[App State] Set Wallet Connected',
@@ -134,4 +134,33 @@ export const restoreScrollPosition = createAction(
 export const setNotifHoverState = createAction(
   '[App State] Set Notif Hover State',
   props<{ notifHoverState: AppState['notifHoverState'] }>()
+);
+
+export const setSearchHistory = createAction(
+  '[App State] Set Search History',
+  props<{ searchHistory: AppState['searchHistory'] }>()
+);
+
+export const addSearchHistory = createAction(
+  '[App State] Add Search History',
+  props<{ item: HistoryItem }>()
+);
+
+export const clearSearchHistory = createAction(
+  '[App State] Clear Search History'
+);
+
+export const removeSearchHistory = createAction(
+  '[App State] Remove Search History',
+  props<{ index: number }>()
+);
+
+export const setSearchHistoryActive = createAction(
+  '[App State] Set Search History Active',
+  props<{ searchHistoryActive: boolean }>()
+);
+
+export const setIsSearchResult = createAction(
+  '[App State] Set Is Search Result',
+  props<{ isSearchResult: boolean }>()
 );

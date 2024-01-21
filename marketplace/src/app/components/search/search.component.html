@@ -1,19 +1,56 @@
 <form [formGroup]="phunkBox" (ngSubmit)="onSubmit($event)">
   <div class="input-wrapper">
     <input
+      #searchInput
       type="text"
       [placeholder]="phunkBoxError ? 'Bad input. Try again' : 'Search: 0x, ens or Ethscription ID'"
       formControlName="addressInput"
       [class.error]="phunkBoxError"
       [class.disabled]="phunkBoxLoading"
+      (focus)="onFocus($event)"
+      (blur)="onBlur($event)"
+      autocapitalize="off"
+      autocorrect="off"
+      autocomplete="off"
+      spellcheck="false"
     />
+
+    @if (phunkBox.dirty || phunkBox.touched && phunkBox.value?.addressInput?.length) {
+      <button class="clear" type="reset" (click)="clearInput()">x</button>
+    }
+
+    @if (historyActive$ | async) {
+      @if (searchHistory$ | async; as historyItems) {
+        @if (historyItems.length > 0) {
+          <div class="dropdown">
+            <div class="dropdown-header">
+              <h5>Search History</h5>
+
+                <div>
+                  @if (historyItems.length > 1) {
+                    <button type="button" (click)="clearSearchHistory()">clear</button>
+                  }
+                  <button type="button" class="close" (click)="unfocusInput()">x</button>
+                </div>
+            </div>
+            @for (item of historyItems; track item.value) {
+              <div class="item">
+                <div class="value" (click)="selectHistoryItem(item.value)">{{ item.value }}</div>
+                <div class="remove" (click)="removeHistoryItem(historyItems, item)">x</div>
+              </div>
+            }
+          </div>
+        }
+      }
+    }
   </div>
 
   @if (phunkBoxLoading) {
-    <button>
+    <button class="loader">
       <img src="/assets/loader-{{ theme$ | async }}.gif" width="20" height="20" />
     </button>
   } @else {
-    <button i18n type="submit">Go</button>
+    <button i18n class="submit" type="submit">Go</button>
   }
 </form>
+

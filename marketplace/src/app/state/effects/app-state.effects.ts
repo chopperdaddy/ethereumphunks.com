@@ -158,12 +158,14 @@ export class AppStateEffects {
     withLatestFrom(
       this.store.select(appStateSelectors.selectMenuActive),
       this.store.select(appStateSelectors.selectSlideoutActive),
+      this.store.select(appStateSelectors.selectSearchHistoryActive),
     ),
-    tap(([action, menuActive, slideoutActive]) => {
+    tap(([action, menuActive, slideoutActive, searchHistoryActive]) => {
 
       const slideout = document.querySelector('app-slideout') as HTMLElement;
       const menu = document.querySelector('app-menu') as HTMLElement;
       const header = document.querySelector('app-header') as HTMLElement;
+      const search = document.querySelector('app-search') as HTMLElement;
       const target = action.event.target as HTMLElement;
 
       if (
@@ -181,8 +183,27 @@ export class AppStateEffects {
         this.store.dispatch(appStateActions.setSlideoutActive({ slideoutActive: false }));
       }
 
+      if (
+        searchHistoryActive
+        && !search?.contains(target)
+      ) {
+        this.store.dispatch(appStateActions.setSearchHistoryActive({ searchHistoryActive: false }));
+      }
     }),
   ), { dispatch: false });
+
+  onSearchHistoryClear = createEffect(() => this.actions$.pipe(
+    ofType(
+      appStateActions.clearSearchHistory,
+      appStateActions.addSearchHistory,
+      appStateActions.removeSearchHistory,
+    ),
+    withLatestFrom(this.store.select(appStateSelectors.selectSearchHistory)),
+    map(([action, searchHistory]) => {
+      localStorage.setItem('EtherPhunks_searchHistory', JSON.stringify(searchHistory));
+      return appStateActions.setSearchHistory({ searchHistory });
+    })
+  ));
 
   constructor(
     private store: Store<GlobalState>,

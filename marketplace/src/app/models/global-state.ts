@@ -35,7 +35,13 @@ export interface AppState {
   cooldowns: Cooldowns;
 
   notifHoverState: { [notificationId: string]: boolean };
+
+  searchHistory: HistoryItem[];
+  searchHistoryActive: boolean;
+  isSearchResult: boolean;
 }
+
+export interface HistoryItem { type: string; value: string };
 
 export interface Cooldowns {
   [hashId: string]: number;

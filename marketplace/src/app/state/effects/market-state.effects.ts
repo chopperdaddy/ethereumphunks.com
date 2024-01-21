@@ -103,7 +103,7 @@ export class MarketStateEffects {
     ),
     switchMap(([action, marketSlug, all]) => {
       if (all.length) return of(all);
-      return this.dataSvc.fetchAllWithPagination(marketSlug, 0, this.defaultFetchLength, {}).pipe(
+      return this.dataSvc.fetchAllWithPagination(marketSlug, 0, 110, {}).pipe(
         map((data: MarketState['activeMarketRouteData']) => data.data)
       );
     }),

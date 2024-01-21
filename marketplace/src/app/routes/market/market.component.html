@@ -2,32 +2,25 @@
   <div class="inner">
     @if ((activeMarketRouteData$ | async); as phunkData) {
 
-      <div class="header-wrapper">
-        <h1 i18n>{{ marketTitles[marketType].replace('%collectionName%', (activeCollection$ | async)?.singleName) }}</h1>
-        @if ((route.queryParams | async)?.address; as address) {
-          @if (address) {
-            <h2>
-              by
-              <a [href]="env.explorerUrl + '/address/' + address" target="_blank">
-                <app-address [address]="address" class="highlight" />
-              </a>
-            </h2>
+      @if ((activeCollection$ | async); as collection) {
+        <div class="header-wrapper">
+
+          <h1 i18n>{{ marketTitles[marketType].replace('%collectionName%', collection.singleName) }}</h1>
+
+          @if ((route.queryParams | async)?.address; as address) {
+            @if (address) {
+              <h2>
+                by
+                <a [href]="env.explorerUrl + '/address/' + address" target="_blank">
+                  <app-address [address]="address" class="highlight" />
+                </a>
+              </h2>
+            }
           }
-        }
 
-        {{ phunkData.total }}
-
-        <!-- @if (marketType === 'all') {
-          @if ((activeCollection$ | async); as activeCollection) {
-            <h3>{{ activeCollection.supply | number }} Items Total</h3>
-          } @else {
-            <h3>{{ phunkData.length | number }} Items Total</h3>
-          }
-        } @else {
-          <h3>{{ phunkData.length | number }} Items Total</h3>
-        } -->
-
-      </div>
+          <h3>Showing <span class="highlight">{{ phunkData.total | number }}</span> of {{ collection.supply | number }}</h3>
+        </div>
+      }
 
       <div class="toolbar-wrapper">
         <div class="toolbar">

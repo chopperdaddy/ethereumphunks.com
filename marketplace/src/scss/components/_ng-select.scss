@@ -1,4 +1,11 @@
+.ng-select.ng-select-single .ng-select-container .ng-value-container .ng-input {
+  top: 0;
+  height: 100%;
 
+  input {
+    height: 100%;
+  }
+}
 
 .ng-select {
   outline: none !important;
@@ -45,6 +52,33 @@
     color: rgba(var(--text-color), 1);
   }
 
+  .ng-dropdown-panel {
+    background-color: rgba(var(--background), 1);
+    border: .2rem solid rgba(var(--text-color), 1);
+
+    &.ng-select-bottom {
+      border-top: none;
+    }
+
+    .ng-dropdown-panel-items {
+      .ng-option {
+        background: none;
+        color: rgba(var(--text-color), 1);
+
+        &.ng-option-marked,
+        &.ng-option-selected {
+          background: none;
+          color: rgba(var(--highlight), 1);
+
+          &.ng-option-selected {
+            background: none;
+            color: rgba(var(--highlight), 1);
+          }
+        }
+      }
+    }
+  }
+
   &.ng-select-opened {
     .ng-select-container {
       border: .2rem solid rgba(var(--text-color), 1);
@@ -65,31 +99,57 @@
       box-shadow: none;
     }
   }
-}
 
-.ng-dropdown-panel {
-  background-color: rgba(var(--background), 1);
-  border: .2rem solid rgba(var(--text-color), 1);
+  &.search {
+    border: none;
 
-  &.ng-select-bottom {
-    border-top: none;
-  }
+    .ng-select-container {
+      border: none;
+      background-color: rgba(var(--black), .1);
+      color: rgba(var(--black), 1);
 
-  .ng-dropdown-panel-items {
-    .ng-option {
-      background: none;
-      color: rgba(var(--text-color), 1);
+      .ng-value-container {
 
-      &.ng-option-marked,
-      &.ng-option-selected {
-        background: none;
-        color: rgba(var(--highlight), 1);
+        .ng-placeholder,
+        .ng-input > input,
+        .ng-value {
+          font-family: $secondary-font-stack;
+          font-size: 1.6rem;
+          font-weight: normal;
+          color: rgba(var(--black), .25);
+        }
 
-        &.ng-option-selected {
-          background: none;
-          color: rgba(var(--highlight), 1);
+        .ng-placeholder {
+          font-size: 1.2rem;
+        }
+
+        .ng-input > input {
+          color: rgba(var(--black), 1);
+        }
+
+        .ng-value {
+
         }
       }
     }
+
+    .ng-arrow-wrapper,
+    .ng-clear-wrapper {
+      display: none;
+    }
+
+    .ng-dropdown-panel {
+      border: none;
+      background-color: rgba(var(--black), 1);
+    }
+
+    &.ng-select-focused:not(.ng-select-opened),
+    &.active {
+      .ng-select-container {
+        border: none;
+        box-shadow: none;
+      }
+    }
+
   }
 }
