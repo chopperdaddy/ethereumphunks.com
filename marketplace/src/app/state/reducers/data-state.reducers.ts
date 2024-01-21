@@ -7,7 +7,7 @@ export const initialState: DataState = {
   usd: null,
   events: null,
   singlePhunk: null,
-  userOpenBids: null,
+  userOpenBids: [],
   txHistory: null,
   leaderboard: null,
   collections: null,

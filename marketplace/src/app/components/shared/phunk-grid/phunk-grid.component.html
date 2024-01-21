@@ -1,7 +1,5 @@
 @if (marketType) {
 
-  <!-- {{ phunkData | json }} -->
-
   @for (
     phunk of phunkData |
     properties : traitFilters |
@@ -9,13 +7,13 @@
     track phunk.tokenId;
     let i = $index;
   ) {
-    @if (!limit || i < limit) {
+    @if (i < limit) {
       <ng-container *ngTemplateOutlet="phunkItem; context:{ $implicit: phunk, index: i }" />
     }
   } @empty {
     @for (i of limitArr; track i) {
-      <div class="item-link">
-        <div class="item">
+      <div class="item">
+        <div class="item-link">
           <div class="image-wrapper">
             <img [src]="'assets/loadingphunk.png'" width="50" height="50" />
           </div>
@@ -29,6 +27,15 @@
         </div>
       </div>
     }
+  }
+
+  @if (phunkData && phunkData.length && observe && showLoadMore) {
+    <div class="item more">
+      <!-- <button>Load More</button> -->
+      <div class="image-wrapper">
+        <button (click)="loadMore()">Load More</button>
+      </div>
+    </div>
   }
 
   <ng-template #phunkItem let-phunk let-i="index">
@@ -68,6 +75,8 @@
           </label>
         </div>
       }
+
+      <!-- {{ phunk }} -->
 
       <a
         class="item-link"

@@ -14,7 +14,10 @@ export const initialState: MarketState = {
   listings: [],
   bids: [],
   all: [],
-  activeMarketRouteData: [],
+  activeMarketRouteData: {
+    data: [],
+    total: 0
+  },
 
   selectedPhunks: [],
 
@@ -22,10 +25,8 @@ export const initialState: MarketState = {
   activeTraitFilters: {},
 
   pagination: {
-    currentPage: 1,
-    pageSize: 250,
-    hasMore: false,
-    isLoading: false,
+    fromIndex: 0,
+    toIndex: 0,
   },
 };
 
@@ -80,35 +81,16 @@ export const marketStateReducer: ActionReducer<MarketState, Action> = createRedu
   on(actions.clearActiveMarketRouteData, (state) => {
     const clearActiveMarketRouteData = {
       ...state,
-      activeMarketRouteData: [],
+      activeMarketRouteData: initialState.activeMarketRouteData,
     };
     return clearActiveMarketRouteData
   }),
-  on(actions.setActiveTraitFilters, (state, { activeTraitFilters }) => {
+  on(actions.setActiveTraitFilters, (state, { traitFilters }) => {
     const setActiveTraitFilters = {
       ...state,
-      activeTraitFilters,
+      activeTraitFilters: traitFilters,
     };
     return setActiveTraitFilters
-  }),
-  on(actions.addRemoveTraitFilter, (state, { traitFilter }) => {
-    let activeTraitFilters = { ...state.activeTraitFilters, };
-
-    if (!traitFilter.value) delete activeTraitFilters[traitFilter.key];
-    else activeTraitFilters[traitFilter.key] = traitFilter.value;
-
-    const addRemoveTraitFilter = {
-      ...state,
-      activeTraitFilters,
-    };
-    return addRemoveTraitFilter
-  }),
-  on(actions.clearActiveTraitFilters, (state) => {
-    const clearTraitFilters = {
-      ...state,
-      activeTraitFilters: {},
-    };
-    return clearTraitFilters
   }),
   on(actions.setSelectedPhunks, (state, { selectedPhunks }) => {
     const setSelectedPhunks = {
@@ -131,52 +113,5 @@ export const marketStateReducer: ActionReducer<MarketState, Action> = createRedu
       pagination,
     };
     return setPagination
-  }),
-  on(actions.resetPagination, (state) => {
-    const resetPagination = {
-      ...state,
-      pagination: initialState.pagination,
-    };
-    return resetPagination
-  }),
-  on(actions.setCurrentPage, (state, { currentPage }) => {
-    const setCurrentPage = {
-      ...state,
-      pagination: {
-        ...state.pagination,
-        currentPage,
-      }
-    };
-    return setCurrentPage
-  }),
-  on(actions.setPageSize, (state, { pageSize }) => {
-    const setPageSize = {
-      ...state,
-      pagination: {
-        ...state.pagination,
-        pageSize,
-      }
-    };
-    return setPageSize
-  }),
-  on(actions.setHasMore, (state, { hasMore }) => {
-    const setHasMore = {
-      ...state,
-      pagination: {
-        ...state.pagination,
-        hasMore,
-      }
-    };
-    return setHasMore
-  }),
-  on(actions.setIsLoading, (state, { isLoading }) => {
-    const setIsLoading = {
-      ...state,
-      pagination: {
-        ...state.pagination,
-        isLoading,
-      }
-    };
-    return setIsLoading
   }),
 );

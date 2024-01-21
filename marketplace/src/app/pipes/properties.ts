@@ -16,9 +16,12 @@ export class PropertiesPipe implements PipeTransform {
     if (!value) return [];
     if (!activeTraitFilters) return value;
 
+    const traitFilters: TraitFilter = { ...activeTraitFilters };
+    delete traitFilters['address'];
+
     let filtered = value;
-    const filtersLength = Object.keys(activeTraitFilters).length;
-    const traitCountFilter = activeTraitFilters['trait-count'];
+    const filtersLength = Object.keys(traitFilters).length;
+    const traitCountFilter = traitFilters['trait-count'];
 
     if (traitCountFilter !== undefined) {
       const traitCount = Number(traitCountFilter);
@@ -33,7 +36,7 @@ export class PropertiesPipe implements PipeTransform {
         const matches = res.attributes.filter((attr) => {
           const key = attr?.k?.replace(/ /g, '-')?.toLowerCase();
           const val = attr?.v?.replace(/ /g, '-')?.toLowerCase();
-          return activeTraitFilters[key] === val;
+          return traitFilters[key] === val;
         });
         return matches.length === filtersLength - (traitCountFilter !== undefined ? 1 : 0);
       });

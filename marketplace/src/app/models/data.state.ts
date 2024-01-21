@@ -13,7 +13,7 @@ export interface DataState {
   usd: number | null;
   events: any[] | null;
   singlePhunk: Phunk | null;
-  userOpenBids: Phunk[] | null;
+  userOpenBids: Phunk[];
 
   txHistory: any[] | null;
   leaderboard: any[] | null;

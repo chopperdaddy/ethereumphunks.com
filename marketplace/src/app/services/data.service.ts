@@ -13,7 +13,7 @@ import { Attribute, Bid, Event, Listing, Phunk } from '@/models/db';
 import { createClient } from '@supabase/supabase-js'
 
 import { Observable, of, BehaviorSubject, from, forkJoin, firstValueFrom } from 'rxjs';
-import { map, switchMap, tap, withLatestFrom } from 'rxjs/operators';
+import { catchError, map, switchMap, tap, withLatestFrom } from 'rxjs/operators';
 
 import { NgForage } from 'ngforage';
 
@@ -21,6 +21,7 @@ import { environment } from 'src/environments/environment';
 
 import * as dataStateActions from '@/state/actions/data-state.actions';
 import * as appStateActions from '@/state/actions/app-state.actions';
+import { MarketState } from '@/models/market.state';
 
 const supabaseUrl = environment.supabaseUrl;
 const supabaseKey = environment.supabaseKey;
@@ -88,6 +89,10 @@ export class DataService {
           this.store.dispatch(appStateActions.setIndexerBlock({ indexerBlock: payload.new.blockNumber }));
         },
       ).subscribe();
+
+    // this.fetchAllWithPagination( 'ethereum-phunks', 0, 10, { "hair": "blonde-bob" }).subscribe((res) => {
+    //   console.log('fetchAllWithPagination', res);
+    // });
 
     // this.fetchStats(90, undefined).subscribe((res: any) => {
     //   console.log('fetchStats', res);
@@ -412,13 +417,25 @@ export class DataService {
       switchMap((address) => {
         const query = supabase
           .from('ethscriptions' + this.prefix)
-          .select('*')
+          .select(`
+            *,
+            listings${this.prefix}(minValue)
+          `)
           .in('hashId', hashIds)
           .eq('prevOwner', address)
           .eq('owner', this.escrowAddress)
           .limit(1000);
 
-        return from(query).pipe(map((res: any) => res.data));
+        return from(query).pipe(map((res: any) => {
+          return res.data.map((item: any) => {
+            const listing = item[`listings${this.prefix}`];
+            delete item[`listings${this.prefix}`];
+            return {
+              ...item,
+              listing,
+            };
+          });
+        }));
       }),
     );
   }
@@ -449,85 +466,55 @@ export class DataService {
     );
   }
 
-  fetchAll(
-    slug: string,
-    fromNum: number,
-    toNum: number,
-    filters?: any,
-  ): Observable<Phunk[]> {
-    // console.log('fetchAll', { slug, fromNum, toNum, filters });
+  // fetchAll(
+  //   slug: string,
+  //   fromNum: number,
+  //   toNum: number,
+  //   filters?: any,
+  // ): Observable<Phunk[]> {
+  //   console.log('fetchAll', { slug, fromNum, toNum, filters });
+  //   // console.log('fetchAll', { slug, fromNum, toNum, filters });
 
-    let query = supabase
-      .from('ethscriptions')
-      .select(`
-        tokenId,
-        slug,
-        hashId,
-        sha,
-        attributes!inner()
-      `)
-      .eq('slug', slug)
-      .order('tokenId', { ascending: true })
-      .range(fromNum, toNum);
+  //   let query = supabase
+  //     .from('ethscriptions')
+  //     .select(`
+  //       tokenId,
+  //       slug,
+  //       hashId,
+  //       sha,
+  //       attributes!inner()
+  //     `)
+  //     .eq('slug', slug)
+  //     .order('tokenId', { ascending: true })
+  //     .range(fromNum, toNum);
 
-    if (Object.keys(filters).length) {
-      Object.keys(filters).forEach(key => {
-        const value = filters[key];
-        query = query.ilike(`attributes.values->>${key}`, `%${value}%`);
-      });
-    }
+  //   if (Object.keys(filters).length) {
+  //     Object.keys(filters).forEach(key => {
+  //       const value = filters[key];
+  //       query = query.ilike(`attributes.values->>${key}`, `%${value}%`);
+  //     });
+  //   }
 
-    return from(query).pipe(
-      // tap((res) => console.log('fetchAll', res)),
-      switchMap((res) => {
-        return this.getAttributes(slug).pipe(
-          map((attributes) => {
-            if (!res.data) return [];
-            return res.data?.map((item: any) => {
-              const ethscription = item[`ethscriptions${this.prefix}`];
-              delete item[`ethscriptions${this.prefix}`];
-              return {
-                ...item,
-                ...ethscription,
-                attributes: attributes[item.sha],
-              } as Phunk;
-            })
-          })
-        )
-      }),
-    );
-
-    // return this.getAttributes(slug).pipe(
-    //   map((res) => {
-    //     const shas: string[] = [];
-    //     Object.keys(res).forEach((sha: string) => {
-    //       const attributes = res[sha];
-    //       const exists = attributes.filter((attribute: any) => {
-    //         const k = attribute.k.toLowerCase().replace(/ /g, '-');
-    //         const v = attribute.v.toLowerCase().replace(/ /g, '-');
-    //         return filters[k] && filters[k] === v;
-    //       });
-    //       if (exists?.length && exists.length === Object.keys(filters)?.length) shas.push(sha);
-    //     });
-    //     return shas;
-    //   }),
-    //   switchMap((shas: string[]) => {
-    //     const query = supabase
-    //       .from('ethscriptions' + this.prefix)
-    //       .select(`
-    //         tokenId,
-    //         hashId,
-    //         sha
-    //       `)
-    //       .eq('slug', slug)
-    //       // .in('sha', shas.length ? shas : [])
-    //       .order('tokenId', { ascending: true })
-    //       .range(fromNum, toNum);
-
-    //     return from(query).pipe(map((res: any) => res.data));
-    //   })
-    // );
-  }
+  //   return from(query).pipe(
+  //     // tap((res) => console.log('fetchAll', res)),
+  //     switchMap((res) => {
+  //       return this.getAttributes(slug).pipe(
+  //         map((attributes) => {
+  //           if (!res.data) return [];
+  //           return res.data?.map((item: any) => {
+  //             const ethscription = item[`ethscriptions${this.prefix}`];
+  //             delete item[`ethscriptions${this.prefix}`];
+  //             return {
+  //               ...item,
+  //               ...ethscription,
+  //               attributes: attributes[item.sha],
+  //             } as Phunk;
+  //           })
+  //         })
+  //       )
+  //     }),
+  //   );
+  // }
 
   fetchStats(
     days: number = 1,
@@ -544,6 +531,45 @@ export class DataService {
     return from(query).pipe(
       map((res: any) => res.data[0]),
     )
+  }
+
+  fetchAllWithPagination(
+    slug: string = 'ethereum-phunks',
+    fromNum: number,
+    toNum: number,
+    filters?: any,
+  ): Observable<MarketState['activeMarketRouteData']> {
+
+    return from(
+      supabase.rpc('fetch_all_with_pagination', {
+        p_slug: slug,
+        p_from_num: fromNum,
+        p_to_num: toNum,
+        p_filters: filters,
+      })
+    ).pipe(
+      tap((res) => console.log('fetchAllWithPagination', {slug, fromNum, toNum, filters, res})),
+      switchMap((res: any) => {
+        if (res.error) throw res.error;
+        return this.getAttributes(slug).pipe(
+          map((attributes) => {
+            const data = res.data;
+            return {
+              data: data.data.map((item: Phunk) => ({
+                ...item,
+                attributes: attributes[item.sha],
+              } as Phunk)),
+              total: data.total_count
+            }
+          }),
+        )
+      }),
+      catchError((err) => {
+        console.log('fetchAllWithPagination', err);
+        return of({ data: [], total: 0 });
+      })
+    );
+
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

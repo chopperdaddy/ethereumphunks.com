@@ -10,7 +10,7 @@ import { ThemeService } from '@/services/theme.service';
 
 import { GlobalState, Notification } from '@/models/global-state';
 
-import { EMPTY, concatMap, delay, filter, from, map, of, switchMap, tap, withLatestFrom } from 'rxjs';
+import { EMPTY, concatMap, delay, filter, from, map, mergeMap, of, switchMap, tap, withLatestFrom } from 'rxjs';
 
 import * as appStateActions from '@/state/actions/app-state.actions';
 import * as appStateSelectors from '@/state/selectors/app-state.selectors';
@@ -25,21 +25,11 @@ export class AppStateEffects {
 
   routerNavigation$ = createEffect(() => this.actions$.pipe(
     ofType(ROUTER_NAVIGATION),
-    tap((_) => {
-      this.store.dispatch(appStateActions.setMenuActive({ menuActive: false }));
-      this.store.dispatch(appStateActions.setSlideoutActive({ slideoutActive: false }));
-      this.store.dispatch(appStateActions.setActiveMenuNav({ activeMenuNav: 'main' }));
-    }),
-    withLatestFrom(
-      this.store.select(getRouterSelectors().selectQueryParams),
-      this.store.select(getRouterSelectors().selectRouteParams),
-    ),
-    filter(([_, queryParams, routeParams]) => !!routeParams['marketType']),
-    map(([_, queryParams, routeParams]) => {
-      queryParams = { ...queryParams };
-      if (queryParams.address) delete queryParams.address;
-      return marketStateActions.setActiveTraitFilters({ activeTraitFilters: queryParams });
-    }),
+    mergeMap(() => [
+      appStateActions.setMenuActive({ menuActive: false }),
+      appStateActions.setSlideoutActive({ slideoutActive: false }),
+      appStateActions.setActiveMenuNav({ activeMenuNav: 'main' }),
+    ])
   ));
 
   addressChanged$ = createEffect(() => this.actions$.pipe(

@@ -24,7 +24,6 @@ import { GlobalState } from '@/models/global-state';
 import * as dataStateSelectors from '@/state/selectors/data-state.selectors';
 import * as appStateSelectors from '@/state/selectors/app-state.selectors';
 import * as marketStateSelectors from '@/state/selectors/market-state.selectors';
-import { map } from 'rxjs';
 
 @Component({
   standalone: true,
@@ -66,8 +65,5 @@ export class IndexComponent {
     private store: Store<GlobalState>,
     public themeSvc: ThemeService,
     public dataSvc: DataService,
-  ) {
-    console.log('IndexComponent constructor');
-  }
-
+  ) {}
 }

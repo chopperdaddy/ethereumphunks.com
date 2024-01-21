@@ -1,4 +1,5 @@
 import { Phunk } from './db';
+import { TraitFilter } from './global-state';
 
 export interface MarketState {
   marketType: MarketType | null;
@@ -9,21 +10,22 @@ export interface MarketState {
   listings: Phunk[];
   bids: Phunk[];
   all: Phunk[];
-  activeMarketRouteData: Phunk[];
+
+  activeMarketRouteData: {
+    data: Phunk[];
+    total: number;
+  };
+  pagination: PaginationState;
 
   selectedPhunks: Phunk[];
 
   activeSort: { label: 'Price Low', value: 'price-low' };
-  activeTraitFilters: any;
-
-  pagination: PaginationState;
+  activeTraitFilters: TraitFilter | null;
 }
 
 export type MarketType = 'listings' | 'bids' | 'owned' | 'all';
 
 export interface PaginationState {
-  currentPage: number;
-  pageSize: number;
-  hasMore: boolean;
-  isLoading: boolean;
+  fromIndex: number;
+  toIndex: number;
 };

@@ -9,10 +9,10 @@ import { NgSelectModule } from '@ng-select/ng-select';
 import { DataService } from '@/services/data.service';
 import { GlobalState } from '@/models/global-state';
 
-import { addRemoveTraitFilter } from '@/state/actions/market-state.actions';
+import { setActiveTraitFilters } from '@/state/actions/market-state.actions';
 import { selectActiveTraitFilters } from '@/state/selectors/market-state.selectors';
 
-import { tap } from 'rxjs';
+import { Subject, switchMap, tap } from 'rxjs';
 
 @Component({
   selector: 'app-market-filters',
@@ -43,23 +43,16 @@ export class MarketFiltersComponent {
   ) {}
 
   selectFilter($event: any, key: string): void {
-    // console.log('selectFilter', $event, key);
 
-    this.store.dispatch(addRemoveTraitFilter({ traitFilter: { key, value: $event }}));
+    const filters = { ...this.activeFiltersModel };
+    let urlParams = new HttpParams();
+    Object.keys(filters).forEach((key) => {
+      if (filters[key] === null) delete filters[key];
+      if (filters[key]) urlParams = urlParams.append(key, filters[key]);
+    });
 
-    // const filters = { ...this.activeFiltersModel };
-    // for (let prop in filters) {
-    //   if (filters[prop] === null) delete filters[prop];
-    // }
-
-    // let params = new HttpParams();
-    // Object.keys(filters).map((key) => {
-    //   if (filters[key]) params = params.append(key, filters[key]);
-    // });
-
-    // this.location.go(this.location.path().split('?')[0], params.toString());
-    // this.activeFiltersModel = { ...filters };
-    // this.activeFilters.next(this.activeFiltersModel);
+    this.location.go(this.location.path().split('?')[0], urlParams.toString());
+    this.store.dispatch(setActiveTraitFilters({ traitFilters: { ...filters } }));
   }
 
 }

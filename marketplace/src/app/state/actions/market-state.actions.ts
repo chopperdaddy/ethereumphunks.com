@@ -2,25 +2,16 @@ import { createAction, props } from '@ngrx/store';
 
 import { MarketState, MarketType } from '@/models/market.state';
 import { Phunk } from '@/models/db';
-import { Sort } from '@/models/pipes';
+import { TraitFilter } from '@/models/global-state';
 
 export const setActiveSort = createAction(
   '[Market State] Set Active Sort',
   props<{ activeSort: MarketState['activeSort'] }>()
 );
 
-export const addRemoveTraitFilter = createAction(
-  '[Market State] Add Trait Filter',
-  props<{ traitFilter: any }>()
-);
-
 export const setActiveTraitFilters = createAction(
   '[Market State] Set Active Trait Filters',
-  props<{ activeTraitFilters: any }>()
-);
-
-export const clearActiveTraitFilters = createAction(
-  '[Market State] Clear Active Trait Filters',
+  props<{ traitFilters: TraitFilter }>()
 );
 
 export const setSelectedPhunks = createAction(
@@ -87,36 +78,7 @@ export const triggerDataRefresh = createAction(
   '[Data State] Trigger Data Refresh'
 );
 
-export const setPageSize = createAction(
-  '[Market State] Set Page Size',
-  props<{ pageSize: number }>()
-);
-
-export const setCurrentPage = createAction(
-  '[Market State] Set Current Page',
-  props<{ currentPage: number }>()
-);
-
-export const setHasMore = createAction(
-  '[Market State] Set Has More',
-  props<{ hasMore: boolean }>()
-);
-
-export const setIsLoading = createAction(
-  '[Market State] Set Is Loading',
-  props<{ isLoading: boolean }>()
-);
-
 export const setPagination = createAction(
   '[Market State] Set Pagination',
   props<{ pagination: MarketState['pagination'] }>()
-);
-
-export const setPaginationPartial = createAction(
-  '[Market State] Set Pagination Partial',
-  props<{ partial: Partial<MarketState['pagination']> }>()
-);
-
-export const resetPagination = createAction(
-  '[Market State] Reset Pagination'
 );

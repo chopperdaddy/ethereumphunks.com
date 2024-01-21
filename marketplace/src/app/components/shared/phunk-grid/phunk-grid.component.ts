@@ -63,12 +63,14 @@ export class PhunkGridComponent implements OnChanges {
   @Input() marketType!: MarketType;
   @Input() activeSort!: Sort['value'];
 
-  @Input() phunkData!: Phunk[];
   @Input() viewType: ViewType = 'market';
-  @Input() limit!: number;
+  @Input() phunkData!: Phunk[];
+  @Input() total: number = 0;
+  @Input() limit: number = 0;
+
   @Input() showLabels: boolean = true;
+  @Input() traitFilters!: TraitFilter | null;
   @Input() observe: boolean = false;
-  @Input() traitFilters!: TraitFilter;
 
   @Input() selectable: boolean = false;
   @Input() selectAll: boolean = false;
@@ -79,6 +81,8 @@ export class PhunkGridComponent implements OnChanges {
   limitArr = Array.from({length: this.limit}, (_, i) => i);
 
   usd$ = this.store.select(dataStateSelectors.selectUsd);
+
+  showLoadMore: boolean = false;
 
   constructor(
     private store: Store<GlobalState>,
@@ -96,7 +100,6 @@ export class PhunkGridComponent implements OnChanges {
     }
 
     if (changes.selectAll) {
-
       this.phunkCheck?.forEach((checkbox) => {
         if (!this.phunkData) return;
         checkbox.nativeElement.checked = this.selectAll;
@@ -108,6 +111,14 @@ export class PhunkGridComponent implements OnChanges {
         if (!phunk) return;
         this.selectPhunk(phunk, true, !this.selectAll);
       });
+    }
+
+    if (changes.traitFilters && !changes.traitFilters.firstChange) {
+      this.limit = 250;
+    }
+
+    if (changes.total && this.childrenLength() === this.total) {
+      this.showLoadMore = false;
     }
   }
 
@@ -142,24 +153,43 @@ export class PhunkGridComponent implements OnChanges {
   onIntersection($event: IntersectionObserverEntry[]): void {
     if (!this.observe || !this.phunkData) return;
 
-    // $event.forEach((entry) => {
-    //   if (entry.isIntersecting) {
-    //     const target = entry.target as HTMLElement;
-    //     const index = Number(target.dataset.index);
+    $event.forEach((entry) => {
+      if (entry.isIntersecting) {
 
-    //     // console.log({ index, limit: this.limit, length: this.phunkData?.length, el: this.el.nativeElement.children });
+        const target = entry.target as HTMLElement;
+        const index = Number(target.dataset.index) + 1;
+        const limit = this.limit;
 
-    //     if (
-    //       index >= this.limit - 18 ||
-    //       this.el.nativeElement.children.length < this.limit
-    //     ) {
-    //       this.limit += 50;
+        console.log({
+          children: this.childrenLength(),
+          index,
+          limit,
+          total: this.total,
+        });
 
-    //       if (!this.phunkData) return;
-    //       if (this.limit < this.phunkData.length) return;
-    //       this.store.dispatch(marketStateActions.paginateAll({ limit: this.limit }));
-    //     }
-    //   }
-    // });
+        if (index >= (this.childrenLength() - 50)) {
+          this.limit = this.limit >= this.total ? this.total : this.childrenLength() + 250;
+        }
+
+        this.showLoadMore = this.childrenLength() < this.limit || this.childrenLength() !== this.total;
+      }
+    });
+  }
+
+  loadMore() {
+    if (this.marketType === 'all') {
+      this.store.dispatch(
+        marketStateActions.setPagination({
+          pagination: {
+            fromIndex: this.childrenLength() || 0,
+            toIndex: this.limit >= this.total ? this.total : this.limit,
+          }
+        })
+      );
+    }
+  }
+
+  childrenLength() {
+    return [...this.el.nativeElement.children].filter((child: HTMLElement) => !child.classList.contains('more')).length;
   }
 }

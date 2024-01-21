@@ -15,7 +15,9 @@
           }
         }
 
-        @if (marketType === 'all') {
+        {{ phunkData.total }}
+
+        <!-- @if (marketType === 'all') {
           @if ((activeCollection$ | async); as activeCollection) {
             <h3>{{ activeCollection.supply | number }} Items Total</h3>
           } @else {
@@ -23,7 +25,7 @@
           }
         } @else {
           <h3>{{ phunkData.length | number }} Items Total</h3>
-        }
+        } -->
 
       </div>
 
@@ -57,15 +59,14 @@
               Filter by Attribute
             </button>
 
-            <!-- @if (
+            @if (
               (marketType === 'owned'
               && (route.snapshot.queryParams.address | lowercase) === (walletAddress$ | async))
             ) {
-              || marketType === 'listings'
+              <!-- || marketType === 'listings' -->
               <div class="select-buttons">
-                <button (click)="setSelectMiltiple()" [class.active]="selectMutipleActive">Select</button>
                 @if (selectMutipleActive) {
-                   && marketType !== 'listings'
+                   <!-- && marketType !== 'listings' -->
                   <button
                     class="all-none"
                     [class.all]="selectAll"
@@ -74,8 +75,15 @@
                     all
                   </button>
                 }
+                <button
+                  class="select"
+                  (click)="setSelectMiltiple()"
+                  [class.active]="selectMutipleActive">
+
+                  Select
+                </button>
               </div>
-            } -->
+            }
           </div>
         </div>
 
@@ -120,8 +128,10 @@
           [observe]="true"
           [marketType]="marketType"
           [activeSort]="(activeSort$ | async).value"
+          [limit]="250"
           [traitFilters]="(activeTraitFilters$ | async)"
-          [phunkData]="phunkData"
+          [phunkData]="phunkData.data"
+          [total]="phunkData.total"
           [selectAll]="selectAll"
           [selectable]="
             selectMutipleActive
@@ -148,6 +158,8 @@
             </span> Selected items are not eligible to be listed
           </h3>
         }
+
+        <p class="description">Items with no value will not be listed.</p>
       </div>
 
       <div class="selected-wrapper">
@@ -157,6 +169,7 @@
 
               <div class="selected">
                 <img
+                  [class.listed]="item.value.listing"
                   [lazyLoad]="dataSvc.staticUrl + '/images/' + item.value.sha + '.png'"
                   [defaultImage]="'assets/loadingphunk.png'"
                   width="50"
@@ -165,7 +178,12 @@
 
                 <div class="form-group">
                   <label [for]="item.value.phunkId">List Price</label>
-                  <input type="number" [id]="item.value.phunkId" placeholder="ETH" formControlName="listPrice">
+                  <input
+                    type="number"
+                    [id]="item.value.phunkId"
+                    [placeholder]="((item.value.listing?.minValue | weiToEth) + 'Ξ') || 'ETH'"
+                    formControlName="listPrice"
+                  />
                   @if (selectedPhunksFormArray.controls[i].get('listPrice')?.value) {
                     <button tabindex="-1" class="copy" (click)="copyToNext(i)">Copy</button>
                   }

@@ -139,6 +139,30 @@
         }
       }
     }
+
+    &.more {
+      width: 100%;
+      height: 100%;
+
+      .image-wrapper {
+
+        button {
+          width: 100%;
+          height: 100%;
+          background: none;
+
+          display: flex;
+          align-items: center;
+          justify-content: center;
+
+          font-family: $secondary-font-stack;
+          font-size: 1.4rem;
+          font-weight: normal;
+
+          padding: 2rem 0;
+        }
+      }
+    }
   }
 
   &.selectable {

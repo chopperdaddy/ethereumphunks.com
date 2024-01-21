@@ -70,7 +70,7 @@
     }
 
     &.all-none {
-      margin-left: .5rem;
+      margin-left: 2rem;
       background: none;
       border: .3rem solid rgba(var(--highlight), 1);
 
@@ -83,6 +83,12 @@
     &.active {
       background-color: rgba(var(--highlight), 1);
       color: rgba(var(--black), 1);
+    }
+
+    &.select {
+      &.active {
+        margin-left: .5rem;
+      }
     }
   }
 
@@ -273,6 +279,13 @@ form {
       opacity: .75;
       line-height: 1.2;
     }
+
+    .description {
+      font-size: 1rem;
+      color: rgba(var(--text-color), .75);
+      padding: 0;
+      margin: 2rem 0 0 0;
+    }
   }
 
   .image-grid-wrapper {
@@ -318,6 +331,10 @@ form {
         width: 5rem;
         height: 5rem;
         image-rendering: pixelated;
+
+        &.listed {
+          background-color: rgba(var(--listed-color), 1);
+        }
       }
 
       .form-group {
@@ -348,6 +365,14 @@ form {
         font-weight: normal;
         transform: translateY(-1px);
       }
+    }
+
+    .listed {
+      position: absolute;
+      bottom: 0;
+      right: 0;
+
+      font-size: 1rem;
     }
 
     button {

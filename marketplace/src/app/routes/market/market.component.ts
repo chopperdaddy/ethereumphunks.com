@@ -17,7 +17,7 @@ import { WalletAddressDirective } from '@/directives/wallet-address.directive';
 import { Sorts } from '@/models/pipes';
 import { TokenIdParsePipe } from '@/pipes/token-id-parse.pipe';
 
-import { GlobalState, Notification } from '@/models/global-state';
+import { GlobalState, Notification, TraitFilter } from '@/models/global-state';
 import { Phunk } from '@/models/db';
 
 import { DataService } from '@/services/data.service';
@@ -136,7 +136,13 @@ export class MarketComponent {
 
   marketType$ = this.store.select(marketStateSelectors.selectMarketType);
   activeMarketRouteData$ = this.store.select(marketStateSelectors.selectActiveMarketRouteData);
-  activeTraitFilters$ = this.store.select(marketStateSelectors.selectActiveTraitFilters);
+  activeTraitFilters$ = this.store.select(marketStateSelectors.selectActiveTraitFilters).pipe(
+    map((traitFilters: any) => {
+      const traitFiltersCopy = { ...traitFilters };
+      delete traitFiltersCopy['address'];
+      return traitFiltersCopy as TraitFilter;
+    })
+  );
   activeSort$ = this.store.select(marketStateSelectors.selectActiveSort).pipe(
     tap((sort: any) => this.activeSortModel = sort)
   );
@@ -205,6 +211,7 @@ export class MarketComponent {
       phunkId: [phunk.tokenId],
       hashId: [phunk.hashId],
       sha: [phunk.sha],
+      listing: [phunk.listing],
       listPrice: [''],
     }))) as FormArray;
 
