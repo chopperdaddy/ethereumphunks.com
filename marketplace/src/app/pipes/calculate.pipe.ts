@@ -12,7 +12,7 @@ import { Phunk } from '@/models/db';
 
 export class CalcPipe implements PipeTransform {
 
-  transform(value: Phunk[], type: Calcs): number {
+  transform(value: Phunk[] | any[], type: Calcs): number {
 
     // console.log(value, type)
     if (!value?.length) return 0;
@@ -36,6 +36,11 @@ export class CalcPipe implements PipeTransform {
 
     if (type === 'totalBidsValue') {
       let val = value.reduce((sum, obj) => sum + Number(formatEther(BigInt(obj.bid!.value!))), 0);
+      return val;
+    }
+
+    if (type === 'totalListingsValue') {
+      let val = value.reduce((sum, obj) => sum + Number(formatEther(BigInt(obj.listing!.minValue!))), 0);
       return val;
     }
 

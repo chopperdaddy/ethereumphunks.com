@@ -7,7 +7,15 @@
       <ng-template [ngTemplateOutlet]="githubIcon" />
     </a>
   </div>
+
+  <p class="links">
+    Marketplace: <a [href]="explorerUrl + '/address/' + contract" target="_blank"><app-address [address]="contract" /></a><br />
+    Points: <a [href]="explorerUrl + '/address/' + points" target="_blank"><app-address [address]="points" /></a><br />
+    Contributions: <a [href]="explorerUrl + '/address/' + contributions" target="_blank"><app-address [address]="contributions" /></a>
+  </p>
+
   <p i18n>By using this app, you accept all risks associated, including the loss of funds. The creators of Ethereum Phunks Market are not liable for any issues or damages that may arise from its use.</p>
+
   <p i18n>Be Phree. Be Phunky. 👍</p>
 </div>
 

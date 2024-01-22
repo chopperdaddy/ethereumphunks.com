@@ -267,6 +267,7 @@
       .logo {
         overflow: hidden;
         width: 3rem;
+        transform: translate(0, .25rem);
 
         svg {
           overflow: visible;

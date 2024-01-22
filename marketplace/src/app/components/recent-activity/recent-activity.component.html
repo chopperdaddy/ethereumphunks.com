@@ -48,7 +48,7 @@
               </app-address>
             }
 
-            @if (event.value !== '0' && event.type !== 'transfer') {
+            @if (event.value !== '0' && event.type !== 'transfer' && event.type !== 'created') {
               <span class="value">
                 Ξ{{ event.value | weiToEth }}<br />
               </span>

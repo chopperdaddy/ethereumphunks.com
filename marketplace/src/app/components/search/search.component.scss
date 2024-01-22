@@ -154,6 +154,12 @@ form {
             width: auto;
           }
         }
+
+        > div {
+          display: flex;
+          align-items: center;
+
+        }
       }
 
       .item {

@@ -57,7 +57,7 @@ export class MarketStateEffects {
       }
 
       if (queryAddress) {
-        console.log('onMarketTypeChanged$', action);
+        // console.log('onMarketTypeChanged$', action);
         return this.store.select(appStateSelectors.selectWalletAddress).pipe(
           switchMap((res) => {
             if (res && res === queryAddress?.toLowerCase()) {
@@ -122,7 +122,7 @@ export class MarketStateEffects {
     filter(([action, , marketType]) => {
       return marketType === 'all' && (this.defaultFetchLength + 1) <= action.pagination.toIndex;
     }),
-    tap((action) => console.log('paginateAll', action)),
+    // tap((action) => console.log('paginateAll', action)),
     switchMap(([action, marketSlug, marketType, routeData, traitFilters]) => {
       return this.dataSvc.fetchAllWithPagination(
         marketSlug,

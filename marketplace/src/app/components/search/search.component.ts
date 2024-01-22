@@ -49,7 +49,7 @@ export class SearchComponent {
       withLatestFrom(this.store.select(appStateSelectors.selectIsSearchResult)),
       tap(([$event, isSearchResult]) => {
         if ($event instanceof NavigationEnd) {
-          console.log('NavigationEnd', {$event, isSearchResult});
+          // console.log('NavigationEnd', {$event, isSearchResult});
           if (isSearchResult) {
             this.store.dispatch(appStateActions.setIsSearchResult({ isSearchResult: false }));
             this.phunkBox.reset();
@@ -93,7 +93,7 @@ export class SearchComponent {
         else throw new Error('Invalid Search Parameters');
       }
 
-      console.log({ isEns, isAddress, isTokenId, possibleHashId });
+      // console.log({ isEns, isAddress, isTokenId, possibleHashId });
       let type = isEns ? 'ens' : isAddress ? 'address' : isTokenId ? 'tokenId' : possibleHashId ? 'hashId' : 'unknown';
 
       this.store.dispatch(appStateActions.addSearchHistory({ item: { type, value: addressInput } }));
@@ -115,7 +115,7 @@ export class SearchComponent {
   }
 
   onFocus($event: any): void {
-    console.log('onFocus', $event);
+    // console.log('onFocus', $event);
     this.store.dispatch(appStateActions.setSearchHistoryActive({ searchHistoryActive: true }));
   }
 
@@ -124,23 +124,23 @@ export class SearchComponent {
   }
 
   selectHistoryItem(item: any): void {
-    console.log('selectHistoryItem', item);
+    // console.log('selectHistoryItem', item);
     this.phunkBox.setValue({ addressInput: item });
     this.onSubmit(null);
   }
 
   removeHistoryItem(items: HistoryItem[], item: HistoryItem): void {
-    console.log('removeHistoryItem', item);
+    // console.log('removeHistoryItem', item);
     this.store.dispatch(appStateActions.removeSearchHistory({ index: items.indexOf(item) }));
   }
 
   clearSearchHistory(): void {
-    console.log('removeAllHistory');
+    // console.log('removeAllHistory');
     this.store.dispatch(appStateActions.clearSearchHistory());
   }
 
   clearInput(): void {
-    console.log('clearInput');
+    // console.log('clearInput');
     this.phunkBox.reset();
     this.searchInput.nativeElement.focus();
   }

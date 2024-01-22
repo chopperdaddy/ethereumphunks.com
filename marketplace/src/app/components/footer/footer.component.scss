@@ -34,6 +34,15 @@
 
     p {
       max-width: 50rem;
+
+      &.links {
+        line-height: 1.5;
+        font-size: 1rem;
+
+        a {
+          text-decoration: none;
+        }
+      }
     }
   }
 

@@ -9,7 +9,7 @@
   display: flex;
   align-items: center;
 
-  padding: 1.5rem 1rem;
+  padding: 1rem 1.5rem;
   background-color: rgba(var(--dark-text), .1);
 
   .inner {
@@ -19,15 +19,11 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 0 1rem 2rem 0;
+      padding: .5rem 0 1rem 0;
 
       .pfp-options {
         display: flex;
         align-items: center;
-      }
-
-      .download-pfp {
-
       }
     }
 
@@ -58,11 +54,16 @@
       .save-pfp {
         button {
           background: none;
-          padding: 0 1rem;
+          padding: .5rem 1rem;
           margin: 0;
           color: rgba(var(--highlight), 1);
           font-weight: 700;
           font-size: 1.4rem;
+
+          &.active {
+            background-color: rgba(var(--highlight), 1);
+            color: rgba(var(--background), 1);
+          }
         }
       }
     }

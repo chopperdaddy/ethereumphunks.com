@@ -42,6 +42,7 @@
 
             <button
               class="filters-button"
+              [class.active]="filtersVisible"
               (click)="filtersVisible = !filtersVisible">
 
               @if ((activeTraitFilters$ | async); as filters) {
@@ -52,14 +53,13 @@
               Filter by Attribute
             </button>
 
-            @if (
+            <!-- @if (
               (marketType === 'owned'
               && (route.snapshot.queryParams.address | lowercase) === (walletAddress$ | async))
+              || marketType === 'listings'
             ) {
-              <!-- || marketType === 'listings' -->
               <div class="select-buttons">
-                @if (selectMutipleActive) {
-                   <!-- && marketType !== 'listings' -->
+                @if (selectMutipleActive && marketType !== 'listings') {
                   <button
                     class="all-none"
                     [class.all]="selectAll"
@@ -76,7 +76,7 @@
                   Select
                 </button>
               </div>
-            }
+            } -->
           </div>
         </div>
 
@@ -87,7 +87,7 @@
         ) {
           <div class="selection-toolbar">
             <div class="selected-label">
-              Selected: <span>{{ objectKeys(selected).length }}</span>
+              <span>{{ objectKeys(selected).length }}</span> selected
             </div>
 
             <div class="actions" [class.disabled]="!objectKeys(selected).length">
@@ -141,9 +141,9 @@
 
 <app-slideout [active]="!!(slidseoutActive$ | async)">
   @if (isListingBulk) {
-    <form [formGroup]="bulkListingForm" class="list">
+    <form [formGroup]="bulkActionsForm" class="list">
       <div class="top-bar">
-        <h2 i18n>Bulk List <span class="highlight">{{ bulkListingForm.value.listingPhunks?.length }}</span> items</h2>
+        <h2 i18n>Bulk List <span class="highlight">{{ bulkActionsForm.value.listingPhunks?.length }}</span> items</h2>
         @if (deselected.length) {
           <h3>
             <span class="highlight">
@@ -174,7 +174,7 @@
                   <input
                     type="number"
                     [id]="item.value.phunkId"
-                    [placeholder]="((item.value.listing?.minValue | weiToEth) + 'Ξ') || 'ETH'"
+                    [placeholder]="item.value.listing ? ((item.value.listing?.minValue | weiToEth) + 'Ξ') : 'ETH'"
                     formControlName="listPrice"
                   />
                   @if (selectedPhunksFormArray.controls[i].get('listPrice')?.value) {
@@ -193,9 +193,9 @@
       </div>
     </form>
   } @else if (isTransferingBulk) {
-    <form [formGroup]="bulkListingForm" class="transfer">
+    <form [formGroup]="bulkActionsForm" class="transfer">
       <div class="top-bar">
-        <h2 i18n>Bulk transfer <span class="highlight">{{ bulkListingForm.value.transferPhunks?.length }}</span> Phunks</h2>
+        <h2 i18n>Bulk transfer <span class="highlight">{{ bulkActionsForm.value.transferPhunks?.length }}</span> Phunks</h2>
         @if (deselected.length) {
           <h3>
             <span class="highlight">
@@ -228,9 +228,9 @@
       </div>
     </form>
   } @else if (isEscrowingBulk) {
-    <form [formGroup]="bulkListingForm" class="escrow">
+    <form [formGroup]="bulkActionsForm" class="escrow">
       <div class="top-bar">
-        <h2 i18n>Bulk Escrow <span class="highlight">{{ bulkListingForm.value.escrowPhunks?.length }}</span> items</h2>
+        <h2 i18n>Bulk Escrow <span class="highlight">{{ bulkActionsForm.value.escrowPhunks?.length }}</span> items</h2>
         @if (deselected.length) {
           <h3>
             <span class="highlight">
@@ -256,84 +256,96 @@
         <button type="submit" (click)="submitBatchEscrow()">Escrow All</button>
       </div>
     </form>
+  } @else if (isWithdrawingBulk) {
+    <form [formGroup]="bulkActionsForm" class="withdraw">
+      <div class="top-bar">
+        <h2 i18n>Bulk Withdraw <span class="highlight">{{ bulkActionsForm.value.withdrawPhunks?.length }}</span> items</h2>
+        @if (deselected.length) {
+          <h3>
+            <span class="highlight">
+              {{ deselected.length }}
+            </span> Selected items are not eligible to be withdrawn
+          </h3>
+        }
+      </div>
+
+      <div class="image-grid-wrapper">
+        @for (item of selectedPhunksFormArray.controls; track item.value.hashId; let i = $index) {
+          <div class="image">
+            <img
+              [lazyLoad]="dataSvc.staticUrl + '/images/' + item.value.sha + '.png'"
+              [defaultImage]="'assets/loadingphunk.png'"
+            />
+          </div>
+        }
+      </div>
+
+      <div class="form-actions">
+        <button type="reset" (click)="closeModal()">Cancel</button>
+        <button type="submit" (click)="submitBatchWithdraw()">Withdraw All</button>
+      </div>
+    </form>
+  } @else if (isBuyingBulk) {
+    <form [formGroup]="bulkActionsForm" class="buy">
+      <div class="top-bar">
+        <h2 i18n>Buy <span class="highlight">{{ bulkActionsForm.value.buyPhunks?.length }}</span> items</h2>
+        @if (deselected.length) {
+          <h3>
+            <span class="highlight">
+              {{ deselected.length }}
+            </span> Selected items are not eligible to be purchased
+          </h3>
+        }
+      </div>
+
+      <div class="items-wrapper">
+        @for (item of selectedPhunksFormArray.controls; track item.value.hashId; let i = $index) {
+          <div class="image-wrapper">
+            <img
+              [lazyLoad]="dataSvc.staticUrl + '/images/' + item.value.sha + '.png'"
+              [defaultImage]="'assets/loadingphunk.png'"
+            />
+          </div>
+          <div class="value-wrapper">
+            <span class="token">
+              #{{ item.value.phunkId }}
+            </span>
+            <span class="eth">
+              {{ (item.value.listing?.minValue | weiToEth) | number }}Ξ
+            </span>
+            <span class="usd">
+              ${{ ((item.value.listing?.minValue | weiToEth) * ((usd$ | async) || 0)) | formatCash }}
+            </span>
+          </div>
+        }
+      </div>
+
+      <div class="total-wrapper">
+        <div class="label">Total</div>
+        <div class="value-wrapper">
+          @if ((bulkActionsForm.value.buyPhunks || []) | calc : 'totalListingsValue'; as totalValue) {
+            <span class="eth">
+              {{ (totalValue) | number : '1.0-5' }}Ξ
+            </span>
+            <span class="usd">
+              ${{ (totalValue * ((usd$ | async) || 0)) | formatCash }}
+            </span>
+          }
+        </div>
+      </div>
+
+      <div class="form-actions">
+        <button type="reset" (click)="closeModal()">Cancel</button>
+        <button type="submit" (click)="submitBatchBuy()">Buy All</button>
+      </div>
+    </form>
   }
 </app-slideout>
 
 <ng-template #prevIcon>
-  <svg height="13" viewBox="0 0 8 13" width="8" xmlns="http://www.w3.org/2000/svg">
-    <path
-      d="m5.203125 10.40625v2.5664062h2.6015625v-2.5664062zm-2.6015625-2.6015625v2.6015625h2.6015625v-2.6015625zm-2.6015625-2.6015625v2.6015625h2.6015625v-2.6015625zm2.6015625-2.6015625v2.6015625h2.6015625v-2.6015625zm2.6015625-2.6015625v2.6015625h2.6015625v-2.6015625z"
-      fill="rgba(var(--text-color), 1)" />
-  </svg>
+  <svg height="13" viewBox="0 0 8 13" width="8" xmlns="http://www.w3.org/2000/svg"><path d="m5.203125 10.40625v2.5664062h2.6015625v-2.5664062zm-2.6015625-2.6015625v2.6015625h2.6015625v-2.6015625zm-2.6015625-2.6015625v2.6015625h2.6015625v-2.6015625zm2.6015625-2.6015625v2.6015625h2.6015625v-2.6015625zm2.6015625-2.6015625v2.6015625h2.6015625v-2.6015625z" fill="rgba(var(--text-color), 1)" /></svg>
 </ng-template>
 
 <ng-template #nextIcon>
-  <svg height="13" viewBox="0 0 8 13" width="8" xmlns="http://www.w3.org/2000/svg">
-    <path
-      d="m2.6015625 10.40625v2.5664062h-2.6015625v-2.5664062zm2.6015625-2.6015625v2.6015625h-2.6015625v-2.6015625zm2.6015625-2.6015625v2.6015625h-2.6015625v-2.6015625zm-2.6015625-2.6015625v2.6015625h-2.6015625v-2.6015625zm-2.6015625-2.6015625v2.6015625h-2.6015625v-2.6015625z"
-      fill="rgba(var(--text-color), 1)" />
-  </svg>
-</ng-template>
-
-<ng-template #thumbUpIcon>
-  <svg height="16" viewBox="0 0 15 16" width="15" xmlns="http://www.w3.org/2000/svg">
-    <g fill="none" fill-rule="evenodd">
-      <g fill="#ffca00">
-        <path d="m5 0h1v4h-1z" />
-        <path d="m11 13h1v1h-1z" />
-        <path d="m11 10h2v1h-2z" />
-        <path d="m11 7h2v1h-2z" />
-        <path d="m10 8h1v2h-1z" />
-        <path d="m13 6h1v1h-1z" />
-        <path d="m14 8h1v2h-1z" />
-        <path d="m13 11h1v2h-1z" />
-        <path d="m12 5h1v1h-1z" />
-        <path d="m10 11h1v2h-1z" />
-        <path d="m10 14h1v1h-1z" />
-      </g>
-      <path d="m6 0h1v6h-1z" fill="#ffe73e" />
-      <path d="m5 4h1v10h-1z" fill="#ffe73e" />
-      <path d="m4 6h1v8h-1z" fill="#ffe73e" />
-      <path d="m0 9h2v4h-2z" fill="#ffe73e" />
-      <path d="m10 5h2v2h-2z" fill="#ffe73e" />
-      <path d="m11 8h3v2h-3z" fill="#ffe73e" />
-      <path d="m11 11h2v2h-2z" fill="#ffe73e" />
-      <path d="m11 14h1v1h-1z" fill="#ffe73e" />
-      <path d="m12 6h1v1h-1z" fill="#ffe73e" />
-      <path d="m3 7h1v6h-1z" fill="#ffe73e" />
-      <path d="m7 1h1v4h-1z" fill="#ffe73e" />
-      <path d="m4 4h1v2h-1z" fill="#ffca00" />
-      <path d="m3 6h1v1h-1z" fill="#ffca00" />
-      <path d="m0 8h2v1h-2z" fill="#ffca00" />
-      <path d="m0 13h2v1h-2z" fill="#ffca00" />
-      <path d="m3 13h1v1h-1z" fill="#ffca00" />
-      <path d="m4 14h2v1h-2z" fill="#ffca00" />
-      <path d="m6 14h2v1h-2z" fill="#ffca00" />
-      <path d="m6 6h1v8h-1z" fill="#ffca00" />
-      <path d="m2 9h1v4h-1z" fill="#ffca00" />
-      <path d="m7 5h1v1h-1z" fill="#ffca00" />
-      <path d="m0 7h3v1h-3z" fill="#ff9e00" />
-      <path d="m8 5h2v1h-2z" fill="#ff9e00" />
-      <path d="m9 6h1v1h-1z" fill="#ff9e00" />
-      <path d="m9 14h1v1h-1z" fill="#ff9e00" />
-      <path d="m9 11h1v2h-1z" fill="#ff9e00" />
-      <path d="m9 8h1v2h-1z" fill="#ff9e00" />
-      <path d="m10 7h1v1h-1z" fill="#ff9e00" />
-      <path d="m10 10h1v1h-1z" fill="#ff9e00" />
-      <path d="m10 13h1v1h-1z" fill="#ff9e00" />
-      <path d="m0 14h3v1h-3z" fill="#d76525" />
-      <path d="m3 15h9v1h-9z" fill="#d76525" />
-      <path d="m8 6h1v9h-1z" fill="#d76525" />
-      <path d="m9 7h1v1h-1z" fill="#d76525" />
-      <path d="m9 10h1v1h-1z" fill="#d76525" />
-      <path d="m9 13h1v1h-1z" fill="#d76525" />
-      <path d="m2 8h1v1h-1z" fill="#ff9e00" />
-      <path d="m13 7h1v1h-1z" fill="#ff9e00" />
-      <path d="m13 10h1v1h-1z" fill="#ff9e00" />
-      <path d="m12 13h1v2h-1z" fill="#ff9e00" />
-      <path d="m7 6h1v8h-1z" fill="#ff9e00" />
-      <path d="m2 13h1v1h-1z" fill="#ff9e00" />
-      <path d="m3 14h1v1h-1z" fill="#ff9e00" />
-    </g>
-  </svg>
+  <svg height="13" viewBox="0 0 8 13" width="8" xmlns="http://www.w3.org/2000/svg"><path d="m2.6015625 10.40625v2.5664062h-2.6015625v-2.5664062zm2.6015625-2.6015625v2.6015625h-2.6015625v-2.6015625zm2.6015625-2.6015625v2.6015625h-2.6015625v-2.6015625zm-2.6015625-2.6015625v2.6015625h-2.6015625v-2.6015625zm-2.6015625-2.6015625v2.6015625h-2.6015625v-2.6015625z" fill="rgba(var(--text-color), 1)" /></svg>
 </ng-template>

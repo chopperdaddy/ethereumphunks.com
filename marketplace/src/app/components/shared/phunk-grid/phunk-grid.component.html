@@ -4,7 +4,7 @@
     phunk of phunkData |
     properties : traitFilters |
     sort: activeSort : marketType;
-    track phunk.tokenId;
+    track phunk.sha;
     let i = $index;
   ) {
     @if (i < limit) {
@@ -29,11 +29,11 @@
     }
   }
 
-  @if (phunkData && phunkData.length && observe && showLoadMore) {
+  @if (phunkData && phunkData.length && observe && showLoadMore && marketType === 'all') {
     <div class="item more">
       <!-- <button>Load More</button> -->
       <div class="image-wrapper">
-        <button (click)="loadMore()">Load More</button>
+        <button class="load-more" (click)="loadMore()">Load <br />More</button>
       </div>
     </div>
   }
@@ -101,7 +101,7 @@
             ) {
               @if (phunk.listing; as listing) {
                 <p i18n>
-                  {{ (listing.minValue | weiToEth) }}Ξ<br />
+                  {{ (listing.minValue | weiToEth) | number : '1.0-5' }}Ξ<br />
                   ${{ ((listing.minValue | weiToEth) * ((usd$ | async) || 0)) | formatCash }}
                 </p>
               }

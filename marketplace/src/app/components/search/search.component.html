@@ -24,14 +24,14 @@
         @if (historyItems.length > 0) {
           <div class="dropdown">
             <div class="dropdown-header">
-              <h5>Search History</h5>
+              <div>
+                <h5>Search History</h5>
+                @if (historyItems.length > 1) {
+                  <button type="button" (click)="clearSearchHistory()">clear</button>
+                }
+              </div>
 
-                <div>
-                  @if (historyItems.length > 1) {
-                    <button type="button" (click)="clearSearchHistory()">clear</button>
-                  }
-                  <button type="button" class="close" (click)="unfocusInput()">x</button>
-                </div>
+              <button type="button" class="close" (click)="unfocusInput()">close</button>
             </div>
             @for (item of historyItems; track item.value) {
               <div class="item">

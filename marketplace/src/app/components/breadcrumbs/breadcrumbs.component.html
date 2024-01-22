@@ -1,65 +1,66 @@
 @if (phunk) {
-<div class="breadcrumb">
-  <div class="inner">
+  <div class="breadcrumb">
+    <div class="inner">
 
-    @if (pfpOptionsActive) {
-    <div class="pfp-options-wrapper">
+      @if (pfpOptionsActive) {
+        <div class="pfp-options-wrapper">
 
-      <div class="pfp-options">
-        <div class="shape-select">
-          <input type="radio" id="square" name="shape" value="square" [formControl]="shapeCheck">
-          <label i18n for="square">Square</label>
+          <div class="pfp-options">
+            <div class="shape-select">
+              <input type="radio" id="square" name="shape" value="square" [formControl]="shapeCheck">
+              <label i18n for="square">Square</label>
+            </div>
+
+            <div class="shape-select">
+              <input type="radio" id="round" name="shape" value="round" [formControl]="shapeCheck">
+              <label i18n for="round">Round</label>
+            </div>
+
+            <div class="shape-select">
+              <input type="radio" id="transparent" name="shape" value="trans" [formControl]="shapeCheck">
+              <label i18n for="transparent">Transparent</label>
+            </div>
+          </div>
+        </div>
+      }
+
+      <div class="crumbs-wrapper">
+        <div class="crumbs">
+          <button (click)="history.back()">
+            {{ phunk.collectionName }}
+          </button>
+          <span class="divider">/</span>
+          <span class="number">{{ phunk.tokenId }}</span>
         </div>
 
-        <div class="shape-select">
-          <input type="radio" id="round" name="shape" value="round" [formControl]="shapeCheck">
-          <label i18n for="round">Round</label>
+        <div class="save-pfp">
+          <button
+            (click)="pfpOptionsActive ? downloadCanvas() : togglePfpOptions()"
+            [class.active]="pfpOptionsActive">
+
+            Download
+          </button>
         </div>
-
-        <div class="shape-select">
-          <input type="radio" id="transparent" name="shape" value="trans" [formControl]="shapeCheck">
-          <label i18n for="transparent">Transparent</label>
-        </div>
-      </div>
-
-      <button i18n class="download-pfp" (click)="downloadCanvas()">Download</button>
-    </div>
-    }
-
-    <div class="crumbs-wrapper">
-      <div class="crumbs">
-        <button (click)="history.back()">
-
-          {{ phunk.collectionName }}
-        </button>
-        <span class="divider">/</span>
-        <span class="number">{{ phunk.tokenId }}</span>
-      </div>
-
-      <div class="save-pfp">
-        <button i18n (click)="togglePfpOptions()">
-
-          {{ pfpOptionsActive ? 'Cancel' : 'Download' }}
-        </button>
       </div>
     </div>
   </div>
-</div>
 } @else {
+  <div class="breadcrumb">
+    <div class="inner">
 
-<div class="breadcrumb">
-  <div class="inner">
+      <div class="crumbs-wrapper">
+        <div class="crumbs">
+          <button>Loading...</button>
+          <span class="divider">&nbsp;</span>
+          <span class="number">&nbsp;</span>
+        </div>
 
-    <div class="crumbs-wrapper">
-      <div class="crumbs">
-        <span class="divider">Loading...</span>
+        <div class="save-pfp">
+          <button class="disabled">Download</button>
+        </div>
       </div>
-
-      <div class="save-pfp"></div>
     </div>
   </div>
-</div>
-
 }
 
 <canvas #pfp id="pfp" width="480" height="480" style="display: none;">

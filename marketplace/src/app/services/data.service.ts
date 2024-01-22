@@ -94,9 +94,9 @@ export class DataService {
     //   console.log('fetchAllWithPagination', res);
     // });
 
-    this.fetchStats(90, undefined).subscribe((res: any) => {
-      console.log('fetchStats', res);
-    });
+    // this.fetchStats(90, undefined).subscribe((res: any) => {
+    //   console.log('fetchStats', res);
+    // });
   }
 
   getFloor(): number {
@@ -397,22 +397,22 @@ export class DataService {
   // CHECKS ////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  phunksCanTransfer(hashIds: Phunk['hashId'][]): Observable<any> {
-    return this.walletAddress$.pipe(
-      switchMap((address) => {
-        const query = supabase
-          .from('ethscriptions' + this.prefix)
-          .select('*')
-          .in('hashId', hashIds)
-          .eq('owner', address)
-          .limit(1000);
+  // phunksCanTransfer(hashIds: Phunk['hashId'][]): Observable<any> {
+  //   return this.walletAddress$.pipe(
+  //     switchMap((address) => {
+  //       const query = supabase
+  //         .from('ethscriptions' + this.prefix)
+  //         .select('*')
+  //         .in('hashId', hashIds)
+  //         .eq('owner', address)
+  //         .limit(1000);
 
-        return from(query).pipe(map((res: any) => res.data));
-      }),
-    );
-  }
+  //       return from(query).pipe(map((res: any) => res.data));
+  //     }),
+  //   );
+  // }
 
-  phunksAreInEscrow(hashIds: Phunk['hashId'][]): Observable<any> {
+  phunksAreInEscrow(hashIds: Phunk['hashId'][], checkPrevOwner = true): Observable<any> {
     return this.walletAddress$.pipe(
       switchMap((address) => {
         const query = supabase
@@ -422,12 +422,15 @@ export class DataService {
             listings${this.prefix}(minValue)
           `)
           .in('hashId', hashIds)
-          .eq('prevOwner', address)
           .eq('owner', this.escrowAddress)
           .limit(1000);
 
+        if (checkPrevOwner) query.eq('prevOwner', address);
+
         return from(query).pipe(map((res: any) => {
+          console.log('phunksAreInEscrow', { res, address, hashIds });
           return res.data.map((item: any) => {
+            console.log(item)
             const listing = item[`listings${this.prefix}`];
             delete item[`listings${this.prefix}`];
             return {
@@ -548,7 +551,7 @@ export class DataService {
         p_filters: filters,
       })
     ).pipe(
-      tap((res) => console.log('fetchAllWithPagination', {slug, fromNum, toNum, filters, res})),
+      // tap((res) => console.log('fetchAllWithPagination', {slug, fromNum, toNum, filters, res})),
       switchMap((res: any) => {
         if (res.error) throw res.error;
         return this.getAttributes(slug).pipe(

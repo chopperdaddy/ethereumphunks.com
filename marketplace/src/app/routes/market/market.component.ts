@@ -36,6 +36,8 @@ import * as marketStateActions from '@/state/actions/market-state.actions';
 import { environment } from 'src/environments/environment';
 
 import { firstValueFrom, map, tap } from 'rxjs';
+import { CalcPipe } from '@/pipes/calculate.pipe';
+import { FormatCashPipe } from '@/pipes/format-cash.pipe';
 
 const defaultActionState = {
   canList: false,
@@ -63,6 +65,8 @@ const defaultActionState = {
 
     WalletAddressDirective,
     WeiToEthPipe,
+    CalcPipe,
+    FormatCashPipe,
 
     TokenIdParsePipe,
   ],
@@ -91,15 +95,16 @@ export class MarketComponent {
     // { label: 'Recent', value: 'recent' },
     { label: 'Token ID', value: 'id' }
   ];
+  activeSortModel: any = this.sorts[0];
+  filtersVisible: boolean = false;
 
-  bulkListingForm = this.fb.group({
+  bulkActionsForm = this.fb.group({
     listingPhunks: this.fb.array([]),
     transferPhunks: this.fb.array([]),
     escrowPhunks: this.fb.array([]),
+    withdrawPhunks: this.fb.array([]),
+    buyPhunks: this.fb.array([]),
   });
-
-  activeSortModel: any = this.sorts[0];
-  filtersVisible: boolean = false;
 
   selectedPhunksFormArray: FormArray = this.fb.array([]);
   transferAddress = new FormControl<string | null>('');
@@ -114,6 +119,8 @@ export class MarketComponent {
   isListingBulk: boolean = false;
   isTransferingBulk: boolean = false;
   isEscrowingBulk: boolean = false;
+  isWithdrawingBulk: boolean = false;
+  isBuyingBulk: boolean = false;
 
   actionsState: {
     canList: boolean,
@@ -126,11 +133,7 @@ export class MarketComponent {
   walletAddress$ = this.store.select(appStateSelectors.selectWalletAddress);
   slidseoutActive$ = this.store.select(appStateSelectors.selectSlideoutActive).pipe(
     tap((slideoutActive: boolean) => {
-      if (!slideoutActive) {
-        this.isListingBulk = false;
-        this.isTransferingBulk = false;
-        this.selectedPhunksFormArray = this.fb.array([]);
-      }
+      if (!slideoutActive) this.resetState();
     })
   );
 
@@ -150,6 +153,8 @@ export class MarketComponent {
   ceil = Math.ceil;
   objectKeys = Object.keys;
 
+  usd$ = this.store.select(dataStateSelectors.selectUsd);
+
   constructor(
     private store: Store<GlobalState>,
     public route: ActivatedRoute,
@@ -165,35 +170,51 @@ export class MarketComponent {
   async batchAction(type: 'transfer' | 'escrow' | 'withdraw' | 'list' | 'sweep'): Promise<void> {
     if (!Object.keys(this.selected).length) return;
 
-    if (type === 'sweep') this.buySelected();
+    if (type === 'sweep') await this.buySelected();
     if (type === 'transfer') await this.transferSelected();
-    if (type === 'escrow') await this.batchEscrowSelected();
+    if (type === 'escrow') await this.escrowSelected();
     if (type === 'list') await this.listSelected();
-    if (type === 'withdraw') await this.withdrawBatch();
+    if (type === 'withdraw') await this.withdrawSelected();
   }
 
   // Actions
   async buySelected(): Promise<void> {
-    // check wallet balance
-    await this.web3Svc.batchBuyPhunks(Object.values(this.selected));
+    this.isBuyingBulk = true;
+    this.store.dispatch(appStateActions.setSlideoutActive({ slideoutActive: true }));
+
+    const { inEscrow, notInEscrow } = await this.getSelectedEscrowed(false, true);
+    console.log({inEscrow, notInEscrow});
+    this.deselected = notInEscrow;
+
+    const formArray = this.fb.array(inEscrow.map((phunk: Phunk) => this.fb.group({
+      phunkId: [phunk.tokenId],
+      hashId: [phunk.hashId],
+      sha: [phunk.sha],
+      listing: {
+        minValue: [phunk.listing?.minValue]
+      },
+    }))) as FormArray;
+
+    this.bulkActionsForm.setControl('buyPhunks', formArray);
+    this.selectedPhunksFormArray = this.bulkActionsForm.get('buyPhunks') as FormArray;
   }
 
   async transferSelected(): Promise<void> {
     this.isTransferingBulk = true;
     this.store.dispatch(appStateActions.setSlideoutActive({ slideoutActive: true }));
 
-    const { inEscrow, deselected } = await this.getSelectedEscrowed();
+    const { inEscrow, notInEscrow } = await this.getSelectedEscrowed(false);
     this.deselected = inEscrow;
 
-    const formArray = this.fb.array(deselected.map((phunk: Phunk) => this.fb.group({
+    const formArray = this.fb.array(notInEscrow.map((phunk: Phunk) => this.fb.group({
       phunkId: [phunk.tokenId],
       hashId: [phunk.hashId],
       sha: [phunk.sha],
       listPrice: [''],
     }))) as FormArray;
 
-    this.bulkListingForm.setControl('transferPhunks', formArray);
-    this.selectedPhunksFormArray = this.bulkListingForm.get('transferPhunks') as FormArray;
+    this.bulkActionsForm.setControl('transferPhunks', formArray);
+    this.selectedPhunksFormArray = this.bulkActionsForm.get('transferPhunks') as FormArray;
 
     setTimeout(() => this.transferAddressInput.nativeElement.focus(), 0);
   }
@@ -202,10 +223,8 @@ export class MarketComponent {
     this.isListingBulk = true;
     this.store.dispatch(appStateActions.setSlideoutActive({ slideoutActive: true }));
 
-    const { inEscrow, deselected } = await this.getSelectedEscrowed();
-    this.deselected = deselected;
-
-    // console.log({inEscrow, deselected});
+    const { inEscrow, notInEscrow } = await this.getSelectedEscrowed();
+    this.deselected = notInEscrow;
 
     const formArray = this.fb.array(inEscrow.map((phunk: Phunk) => this.fb.group({
       phunkId: [phunk.tokenId],
@@ -215,20 +234,20 @@ export class MarketComponent {
       listPrice: [''],
     }))) as FormArray;
 
-    this.bulkListingForm.setControl('listingPhunks', formArray);
-    this.selectedPhunksFormArray = this.bulkListingForm.get('listingPhunks') as FormArray;
+    this.bulkActionsForm.setControl('listingPhunks', formArray);
+    this.selectedPhunksFormArray = this.bulkActionsForm.get('listingPhunks') as FormArray;
   }
 
-  async batchEscrowSelected(): Promise<void> {
+  async escrowSelected(): Promise<void> {
     this.isEscrowingBulk = true;
     this.store.dispatch(appStateActions.setSlideoutActive({ slideoutActive: true }));
 
-    const { inEscrow, deselected } = await this.getSelectedEscrowed();
+    const { inEscrow, notInEscrow } = await this.getSelectedEscrowed();
     this.deselected = inEscrow;
 
-    // console.log({inEscrow, deselected})
+    // console.log({inEscrow, notInEscrow})
 
-    const formArray = this.fb.array(deselected.map((phunk: Phunk) => this.fb.group({
+    const formArray = this.fb.array(notInEscrow.map((phunk: Phunk) => this.fb.group({
       phunkId: [phunk.tokenId],
       hashId: [phunk.hashId],
       slug: [phunk.slug],
@@ -236,79 +255,33 @@ export class MarketComponent {
       listPrice: [''],
     }))) as FormArray;
 
-    this.bulkListingForm.setControl('escrowPhunks', formArray);
-    this.selectedPhunksFormArray = this.bulkListingForm.get('escrowPhunks') as FormArray;
+    this.bulkActionsForm.setControl('escrowPhunks', formArray);
+    this.selectedPhunksFormArray = this.bulkActionsForm.get('escrowPhunks') as FormArray;
   }
 
-  async withdrawBatch(): Promise<void> {
-    const selectedHashIds = Object.keys(this.selected);
-    const inEscrow = await firstValueFrom(
-      this.dataSvc.phunksAreInEscrow(selectedHashIds)
-    );
+  async withdrawSelected(): Promise<void> {
+    this.isWithdrawingBulk = true;
+    this.store.dispatch(appStateActions.setSlideoutActive({ slideoutActive: true }));
 
-    const selected: { [string: Phunk['hashId']]: Phunk } = {};
-    inEscrow.forEach((phunk: Phunk) => selected[phunk.hashId] = phunk);
-    this.selected = selected;
+    const { inEscrow, notInEscrow } = await this.getSelectedEscrowed();
+    this.deselected = notInEscrow;
 
-    const hashIds = Object.values(selected).map((phunk: Phunk) => phunk.hashId);
+    const formArray = this.fb.array(inEscrow.map((phunk: Phunk) => this.fb.group({
+      phunkId: [phunk.tokenId],
+      hashId: [phunk.hashId],
+      sha: [phunk.sha],
+      listing: [phunk.listing],
+      listPrice: [''],
+    }))) as FormArray;
 
-    let notification: Notification = {
-      id: Date.now(),
-      type: 'wallet',
-      function: 'withdrawPhunk',
-      hashId: hashIds[0],
-      hashIds,
-      isBatch: true,
-    };
-
-    try {
-      this.store.dispatch(appStateActions.upsertNotification({ notification }));
-
-      const hash = await this.web3Svc.withdrawBatch(Object.keys(selected));
-      notification = {
-        ...notification,
-        type: 'pending',
-        hash,
-      };
-      this.store.dispatch(appStateActions.upsertNotification({ notification }));
-
-      const receipt = await this.web3Svc.pollReceipt(hash!);
-      notification = {
-        ...notification,
-        type: 'complete',
-        hash: receipt.transactionHash,
-      };
-      this.store.dispatch(appStateActions.upsertNotification({ notification }));
-      this.clearSelectedAndClose();
-    } catch (err) {
-      console.log(err);
-      notification = {
-        ...notification,
-        type: 'error',
-        detail: err,
-      };
-      this.store.dispatch(appStateActions.upsertNotification({ notification }));
-    }
-  }
-
-  // Submissions
-  async getSelectedEscrowed(): Promise<{ deselected: Phunk[], inEscrow: Phunk[]}> {
-    const selectedHashIds = Object.keys(this.selected);
-    const inEscrow = await firstValueFrom(
-      this.dataSvc.phunksAreInEscrow(selectedHashIds)
-    );
-
-    const deselected = selectedHashIds
-      .filter(hashId => !inEscrow.find((phunk: Phunk) => phunk.hashId === hashId))
-      .map(hashId => this.selected[hashId]);
-
-    return { deselected, inEscrow };
+    this.bulkActionsForm.setControl('withdrawPhunks', formArray);
+    this.selectedPhunksFormArray = this.bulkActionsForm.get('withdrawPhunks') as FormArray;
   }
 
   async submitBatchTransfer(): Promise<void> {
 
-    if (!this.bulkListingForm.value.transferPhunks) return;
-    const hashIds = this.bulkListingForm.value.transferPhunks.map((phunk: any) => phunk.hashId);
+    if (!this.bulkActionsForm.value.transferPhunks) return;
+    const hashIds = this.bulkActionsForm.value.transferPhunks.map((phunk: any) => phunk.hashId);
 
     if (!hashIds?.length) return;
     if (!this.transferAddress.value) return;
@@ -358,9 +331,9 @@ export class MarketComponent {
   }
 
   async submitBatchListing(): Promise<void> {
-    if (!this.bulkListingForm.value.listingPhunks) return;
+    if (!this.bulkActionsForm.value.listingPhunks) return;
 
-    const newListings = this.bulkListingForm.value.listingPhunks
+    const newListings = this.bulkActionsForm.value.listingPhunks
       .filter((phunk: any) => phunk.listPrice);
 
     if (!newListings.length) return;
@@ -415,16 +388,12 @@ export class MarketComponent {
   }
 
   async submitBatchEscrow(): Promise<void> {
-    if (!this.bulkListingForm.value.escrowPhunks) return;
+    if (!this.bulkActionsForm.value.escrowPhunks) return;
 
-    const selectedHashIds = Object.keys(this.selected);
-    const canTransfer = await firstValueFrom(
-      this.dataSvc.phunksCanTransfer(selectedHashIds)
-    );
+    const { notInEscrow } = await this.getSelectedEscrowed();
 
-    // console.log({canTransfer});
     const selected: { [string: Phunk['hashId']]: Phunk } = {};
-    canTransfer.forEach((phunk: Phunk) => selected[phunk.hashId] = phunk);
+    notInEscrow.forEach((phunk: Phunk) => selected[phunk.hashId] = phunk);
     this.selected = selected;
     // console.log({selected});
 
@@ -448,6 +417,109 @@ export class MarketComponent {
 
     try {
       const hash = await this.web3Svc.transferPhunk(hex, this.escrowAddress);
+      notification = {
+        ...notification,
+        type: 'pending',
+        hash,
+      };
+      this.store.dispatch(appStateActions.upsertNotification({ notification }));
+
+      const receipt = await this.web3Svc.pollReceipt(hash!);
+      notification = {
+        ...notification,
+        type: 'complete',
+        hash: receipt.transactionHash,
+      };
+      this.store.dispatch(appStateActions.upsertNotification({ notification }));
+      this.clearSelectedAndClose();
+    } catch (err) {
+      console.log(err);
+      notification = {
+        ...notification,
+        type: 'error',
+        detail: err,
+      };
+      this.store.dispatch(appStateActions.upsertNotification({ notification }));
+    }
+  }
+
+  async submitBatchWithdraw(): Promise<void> {
+    if (!this.bulkActionsForm.value.withdrawPhunks) return;
+
+    const { inEscrow } = await this.getSelectedEscrowed();
+
+    const selected: { [string: Phunk['hashId']]: Phunk } = {};
+    inEscrow.forEach((phunk: Phunk) => selected[phunk.hashId] = phunk);
+    this.selected = selected;
+
+    const hashIds = Object.values(selected).map((phunk: Phunk) => phunk.hashId);
+
+    let notification: Notification = {
+      id: Date.now(),
+      type: 'wallet',
+      function: 'withdrawPhunk',
+      hashId: hashIds[0],
+      hashIds,
+      isBatch: true,
+    };
+
+    this.store.dispatch(appStateActions.upsertNotification({ notification }));
+    this.closeModal();
+
+    try {
+
+      const hash = await this.web3Svc.withdrawBatch(Object.keys(selected));
+      notification = {
+        ...notification,
+        type: 'pending',
+        hash,
+      };
+      this.store.dispatch(appStateActions.upsertNotification({ notification }));
+
+      const receipt = await this.web3Svc.pollReceipt(hash!);
+      notification = {
+        ...notification,
+        type: 'complete',
+        hash: receipt.transactionHash,
+      };
+      this.store.dispatch(appStateActions.upsertNotification({ notification }));
+      this.clearSelectedAndClose();
+    } catch (err) {
+      console.log(err);
+      notification = {
+        ...notification,
+        type: 'error',
+        detail: err,
+      };
+      this.store.dispatch(appStateActions.upsertNotification({ notification }));
+    }
+  }
+
+  async submitBatchBuy(): Promise<void> {
+    if (!this.bulkActionsForm.value.buyPhunks) return;
+
+    const { inEscrow } = await this.getSelectedEscrowed(false);
+
+    const selected: { [string: Phunk['hashId']]: Phunk } = {};
+    inEscrow.forEach((phunk: Phunk) => selected[phunk.hashId] = phunk);
+    this.selected = selected;
+
+    const hashIds = Object.values(selected).map((phunk: Phunk) => phunk.hashId);
+
+    let notification: Notification = {
+      id: Date.now(),
+      type: 'wallet',
+      function: 'buyPhunk',
+      hashId: hashIds[0],
+      hashIds,
+      isBatch: true,
+    };
+
+    this.store.dispatch(appStateActions.upsertNotification({ notification }));
+
+    try {
+      const hash = await this.web3Svc.batchBuyPhunks(Object.values(selected));
+      // await this.web3Svc.withdrawBatch(Object.keys(selected));
       notification = {
         ...notification,
         type: 'pending',
@@ -519,5 +591,55 @@ export class MarketComponent {
     this.selectedPhunksFormArray.controls[index + 1].get('listPrice')?.setValue(
       this.selectedPhunksFormArray.controls[index].get('listPrice')?.value
     );
+  }
+
+  resetState() {
+    this.isListingBulk = false;
+    this.isTransferingBulk = false;
+    this.isEscrowingBulk = false;
+    this.isWithdrawingBulk = false;
+    this.isBuyingBulk = false;
+    this.selectedPhunksFormArray = this.fb.array([]);
+  }
+
+  // Submissions
+  async getSelectedEscrowed(
+    checkPrevOwner = true,
+    checkConsensus = false
+  ): Promise<{ notInEscrow: Phunk[], inEscrow: Phunk[]}> {
+    let selectedHashIds = Object.keys(this.selected);
+
+    const inEscrow = await firstValueFrom(
+      this.dataSvc.phunksAreInEscrow(selectedHashIds, checkPrevOwner)
+    );
+
+    if (checkConsensus) {
+      const checkPromises = selectedHashIds.map(async (hashId: string) => {
+        const phunk = this.selected[hashId];
+        console.log({phunk});
+        const hasConsensus = await this.dataSvc.checkConsensus(hashId, phunk.owner, phunk.prevOwner);
+        return { hashId, hasConsensus };
+      });
+
+      const checkResults = await Promise.all(checkPromises);
+      selectedHashIds = checkResults
+        .filter(result => result.hasConsensus)
+        .map(result => result.hashId);
+
+      console.log('checkConsensus', {checkResults, selectedHashIds})
+    }
+
+    const notInEscrow = selectedHashIds
+      .filter(hashId => !inEscrow.find((phunk: Phunk) => phunk.hashId === hashId))
+      .map(hashId => this.selected[hashId]);
+
+    console.log({ inEscrow, notInEscrow });
+    return { notInEscrow, inEscrow };
+  }
+
+  async checkConsenus(hashId: string, owner: string, prevOwner: string | null): Promise<boolean> {
+    const consensus = await this.dataSvc.checkConsensus(hashId, owner, prevOwner);
+    if (!consensus) throw new Error('Consensus not reached. Contact Support @etherphunks');
+    return consensus;
   }
 }
