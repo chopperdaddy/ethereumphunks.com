@@ -214,16 +214,21 @@ export class Web3Service {
 
     const network = getNetwork();
     const walletClient = await getWalletClient({ chainId: network.chain?.id });
+    const publicClient = getPublicClient();
 
     const tx: any = {
       address: marketAddress as `0x${string}`,
       abi: EtherPhunksMarketAbi,
       functionName,
-      args
+      args,
+      account: walletClient?.account?.address as `0x${string}`,
     };
     if (value) tx.value = value;
 
-    return await walletClient?.writeContract(tx);
+    const { request, result } = await publicClient.simulateContract(tx);
+    console.log(request, result);
+
+    return await walletClient?.writeContract(request);
   }
 
   async readContract(functionName: string, args: (string | undefined)[]): Promise<any> {
@@ -282,7 +287,9 @@ export class Web3Service {
     return this.marketContractInteraction('batchOfferPhunkForSale', [hashIds, weiValues]);
   }
 
-  async batchBuyPhunks(phunks: Phunk[]): Promise<string | undefined> {
+  async batchBuyPhunks(
+    phunks: Phunk[]
+  ): Promise<string | undefined> {
 
     const walletClient = await getWalletClient();
     const address = walletClient?.account?.address as `0x${string}`;
@@ -300,7 +307,7 @@ export class Web3Service {
       total += BigInt(phunk.listing.minValue);
     }
 
-    console.log({hashIds, minSalePricesInWei, total});
+    if (!hashIds.length || !minSalePricesInWei.length) throw new Error('No phunks selected');
 
     return this.marketContractInteraction(
       'batchBuyPhunk',
@@ -417,6 +424,12 @@ export class Web3Service {
         }
       }
     });
+  }
+
+  async getActiveWalletAddress(): Promise<string | null> {
+    const walletClient = await getWalletClient();
+    const address = walletClient?.account?.address as `0x${string}`;
+    return address;
   }
 
   //////////////////////////////////

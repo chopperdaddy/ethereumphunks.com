@@ -428,9 +428,9 @@ export class DataService {
         if (checkPrevOwner) query.eq('prevOwner', address);
 
         return from(query).pipe(map((res: any) => {
-          console.log('phunksAreInEscrow', { res, address, hashIds });
+          // console.log('phunksAreInEscrow', { res, address, hashIds });
           return res.data.map((item: any) => {
-            console.log(item)
+            // console.log(item)
             const listing = item[`listings${this.prefix}`];
             delete item[`listings${this.prefix}`];
             return {

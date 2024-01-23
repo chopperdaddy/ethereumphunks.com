@@ -53,60 +53,67 @@
               Filter by Attribute
             </button>
 
-            <!-- @if (
-              (marketType === 'owned'
-              && (route.snapshot.queryParams.address | lowercase) === (walletAddress$ | async))
-              || marketType === 'listings'
-            ) {
-              <div class="select-buttons">
-                @if (selectMutipleActive && marketType !== 'listings') {
+            @if ((walletAddress$ | async); as walletAddress) {
+              @if (
+                (marketType === 'owned'
+                && (route.snapshot.queryParams.address | lowercase) === walletAddress)
+                || marketType === 'listings'
+              ) {
+                <div class="select-buttons">
+                  @if (selectMutipleActive && marketType !== 'listings') {
+                    <button
+                      class="all-none"
+                      [class.all]="selectAll"
+                      (click)="selectAll = !selectAll">
+
+                      all
+                    </button>
+                  }
                   <button
-                    class="all-none"
-                    [class.all]="selectAll"
-                    (click)="selectAll = !selectAll">
+                    class="select"
+                    (click)="setSelectActive()"
+                    [class.active]="selectMutipleActive">
 
-                    all
+                    Select
                   </button>
-                }
-                <button
-                  class="select"
-                  (click)="setSelectMiltiple()"
-                  [class.active]="selectMutipleActive">
-
-                  Select
-                </button>
-              </div>
-            } -->
+                </div>
+              }
+            }
           </div>
         </div>
 
-        @if (
-          selectMutipleActive
-          && (((marketType === 'owned')
-          && (route.snapshot.queryParams.address | lowercase) === (walletAddress$ | async)) || marketType === 'listings')
-        ) {
-          <div class="selection-toolbar">
-            <div class="selected-label">
-              <span>{{ objectKeys(selected).length }}</span> selected
-            </div>
+        @if ((walletAddress$ | async); as walletAddress) {
+          @if (
+            selectMutipleActive
+            && (((marketType === 'owned')
+            && (route.snapshot.queryParams.address | lowercase) === walletAddress) || marketType === 'listings')
+          ) {
+            <div class="selection-toolbar">
+              <div class="selected-label">
+                <span>{{ objectKeys(selected).length }}</span> selected
+              </div>
 
-            <div class="actions" [class.disabled]="!objectKeys(selected).length">
-              @if (marketType === 'owned') {
-                <button (click)="batchAction('list')" [class.disabled]="!actionsState.canList">List</button>
-                <button (click)="batchAction('transfer')" [class.disabled]="!actionsState.canTransfer">Transfer</button>
-                <button (click)="batchAction('escrow')" [class.disabled]="!actionsState.canEscrow">Escrow</button>
-                <button (click)="batchAction('withdraw')" [class.disabled]="!actionsState.canWithdraw">Withdraw</button>
-              } @else if (marketType === 'listings') {
-                <div class="total-value">
-                  <span class="label">Total cost: </span>
-                  <span class="value">{{ (selectedValue | weiToEth) | number }}Ξ</span>
-                </div>
-                <button (click)="batchAction('sweep')">
-                  Buy Selected
-                </button>
-              }
+              <div class="actions" [class.disabled]="!objectKeys(selected).length">
+                @if (marketType === 'owned') {
+                  <button (click)="batchAction('list')" [class.disabled]="!actionsState.canList">List</button>
+                  <button (click)="batchAction('transfer')" [class.disabled]="!actionsState.canTransfer">Transfer</button>
+                  <button (click)="batchAction('escrow')" [class.disabled]="!actionsState.canEscrow">Escrow</button>
+                  <button (click)="batchAction('withdraw')" [class.disabled]="!actionsState.canWithdraw">Withdraw</button>
+                } @else if (marketType === 'listings') {
+                  <div class="total-value">
+                    <span class="label">Total cost: </span>
+                    <span class="value">
+                      {{ (objectValues(selected) | calc : 'totalListingsValue') | number : '1.0-5' }}Ξ
+                    </span>
+                    <!-- {{ (selectedValue | weiToEth) | number }}Ξ</span> -->
+                  </div>
+                  <button (click)="batchAction('sweep')">
+                    Buy Selected
+                  </button>
+                }
+              </div>
             </div>
-          </div>
+          }
         }
       </div>
 

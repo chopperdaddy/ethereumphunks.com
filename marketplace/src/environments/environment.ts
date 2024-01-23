@@ -5,8 +5,8 @@ export const environment = {
   rpcHttpProvider: 'http://goerli-geth.dappnode:8545',
   explorerUrl: 'https://goerli.etherscan.io',
 
-  pointsAddress: '0xd21B8CFEd94F121C6F5520F849e12f656E5D05fD'.toLowerCase(),
-  donationsAddress: '0x51a9c3882a39A65daf1f20Ec4360e701f0900769'.toLowerCase(),
+  pointsAddress: '0x24d667C5195a767819C9313D6ceEC09D0Dc06Cfd'.toLowerCase(),
+  donationsAddress: '0x8191f333Da8fEB4De8Ec0d929b136297FDAA34de'.toLowerCase(),
   marketAddress: '0xCd8Ec38A9ff21CF3F2c21d06fE7904dE3c3a52a3'.toLowerCase(),
   auctionAddress: '0xc6a824D8cce7c946A3F35879694b9261A36fc823'.toLowerCase(),
 
