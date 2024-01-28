@@ -601,68 +601,76 @@ export class ProcessingService {
       };
     }
 
-    if (eventName === 'PhunkBidEntered') {
-      const { phunkId: hashId, fromAddress, value } = args;
-      await this.sbSvc.createBid(txn, createdAt, hashId, fromAddress, value);
-      return {
-        txId: txn.hash + log.logIndex,
-        type: eventName,
-        hashId: hashId.toLowerCase(),
-        from: txn.from?.toLowerCase(),
-        to: zeroAddress,
-        blockHash: txn.blockHash,
-        txIndex: txn.transactionIndex,
-        txHash: txn.hash,
-        blockNumber: Number(txn.blockNumber),
-        blockTimestamp: createdAt,
-        value: value.toString(),
-      };
-    }
+    // if (eventName === 'PhunkBidEntered') {
+    //   const { phunkId: hashId, fromAddress, value } = args;
+    //   await this.sbSvc.createBid(txn, createdAt, hashId, fromAddress, value);
+    //   return {
+    //     txId: txn.hash + log.logIndex,
+    //     type: eventName,
+    //     hashId: hashId.toLowerCase(),
+    //     from: txn.from?.toLowerCase(),
+    //     to: zeroAddress,
+    //     blockHash: txn.blockHash,
+    //     txIndex: txn.transactionIndex,
+    //     txHash: txn.hash,
+    //     blockNumber: Number(txn.blockNumber),
+    //     blockTimestamp: createdAt,
+    //     value: value.toString(),
+    //   };
+    // }
 
-    if (eventName === 'PhunkBidWithdrawn') {
-      const { phunkId: hashId } = args;
-      await this.sbSvc.removeBid(hashId);
-      return {
-        txId: txn.hash + log.logIndex,
-        type: eventName,
-        hashId: hashId.toLowerCase(),
-        from: txn.from?.toLowerCase(),
-        to: zeroAddress,
-        blockHash: txn.blockHash,
-        txIndex: txn.transactionIndex,
-        txHash: txn.hash,
-        blockNumber: Number(txn.blockNumber),
-        blockTimestamp: createdAt,
-        value: BigInt(0).toString(),
-      };
-    }
+    // if (eventName === 'PhunkBidWithdrawn') {
+    //   const { phunkId: hashId } = args;
+    //   await this.sbSvc.removeBid(hashId);
+    //   return {
+    //     txId: txn.hash + log.logIndex,
+    //     type: eventName,
+    //     hashId: hashId.toLowerCase(),
+    //     from: txn.from?.toLowerCase(),
+    //     to: zeroAddress,
+    //     blockHash: txn.blockHash,
+    //     txIndex: txn.transactionIndex,
+    //     txHash: txn.hash,
+    //     blockNumber: Number(txn.blockNumber),
+    //     blockTimestamp: createdAt,
+    //     value: BigInt(0).toString(),
+    //   };
+    // }
 
     if (eventName === 'PhunkNoLongerForSale') {
       const { phunkId: hashId } = args;
-      // console.log(args);
       await this.sbSvc.removeListing(hashId);
-      return {
-        txId: txn.hash + log.logIndex,
-        type: eventName,
-        hashId: hashId.toLowerCase(),
-        from: txn.from?.toLowerCase(),
-        to: zeroAddress,
-        blockHash: txn.blockHash,
-        txIndex: txn.transactionIndex,
-        txHash: txn.hash,
-        blockNumber: Number(txn.blockNumber),
-        blockTimestamp: createdAt,
-        value: BigInt(0).toString(),
-      };
+
+      if (txn.from === phunk.prevOwner) {
+        return {
+          txId: txn.hash + log.logIndex,
+          type: eventName,
+          hashId: hashId.toLowerCase(),
+          from: txn.from?.toLowerCase(),
+          to: zeroAddress,
+          blockHash: txn.blockHash,
+          txIndex: txn.transactionIndex,
+          txHash: txn.hash,
+          blockNumber: Number(txn.blockNumber),
+          blockTimestamp: createdAt,
+          value: BigInt(0).toString(),
+        };
+      }
     }
 
     if (eventName === 'PhunkOffered') {
       const { phunkId: hashId, toAddress, minValue } = args;
 
-      // We do this here because the event is emitted after
-      // transfer of ownership. It was not a valid listing.
+      // We do this here because this event is emitted after
+      // transfer of ownership. If the listing was NOT created
+      // by the previous owner, we should ignore it.
       if (txn.from !== phunk.prevOwner) {
-        await writeFile(`./${hashId}.txt`, JSON.stringify({ txn: txn.hash, phunk }));
+        await writeFile(`./${hashId}.json`, JSON.stringify({ txn: txn.hash, phunk }));
+        Logger.error('Listing not created by previous owner', `${hashId.toLowerCase()}`);
+
+        // Since this listing will STILL overwrite existing listings
+        // on the smart contract, we must delete it from the database
+        await this.sbSvc.removeListing(hashId);
         return;
       }
 
