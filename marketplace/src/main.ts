@@ -64,7 +64,7 @@ bootstrapApplication(AppComponent, {
     importProvidersFrom(HttpClientModule),
     provideRouter(
       routes,
-      // withHashLocation(),
+      withHashLocation(),
       // withInMemoryScrolling({
       //   scrollPositionRestoration: 'top',
       // }),

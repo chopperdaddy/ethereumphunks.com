@@ -496,8 +496,9 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
 
     try {
       await this.checkConsenus(hashId, phunk.owner, phunk.prevOwner);
+      if (!phunk.prevOwner) throw new Error('Invalid prevOwner');
 
-      const hash = await this.web3Svc.buyPhunk(hashId, value!);
+      const hash = await this.web3Svc.buyPhunk(phunk.prevOwner, hashId, value!);
       notification = {
         ...notification,
         type: 'pending',

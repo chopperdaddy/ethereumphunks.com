@@ -5,7 +5,7 @@ export const environment = {
   rpcHttpProvider: 'https://eth-goerli.g.alchemy.com/v2/yPJzT7r3rcFmI4ekjA9S7S1SP688b-au',
   explorerUrl: 'https://goerli.etherscan.io',
 
-  pointsAddress: '0x24d667C5195a767819C9313D6ceEC09D0Dc06Cfd'.toLowerCase(),
+  pointsAddress: '0xd21B8CFEd94F121C6F5520F849e12f656E5D05fD'.toLowerCase(),
   donationsAddress: '0x8191f333Da8fEB4De8Ec0d929b136297FDAA34de'.toLowerCase(),
   marketAddress: '0xCd8Ec38A9ff21CF3F2c21d06fE7904dE3c3a52a3'.toLowerCase(),
   // auctionAddress: '0xc6a824D8cce7c946A3F35879694b9261A36fc823'.toLowerCase(),

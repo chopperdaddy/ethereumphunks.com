@@ -15,7 +15,7 @@
           </tr>
         </thead>
         <tbody>
-          @for (event of tokenSales; track event) {
+          @for (event of tokenSales; track event.txHash + '-' + event.type) {
             <tr [class]="(event.type | lowercase) || 'transfer'">
 
               <td>
@@ -52,7 +52,7 @@
                 <div class="cell-inner value">
                   @if (event.value; as value) {
                     @if ((value | weiToEth); as price) {
-                      {{ price | number }}Ξ
+                      {{ price | number : '1.0-5' }}Ξ
                     } @else {
                       <ng-template [ngTemplateOutlet]="placeholderCell" />
                     }

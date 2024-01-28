@@ -8,7 +8,7 @@ import { Observable, catchError, filter, of, tap } from 'rxjs';
 
 import PointsAbi from '@/abi/Points.json';
 import DonationsAbi from '@/abi/Contributions.json';
-import EtherPhunksMarketAbi from '@/abi/EtherPhunksMarket.json';
+import { EtherPhunksMarketABI } from '@/abi/EtherPhunksMarket';
 import AuctionAbi from '@/abi/EtherPhunksAuctionHouse.json';
 
 import { TransactionReceipt, WatchBlockNumberReturnType, decodeFunctionData, formatEther, isAddress, parseEther, zeroAddress } from 'viem';
@@ -157,9 +157,9 @@ export class Web3Service {
     const publicClient = getPublicClient();
     const pendingWithdrawals = await publicClient?.readContract({
       address: marketAddress as `0x${string}`,
-      abi: EtherPhunksMarketAbi,
+      abi: EtherPhunksMarketABI,
       functionName: 'pendingWithdrawals',
-      args: [address],
+      args: [address as `0x${string}`],
     });
     return Number(pendingWithdrawals);
   }
@@ -170,11 +170,14 @@ export class Web3Service {
 
   async isInEscrow(tokenId: string): Promise<boolean> {
     const publicClient = getPublicClient();
+    const address = getAccount().address;
+    if (!address) return false;
+
     const isInEscrow = await publicClient?.readContract({
       address: marketAddress as `0x${string}`,
-      abi: EtherPhunksMarketAbi,
+      abi: EtherPhunksMarketABI,
       functionName: 'userEthscriptionPossiblyStored',
-      args: [getAccount().address, tokenId],
+      args: [address, tokenId as `0x${string}`],
     });
     return !!isInEscrow;
   }
@@ -198,7 +201,7 @@ export class Web3Service {
 
   async decodeInputData(data: string): Promise<any> {
     const decoded = decodeFunctionData({
-      abi: EtherPhunksMarketAbi,
+      abi: EtherPhunksMarketABI,
       data: data as `0x${string}`,
     });
     return decoded;
@@ -216,9 +219,19 @@ export class Web3Service {
     const walletClient = await getWalletClient({ chainId: network.chain?.id });
     const publicClient = getPublicClient();
 
+    const paused = await publicClient.readContract({
+      address: marketAddress as `0x${string}`,
+      abi: EtherPhunksMarketABI,
+      functionName: 'paused'
+    });
+
+    // console.log({ paused, whitelist, functionName });
+    const whitelist = ['batchOfferPhunkForSale', 'offerPhunkForSale', 'phunkNoLongerForSale', 'withdrawPhunk'];
+    if (paused && whitelist.indexOf(functionName) === -1) throw new Error('Contract is paused');
+
     const tx: any = {
       address: marketAddress as `0x${string}`,
-      abi: EtherPhunksMarketAbi,
+      abi: EtherPhunksMarketABI,
       functionName,
       args,
       account: walletClient?.account?.address as `0x${string}`,
@@ -231,13 +244,13 @@ export class Web3Service {
     return await walletClient?.writeContract(request);
   }
 
-  async readContract(functionName: string, args: (string | undefined)[]): Promise<any> {
+  async readContract(functionName: any, args: (string | undefined)[]): Promise<any> {
     const publicClient = getPublicClient();
     const call: any = await publicClient.readContract({
       address: marketAddress as `0x${string}`,
-      abi: EtherPhunksMarketAbi,
+      abi: EtherPhunksMarketABI,
       functionName,
-      args,
+      args: args as any,
     });
     return call;
   }
@@ -294,13 +307,26 @@ export class Web3Service {
     const walletClient = await getWalletClient();
     const address = walletClient?.account?.address as `0x${string}`;
 
+    const escrowAndListing = await this.fetchMultipleEscrowAndListing(phunks);
+
     const hashIds = [];
     const minSalePricesInWei = [];
 
     let total = BigInt(0);
-    for (const phunk of phunks) {
-      if (!phunk.listing) continue;
-      if (phunk.prevOwner?.toLowerCase() === address?.toLowerCase()) continue;
+
+    for (const [i, phunk] of phunks.entries()) {
+      const hashId = phunk.hashId;
+      const stored = escrowAndListing[hashId].stored;
+      const listed = escrowAndListing[hashId][0];
+      const listedBy = escrowAndListing[hashId][2];
+
+      if (
+        !phunk.listing ||
+        !listed ||
+        !stored ||
+        listedBy.toLowerCase() !== phunk.prevOwner?.toLowerCase() ||
+        phunk.prevOwner?.toLowerCase() === address?.toLowerCase()
+      ) continue;
 
       hashIds.push(phunk.hashId);
       minSalePricesInWei.push(BigInt(phunk.listing.minValue));
@@ -308,6 +334,8 @@ export class Web3Service {
     }
 
     if (!hashIds.length || !minSalePricesInWei.length) throw new Error('No phunks selected');
+
+    console.log({ hashIds, minSalePricesInWei, total });
 
     return this.marketContractInteraction(
       'batchBuyPhunk',
@@ -344,23 +372,37 @@ export class Web3Service {
   }
 
   async enterBidForPhunk(hashId: string, value: number): Promise<string | undefined> {
+    return;
     const weiValue = this.ethToWei(value);
     return this.marketContractInteraction('enterBidForPhunk', [hashId], weiValue as any);
   }
 
   async withdrawBidForPhunk(hashId: string): Promise<string | undefined> {
+    return;
     return this.marketContractInteraction('withdrawBidForPhunk', [hashId]);
   }
 
   async acceptBidForPhunk(hashId: string, minPrice: string): Promise<string | undefined> {
-    // We need to make sure this get's added.
-    // Once added, this loop will run through as mm knows it's on the network.
-    // for (let i = 0; i < 11; i++) await this.addFlashbotsNetwork();
-
+    return;
     return this.marketContractInteraction('acceptBidForPhunk', [hashId, minPrice]);
   }
 
-  async buyPhunk(hashId: string, value: string): Promise<string | undefined> {
+  async buyPhunk(owner: string, hashId: string, value: string): Promise<string | undefined> {
+
+    const escrowAndListing = await this.fetchEscrowAndListing(owner, hashId);
+
+    const stored = escrowAndListing[0].result;
+    const listing = escrowAndListing[1].result;
+
+    const listed = listing[0];
+    const listedBy = listing[2];
+
+    if (
+      !stored ||
+      !listed ||
+      listedBy.toLowerCase() !== owner.toLowerCase()
+    ) throw new Error('Phunk not listed for sale');
+
     return this.marketContractInteraction('buyPhunk', [hashId, value], value as any);
   }
 
@@ -390,6 +432,64 @@ export class Web3Service {
       args: [],
     });
     return multiplier;
+  }
+
+  async fetchEscrowAndListing(prevOwner: string, hashId: string): Promise<any> {
+    const publicClient = getPublicClient();
+
+    const contract = {
+      address: marketAddress as `0x${string}`,
+      abi: EtherPhunksMarketABI
+    };
+
+    return await publicClient.multicall({
+      contracts: [{
+        ...contract,
+        functionName: 'userEthscriptionPossiblyStored',
+        args: [prevOwner as `0x${string}`, hashId as `0x${string}`],
+      },
+      {
+        ...contract,
+        functionName: 'phunksOfferedForSale',
+        args: [hashId as `0x${string}`],
+      }]
+    });
+  }
+
+  async fetchMultipleEscrowAndListing(phunks: Phunk[]): Promise<any> {
+    const publicClient = getPublicClient();
+
+    const contract = {
+      address: marketAddress as `0x${string}`,
+      abi: EtherPhunksMarketABI
+    };
+
+    const calls = [];
+    for (const phunk of phunks) {
+      calls.push({
+        ...contract,
+        functionName: 'userEthscriptionPossiblyStored',
+        args: [phunk.prevOwner as `0x${string}`, phunk.hashId as `0x${string}`],
+      });
+      calls.push({
+        ...contract,
+        functionName: 'phunksOfferedForSale',
+        args: [phunk.hashId as `0x${string}`],
+      });
+    }
+
+    const res = await publicClient.multicall({ contracts: calls });
+
+    const combined: any = {};
+    for (let i = 0; i < res.length; i += 2) {
+      const hashId = (res[i + 1] as any).result[1];
+      if (!hashId) continue;
+      combined[hashId] = {
+        stored: (res[i] as any).result,
+        ...(res[i + 1] as any).result,
+      };
+    }
+    return combined;
   }
 
   //////////////////////////////////

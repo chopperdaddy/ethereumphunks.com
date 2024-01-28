@@ -143,31 +143,31 @@
                   }
 
                   <!-- Bid -->
-                  @if (
+                  <!-- @if (
                     (owner | lowercase) !== (address | lowercase) &&
                     (phunk.prevOwner | lowercase) !== (address | lowercase)
                   ) {
                     <button [class.active]="bidActive" class="sell" (click)="bidOnPhunk()">
                       <span>Place Bid</span>
                       <ng-container *ngTemplateOutlet="pending; context:{ $implicit: 'enterBidForPhunk' }" />
-                    </button>
+                    </button> -->
 
                     <!-- Bid Actions -->
-                    @if (bidActive) {
+                    <!-- @if (bidActive) {
                       <ng-container *ngTemplateOutlet="bidForm; context:{ $implicit: phunk }" />
-                    }
-                  }
+                    } -->
+                  <!-- } -->
 
                   <!-- Withdraw Bid button -->
-                  @if ((phunk.bid?.fromAddress | lowercase) === (address | lowercase)) {
+                  <!-- @if ((phunk.bid?.fromAddress | lowercase) === (address | lowercase)) {
                     <button class="sell" (click)="withdrawBidForPhunk(phunk)">
                       <span>Withdraw Bid</span>
                       <ng-container *ngTemplateOutlet="pending; context:{ $implicit: 'withdrawBidForPhunk' }" />
                     </button>
-                  }
+                  } -->
 
                   <!-- Accept Bid button -->
-                  @if (phunk.bid) {
+                  <!-- @if (phunk.bid) {
                     @if (
                       ((owner | lowercase) === (escrowAddress | lowercase)) &&
                       (phunk.prevOwner | lowercase) === (address | lowercase)
@@ -183,12 +183,8 @@
                       @if (acceptbidActive) {
                         <ng-container *ngTemplateOutlet="escrowForm; context:{ $implicit: phunk, type: 'bid' }" />
                       }
-
-                      <!-- <button i18n class="sell" (click)="acceptBidForPhunk(phunk)">
-                        Accept Top Bid
-                      </button> -->
                     }
-                  }
+                  } -->
                 }
 
               } @else {
@@ -224,9 +220,8 @@
         </div>
 
         @defer {
-          <app-tx-history [hashId]="phunk.hashId" />
+          <app-tx-history [phunk]="phunk" />
         }
-        <!-- <app-tx-history [hashId]="phunk.hashId" /> -->
       </div>
     } @else {
       <div class="details-wrapper">
@@ -303,7 +298,7 @@
 </ng-template>
 
 <!-- Bid Form -->
-<ng-template #bidForm let-phunk>
+<!-- <ng-template #bidForm let-phunk>
   <form class="form-wrapper">
     <div class="form-group">
       <label i18n for="bid-price">Bid Price (Ξ)</label>
@@ -315,7 +310,7 @@
       <button i18n type="submit" class="submit" (click)="submitBid(phunk)">Submit</button>
     </div>
   </form>
-</ng-template>
+</ng-template> -->
 
 <!-- Sell Form -->
 <ng-template #sellForm let-phunk>

@@ -19,6 +19,7 @@ import { ZERO_ADDRESS } from '@/constants/utils';
 import { BehaviorSubject, catchError, filter, map, of, switchMap } from 'rxjs';
 import { Store } from '@ngrx/store';
 import { GlobalState } from '@/models/global-state';
+import { Phunk } from '@/models/db';
 
 @Component({
   standalone: true,
@@ -45,16 +46,14 @@ export class TxHistoryComponent implements OnChanges {
   ZERO_ADDRESS = ZERO_ADDRESS;
   explorerUrl = environment.explorerUrl;
 
-  @Input() hashId!: string | undefined;
+  @Input() phunk!: Phunk;
 
   private fetchTxHistory = new BehaviorSubject<string | null>(null);
   fetchTxHistory$ = this.fetchTxHistory.asObservable();
 
   tokenSales$ = this.fetchTxHistory$.pipe(
     filter((hashId) => !!hashId),
-    switchMap((hashId) => {
-      return this.dataSvc.fetchSingleTokenEvents(hashId!);
-    }),
+    switchMap((hashId) => this.dataSvc.fetchSingleTokenEvents(hashId!)),
     map((data) => data?.map((tx: any) => {
       // if (tx.type === 'transfer' && tx.from.toLowerCase() === environment.marketAddress) console.log(tx);
       return {
@@ -74,8 +73,8 @@ export class TxHistoryComponent implements OnChanges {
   ) {}
 
   ngOnChanges(changes: SimpleChanges): void {
-    if (changes.hashId && changes.hashId.currentValue) {
-      this.fetchTxHistory.next(changes.hashId.currentValue);
+    if (changes.phunk && changes.phunk.currentValue) {
+      this.fetchTxHistory.next(this.phunk.hashId);
     }
   }
 }

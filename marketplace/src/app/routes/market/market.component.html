@@ -95,21 +95,25 @@
 
               <div class="actions" [class.disabled]="!objectKeys(selected).length">
                 @if (marketType === 'owned') {
-                  <button (click)="batchAction('list')" [class.disabled]="!actionsState.canList">List</button>
-                  <button (click)="batchAction('transfer')" [class.disabled]="!actionsState.canTransfer">Transfer</button>
-                  <button (click)="batchAction('escrow')" [class.disabled]="!actionsState.canEscrow">Escrow</button>
-                  <button (click)="batchAction('withdraw')" [class.disabled]="!actionsState.canWithdraw">Withdraw</button>
-                } @else if (marketType === 'listings') {
-                  <div class="total-value">
-                    <span class="label">Total cost: </span>
-                    <span class="value">
-                      {{ (objectValues(selected) | calc : 'totalListingsValue') | number : '1.0-5' }}Ξ
-                    </span>
-                    <!-- {{ (selectedValue | weiToEth) | number }}Ξ</span> -->
+                  <div class="actions-group">
+                    <button (click)="batchAction('list')" [class.disabled]="!actionsState.canList">List</button>
+                    <button (click)="batchAction('transfer')" [class.disabled]="!actionsState.canTransfer">Transfer</button>
+                    <button (click)="batchAction('escrow')" [class.disabled]="!actionsState.canEscrow">Escrow</button>
+                    <button (click)="batchAction('withdraw')" [class.disabled]="!actionsState.canWithdraw">Withdraw</button>
                   </div>
-                  <button (click)="batchAction('sweep')">
-                    Buy Selected
-                  </button>
+                } @else if (marketType === 'listings') {
+                  <div class="actions-group buy-side">
+                    <div class="total-value">
+                      <span class="label">Total cost: </span>
+                      <span class="value">
+                        {{ (objectValues(selected) | calc : 'totalListingsValue') | number : '1.0-5' }}Ξ
+                      </span>
+                      <!-- {{ (selectedValue | weiToEth) | number }}Ξ</span> -->
+                    </div>
+                    <button (click)="batchAction('sweep')">
+                      Buy Selected
+                    </button>
+                  </div>
                 }
               </div>
             </div>

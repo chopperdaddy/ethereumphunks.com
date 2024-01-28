@@ -101,10 +101,10 @@ export class MarketStateEffects {
       this.store.select(marketStateSelectors.selectMarketSlug),
       this.store.select(marketStateSelectors.selectAll)
     ),
-    switchMap(([action, marketSlug, all]) => {
-      if (all.length) return of(all);
+    switchMap(([action, marketSlug]) => {
       return this.dataSvc.fetchAllWithPagination(marketSlug, 0, 110, {}).pipe(
-        map((data: MarketState['activeMarketRouteData']) => data.data)
+        map((data: MarketState['activeMarketRouteData']) => data.data),
+        tap((data) => console.log('fetchAll$', data))
       );
     }),
     map((phunks: Phunk[]) => marketStateActions.setAll({ all: phunks }))

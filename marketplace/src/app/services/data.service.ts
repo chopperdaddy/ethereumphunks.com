@@ -86,6 +86,7 @@ export class DataService {
         'postgres_changes',
         { event: '*', schema: 'public', table: 'blocks' },
         (payload: any) => {
+          if (payload.new.network !== environment.chainId) return;
           this.store.dispatch(appStateActions.setIndexerBlock({ indexerBlock: payload.new.blockNumber }));
         },
       ).subscribe();
@@ -254,6 +255,7 @@ export class DataService {
           };
         });
       }),
+      tap((res) => console.log('fetchSingleTokenEvents', res)),
     );
   }
 

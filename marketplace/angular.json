@@ -31,8 +31,7 @@
               "src/favicon.ico",
               "src/assets",
               "src/_static",
-              "src/manifest.webmanifest",
-              "src/_redirects"
+              "src/manifest.webmanifest"
             ],
             "stylePreprocessorOptions": {
               "includePaths": [
