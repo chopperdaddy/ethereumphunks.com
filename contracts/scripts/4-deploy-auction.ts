@@ -24,5 +24,5 @@ export async function deployAuctionHouse(pointsAddress: string) {
 
   console.log(`${contractName} deployed to:`, contractAddress);
   console.log('\nVerify with:');
-  console.log(`npx hardhat verify --network goerli ${contractAddress}`, args.map((arg) => `"${arg}"`).join(' '));
+  console.log(`npx hardhat verify --network sepolia ${contractAddress}`, args.map((arg) => `"${arg}"`).join(' '));
 }

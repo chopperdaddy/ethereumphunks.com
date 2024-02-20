@@ -11,25 +11,21 @@ const _pointsAddress = '0x24d667C5195a767819C9313D6ceEC09D0Dc06Cfd';
 
 describe('EtherPhunksMarket', function () {
 
-  async function deployEtherPhunksMarketFixture() {
-    const [owner, otherAccount] = await ethers.getSigners();
-    const EtherPhunksMarket = await ethers.getContractFactory(contractName);
+  let market: Contract;
+  let owner: HardhatEthersSigner;
+  let otherAccount: HardhatEthersSigner;
 
-    // Deploy as upgradeable proxy
-    const market = await upgrades.deployProxy(
-      EtherPhunksMarket,
-      [_version, _pointsAddress],
-      { initializer: 'initialize' }
-    );
-
-    await market.waitForDeployment();
-
-    return { market, owner, otherAccount };
-  }
+  beforeEach(async () => {
+    // Deploy a fresh instance before each test
+    const deployment = await deployEtherPhunksMarketFixture();
+    market = deployment.market;
+    owner = deployment.owner;
+    otherAccount = deployment.otherAccount;
+  });
 
   describe('Deployment', () => {
     it('Should initialize with the correct contract version and points address', async () => {
-      const { market, owner } = await deployEtherPhunksMarketFixture();
+      // const { market, owner } = await deployEtherPhunksMarketFixture();
 
       const version = await market.contractVersion();
       const pointsAddress = await market.pointsAddress();
@@ -41,9 +37,8 @@ describe('EtherPhunksMarket', function () {
 
   describe('Escrow Phunk', () => {
     it('Should allow a user to escrow a phunk', async () => {
-      const { market, owner } = await deployEtherPhunksMarketFixture();
-      const marketAddress = await market.getAddress();
 
+      const marketAddress = await market.getAddress();
       const phunkId = '0xb73019848d725c4502ed3b4f0d29f7481b54699409e5589dcda52d22829c8dee';
 
       await escrowPhunk(marketAddress, owner, phunkId);
@@ -55,9 +50,8 @@ describe('EtherPhunksMarket', function () {
 
   describe('Offer Phunk for Sale', () => {
     it('Should allow a user to offer a phunk for sale', async () => {
-      const { market, owner } = await deployEtherPhunksMarketFixture();
-      const marketAddress = await market.getAddress();
 
+      const marketAddress = await market.getAddress();
       const phunkId = '0xb73019848d725c4502ed3b4f0d29f7481b54699409e5589dcda52d22829c8dee';
       const minSalePriceInWei = hre.ethers.formatUnits('1000000000000000000', 'wei');
 
@@ -73,8 +67,6 @@ describe('EtherPhunksMarket', function () {
 
   describe('Offer Non-Escrowed Phunk for Sale', () => {
     it('Should revert when a user tries to offer a phunk that is not in escrow', async () => {
-      const { market, owner } = await deployEtherPhunksMarketFixture();
-
       const phunkId = '0xb73019848d725c4502ed3b4f0d29f7481b54699409e5589dcda52d22829c8dee';
       const minSalePriceInWei = hre.ethers.formatUnits('1000000000000000000', 'wei');
 
@@ -88,7 +80,6 @@ describe('EtherPhunksMarket', function () {
 
   describe('Offer Phunk for Sale to Address', () => {
     it('Should allow a user to offer a phunk for sale to another address', async () => {
-      const { market, owner, otherAccount } = await deployEtherPhunksMarketFixture();
       const marketAddress = await market.getAddress();
 
       const phunkId = '0xb73019848d725c4502ed3b4f0d29f7481b54699409e5589dcda52d22829c8dee';
@@ -107,7 +98,6 @@ describe('EtherPhunksMarket', function () {
 
   describe('Offer Non-Escrowed Phunk for Sale to Address', () => {
     it('Should revert when a user tries to offer a phunk for sale, that is not in escrow, to another address', async () => {
-      const { market, owner, otherAccount } = await deployEtherPhunksMarketFixture();
 
       const phunkId = '0xb73019848d725c4502ed3b4f0d29f7481b54699409e5589dcda52d22829c8dee';
       const minSalePriceInWei = hre.ethers.formatUnits('1000000000000000000', 'wei');
@@ -122,7 +112,6 @@ describe('EtherPhunksMarket', function () {
 
   describe('Escrow and list with fallback', () => {
     it('Should allow a user to escrow and list a phunk with fallback function and signature', async () => {
-      const { market, owner } = await deployEtherPhunksMarketFixture();
       const marketAddress = await market.getAddress();
 
       const phunkId = '0xb73019848d725c4502ed3b4f0d29f7481b54699409e5589dcda52d22829c8dee';
@@ -146,7 +135,6 @@ describe('EtherPhunksMarket', function () {
 
   describe('Escrow and list to Address with fallback', () => {
     it('Should allow a user to escrow and list a phunk with fallback function and signature', async () => {
-      const { market, owner, otherAccount } = await deployEtherPhunksMarketFixture();
       const marketAddress = await market.getAddress();
 
       const phunkId = '0xb73019848d725c4502ed3b4f0d29f7481b54699409e5589dcda52d22829c8dee';
@@ -167,6 +155,22 @@ describe('EtherPhunksMarket', function () {
       expect(offer.seller).to.equal(owner.address);
     });
   });
+
+  async function deployEtherPhunksMarketFixture() {
+    const [owner, otherAccount] = await ethers.getSigners();
+    const EtherPhunksMarket = await ethers.getContractFactory(contractName);
+
+    // Deploy as upgradeable proxy
+    const market = await upgrades.deployProxy(
+      EtherPhunksMarket,
+      [_version, _pointsAddress],
+      { initializer: 'initialize' }
+    );
+
+    await market.waitForDeployment();
+
+    return { market, owner, otherAccount };
+  }
 
   async function escrowPhunk(
     marketAddress: string,

@@ -37,6 +37,8 @@ contract EtherPhunksAuctionHouse is
     // The Treasury wallet
     address payable public treasuryWallet;
 
+    mapping(address => mapping(bytes32 => Auction)) public auctions;
+
     constructor(
         address _initialPointsAddress,
         address payable _treasuryWallet,
@@ -65,11 +67,20 @@ contract EtherPhunksAuctionHouse is
      * catch the revert and pause this contract.
      */
     function _createAuction(bytes32 hashId, address owner) internal {
+        IAuctionHouse.Auction memory _auction = auctions[owner][hashId];
+
+        require(
+            _auction.startTime == 0 ||
+            block.timestamp >= auction.endTime,
+            "Auction already exists"
+        );
+
         uint256 startTime = block.timestamp;
         uint256 endTime = startTime + duration;
+
         auctionId++;
 
-        auction = Auction({
+        auctions[owner][hashId] = Auction({
             hashId: hashId,
             owner: owner,
             amount: 0,
@@ -87,8 +98,8 @@ contract EtherPhunksAuctionHouse is
      * @notice Settle an auction, finalizing the bid and paying out to the owner.
      * @dev If there are no bids, the Phunk is burned.
      */
-    function _settleAuction() internal {
-        IAuctionHouse.Auction memory _auction = auction;
+    function _settleAuction(bytes32 hashId, address owner) internal {
+        IAuctionHouse.Auction memory _auction = auctions[owner][hashId];
 
         require(_auction.startTime != 0, "Auction hasn't begun");
         require(!_auction.settled, "Auction has already been settled");
@@ -121,8 +132,8 @@ contract EtherPhunksAuctionHouse is
      * @notice Create a bid for a Phunk, with a given amount.
      * @dev This contract only accepts payment in ETH.
      */
-    function createBid() external payable override nonReentrant {
-        IAuctionHouse.Auction memory _auction = auction;
+    function createBid(bytes32 hashId, address owner) external payable override nonReentrant {
+        IAuctionHouse.Auction memory _auction = auctions[owner][hashId];
 
         require(block.timestamp < _auction.endTime, "Auction expired");
         require(
@@ -288,19 +299,9 @@ contract EtherPhunksAuctionHouse is
 
         require(MerkleProof.verify(proof, merkleRoot, leaf), "MerkleDistributor: Invalid proof.");
 
-        // Check if this is the first auction or if the previous auction has ended
-        if (auction.startTime == 0 || block.timestamp >= auction.endTime) {
-            if (auction.startTime != 0 && !auction.settled) {
-                // Settle the ongoing auction if it's not the first and has ended
-                _settleAuction();
-            }
-            // Escrow the ethscription
-            _onPotentialPhunkDeposit(msg.sender, hashId);
-            // Create a new auction
-            _createAuction(hashId, msg.sender);
-        } else {
-            // Handle the case where an auction is already ongoing and hasn't ended
-            revert("Ongoing auction exists");
-        }
+        // Create a new auction
+        _createAuction(hashId, msg.sender);
+        // Escrow the ethscription
+        _onPotentialPhunkDeposit(msg.sender, hashId);
     }
 }

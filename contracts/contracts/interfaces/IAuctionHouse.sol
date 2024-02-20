@@ -37,7 +37,7 @@ interface IAuctionHouse {
 
     event AuctionMinBidIncrementPercentageUpdated(uint256 minBidIncrementPercentage);
 
-    function createBid() external payable;
+    function createBid(bytes32 hashId, address owner) external payable;
 
     function pause() external;
 

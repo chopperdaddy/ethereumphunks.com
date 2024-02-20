@@ -33,7 +33,7 @@ export async function upgradeMarket() {
   console.log('=====================================================================');
 
   console.log('\n\n=====================================================================');
-  console.log(`Verify with: npx hardhat verify --network goerli ${upgraded}`);
+  console.log(`Verify with: npx hardhat verify --network sepolia ${upgraded}`);
   console.log('=====================================================================');
 }
 

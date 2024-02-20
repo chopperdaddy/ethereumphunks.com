@@ -5,7 +5,7 @@ import hre, { upgrades } from 'hardhat';
 const contractName = 'EtherPhunksMarket';
 
 const _version = 1;
-const _pointsAddress = '0x24d667C5195a767819C9313D6ceEC09D0Dc06Cfd';
+const _pointsAddress = '0x2A953aA14e986b0595A0c5201dD267391BF7d39d';
 
 export async function deployMarket() {
   const [signer] = await hre.ethers.getSigners();
@@ -32,7 +32,7 @@ export async function deployMarket() {
   console.log('=====================================================================');
 
   console.log('\n\n=====================================================================');
-  console.log(`Verify with: npx hardhat verify --network goerli ${proxyAddress}`);
+  console.log(`Verify with: npx hardhat verify --network sepolia ${proxyAddress}`);
   console.log('=====================================================================');
 
   // Get implementation address

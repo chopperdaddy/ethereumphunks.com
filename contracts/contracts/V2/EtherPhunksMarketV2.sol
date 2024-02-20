@@ -15,23 +15,27 @@
 * ░░░░░░░░░░░░░░░░░░░░░░░░░ *
 ****************************/
 
+/*   Changelog:                               */
+/* - Removed MulticallUpgradeable             */
+/* - Removed Bidding functionality            */
+/* - Removed single buyPhunk (dev method)     */
+/* - Added setPointsAddress()                 */
+
 pragma solidity 0.8.20;
 
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/PausableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/utils/MulticallUpgradeable.sol";
 
 import "./interfaces/IPoints.sol";
 import "./EthscriptionsEscrower.sol";
 
-contract EtherPhunksMarket is
+contract EtherPhunksMarketV2 is
     Initializable,
     PausableUpgradeable,
     OwnableUpgradeable,
     ReentrancyGuardUpgradeable,
-    MulticallUpgradeable,
     EthscriptionsEscrower
 {
     bytes32 constant DEPOSIT_AND_LIST_SIGNATURE = 0x4445504f5349545f414e445f4c4953545f5349474e4154555245000000000000;
@@ -57,6 +61,7 @@ contract EtherPhunksMarket is
     mapping(bytes32 => Offer) public phunksOfferedForSale;
     mapping(bytes32 => Bid) public phunkBids;
     mapping(address => uint) public pendingWithdrawals;
+    mapping(address => uint) public pendingWithdrawalsV2;
 
     event PhunkOffered(
         bytes32 indexed phunkId,
@@ -203,13 +208,6 @@ contract EtherPhunksMarket is
         }
     }
 
-    function buyPhunk(
-        bytes32 phunkId,
-        uint minSalePriceInWei
-    ) external payable whenNotPaused nonReentrant {
-        _buyPhunk(phunkId, minSalePriceInWei);
-    }
-
     function batchBuyPhunk(
         bytes32[] calldata phunkIds,
         uint[] calldata minSalePricesInWei
@@ -226,80 +224,6 @@ contract EtherPhunksMarket is
         }
 
         require(msg.value == totalSalePrice, "Incorrect total Ether sent");
-    }
-
-    function enterBidForPhunk(
-        bytes32 phunkId
-    ) external payable whenNotPaused nonReentrant {
-        require(msg.value != 0);
-
-        Bid memory existing = phunkBids[phunkId];
-        require(msg.value > existing.value);
-
-        if (existing.value > 0) {
-            pendingWithdrawals[existing.bidder] += existing.value;
-        }
-
-        phunkBids[phunkId] = Bid(true, phunkId, msg.sender, msg.value);
-        emit PhunkBidEntered(phunkId, msg.value, msg.sender);
-    }
-
-    function acceptBidForPhunk(
-        bytes32 phunkId,
-        uint minPrice
-    ) external whenNotPaused nonReentrant {
-        require(
-            !userEthscriptionDefinitelyNotStored(msg.sender, phunkId),
-            unicode"That's not your Phunk 🖕"
-        );
-
-        address seller = msg.sender;
-
-        Bid memory bid = phunkBids[phunkId];
-        address bidder = bid.bidder;
-
-        require(
-            bid.value != 0 &&
-            bid.value >= minPrice &&
-            seller != bidder,
-            unicode"No Phunk for you 🖕"
-        );
-
-        phunksOfferedForSale[phunkId] = Offer(
-            false,
-            phunkId,
-            bidder,
-            0,
-            address(0x0)
-        );
-
-        uint amount = bid.value;
-        pendingWithdrawals[seller] += amount;
-
-        _addPoints(seller, 100);
-
-        _transferEthscription(seller, bidder, phunkId);
-        emit PhunkBought(phunkId, amount, seller, bidder);
-
-        phunkBids[phunkId] = Bid(false, phunkId, address(0x0), 0);
-    }
-
-    function withdrawBidForPhunk(
-      bytes32 phunkId
-    ) external nonReentrant {
-        Bid memory bid = phunkBids[phunkId];
-        require(
-            bid.bidder == msg.sender,
-            unicode"That's not your bid, Phunk 🖕"
-        );
-
-        emit PhunkBidWithdrawn(phunkId, bid.value, msg.sender);
-
-        uint amount = bid.value;
-        phunkBids[phunkId] = Bid(false, phunkId, address(0x0), 0);
-
-        (bool sent, ) = payable(msg.sender).call{value: amount}("");
-        require(sent, "Failed to send Ether");
     }
 
     function withdraw() public nonReentrant {
@@ -442,4 +366,49 @@ contract EtherPhunksMarket is
 
         _onPotentialEthscriptionDeposit(msg.sender, msg.data);
     }
+
+    /* ******************** */
+    /* ******** V2 ******** */
+    /* ******************** */
+
+    function setPointsAddress(address _pointsAddress) public onlyOwner {
+        pointsAddress = _pointsAddress;
+    }
+
+    // mapping(address => bytes32[]) public phunksForSale;
+
+    // mapping(address => mapping(bytes32 => Offer)) public phunksOfferedForSaleV2;
+
+    // mapping(address => mapping(bytes32 => Offer)) public phunksOfferedForSaleByAddress;
+
+    // function _checkOwnership(
+    //     bytes32 phunkId,
+    //     uint minPrice
+    // ) external whenNotPaused nonReentrant {
+    //     bool isOwner = false;
+    //     Offer memory offer;
+
+    //     for (uint256 i = 0; i < phunksForSale[msg.sender].length; i++) {
+    //         if (phunksOfferedForSale[phunksForSale[msg.sender][i]].phunkId == phunkId) {
+    //             isOwner = true;
+    //             offer = phunksOfferedForSale[phunksForSale[msg.sender][i]];
+    //             delete phunksForSale[msg.sender][i];
+
+    //             phunksForSale[msg.sender][i] = phunksForSale[msg.sender][phunksForSale[msg.sender].length - 1];
+    //             phunksForSale[msg.sender].pop();
+    //             break;
+    //         }
+    //     }
+
+    //     require (isOwner, "You don't own this Phunk");
+    // }
+
+    // listingsValidAfterTimeStamp public listingsValidAfter;
+    // on purchase,
+    // two time/// @notice Explain to an end user what this does
+    // /// @dev Explain to a developer any extra details
+    // /// @return Documents the return variables of a contract’s function state variable
+    // /// @inheritdoc	Copies all missing tags from the base function (must be followed by the contract name)user level, user ethscription level
+    // // both can be set with timestamp.
+    // // if user level is set, user ethscription level is ignored.
 }

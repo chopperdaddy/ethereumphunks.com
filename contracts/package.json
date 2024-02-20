@@ -2,8 +2,8 @@
   "scripts": {
     "compile": "npx hardhat compile",
     "test": "hardhat test",
-    "deploy": "npx hardhat run --network goerli scripts/deploy-all.ts",
-    "verify": "npx hardhat verify --network goerli",
+    "deploy": "npx hardhat run --network sepolia scripts/deploy-all.ts",
+    "verify": "npx hardhat verify --network sepolia",
     "clean": "npx hardhat clean"
   },
   "dependencies": {

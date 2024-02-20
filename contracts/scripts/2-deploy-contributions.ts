@@ -3,8 +3,8 @@ import hre from 'hardhat';
 
 const contractName = 'Contributions';
 
-const _beneficiary = '0x3d5eEB0046C1B6C7A1DF6EA4eEb02967de4fe087';
-const _pointsAddress = '0x24d667C5195a767819C9313D6ceEC09D0Dc06Cfd';
+const _beneficiary = '0x051281d626b327638B916E1a52aF1495855016c1';
+const _pointsAddress = '0x2A953aA14e986b0595A0c5201dD267391BF7d39d';
 
 export async function deployDonations() {
   const [signer] = await hre.ethers.getSigners();
@@ -45,7 +45,7 @@ export async function deployDonations() {
 
   console.log(`${contractName} deployed to:`, contractAddress);
   console.log('\nVerify with:');
-  console.log(`npx hardhat verify --network goerli ${contractAddress}`, args.map((arg) => `${arg}`).join(' '));
+  console.log(`npx hardhat verify --network sepolia ${contractAddress}`, args.map((arg) => `${arg}`).join(' '));
   console.log('=====================================================================');
   console.log(`\n`);
 }
