@@ -1,0 +1,18 @@
+@if (activeView === 'login') {
+  <app-login (signedIn)="signedIn($event)" />
+}
+
+@if (activeView === 'conversations') {
+  <app-conversations
+    [withUser]="withUser"
+    (setConversation)="selectConversation($event)"
+  />
+}
+
+@if (activeView === 'conversation') {
+  <app-conversation
+    [withUser]="withUser"
+    [standalone]="standalone"
+    (goBack)="activeView = 'conversations'"
+  />
+}

@@ -30,7 +30,10 @@
         </div>
 
         <div class="split">
-          <div class="left">
+          <div
+            class="left"
+            [class.disabled]="blocksBehind$ | async">
+
             <div class="market-status">
               <!-- @if (phunk.auction) {
                 <h2 i18n>Auction</h2>
@@ -71,7 +74,6 @@
             </div>
 
             <div class="actions-wrapper">
-
               @if ((walletAddress$ | async); as address) {
                 @if (phunk.owner; as owner) {
                   <!-- Buy button -->
@@ -188,7 +190,9 @@
                 }
 
               } @else {
-                <button i18n (click)="web3Svc.connect()">Connect an Ethereum wallet to interact with this item</button>
+                <button i18n (click)="web3Svc.connect()">
+                  Connect an Ethereum wallet to interact with this item
+                </button>
               }
 
             </div>

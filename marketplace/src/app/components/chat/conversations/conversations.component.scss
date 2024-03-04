@@ -1,0 +1,69 @@
+@import 'abstracts/variables';
+@import 'abstracts/mixins';
+
+:host {
+  font-family: $secondary-font-stack;
+  font-weight: 400;
+}
+
+.conversations-header {
+  display: flex;
+  align-items: center;
+
+  height: 4rem;
+  padding: 0 1rem;
+
+  h2 {
+    font-size: 1.4rem;
+    font-weight: 400;
+  }
+}
+
+.conversations-wrapper {
+  overflow: auto;
+  overflow-x: hidden;
+
+  height: calc(100% - 4rem);
+
+  .conversation {
+    display: flex;
+    padding: 0 .5rem;
+    margin-bottom: .5rem;
+
+    background-color: rgba(var(--base-color), 1);
+    color: rgba(var(--black), 1);
+
+    cursor: pointer;
+
+    .profile-item {
+      .image-wrapper {
+        width: 4rem;
+        height: 4rem;
+
+        img {
+          width: 100%;
+          height: 100%;
+          image-rendering: pixelated;
+        }
+      }
+    }
+
+    .message-inner {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+
+      padding-left: .5rem;
+
+      .timestamp {
+        font-size: .8rem;
+        padding-bottom: .5rem;
+      }
+
+      .content {
+        font-size: 1.4rem;
+        font-weight: 400;
+      }
+    }
+  }
+}

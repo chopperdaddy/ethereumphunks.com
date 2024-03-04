@@ -38,6 +38,7 @@ $base-url: '/assets/' !default;
   --sale-color: 0, 255, 200;
   --listed-color: 0, 255, 200;
   --escrow-color: 255, 230, 0;
+  --magma: 255, 102, 73;
 
   @media (max-width: $mobile) {
     --header-height: 12rem;

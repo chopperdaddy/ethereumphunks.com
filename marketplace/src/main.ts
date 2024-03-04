@@ -44,21 +44,21 @@ bootstrapApplication(AppComponent, {
     { provide: DEFAULT_CONFIG, useValue: { name: 'etherphunks' } },
     { provide: RouteReuseStrategy, useClass: CustomReuseStrategy },
     provideStore({
-        appState: appStateReducer,
-        dataState: dataStateReducer,
-        marketState: marketStateReducer,
-        router: routerReducer
+      appState: appStateReducer,
+      dataState: dataStateReducer,
+      marketState: marketStateReducer,
+      router: routerReducer
     }),
     provideEffects([
-        AppStateEffects,
-        DataStateEffects,
-        MarketStateEffects
+      AppStateEffects,
+      DataStateEffects,
+      MarketStateEffects
     ]),
     provideStoreDevtools({
-        maxAge: 25,
-        logOnly: !isDevMode(),
-        trace: true,
-        // serialize: false
+      maxAge: 25,
+      logOnly: !isDevMode(),
+      trace: true,
+      // serialize: false
     }),
     provideRouterStore(),
     importProvidersFrom(HttpClientModule),

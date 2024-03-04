@@ -1,5 +1,16 @@
-<div class="inner" [class.active]="active">
-  <div class="modal">
-    <ng-content />
-  </div>
+<div
+  class="modal"
+  [style]="{
+    'max-width': width ? width + 'px' : 'auto',
+    'max-height': height ? height + 'px' : 'auto',
+  }">
+  <button class="close" (click)="close()">
+    <ng-template [ngTemplateOutlet]="closeIcon" />
+  </button>
+
+  <ng-content />
 </div>
+
+<ng-template #closeIcon>
+  <svg height="15" viewBox="0 0 15 15" width="15" xmlns="http://www.w3.org/2000/svg"><g fill="#000" fill-rule="evenodd"><path d="m6 6h3v3h-3z"/><path d="m3 3h3v3h-3z"/><path d="m3 9h3v3h-3z"/><path d="m0 0h3v3h-3z"/><path d="m0 12h3v3h-3z"/><path d="m12 3h-3v3h3z"/><path d="m12 9h-3v3h3z"/><path d="m15 0h-3v3h3z"/><path d="m15 12h-3v3h3z"/></g></svg>
+</ng-template>

@@ -109,6 +109,11 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
     )),
   );
 
+  blocksBehind$ = this.store.select(appStateSelectors.selectBlocksBehind).pipe(
+    filter((blocksBehind) => !!blocksBehind),
+    map((blocksBehind) => blocksBehind > 6),
+  );
+
   pendingTx$ = this.store.select(appStateSelectors.selectNotifications).pipe(
     filter((transactions) => !!transactions),
     switchMap((transactions) => this.singlePhunk$.pipe(
@@ -498,7 +503,7 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
       await this.checkConsenus(hashId, phunk.owner, phunk.prevOwner);
       if (!phunk.prevOwner) throw new Error('Invalid prevOwner');
 
-      const hash = await this.web3Svc.buyPhunk(phunk.prevOwner, hashId, value!);
+      const hash = await this.web3Svc.batchBuyPhunks([phunk]);
       notification = {
         ...notification,
         type: 'pending',

@@ -1,22 +1,34 @@
-import { Component, ElementRef, Input } from '@angular/core';
+import { Component, ElementRef, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
 @Component({
-  selector: 'app-modal',
   standalone: true,
-  imports: [CommonModule],
+  imports: [
+    CommonModule
+  ],
+  selector: 'app-modal',
   templateUrl: './modal.component.html',
-  styleUrls: ['./modal.component.scss']
+  styleUrls: ['./modal.component.scss'],
+  host: {
+    '[class.active]': 'active'
+  }
 })
-export class ModalComponent {
+export class ModalComponent implements OnInit {
 
   @Input() active: boolean = false;
+  @Output() activeChange: EventEmitter<boolean> = new EventEmitter<boolean>();
+
+  @Input() width!: number;
+  @Input() height!: number;
 
   constructor(
     private el: ElementRef
   ) {}
 
+  ngOnInit(): void {}
+
   close(): void {
     this.active = false;
+    this.activeChange.emit(this.active);
   }
 }

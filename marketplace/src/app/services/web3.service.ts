@@ -12,7 +12,7 @@ import { EtherPhunksMarketABI } from '@/abi/EtherPhunksMarket';
 import AuctionAbi from '@/abi/EtherPhunksAuctionHouse.json';
 
 import { TransactionReceipt, WatchBlockNumberReturnType, decodeFunctionData, formatEther, isAddress, parseEther, zeroAddress } from 'viem';
-import { mainnet, goerli } from 'viem/chains';
+import { mainnet, sepolia } from 'viem/chains';
 
 import { EIP6963Connector, createWeb3Modal, walletConnectProvider } from '@web3modal/wagmi';
 import { Web3Modal } from '@web3modal/wagmi/dist/types/src/client';
@@ -21,7 +21,7 @@ import { jsonRpcProvider } from '@wagmi/core/providers/jsonRpc';
 import { WalletConnectConnector } from '@wagmi/core/connectors/walletConnect';
 import { CoinbaseWalletConnector } from '@wagmi/core/connectors/coinbaseWallet';
 
-import { configureChains, createConfig, disconnect, getAccount, getNetwork, getPublicClient, getWalletClient, switchNetwork, watchAccount, InjectedConnector } from '@wagmi/core';
+import { configureChains, createConfig, disconnect, getAccount, getNetwork, getPublicClient, getWalletClient, switchNetwork, watchAccount, InjectedConnector, GetWalletClientResult } from '@wagmi/core';
 
 import * as appStateActions from '@/state/actions/app-state.actions';
 
@@ -58,10 +58,13 @@ export class Web3Service {
     private store: Store<GlobalState>,
     private ngZone: NgZone
   ) {
-    const { chains, publicClient } = configureChains([mainnet, goerli], [
-      jsonRpcProvider({ rpc: () => ({ http: environment.rpcHttpProvider }) }),
-      walletConnectProvider({ projectId }),
-    ]);
+    const { chains, publicClient } = configureChains(
+      [mainnet, sepolia],
+      [
+        jsonRpcProvider({ rpc: () => ({ http: environment.rpcHttpProvider }) }),
+        walletConnectProvider({ projectId }),
+      ]
+    );
 
     const metadata = {
       name: 'Ethereum Phunks',
@@ -148,9 +151,15 @@ export class Web3Service {
   }
 
   async switchNetwork(): Promise<void> {
-    if (this.checkNetwork() !== environment.chainId) {
+    const chainId = getNetwork().chain?.id;
+    if (!chainId) return;
+    if (chainId !== environment.chainId) {
       await switchNetwork({ chainId: environment.chainId });
     }
+  }
+
+  async getActiveWalletClient(): Promise<GetWalletClientResult> {
+    return await getWalletClient();
   }
 
   async checkHasWithdrawal(address: string): Promise<number> {
@@ -226,8 +235,9 @@ export class Web3Service {
     });
 
     // console.log({ paused, whitelist, functionName });
-    const whitelist = ['batchOfferPhunkForSale', 'offerPhunkForSale', 'phunkNoLongerForSale', 'withdrawPhunk'];
-    if (paused && whitelist.indexOf(functionName) === -1) throw new Error('Contract is paused');
+    // const whitelist = ['batchOfferPhunkForSale', 'offerPhunkForSale', 'phunkNoLongerForSale', 'withdrawPhunk'];
+    // if (paused && whitelist.indexOf(functionName) === -1) throw new Error('Contract is paused');
+    if (paused) throw new Error('Contract is paused');
 
     const tx: any = {
       address: marketAddress as `0x${string}`,
@@ -252,6 +262,7 @@ export class Web3Service {
       functionName,
       args: args as any,
     });
+    console.log({call})
     return call;
   }
 
@@ -387,24 +398,24 @@ export class Web3Service {
     return this.marketContractInteraction('acceptBidForPhunk', [hashId, minPrice]);
   }
 
-  async buyPhunk(owner: string, hashId: string, value: string): Promise<string | undefined> {
+  // async buyPhunk(owner: string, hashId: string, value: string): Promise<string | undefined> {
 
-    const escrowAndListing = await this.fetchEscrowAndListing(owner, hashId);
+  //   const escrowAndListing = await this.fetchEscrowAndListing(owner, hashId);
 
-    const stored = escrowAndListing[0].result;
-    const listing = escrowAndListing[1].result;
+  //   const stored = escrowAndListing[0].result;
+  //   const listing = escrowAndListing[1].result;
 
-    const listed = listing[0];
-    const listedBy = listing[2];
+  //   const listed = listing[0];
+  //   const listedBy = listing[2];
 
-    if (
-      !stored ||
-      !listed ||
-      listedBy.toLowerCase() !== owner.toLowerCase()
-    ) throw new Error('Phunk not listed for sale');
+  //   if (
+  //     !stored ||
+  //     !listed ||
+  //     listedBy.toLowerCase() !== owner.toLowerCase()
+  //   ) throw new Error('Phunk not listed for sale');
 
-    return this.marketContractInteraction('buyPhunk', [hashId, value], value as any);
-  }
+  //   return this.marketContractInteraction('buyPhunk', [hashId, value], value as any);
+  // }
 
   async withdraw(): Promise<any> {
     const hash = await this.marketContractInteraction('withdraw', []);
@@ -439,10 +450,10 @@ export class Web3Service {
 
     const contract = {
       address: marketAddress as `0x${string}`,
-      abi: EtherPhunksMarketABI
+      abi: EtherPhunksMarketABI as any
     };
 
-    return await publicClient.multicall({
+    const multicall = await publicClient.multicall({
       contracts: [{
         ...contract,
         functionName: 'userEthscriptionPossiblyStored',
@@ -454,6 +465,10 @@ export class Web3Service {
         args: [hashId as `0x${string}`],
       }]
     });
+
+    console.log({multicall});
+
+    return multicall;
   }
 
   async fetchMultipleEscrowAndListing(phunks: Phunk[]): Promise<any> {
@@ -464,7 +479,7 @@ export class Web3Service {
       abi: EtherPhunksMarketABI
     };
 
-    const calls = [];
+    const calls: any[] = [];
     for (const phunk of phunks) {
       calls.push({
         ...contract,
@@ -479,6 +494,8 @@ export class Web3Service {
     }
 
     const res = await publicClient.multicall({ contracts: calls });
+
+    console.log({res})
 
     const combined: any = {};
     for (let i = 0; i < res.length; i += 2) {
@@ -589,10 +606,5 @@ export class Web3Service {
     } catch (err) {
       return null;
     }
-  }
-
-  checkNetwork(): number | undefined {
-    const network = getNetwork();
-    return network.chain?.id;
   }
 }

@@ -30,6 +30,7 @@ export interface AppState {
 
   currentBlock: number;
   indexerBlock: number;
+  blocksBehind: number;
 
   notifications: Notification[];
   cooldowns: Cooldowns;
@@ -49,12 +50,13 @@ export interface Cooldowns {
 
 export interface Notification {
   id: number;
-  slug?: string;
 
-  type: 'wallet' | 'pending' | 'complete' | 'error' | 'event';
+  type: 'wallet' | 'pending' | 'complete' | 'error' | 'event' | 'chat';
   function: TxFunction;
 
-  hashId: string;
+  hashId?: string;
+  chatAddress?: string;
+  slug?: string;
   tokenId?: number | null;
 
   isBatch?: boolean;
@@ -78,7 +80,8 @@ export type TxFunction =
   | 'enterBidForPhunk'
   | 'transferPhunk'
   | 'withdrawPhunk'
-  | 'purchased';
+  | 'purchased'
+  | 'chatMessage';
 
 export interface TraitFilter {
   [key: string]: string;

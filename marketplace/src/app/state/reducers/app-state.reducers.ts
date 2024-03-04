@@ -24,6 +24,7 @@ export const initialState: AppState = {
 
   currentBlock: 0,
   indexerBlock: 0,
+  blocksBehind: 0,
 
   notifications: [],
   cooldowns: JSON.parse(localStorage.getItem('EtherPhunks_cooldowns') || '{}'),
@@ -172,14 +173,16 @@ export const appStateReducer: ActionReducer<AppState, Action> = createReducer(
   on(actions.setCurrentBlock, (state, { currentBlock }) => {
     const setCurrentBlock = {
       ...state,
-      currentBlock
+      currentBlock,
+      blocksBehind: (currentBlock - state.indexerBlock)
     };
     return setCurrentBlock
   }),
   on(actions.setIndexerBlock, (state, { indexerBlock }) => {
     const setIndexerBlock = {
       ...state,
-      indexerBlock
+      indexerBlock,
+      blocksBehind: (state.currentBlock - indexerBlock)
     };
     return setIndexerBlock;
   }),

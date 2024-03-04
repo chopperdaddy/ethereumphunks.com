@@ -23,10 +23,8 @@ export class StatusBarComponent {
 
   blocks$ = combineLatest([
     this.store.select(appStateSelectors.selectCurrentBlock),
-    this.store.select(appStateSelectors.selectIndexerBlock)
-  ]).pipe(
-    // tap(([currentBlock, indexerBlock]) => console.log({ currentBlock, indexerBlock })),
-  );
+    this.store.select(appStateSelectors.selectIndexerBlock),
+  ]);
 
   levels: any = {
     0: 'sync',

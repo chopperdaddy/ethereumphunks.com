@@ -1,13 +1,13 @@
 export const environment = {
-  env: 'goerli',
+  env: 'sepolia',
   production: true,
-  chainId: 5,
-  rpcHttpProvider: 'https://eth-goerli.g.alchemy.com/v2/yPJzT7r3rcFmI4ekjA9S7S1SP688b-au',
-  explorerUrl: 'https://goerli.etherscan.io',
+  chainId: 11155111,
+  rpcHttpProvider: 'https://eth-sepolia.g.alchemy.com/v2/yPJzT7r3rcFmI4ekjA9S7S1SP688b-au',
+  explorerUrl: 'https://sepolia.etherscan.io',
 
-  pointsAddress: '0xd21B8CFEd94F121C6F5520F849e12f656E5D05fD'.toLowerCase(),
-  donationsAddress: '0x8191f333Da8fEB4De8Ec0d929b136297FDAA34de'.toLowerCase(),
-  marketAddress: '0xCd8Ec38A9ff21CF3F2c21d06fE7904dE3c3a52a3'.toLowerCase(),
+  pointsAddress: '0x2a953aa14e986b0595a0c5201dd267391bf7d39d'.toLowerCase(),
+  donationsAddress: '0x26e8fd77346b4b006c5df61f9706581933560f12'.toLowerCase(),
+  marketAddress: '0x3dfbc8c62d3ce0059bdaf21787ec24d5d116fe1e'.toLowerCase(),
   // auctionAddress: '0xc6a824D8cce7c946A3F35879694b9261A36fc823'.toLowerCase(),
 
   staticUrl: 'https://kcbuycbhynlmsrvoegzp.supabase.co/storage/v1/object/public',

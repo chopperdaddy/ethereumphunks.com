@@ -14,10 +14,12 @@
             <app-phunk-image [color]="txn.type === 'event'" [hashId]="hashId" />
           }
         </div>
-      } @else {
+      } @else if (txn.hashId) {
         <a [routerLink]="['/', 'details', txn.hashId]">
           <app-phunk-image [color]="txn.type === 'event'" [hashId]="txn.hashId" />
         </a>
+      } @else {
+        <div class="chat-image"></div>
       }
 
       <div class="txn-info">
@@ -31,9 +33,11 @@
               <ng-template [ngTemplateOutlet]="externalIcon"></ng-template>
             </a>
           }
+
           @if (txn.type === 'error') {
             <span class="error">{{ txn.detail.shortMessage || txn.detail.message || txn.detail }}</span>
           }
+
           @if (!dismissible) {
             <div class="timestamp">{{ txn.id | timeago : true }}</div>
           }

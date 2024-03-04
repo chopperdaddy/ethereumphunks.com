@@ -1,0 +1,38 @@
+<div class="conversations-header">
+  <h2>Conversations ({{ convosLength }})</h2>
+  <!-- <div class="search">
+    <input
+      type="text"
+      placeholder="Search"
+      [(ngModel)]="search"
+      (ngModelChange)="searchConversations()"
+    />
+  </div> -->
+</div>
+
+<div #conversations class="conversations-wrapper">
+  @for (conversation of (conversations$ | async); track conversation.peerAddress) {
+    <div
+      (click)="selectConversation(conversation)"
+      class="conversation">
+
+      <div class="profile-item">
+        <div class="image-wrapper">
+          <img
+            [lazyLoad]="conversation.profileItem | imagePipe"
+            [defaultImage]="'assets/loadingphunk.png'"
+            width="50"
+            height="50"
+          />
+        </div>
+      </div>
+
+      <div class="message-inner">
+        <div class="timestamp">{{ conversation.timestamp | timeago : true }}</div>
+        <div class="content">
+          <app-address [address]="conversation.peerAddress" />
+        </div>
+      </div>
+    </div>
+  }
+</div>

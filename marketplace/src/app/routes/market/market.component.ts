@@ -11,6 +11,7 @@ import { NgSelectModule } from '@ng-select/ng-select';
 import { PhunkGridComponent } from '@/components/shared/phunk-grid/phunk-grid.component';
 import { MarketFiltersComponent } from '@/components/market-filters/market-filters.component';
 import { ModalComponent } from '@/components/shared/modal/modal.component';
+import { ChatComponent } from '@/components/chat/chat.component';
 
 import { WalletAddressDirective } from '@/directives/wallet-address.directive';
 
@@ -38,6 +39,7 @@ import { environment } from 'src/environments/environment';
 import { firstValueFrom, map, tap } from 'rxjs';
 import { CalcPipe } from '@/pipes/calculate.pipe';
 import { FormatCashPipe } from '@/pipes/format-cash.pipe';
+import { ConversationComponent } from '@/components/chat/conversation/conversation.component';
 
 const defaultActionState = {
   canList: false,
@@ -47,7 +49,6 @@ const defaultActionState = {
 };
 
 @Component({
-  selector: 'app-phunk-grid-view',
   standalone: true,
   imports: [
     CommonModule,
@@ -62,6 +63,8 @@ const defaultActionState = {
     MarketFiltersComponent,
     ModalComponent,
     SlideoutComponent,
+    ChatComponent,
+    ConversationComponent,
 
     WalletAddressDirective,
     WeiToEthPipe,
@@ -70,6 +73,7 @@ const defaultActionState = {
 
     TokenIdParsePipe,
   ],
+  selector: 'app-phunk-grid-view',
   templateUrl: './market.component.html',
   styleUrls: ['./market.component.scss']
 })
@@ -155,6 +159,8 @@ export class MarketComponent {
   objectValues = Object.values;
 
   usd$ = this.store.select(dataStateSelectors.selectUsd);
+
+  chatActive = false;
 
   constructor(
     private store: Store<GlobalState>,

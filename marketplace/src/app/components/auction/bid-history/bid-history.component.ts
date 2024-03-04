@@ -30,7 +30,7 @@ export class BidHistoryComponent implements OnInit {
 
   viewAllBids!: boolean;
 
-  etherscanLink: string = `https://${environment.chainId === 5 ? 'goerli' + '.' : ''}etherscan.io`;
+  etherscanLink: string = `https://${environment.chainId === 11155111 ? 'sepolia' + '.' : ''}etherscan.io`;
 
   constructor(
     public dataSvc: DataService

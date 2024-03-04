@@ -81,7 +81,11 @@ app-phunk-billboard {
       padding-bottom: 6rem;
 
       .left {
-
+        &.disabled {
+          opacity: .5;
+          pointer-events: none;
+          user-select: none;
+        }
       }
 
       .right {

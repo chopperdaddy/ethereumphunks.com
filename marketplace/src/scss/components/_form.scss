@@ -11,6 +11,9 @@ input {
   width: 100%;
 
   outline: none;
+  // remove default ios styles
+  border-radius: 0;
+  -webkit-appearance: none;
 
   /* Chrome, Safari, Edge, Opera */
   &::-webkit-outer-spin-button,

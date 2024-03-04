@@ -48,7 +48,7 @@
             "webWorkerTsConfig": "tsconfig.worker.json"
           },
           "configurations": {
-            "dev-goerli": {
+            "dev-sepolia": {
               "buildOptimizer": false,
               "optimization": false,
               "vendorChunk": true,
@@ -58,7 +58,7 @@
               "fileReplacements": [
                 {
                   "replace": "src/environments/environment.ts",
-                  "with": "src/environments/environment.dev-goerli.ts"
+                  "with": "src/environments/environment.dev-sepolia.ts"
                 }
               ]
             },
@@ -76,7 +76,7 @@
                 }
               ]
             },
-            "goerli": {
+            "sepolia": {
               "budgets": [
                 {
                   "type": "initial",
@@ -92,7 +92,7 @@
               "fileReplacements": [
                 {
                   "replace": "src/environments/environment.ts",
-                  "with": "src/environments/environment.goerli.ts"
+                  "with": "src/environments/environment.sepolia.ts"
                 }
               ],
               "outputHashing": "all"
@@ -124,14 +124,14 @@
         "serve": {
           "builder": "@angular-devkit/build-angular:dev-server",
           "configurations": {
-            "dev-goerli": {
-              "buildTarget": "ether-phunks-market:build:dev-goerli"
+            "dev-sepolia": {
+              "buildTarget": "ether-phunks-market:build:dev-sepolia"
             },
             "dev-mainnet": {
               "buildTarget": "ether-phunks-market:build:dev-mainnet"
             },
-            "goerli": {
-              "buildTarget": "ether-phunks-market:build:goerli"
+            "sepolia": {
+              "buildTarget": "ether-phunks-market:build:sepolia"
             },
             "mainnet": {
               "buildTarget": "ether-phunks-market:build:mainnet"

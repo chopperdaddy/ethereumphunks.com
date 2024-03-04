@@ -1,0 +1,7 @@
+@import 'abstracts/variables';
+@import 'abstracts/mixins';
+
+:host {
+  font-family: $secondary-font-stack;
+  font-weight: 400;
+}

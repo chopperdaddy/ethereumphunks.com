@@ -1,0 +1,119 @@
+@import 'abstracts/variables';
+@import 'abstracts/mixins';
+
+:host {
+  font-family: $secondary-font-stack;
+  font-weight: 400;
+}
+
+.chat-header {
+  display: flex;
+  align-items: center;
+
+  height: 4rem;
+  padding: 0 1rem 0 0;
+
+  button {
+    &.back {
+      background: none;
+      padding: 1rem;
+
+      svg {
+        width: 1.4rem;
+        height: 1.4rem;
+        transform: rotate(180deg);
+
+        path {
+          fill: rgba(var(--base-color), 1);
+        }
+      }
+    }
+  }
+
+  .with {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+
+    margin-left: 1rem;
+
+    font-size: .8rem;
+    font-weight: 400;
+
+    app-address {
+      font-size: 1.4rem;
+      color: rgba(var(--base-color), 1);
+    }
+  }
+}
+
+.chat-wrapper {
+  width: 100%;
+  height: 100%;
+
+  .messages-wrapper {
+    overflow: auto;
+    overflow-x: hidden;
+
+    height: calc(100% - 8rem);
+
+    .chat-message {
+      display: flex;
+      justify-content: flex-start;
+
+      font-weight: 400;
+      margin-bottom: .5rem;
+
+      .message-inner {
+        padding: .5rem 1rem;
+        background-color: rgba(var(--text-color), .25);
+
+        .timestamp {
+          font-size: .8rem;
+          padding: 0 0 .5rem 0;
+        }
+
+        .content {
+          font-family: $primary-font-stack;
+          font-size: 1.4rem;
+          font-weight: 600;
+        }
+      }
+
+      &.self {
+        justify-content: flex-end;
+
+        .message-inner {
+          text-align: right;
+          padding: .5rem 1rem;
+
+          background-color: rgba(var(--base-color), 1);
+          color: rgba(var(--black), 1);
+        }
+      }
+    }
+  }
+
+  form {
+    display: flex;
+    align-items: stretch;
+
+    height: 4rem;
+
+    input {
+      border-radius: none;
+
+      &::placeholder {
+        font-family: $secondary-font-stack;
+        font-size: 1.2rem;
+        font-weight: 400;
+      }
+    }
+
+    button {
+      font-family: $secondary-font-stack;
+      font-size: 1.4rem;
+      font-weight: 400;
+    }
+  }
+}

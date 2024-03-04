@@ -129,10 +129,12 @@ export class AppStateEffects {
       this.store.select(appStateSelectors.selectNotifications),
       this.store.select(appStateSelectors.selectWalletAddress),
     ),
-    tap(([_, notifications, address]) => localStorage.setItem(
-      `EtherPhunks_txns__${environment.chainId}__${address}`,
-      JSON.stringify(notifications.filter((txn: Notification) => txn.type === 'complete' || txn.type === 'event')))
-    ),
+    tap(([_, notifications, address]) => {
+      localStorage.setItem(
+        `EtherPhunks_txns__${environment.chainId}__${address}`,
+        JSON.stringify(notifications.filter((txn: Notification) => txn.type === 'complete' || txn.type === 'event'))
+      );
+    }),
     concatMap(([action]) =>
       action.type === '[App State] Upsert Notification'
       && (

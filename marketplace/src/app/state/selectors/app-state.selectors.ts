@@ -79,6 +79,11 @@ export const selectIndexerBlock = createSelector(
   (appState: AppState) => appState.indexerBlock
 );
 
+export const selectBlocksBehind = createSelector(
+  selectAppState,
+  (appState: AppState) => appState.blocksBehind
+);
+
 export const selectUserPoints = createSelector(
   selectAppState,
   (appState: AppState) => appState.userPoints

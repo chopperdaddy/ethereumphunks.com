@@ -21,6 +21,7 @@ export class NotifPipe implements PipeTransform {
       transferPhunk: 'Transfer %singleName%',
       withdrawPhunk: 'Withdraw %singleName% from Escrow',
       purchased: 'Your item Sold!',
+      chatMessage: 'New message',
       batch: {
         sendToEscrow: 'Send <span class="highlight">%length%</span> items to Escrow',
         phunkNoLongerForSale: 'Delist <span class="highlight">%length%</span> items',
@@ -48,6 +49,9 @@ export class NotifPipe implements PipeTransform {
       },
       error: {
         message: 'There was an <strong>error</strong> with your transaction.'
+      },
+      chat: {
+        message: 'New message from <strong>%chatAddress%</strong>'
       }
     },
     classes: {
@@ -60,7 +64,8 @@ export class NotifPipe implements PipeTransform {
       enterBidForPhunk: 'bid',
       transferPhunk: 'transfer',
       withdrawPhunk: 'escrow',
-      purchased: 'purchased'
+      purchased: 'purchased',
+      chatMessage: 'chat',
     },
   }
 
@@ -86,12 +91,20 @@ export class NotifPipe implements PipeTransform {
         title = title.replace('%singleName%', collections[notif.slug]?.singleName || '');
       }
 
+      if (notif.chatAddress) {
+        title = this.notifs.titles.chatMessage;
+      }
+
       return title;
     }
 
     if (type === 'body') {
       if (notif.type === 'event') return this.notifs.body.event.message.replace('%value%', notif.value);
+
       if (notif.isBatch && notif.hashIds) return this.notifs.body[notif.type].message;
+
+      if (notif.chatAddress) return this.notifs.body.chat.message.replace('%chatAddress%', notif.chatAddress);
+
       return this.notifs.body[notif.type].message.replace('%tokenId%', notif.tokenId);
     }
 
