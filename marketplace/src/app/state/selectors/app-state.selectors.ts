@@ -54,11 +54,6 @@ export const selectTheme = createSelector(
   (appState: AppState) => appState.theme
 );
 
-export const selectNotifications = createSelector(
-  selectAppState,
-  (appState: AppState) => appState.notifications
-);
-
 export const selectIsMobile = createSelector(
   selectAppState,
   (appState: AppState) => appState.isMobile
@@ -89,11 +84,6 @@ export const selectUserPoints = createSelector(
   (appState: AppState) => appState.userPoints
 );
 
-export const selectNotifHoverState = createSelector(
-  selectAppState,
-  (appState: AppState) => appState.notifHoverState
-);
-
 export const selectActiveMultiplier = createSelector(
   selectAppState,
   (appState: AppState) => appState.activeMultiplier
@@ -112,4 +102,9 @@ export const selectSearchHistoryActive = createSelector(
 export const selectIsSearchResult = createSelector(
   selectAppState,
   (appState: AppState) => appState.isSearchResult
+);
+
+export const selectModalActive = createSelector(
+  selectAppState,
+  (appState: AppState) => appState.modalActive
 );

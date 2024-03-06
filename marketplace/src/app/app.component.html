@@ -10,5 +10,14 @@
 </main>
 
 <app-footer />
-<app-tx-modal />
+<app-notifications />
 <app-status-bar />
+
+@if ((chatActive$ | async); as active) {
+  <app-modal
+    [width]="500"
+    [height]="600">
+
+    <app-chat />
+  </app-modal>
+}

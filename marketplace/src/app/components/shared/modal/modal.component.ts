@@ -1,5 +1,10 @@
-import { Component, ElementRef, EventEmitter, Input, OnInit, Output } from '@angular/core';
+import { Component, ElementRef, Input, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Store } from '@ngrx/store';
+
+import { GlobalState } from '@/models/global-state';
+
+import { setChatActive } from '@/state/actions/chat.actions';
 
 @Component({
   standalone: true,
@@ -15,20 +20,17 @@ import { CommonModule } from '@angular/common';
 })
 export class ModalComponent implements OnInit {
 
-  @Input() active: boolean = false;
-  @Output() activeChange: EventEmitter<boolean> = new EventEmitter<boolean>();
-
   @Input() width!: number;
   @Input() height!: number;
 
   constructor(
+    private store: Store<GlobalState>,
     private el: ElementRef
   ) {}
 
   ngOnInit(): void {}
 
   close(): void {
-    this.active = false;
-    this.activeChange.emit(this.active);
+    this.store.dispatch(setChatActive({ active: false }));
   }
 }

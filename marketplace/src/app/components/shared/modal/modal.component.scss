@@ -16,15 +16,15 @@
 
   background-color: rgba(var(--base-color), 0.35);
 
-  opacity: 0;
-  visibility: hidden;
-  pointer-events: none;
+  // opacity: 0;
+  // visibility: hidden;
+  // pointer-events: none;
 
-  &.active {
-    opacity: 1;
-    visibility: visible;
-    pointer-events: auto;
-  }
+  // &.active {
+  //   opacity: 1;
+  //   visibility: visible;
+  //   pointer-events: auto;
+  // }
 }
 
 .modal {

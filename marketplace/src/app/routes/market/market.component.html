@@ -15,26 +15,13 @@
                   <app-address [address]="address" class="highlight" />
                 </a>
 
-                <!-- @if ((address | lowercase) !== (walletAddress$ | async)) {
-                  <button class="chat-button" (click)="chatActive = true">
+                @if ((address | lowercase) !== (walletAddress$ | async)) {
+                  <button class="chat-button" (click)="this.setChatActive(address)">
                     <ng-template [ngTemplateOutlet]="chatIcon" />
                   </button>
-                } -->
+                }
               </h2>
             }
-
-            <app-modal
-              [(active)]="chatActive"
-              [width]="500"
-              [height]="600">
-
-              @if (chatActive) {
-                <app-chat
-                  [withUser]="address"
-                  [standalone]="true"
-                />
-              }
-            </app-modal>
           }
 
           <h3>Showing <span class="highlight">{{ phunkData.total | number }}</span> of {{ collection.supply | number }}</h3>

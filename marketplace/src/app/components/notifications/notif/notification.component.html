@@ -15,18 +15,31 @@
           }
         </div>
       } @else if (txn.hashId) {
-        <a [routerLink]="['/', 'details', txn.hashId]">
+        <a class="single-image" [routerLink]="['/', 'details', txn.hashId]">
           <app-phunk-image [color]="txn.type === 'event'" [hashId]="txn.hashId" />
         </a>
       } @else {
-        <div class="chat-image"></div>
+        <div class="single-image">
+          <img src="/assets/chat-image.png" alt="">
+        </div>
       }
 
       <div class="txn-info">
         <h4 [innerHTML]="txn | notifText : collections : 'title'"></h4>
-        <p [innerHTML]="txn | notifText : collections : 'body'"></p>
+
+        @if (txn.type === 'chat' && txn.chatAddress) {
+          <p>
+            from <app-address [address]="txn.chatAddress" />
+          </p>
+        } @else {
+          <p [innerHTML]="txn | notifText : collections : 'body'"></p>
+        }
 
         <div class="footer">
+          @if (txn.type === 'chat' && txn.chatAddress) {
+            <a href="#">View message</a>
+          }
+
           @if (txn.hash) {
             <a class="hash" [href]="env.explorerUrl + '/tx/' + txn.hash" target="_blank">
               <app-address [address]="txn.hash"></app-address>
@@ -38,9 +51,9 @@
             <span class="error">{{ txn.detail.shortMessage || txn.detail.message || txn.detail }}</span>
           }
 
-          @if (!dismissible) {
-            <div class="timestamp">{{ txn.id | timeago : true }}</div>
-          }
+          <!-- @if (!dismissible) {
+            <div class="timestamp">{{ txn.timestamp | timeago : true }}</div>
+          } -->
         </div>
       </div>
     </div>

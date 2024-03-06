@@ -11,14 +11,15 @@ import { GlobalState, Notification } from '@/models/global-state';
 import { Web3Service } from '@/services/web3.service';
 
 import { PhunkGridComponent } from '@/components/shared/phunk-grid/phunk-grid.component';
-import { TxModalComponent } from '@/components/tx-modal/tx-modal.component';
-import { NotifComponent } from '@/components/shared/notif/notif.component';
+import { NotificationsComponent } from '@/components/notifications/notifications.component';
+import { NotificationComponent } from '@/components/notifications/notif/notification.component';
 import { LeaderboardComponent } from '@/components/leaderboard/leaderboard.component';
 import { CollectionsComponent } from '@/components/collections/collections.component';
 
 import { WalletAddressDirective } from '@/directives/wallet-address.directive';
 
 import * as appStateSelectors from '@/state/selectors/app-state.selectors';
+import * as notificationSelectors from '@/state/selectors/notification.selectors';
 import * as appStateActions from '@/state/actions/app-state.actions';
 
 import * as dataStateActions from '@/state/actions/data-state.actions';
@@ -41,8 +42,8 @@ import anime from 'animejs';
     RouterModule,
 
     PhunkGridComponent,
-    NotifComponent,
-    TxModalComponent,
+    NotificationComponent,
+    NotificationsComponent,
     LeaderboardComponent,
     CollectionsComponent,
 
@@ -76,8 +77,8 @@ export class MenuComponent {
     tap((bids: Phunk[] | null) => this.createBidStats(bids))
   );
 
-  transactions$ = this.store.select(appStateSelectors.selectNotifications).pipe(
-    map((txns: Notification[]) => [...txns].sort((a, b) => b.id - a.id))
+  notifications$ = this.store.select(notificationSelectors.selectNotifications).pipe(
+    map((txns: Notification[]) => [...txns].sort((a, b) => b.timestamp - a.timestamp))
   );
 
   isMobile$ = this.store.select(appStateSelectors.selectIsMobile);

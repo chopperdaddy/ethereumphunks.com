@@ -6,8 +6,7 @@ import { SupabaseService } from './supabase.service';
 import { Transaction, hexToString, zeroAddress } from 'viem';
 import crypto from 'crypto';
 
-import MissingPhunks from '../collections/missing-phunks.json';
-import MissingPunks from '../collections/missing-punks.json';
+import MissingPhunks from '../collections/missing-phunks_FINAL.json';
 import EtherPhunksAttributes from '../_attributes.json';
 
 import { CuratedItem, Ethscription, Event } from 'src/models/db';
@@ -22,17 +21,21 @@ export class CollectionService {
     private readonly web3Svc: Web3Service,
     private readonly sbSvc: SupabaseService
   ) {
-    // this.indexImagesFromCollection();
+    // this.indexCuratedCollection();
   }
 
-  async indexImagesFromCollection() {
+  async indexCuratedCollection() {
 
-    const ethscriptions = await this.sbSvc.getAllEthscriptions();
+    const curated = MissingPhunks;
 
     let count = 0;
-    for (const ethscription of ethscriptions) {
+    for (const item of curated) {
 
-      const tx = await this.web3Svc.getTransaction(ethscription.hashId as `0x${string}`);
+      const hashId = item.hashId.replace(/\s+/g, '');
+      const tx = await this.web3Svc.getTransaction(hashId as `0x${string}`);
+      const block = await this.web3Svc.getBlock(tx.blockNumber);
+      const createdAt = new Date(Number(block.timestamp) * 1000);
+
       const utf8Input = hexToString(tx.input);
 
       const imageData = utf8Input.startsWith('data:image/svg+xml') ?
@@ -53,52 +56,69 @@ export class CollectionService {
         sha,
       );
 
-      await this.sbSvc.updateEthscriptionData(
-        ethscription.hashId,
-        sha,
-        utf8Input
+      await this.sbSvc.addCurated(
+        tx,
+        createdAt,
+        {
+          name: item.name,
+          slug: 'missing-phunks',
+          tokenId: Number(item.name.split('#')[1]),
+          sha,
+        }
+      );
+
+      await this.sbSvc.addEvent(
+        tx,
+        tx.from.toLowerCase(),
+        tx.to.toLowerCase(),
+        hashId,
+        'created',
+        createdAt,
+        BigInt(0),
+        Number(tx.transactionIndex),
       );
 
       count++;
-      Logger.log(`Processed ${ count } of ${ ethscriptions.length }`, 'CollectionService');
+      Logger.log(`Processed ${ count } of ${ curated.length }`, 'CollectionService');
+      // break;
     }
   }
 
   async indexCollection() {
-    const collection = MissingPhunks;
+    // const collection = MissingPhunks;
 
-    const attributes: any = {};
+    // const attributes: any = {};
 
-    for (const item of collection) {
-      const hashId = item.hashId;
+    // for (const item of collection) {
+    //   const hashId = item.hashId;
 
-      const tx = await this.web3Svc.getTransaction(hashId as `0x${string}`);
+    //   const tx = await this.web3Svc.getTransaction(hashId as `0x${string}`);
 
-      const image = hexToString(tx.input);
-      const sha = crypto.createHash('sha256').update(image).digest('hex');
+    //   const image = hexToString(tx.input);
+    //   const sha = crypto.createHash('sha256').update(image).digest('hex');
 
-      attributes[sha] = item.attributes;
+    //   attributes[sha] = item.attributes;
 
-      const exists = await this.sbSvc.checkEthscriptionExistsBySha(sha);
-      if (exists) {
-        Logger.log('SHA Exists', `${ sha } -- ${ item.tokenId }`);
-        continue;
-      }
+    //   const exists = await this.sbSvc.checkEthscriptionExistsBySha(sha);
+    //   if (exists) {
+    //     Logger.log('SHA Exists', `${ sha } -- ${ item.tokenId }`);
+    //     continue;
+    //   }
 
-      const curatedItem: CuratedItem = {
-        name: item.name,
-        image,
-        attributes: item.attributes,
-        slug: item.slug,
-        tokenId: item.tokenId,
-        sha,
-      };
+    //   const curatedItem: CuratedItem = {
+    //     name: item.name,
+    //     image,
+    //     attributes: item.attributes,
+    //     slug: item.slug,
+    //     tokenId: item.tokenId,
+    //     sha,
+    //   };
 
-      const event = await this.processCuratedCreationEvent(tx, new Date(), curatedItem);
-      await this.sbSvc.addEvents([event]);
-    }
+    //   const event = await this.processCuratedCreationEvent(tx, new Date(), curatedItem);
+    //   await this.sbSvc.addEvents([event]);
+    // }
 
-    await writeFile(`./${collection[0].slug}_attributes.json`, JSON.stringify(attributes));
+    // await writeFile(`./${collection[0].slug}_attributes.json`, JSON.stringify(attributes));
   }
 
   async generateTraitRarity(collection: any[]) {

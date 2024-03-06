@@ -7,7 +7,7 @@ import Bull, { Queue } from 'bull';
 import dotenv from 'dotenv';
 dotenv.config();
 
-const chain: 'mainnet' | 'goerli' = process.env.CHAIN_ID === '1' ? 'mainnet' : 'goerli';
+const chain: 'mainnet' | 'sepolia' = process.env.CHAIN_ID === '1' ? 'mainnet' : 'sepolia';
 
 @Injectable()
 export class BlockService {

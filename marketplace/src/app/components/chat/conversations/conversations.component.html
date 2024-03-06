@@ -34,5 +34,25 @@
         </div>
       </div>
     </div>
+  } @empty {
+    <div class="conversation">
+
+      <div class="profile-item">
+        <div class="image-wrapper">
+          <img
+            [src]="'assets/loadingphunk.png'"
+            width="50"
+            height="50"
+          />
+        </div>
+      </div>
+
+      <div class="message-inner">
+        <div class="timestamp">&nbsp;</div>
+        <div class="content">
+          Loading...
+        </div>
+      </div>
+    </div>
   }
 </div>

@@ -15,11 +15,12 @@
 * ░░░░░░░░░░░░░░░░░░░░░░░░░ *
 ****************************/
 
-/*   Changelog:                               */
+/*   V2 Changelog:                            */
 /* - Removed MulticallUpgradeable             */
 /* - Removed Bidding functionality            */
-/* - Removed single buyPhunk (dev method)     */
+/* - Removed Single buyPhunk(dev method)      */
 /* - Added setPointsAddress()                 */
+/* - Added pendingWithdrawalsV2 mapping       */
 
 pragma solidity 0.8.20;
 
@@ -61,7 +62,6 @@ contract EtherPhunksMarketV2 is
     mapping(bytes32 => Offer) public phunksOfferedForSale;
     mapping(bytes32 => Bid) public phunkBids;
     mapping(address => uint) public pendingWithdrawals;
-    mapping(address => uint) public pendingWithdrawalsV2;
 
     event PhunkOffered(
         bytes32 indexed phunkId,
@@ -195,7 +195,7 @@ contract EtherPhunksMarketV2 is
             address(0x0)
         );
 
-        pendingWithdrawals[seller] += minSalePriceInWei;
+        pendingWithdrawalsV2[seller] += minSalePriceInWei;
         _addPoints(seller, 100);
 
         _transferEthscription(seller, msg.sender, phunkId);
@@ -203,7 +203,7 @@ contract EtherPhunksMarketV2 is
 
         Bid memory bid = phunkBids[phunkId];
         if (bid.bidder == msg.sender) {
-            pendingWithdrawals[msg.sender] += bid.value;
+            pendingWithdrawalsV2[msg.sender] += bid.value;
             phunkBids[phunkId] = Bid(false, phunkId, address(0x0), 0);
         }
     }
@@ -228,13 +228,13 @@ contract EtherPhunksMarketV2 is
 
     function withdraw() public nonReentrant {
         require(
-            pendingWithdrawals[msg.sender] != 0,
+            pendingWithdrawalsV2[msg.sender] != 0,
             unicode"You're poor, Phunk 🖕"
         );
 
-        uint amount = pendingWithdrawals[msg.sender];
+        uint amount = pendingWithdrawalsV2[msg.sender];
 
-        pendingWithdrawals[msg.sender] = 0;
+        pendingWithdrawalsV2[msg.sender] = 0;
 
         (bool sent, ) = payable(msg.sender).call{value: amount}("");
         require(sent, "Failed to send Ether");
@@ -371,14 +371,20 @@ contract EtherPhunksMarketV2 is
     /* ******** V2 ******** */
     /* ******************** */
 
+    mapping(address => uint) public pendingWithdrawalsV2;
+
+    function initializeV2(
+        uint256 _contractVersion
+    ) public initializer {
+        contractVersion = _contractVersion;
+    }
+
     function setPointsAddress(address _pointsAddress) public onlyOwner {
         pointsAddress = _pointsAddress;
     }
 
     // mapping(address => bytes32[]) public phunksForSale;
-
     // mapping(address => mapping(bytes32 => Offer)) public phunksOfferedForSaleV2;
-
     // mapping(address => mapping(bytes32 => Offer)) public phunksOfferedForSaleByAddress;
 
     // function _checkOwnership(

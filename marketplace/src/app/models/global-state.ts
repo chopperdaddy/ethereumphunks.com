@@ -4,15 +4,18 @@ import { MarketState, MarketType } from './market.state';
 import { Phunk } from './db';
 import { Sort, Sorts } from './pipes';
 import { Theme } from './theme';
+import { Conversation } from '@xmtp/xmtp-js';
 
 export interface GlobalState {
   appState: AppState;
   dataState: DataState;
   marketState: MarketState;
+  notificationState: NotificationState;
+  chatState: ChatState;
 }
 
 export interface AppState {
-  walletAddress: string;
+  walletAddress: string | undefined;
   connected: boolean;
   hasWithdrawal: number;
   userPoints: number;
@@ -32,14 +35,26 @@ export interface AppState {
   indexerBlock: number;
   blocksBehind: number;
 
-  notifications: Notification[];
   cooldowns: Cooldowns;
-
-  notifHoverState: { [notificationId: string]: boolean };
 
   searchHistory: HistoryItem[];
   searchHistoryActive: boolean;
   isSearchResult: boolean;
+
+  modalActive: boolean;
+}
+
+export interface ChatState {
+  active: boolean;
+  connected: boolean;
+  conversations: Conversation[];
+  activeConversation: Conversation | null;
+  toUser: string | null;
+}
+
+export interface NotificationState {
+  notifications: Notification[];
+  notifHoverState: { [notificationId: string]: boolean };
 }
 
 export interface HistoryItem { type: string; value: string };
@@ -49,7 +64,8 @@ export interface Cooldowns {
 }
 
 export interface Notification {
-  id: number;
+  id: string;
+  timestamp: number;
 
   type: 'wallet' | 'pending' | 'complete' | 'error' | 'event' | 'chat';
   function: TxFunction;

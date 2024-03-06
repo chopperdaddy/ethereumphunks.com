@@ -1,4 +1,4 @@
-import { Component, ElementRef, EventEmitter, Input, OnChanges, Output, SimpleChanges, ViewChild } from '@angular/core';
+import { Component, ElementRef, EventEmitter, Input, Output, ViewChild } from '@angular/core';
 import { AsyncPipe, DatePipe, JsonPipe, NgTemplateOutlet } from '@angular/common';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 
@@ -10,6 +10,10 @@ import { BehaviorSubject, Observable, catchError, filter, from, map, of, scan, s
 
 import { Message } from '@/models/chat';
 import { WalletAddressDirective } from '@/directives/wallet-address.directive';
+import { selectToUser } from '@/state/selectors/chat.selectors';
+import { Store } from '@ngrx/store';
+import { GlobalState } from '@/models/global-state';
+import { setToUser } from '@/state/actions/chat.actions';
 
 @Component({
   selector: 'app-conversation',
@@ -28,14 +32,11 @@ import { WalletAddressDirective } from '@/directives/wallet-address.directive';
   templateUrl: './conversation.component.html',
   styleUrl: './conversation.component.scss'
 })
-export class ConversationComponent implements OnChanges {
+export class ConversationComponent {
 
   @ViewChild('messages') messages!: ElementRef<HTMLDivElement>;
 
-  @Input() withUser!: string;
-  @Input() standalone = false;
-
-  @Output() goBack: EventEmitter<void> = new EventEmitter<void>();
+  error!: string | null;
 
   messageInput: FormControl<string | null> = new FormControl(null);
 
@@ -44,11 +45,11 @@ export class ConversationComponent implements OnChanges {
 
   conversations$: Observable<any[]> = of([]);
 
-  messages$: Observable<Message[]> = this.user$.pipe(
-    tap(user => console.log('user', user)),
-    filter(user => !!user),
-    switchMap(user =>
-      from(this.chatSvc.createConversationWithUser(user)).pipe(
+  toUser$ = this.store.select(selectToUser);
+  messages$: Observable<Message[]> = this.store.select(selectToUser).pipe(
+    filter((user) => !!user),
+    switchMap((user) =>
+      from(this.chatSvc.createConversationWithUser(user!)).pipe(
         switchMap(conversation =>
           from(this.chatSvc.getChatMessagesFromConversation(conversation)).pipe(
             switchMap(pastMessages =>
@@ -60,15 +61,15 @@ export class ConversationComponent implements OnChanges {
             )
           )
         ),
-        tap(messages => console.log('messages', messages)),
-        map((messages: any[]) => messages.map(message => ({
+        map((messages: any[]) => messages.map((message) => ({
           id: message.id,
           sender: message.senderAddress,
           content: message.content || message.contentFallback,
-          self: message.senderAddress.toLowerCase() !== this.withUser?.toLowerCase(),
+          self: message.senderAddress.toLowerCase() !== user?.toLowerCase(),
           timestamp: new Date(message.sent).getTime(),
         }))),
-        tap(messages => {
+        tap((messages: Message[]) => {
+          if (messages?.length) this.error = null;
           setTimeout(() => {
             const el = this.messages.nativeElement;
             if (el) el.scrollTop = el.scrollHeight;
@@ -76,6 +77,7 @@ export class ConversationComponent implements OnChanges {
         }),
         catchError(err => {
           console.error('Error creating conversation', err);
+          this.error = 'Error: ' + err?.message || 'Unknown error';
           return of([]);
         })
       )
@@ -83,29 +85,23 @@ export class ConversationComponent implements OnChanges {
   );
 
   constructor(
-    private chatSvc: ChatService
+    private store: Store<GlobalState>,
+    private chatSvc: ChatService,
   ) {}
 
-  ngOnChanges(changes: SimpleChanges): void {
-    console.log({ changes });
-    if (
-      changes.withUser &&
-      changes.withUser.currentValue &&
-      changes.withUser.currentValue !== changes.withUser.previousValue
-    ) {
-      this.user.next(this.withUser);
-    }
-  }
-
-  async sendMessage($event: Event) {
+  async sendMessage($event: Event, toUser: string) {
     $event.preventDefault();
 
     try {
-      await this.chatSvc.sendMessage(this.withUser, this.messageInput.value);
+      await this.chatSvc.sendMessage(toUser, this.messageInput.value);
     } catch (error) {
       console.log('Error sending message', error);
     }
 
     this.messageInput.setValue(null);
+  }
+
+  goBack() {
+    this.store.dispatch(setToUser({ address: null }));
   }
 }

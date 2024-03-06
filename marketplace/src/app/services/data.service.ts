@@ -328,16 +328,13 @@ export class DataService {
       }),
       switchMap((res: Phunk) => forkJoin([
         this.addAttributes(res.slug, [res]),
-        from(Promise.all([
-          this.getListingFromHashId(res.hashId),
-          this.getBidFromHashId(res.hashId),
-        ]))
+        from(this.getListingFromHashId(res.hashId))
       ])),
-      map(([[res], [listing, bid]]) => {
+      map(([[res], listing]) => {
+        console.log({res, listing})
         return {
           ...res,
           listing: listing?.listedBy.toLowerCase() === res.prevOwner?.toLowerCase() ? listing : null,
-          bid,
           attributes: [ ...(res.attributes || []) ].sort((a: Attribute, b: Attribute) => {
             if (a.k === "Sex") return -1;
             if (b.k === "Sex") return 1;
@@ -353,7 +350,7 @@ export class DataService {
     if (!hashId) return null;
 
     try {
-      const call = await this.web3Svc.readContract('phunksOfferedForSale', [hashId]);
+      const call = await this.web3Svc.readMarketContract('phunksOfferedForSale', [hashId]);
       if (!call[0]) return null;
 
       return {
@@ -374,7 +371,7 @@ export class DataService {
     if (!hashId) return null;
 
     try {
-      const call = await this.web3Svc.readContract('phunkBids', [hashId]);
+      const call = await this.web3Svc.readMarketContract('phunkBids', [hashId]);
       if (!call[0]) return null;
 
       return {

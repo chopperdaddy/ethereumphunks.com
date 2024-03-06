@@ -17,9 +17,7 @@ import * as dataStateSelectors from '@/state/selectors/data-state.selectors';
 import * as marketStateActions from '@/state/actions/market-state.actions';
 import * as marketStateSelectors from '@/state/selectors/market-state.selectors';
 
-import { asyncScheduler, catchError, filter, map, mergeMap, of, switchMap, tap, throttleTime, withLatestFrom } from 'rxjs';
-
-import { Web3Service } from '@/services/web3.service';
+import { asyncScheduler, filter, map, mergeMap, switchMap, throttleTime, withLatestFrom } from 'rxjs';
 
 @Injectable()
 export class DataStateEffects {
@@ -27,15 +25,11 @@ export class DataStateEffects {
   // When the database is updated
   dbEventTriggered$ = createEffect(() => this.actions$.pipe(
     ofType(dataStateActions.dbEventTriggered),
-    withLatestFrom(
-      this.store.select(dataStateSelectors.selectSinglePhunk),
-      this.store.select(appStateSelectors.selectWalletAddress)
-    ),
-    map(([action, singlePhunk, address]) => {
+    withLatestFrom(this.store.select(dataStateSelectors.selectSinglePhunk)),
+    map(([action, singlePhunk]) => {
       // Check if the event is for the active phunk
       const newEvent = action.payload.new as Event;
       this.checkEventIsActiveSinglePhunk(newEvent, singlePhunk);
-      this.checkEventForPurchaseFromUser(newEvent, address);
       return newEvent;
     }),
     // Start with the throttle
@@ -45,26 +39,6 @@ export class DataStateEffects {
     }),
     map((event) => marketStateActions.triggerDataRefresh()),
   ));
-
-  onBlockNumber$ = createEffect(() => this.actions$.pipe(
-    ofType(appStateActions.setCurrentBlock),
-    withLatestFrom(this.store.select(appStateSelectors.selectWalletAddress)),
-    switchMap(([action, address]) => {
-      const currentBlock = action.currentBlock;
-      const storedBlock = localStorage.getItem('EtherPhunks_currentBlock');
-      if (storedBlock && (currentBlock - Number(storedBlock)) > 2) {
-        return this.dataSvc.fetchMissedEvents(address, Number(storedBlock)).pipe(
-          tap((events) => {
-            for (const event of events) this.checkEventForPurchaseFromUser(event, address);
-          }),
-          catchError((err) => of([])),
-        );
-      }
-      return of([]);
-    }),
-    withLatestFrom(this.store.select(appStateSelectors.selectCurrentBlock)),
-    tap(([_, blockNumber]) => localStorage.setItem('EtherPhunks_currentBlock', JSON.stringify(blockNumber))),
-  ), { dispatch: false });
 
   fetchCollections$ = createEffect(() => this.actions$.pipe(
     ofType(dataStateActions.fetchCollections),
@@ -126,30 +100,8 @@ export class DataStateEffects {
   constructor(
     private store: Store<GlobalState>,
     private actions$: Actions,
-    private dataSvc: DataService,
-    private web3Svc: Web3Service
+    private dataSvc: DataService
   ) {}
-
-  checkEventForPurchaseFromUser(event: Event, userAddress: string) {
-    if (!userAddress) return;
-    if (event.type === 'PhunkBought' && event.from.toLowerCase() === userAddress?.toLowerCase()) {
-      // This phunk was bought FROM the active user.
-      // We can notify them of this purchase
-      this.store.dispatch(appStateActions.upsertNotification({
-        notification: {
-          id: event.blockTimestamp ? new Date(event.blockTimestamp).getTime() : Date.now(),
-          type: 'event',
-          function: 'purchased',
-          hashId: event.hashId!,
-          tokenId: event.tokenId,
-          hash: event.txHash,
-          isNotification: true,
-          detail: event,
-          value: Number(this.web3Svc.weiToEth(event.value)),
-        }
-      }));
-    }
-  }
 
   checkEventIsActiveSinglePhunk(event: Event, singlePhunk: Phunk | null) {
     if (!singlePhunk) return;

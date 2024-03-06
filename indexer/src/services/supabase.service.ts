@@ -24,14 +24,14 @@ import {
 import dotenv from 'dotenv';
 dotenv.config();
 
-const supabaseUrl = process.env.CHAIN_ID === '1' ? process.env.SUPABASE_URL_MAINNET : process.env.SUPABASE_URL_GOERLI;
-const serviceRole = process.env.CHAIN_ID === '1' ? process.env.SUPABASE_SERVICE_ROLE_MAINNET : process.env.SUPABASE_SERVICE_ROLE_GOERLI;
+const supabaseUrl = process.env.CHAIN_ID === '1' ? process.env.SUPABASE_URL_MAINNET : process.env.SUPABASE_URL_SEPOLIA;
+const serviceRole = process.env.CHAIN_ID === '1' ? process.env.SUPABASE_SERVICE_ROLE_MAINNET : process.env.SUPABASE_SERVICE_ROLE_SEPOLIA;
 
 const supabase = createClient(supabaseUrl, serviceRole);
 
 @Injectable()
 export class SupabaseService {
-  suffix = process.env.CHAIN_ID === '1' ? '' : '_goerli';
+  suffix = process.env.CHAIN_ID === '1' ? '' : '_sepolia';
 
   async updateLastBlock(blockNumber: number, createdAt: Date): Promise<void> {
     const response = await supabase
@@ -182,6 +182,19 @@ export class SupabaseService {
     return null;
   }
 
+  async checkEthscriptionsExistsByHashIds(hashes: string[]): Promise<Ethscription[]> {
+    const response: EthscriptionResponse = await supabase
+      .from('ethscriptions' + this.suffix)
+      .select('*')
+      .in('hashId', hashes.map((hash) => hash.toLowerCase()));
+
+    const { data, error } = response;
+
+    if (error) throw error;
+    if (data?.length) return data;
+    return null;
+  }
+
   ////////////////////////////////////////////////////////////////////////////////
   // Adds ////////////////////////////////////////////////////////////////////////
   ////////////////////////////////////////////////////////////////////////////////
@@ -196,8 +209,9 @@ export class SupabaseService {
     const cleanedString = stringData.replace(/\x00/g, '');
 
     // Get or create the users
-    if (txn.from === txn.to) await this.getOrCreateUser(txn.from, createdAt);
-    else {
+    if (txn.from.toLowerCase() === txn.to.toLowerCase()) {
+      await this.getOrCreateUser(txn.from, createdAt);
+    } else {
       await Promise.all([
         this.getOrCreateUser(txn.from, createdAt),
         this.getOrCreateUser(txn.to, createdAt)
@@ -212,7 +226,7 @@ export class SupabaseService {
           creator: txn.from.toLowerCase(),
           owner: txn.to.toLowerCase(),
           hashId: txn.hash.toLowerCase(),
-          data: cleanedString,
+          // data: cleanedString,
           sha: phunkShaData.sha,
           slug: 'ethereum-phunks',
           tokenId: phunkShaData.phunkId,
@@ -268,6 +282,16 @@ export class SupabaseService {
   }
 
   async addEvents(events: Event[]): Promise<void> {
+
+    events = events.map((event, i) => {
+      event.txId = `${event.txHash.toLowerCase()}-${event.txIndex}-${i}`;
+      event.from = event.from.toLowerCase();
+      event.to = event.to.toLowerCase();
+      event.txHash = event.txHash.toLowerCase();
+      event.hashId = event.hashId.toLowerCase();
+      return event;
+    });
+
     const response: EventResponse = await supabase
       .from('events' + this.suffix)
       .upsert(events, {
@@ -306,7 +330,10 @@ export class SupabaseService {
 
     const newUserResponse: UserResponse = await supabase
       .from('users' + this.suffix)
-      .insert({ address: address.toLowerCase(), createdAt: createdAt || new Date() })
+      .insert({
+        address: address.toLowerCase(),
+        createdAt: createdAt || new Date()
+      })
       .select();
 
     const { data: newUser, error: newError } = newUserResponse;
@@ -539,7 +566,7 @@ export class SupabaseService {
 
     while (hasMore) {
       const { data, error } = await supabase
-        .from('phunks_goerli')
+        .from('phunks_sepolia')
         // .select('hashId')
         .select('phunkId')
         .order('phunkId', { ascending: true })

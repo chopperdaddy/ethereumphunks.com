@@ -25,14 +25,15 @@ import {
 import dotenv from 'dotenv';
 dotenv.config();
 
-const supabaseUrl = process.env.CHAIN_ID === '1' ? process.env.SUPABASE_URL_MAINNET : process.env.SUPABASE_URL_GOERLI;
-const serviceRole = process.env.CHAIN_ID === '1' ? process.env.SUPABASE_SERVICE_ROLE_MAINNET : process.env.SUPABASE_SERVICE_ROLE_GOERLI;
+const supabaseUrl = process.env.CHAIN_ID === '1' ? process.env.SUPABASE_URL_MAINNET : process.env.SUPABASE_URL_SEPOLIA;
+const serviceRole = process.env.CHAIN_ID === '1' ? process.env.SUPABASE_SERVICE_ROLE_MAINNET : process.env.SUPABASE_SERVICE_ROLE_SEPOLIA;
 
 const supabase = createClient(supabaseUrl, serviceRole);
 
 @Injectable()
 export class SupabaseService {
-  suffix = process.env.CHAIN_ID === '1' ? '' : '_goerli';
+
+  suffix = process.env.CHAIN_ID === '1' ? '' : '_sepolia';
 
   constructor(
     private readonly utilSvc: UtilityService
@@ -89,6 +90,17 @@ export class SupabaseService {
     return null;
   }
 
+  async updateUserPoints(address: string, points: number): Promise<void> {
+    const response = await supabase
+      .from('users' + this.suffix)
+      .update({ points: Number(points) })
+      .eq('address', address.toLowerCase());
+
+    const { error } = response;
+    if (error) throw error;
+    Logger.log('Updated user points', address);
+  }
+
   ////////////////////////////////////////////////////////////////////////////////
   // Adds ////////////////////////////////////////////////////////////////////////
   ////////////////////////////////////////////////////////////////////////////////
@@ -130,7 +142,7 @@ export class SupabaseService {
   async addCurated(
     txn: Transaction,
     createdAt: Date,
-    curatedItem: CuratedItem
+    curatedItem: Partial<CuratedItem>
   ): Promise<void> {
 
     const stringData = hexToString(txn.input?.toString() as `0x${string}`);
@@ -158,7 +170,7 @@ export class SupabaseService {
       ]);
 
     const { error } = response;
-    if (error) throw error.message;
+    if (error) Logger.error(error.message, txn.hash.toLowerCase());
     else Logger.log('Added curated', `${curatedItem.name}`);
   }
 
@@ -200,6 +212,17 @@ export class SupabaseService {
     const { error } = response;
     if (error) Logger.error(error.message, txn.hash.toLowerCase());
     Logger.log('Event created', txn.hash.toLowerCase());
+  }
+
+  async deleteEvent(hashId: string): Promise<void> {
+    const response: EventResponse = await supabase
+      .from('events' + this.suffix)
+      .delete()
+      .eq('hashId', hashId.toLowerCase());
+
+    const { error } = response;
+    if (error) throw error.message;
+    Logger.log('Event deleted', hashId);
   }
 
   async addEvents(events: Event[]): Promise<void> {
@@ -252,7 +275,6 @@ export class SupabaseService {
   }
 
   async getAllEthscriptions(): Promise<any[]> {
-
     const pageSize = 1000; // Max rows per request
 
     let allPhunks: any[] = [];
@@ -261,10 +283,10 @@ export class SupabaseService {
 
     while (hasMore) {
       const { data, error } = await supabase
-        .from('ethscriptions' + this.suffix)
-        .select('hashId')
-        // .eq('slug', 'missing-punks')
-        .order('createdAt', { ascending: true })
+        .from('ethscriptions' + ('_goerli' || this.suffix))
+        .select('hashId, creator, owner, prevOwner, slug, tokenId, sha, data')
+        .eq('slug', 'ethereum-phunks')
+        .order('tokenId', { ascending: true })
         .range(page * pageSize, (page + 1) * pageSize - 1);
 
       if (error) {
@@ -284,19 +306,36 @@ export class SupabaseService {
     return allPhunks;
   }
 
-  ////////////////////////////////////////////////////////////////////////////////
-  // Updates /////////////////////////////////////////////////////////////////////
-  ////////////////////////////////////////////////////////////////////////////////
+  async getUsers(): Promise<any[]> {
 
-  async updateEthscriptionData(hashId: string, sha: string, data: string): Promise<void> {
-    const response: EthscriptionResponse = await supabase
-      .from('ethscriptions' + this.suffix)
-      .update({ sha, data })
-      .eq('hashId', hashId.toLowerCase());
+      const pageSize = 1000; // Max rows per request
 
-    const { error } = response;
-    if (error) throw error;
-    Logger.log('Updated ethscription data', hashId);
+      let allUsers: any[] = [];
+      let hasMore = true;
+      let page = 0;
+
+      while (hasMore) {
+        const { data, error } = await supabase
+          .from('users' + this.suffix)
+          .select('address')
+          .order('createdAt', { ascending: true })
+          .range(page * pageSize, (page + 1) * pageSize - 1);
+
+        if (error) {
+          console.error('Error fetching data:', error);
+          throw error;
+        }
+
+        if (data) {
+          allUsers = allUsers.concat(data);
+          hasMore = data.length === pageSize;
+          page++;
+        } else {
+          hasMore = false;
+        }
+      }
+
+      return allUsers;
   }
 
   ////////////////////////////////////////////////////////////////////////////////
@@ -337,4 +376,34 @@ export class SupabaseService {
     if (data) Logger.log('Uploaded curated file', `${fileName}`);
   }
 
+  async removeListing(hashId: string): Promise<void> {
+    const response: ListingResponse = await supabase
+      .from('listings' + this.suffix)
+      .delete()
+      .eq('hashId', hashId);
+    const { error } = response;
+    if (error) return Logger.error(error.details, error.message);
+    Logger.log('Removed listing', hashId);
+  }
+
+  async removeBid(hashId: string): Promise<void> {
+    const response: ListingResponse = await supabase
+      .from('bids' + this.suffix)
+      .delete()
+      .eq('hashId', hashId);
+    const { error } = response;
+    if (error) return Logger.error(error.details, error.message);
+    Logger.log('Removed bid', hashId);
+  }
+
+  async addAttributes(data: { sha: string, attributes: any }[]) {
+    const res = await supabase
+      .from('attributes')
+      .upsert(data);
+
+    const { error } = res;
+    if (error) throw error;
+
+    Logger.log('Added attributes', data.length);
+  }
 }

@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 
 import { FormattedTransaction, GetBlockReturnType, TransactionReceipt, createPublicClient, http } from 'viem';
-import { goerli, mainnet } from 'viem/chains';
+import { sepolia, mainnet } from 'viem/chains';
 
 import punkDataAbi from '../abi/PunkData.json';
 import pointsAbi from '../abi/Points.json';
@@ -12,17 +12,17 @@ dotenv.config();
 @Injectable()
 export class Web3Service {
 
-  chain: 'mainnet' | 'goerli' = process.env.CHAIN_ID === '1' ? 'mainnet' : 'goerli';
-  rpcURL: string = this.chain === 'mainnet' ? process.env.RPC_URL_MAINNET : process.env.RPC_URL_GOERLI;
+  chain: 'mainnet' | 'sepolia' = process.env.CHAIN_ID === '1' ? 'mainnet' : 'sepolia';
+  rpcURL: string = this.chain === 'mainnet' ? process.env.RPC_URL_MAINNET : process.env.RPC_URL_SEPOLIA;
 
   marketAddress: string[] = JSON.parse(
-    this.chain === 'mainnet' ? process.env.MARKET_ADDRESS_MAINNET : process.env.MARKET_ADDRESS_GOERLI
+    this.chain === 'mainnet' ? process.env.MARKET_ADDRESS_MAINNET : process.env.MARKET_ADDRESS_SEPOLIA
   ).map((address: string) => address.toLowerCase());
 
-  pointsAddress: string = this.chain === 'mainnet' ? process.env.POINTS_ADDRESS_MAINNET : process.env.POINTS_ADDRESS_GOERLI;
+  pointsAddress: string = this.chain === 'mainnet' ? process.env.POINTS_ADDRESS_MAINNET : process.env.POINTS_ADDRESS_SEPOLIA;
 
   public client = createPublicClient({
-    chain: this.chain === 'mainnet' ? mainnet : goerli,
+    chain: this.chain === 'mainnet' ? mainnet : sepolia,
     transport: http(this.rpcURL)
   });
 
@@ -55,6 +55,19 @@ export class Web3Service {
   async getTransaction(hash: `0x${string}`): Promise<any> {
     const transaction = await this.client.getTransaction({ hash });
     return transaction;
+  }
+
+  async getValidTransactions(hashes: string[]): Promise<any[]> {
+    const transactions = await Promise.all(
+      hashes.map(async (hash) => {
+        return this.client.getTransaction({ hash: hash as `0x${string}` }).then((res) => {
+          return res.hash;
+        }).catch((e) => {
+          return null;
+        });
+      })
+    );
+    return transactions.filter((tx) => tx);
   }
 
   async getTransactionReceipt(hash: `0x${string}`): Promise<TransactionReceipt> {

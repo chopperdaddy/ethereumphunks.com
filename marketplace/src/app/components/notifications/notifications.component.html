@@ -3,7 +3,7 @@
     <div class="txns">
       @for (txn of txns; track txn.hashId) {
         @if (!txn.dismissed) {
-          <app-notif [txn]="txn" />
+          <app-notification [txn]="txn" />
         }
       }
     </div>

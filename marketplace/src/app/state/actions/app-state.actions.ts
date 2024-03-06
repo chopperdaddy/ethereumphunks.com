@@ -9,7 +9,7 @@ export const setConnected = createAction(
 
 export const setWalletAddress = createAction(
   '[App State] Set Wallet Address',
-  props<{ walletAddress: string }>()
+  props<{ walletAddress: string | undefined }>()
 );
 
 export const checkHasWithdrawal = createAction(
@@ -48,25 +48,6 @@ export const setSlideoutActive = createAction(
 export const setTheme = createAction(
   '[App State] Set Theme',
   props<{ theme: AppState['theme'] }>()
-);
-
-export const clearNotifications = createAction(
-  '[App State] Clear Notifications',
-);
-
-export const upsertNotification = createAction(
-  '[App State] Upsert Notification',
-  props<{ notification: Notification }>()
-);
-
-export const removeNotification = createAction(
-  '[App State] Remove Notification',
-  props<{ txId: Notification['id'] }>()
-);
-
-export const setNotifications = createAction(
-  '[App State] Set Notifications',
-  props<{ notifications: Notification[] }>()
 );
 
 export const setIsMobile = createAction(
@@ -108,6 +89,11 @@ export const mouseUp = createAction(
   props<{ event: MouseEvent }>()
 );
 
+export const mouseDown = createAction(
+  '[App State] Mouse Down',
+  props<{ event: MouseEvent }>()
+);
+
 export const fetchUserPoints = createAction(
   '[App State] Fetch User Points'
 );
@@ -129,11 +115,6 @@ export const setActiveMultiplier = createAction(
 export const restoreScrollPosition = createAction(
   '[Router] Restore Scroll Position',
   props<{ navigationId: number }>()
-);
-
-export const setNotifHoverState = createAction(
-  '[App State] Set Notif Hover State',
-  props<{ notifHoverState: AppState['notifHoverState'] }>()
 );
 
 export const setSearchHistory = createAction(
@@ -163,4 +144,13 @@ export const setSearchHistoryActive = createAction(
 export const setIsSearchResult = createAction(
   '[App State] Set Is Search Result',
   props<{ isSearchResult: boolean }>()
+);
+
+export const reconnectChat = createAction(
+  '[App State] Reconnect Chat'
+);
+
+export const setModalActive = createAction(
+  '[App State] Set Modal Active',
+  props<{ modalActive: boolean }>()
 );

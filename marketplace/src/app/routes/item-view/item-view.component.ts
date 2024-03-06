@@ -22,6 +22,7 @@ import { FormatCashPipe } from '@/pipes/format-cash.pipe';
 import { DataService } from '@/services/data.service';
 import { Web3Service } from '@/services/web3.service';
 import { ThemeService } from '@/services/theme.service';
+import { UtilService } from '@/services/util.service';
 
 import { Phunk } from '@/models/db';
 import { GlobalState, Notification } from '@/models/global-state';
@@ -35,6 +36,9 @@ import * as appStateSelectors from '@/state/selectors/app-state.selectors';
 
 import * as dataStateActions from '@/state/actions/data-state.actions';
 import * as dataStateSelectors from '@/state/selectors/data-state.selectors';
+
+import { selectNotifications } from '@/state/selectors/notification.selectors';
+import { upsertNotification } from '@/state/actions/notification.actions';
 
 interface TxStatus {
   title: string;
@@ -114,7 +118,7 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
     map((blocksBehind) => blocksBehind > 6),
   );
 
-  pendingTx$ = this.store.select(appStateSelectors.selectNotifications).pipe(
+  pendingTx$ = this.store.select(selectNotifications).pipe(
     filter((transactions) => !!transactions),
     switchMap((transactions) => this.singlePhunk$.pipe(
       filter((phunk) => !!phunk),
@@ -136,6 +140,7 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
     public dataSvc: DataService,
     public web3Svc: Web3Service,
     public themeSvc: ThemeService,
+    private utilSvc: UtilService,
   ) {}
 
   ngAfterViewInit(): void {
@@ -219,7 +224,8 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
     let address = this.listToAddress.value || undefined;
 
     let notification: Notification = {
-      id: Date.now(),
+      id: this.utilSvc.createIdFromString('offerPhunkForSale' + hashId),
+      timestamp: Date.now(),
       slug: phunk.slug,
       type: 'wallet',
       function: 'offerPhunkForSale',
@@ -228,7 +234,7 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
       value,
     };
 
-    this.store.dispatch(appStateActions.upsertNotification({ notification }));
+    this.store.dispatch(upsertNotification({ notification }));
 
     try {
       await this.checkConsenus(hashId, phunk.owner, phunk.prevOwner);
@@ -251,7 +257,7 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
       }
 
       // this.initNotificationMessage();
-      this.store.dispatch(appStateActions.upsertNotification({ notification }));
+      this.store.dispatch(upsertNotification({ notification }));
 
       notification = {
         ...notification,
@@ -259,7 +265,7 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
         hash,
       };
 
-      this.store.dispatch(appStateActions.upsertNotification({ notification }));
+      this.store.dispatch(upsertNotification({ notification }));
 
       const receipt = await this.web3Svc.pollReceipt(hash!);
 
@@ -279,7 +285,7 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
       };
     }
 
-    this.store.dispatch(appStateActions.upsertNotification({ notification }));
+    this.store.dispatch(upsertNotification({ notification }));
     this.clearAll();
   }
 
@@ -289,7 +295,8 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
     if (!hashId) throw new Error('Invalid hashId');
 
     let notification: Notification = {
-      id: Date.now(),
+      id: this.utilSvc.createIdFromString('sendToEscrow' + hashId),
+      timestamp: Date.now(),
       slug: phunk.slug,
       type: 'wallet',
       function: 'sendToEscrow',
@@ -297,7 +304,7 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
       tokenId: phunk.tokenId,
     };
 
-    this.store.dispatch(appStateActions.upsertNotification({ notification }));
+    this.store.dispatch(upsertNotification({ notification }));
 
     try {
       await this.checkConsenus(hashId, phunk.owner, phunk.prevOwner);
@@ -310,7 +317,7 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
         type: 'pending',
         hash,
       };
-      this.store.dispatch(appStateActions.upsertNotification({ notification }));
+      this.store.dispatch(upsertNotification({ notification }));
 
       const receipt = await this.web3Svc.pollReceipt(hash!);
       // this.setNotificationCompleteMessage(receipt);
@@ -331,7 +338,7 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
       };
     }
 
-    this.store.dispatch(appStateActions.upsertNotification({ notification }));
+    this.store.dispatch(upsertNotification({ notification }));
   }
 
   async phunkNoLongerForSale(phunk: Phunk): Promise<void> {
@@ -339,7 +346,8 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
     if (!hashId) throw new Error('Invalid hashId');
 
     let notification: Notification = {
-      id: Date.now(),
+      id: this.utilSvc.createIdFromString('phunkNoLongerForSale' + hashId),
+      timestamp: Date.now(),
       slug: phunk.slug,
       type: 'wallet',
       function: 'phunkNoLongerForSale',
@@ -347,7 +355,7 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
       tokenId: phunk.tokenId,
     };
 
-    this.store.dispatch(appStateActions.upsertNotification({ notification }));
+    this.store.dispatch(upsertNotification({ notification }));
 
     try {
 
@@ -358,7 +366,7 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
         type: 'pending',
         hash,
       };
-      this.store.dispatch(appStateActions.upsertNotification({ notification }));
+      this.store.dispatch(upsertNotification({ notification }));
 
       const receipt = await this.web3Svc.pollReceipt(hash!);
 
@@ -379,107 +387,109 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
       };
     }
 
-    this.store.dispatch(appStateActions.upsertNotification({ notification }));
+    this.store.dispatch(upsertNotification({ notification }));
   }
 
-  async withdrawBidForPhunk(phunk: Phunk): Promise<void> {
-    const hashId = phunk.hashId;
-    if (!hashId) throw new Error('Invalid hashId');
+  // async withdrawBidForPhunk(phunk: Phunk): Promise<void> {
+  //   const hashId = phunk.hashId;
+  //   if (!hashId) throw new Error('Invalid hashId');
 
-    let notification: Notification = {
-      id: Date.now(),
-      slug: phunk.slug,
-      type: 'wallet',
-      function: 'withdrawBidForPhunk',
-      hashId,
-      tokenId: phunk.tokenId,
-    };
+  //   let notification: Notification = {
+  //     id: this.utilSvc.createIdFromString('withdrawBidForPhunk' + hashId),
+  //     timestamp: Date.now(),
+  //     slug: phunk.slug,
+  //     type: 'wallet',
+  //     function: 'withdrawBidForPhunk',
+  //     hashId,
+  //     tokenId: phunk.tokenId,
+  //   };
 
-    this.store.dispatch(appStateActions.upsertNotification({ notification }));
+  //   this.store.dispatch(upsertNotification({ notification }));
 
-    try {
+  //   try {
 
-      const hash = await this.web3Svc.withdrawBidForPhunk(hashId);
+  //     const hash = await this.web3Svc.withdrawBidForPhunk(hashId);
 
-      notification = {
-        ...notification,
-        type: 'pending',
-        hash,
-      };
-      this.store.dispatch(appStateActions.upsertNotification({ notification }));
+  //     notification = {
+  //       ...notification,
+  //       type: 'pending',
+  //       hash,
+  //     };
+  //     this.store.dispatch(upsertNotification({ notification }));
 
-      const receipt = await this.web3Svc.pollReceipt(hash!);
+  //     const receipt = await this.web3Svc.pollReceipt(hash!);
 
-      notification = {
-        ...notification,
-        type: 'complete',
-        hash: receipt.transactionHash,
-      };
+  //     notification = {
+  //       ...notification,
+  //       type: 'complete',
+  //       hash: receipt.transactionHash,
+  //     };
 
-      this.store.dispatch(appStateActions.addCooldown({ cooldown: { [hashId]: Number(receipt.blockNumber) }}));
-    } catch (err) {
-      console.log(err);
+  //     this.store.dispatch(appStateActions.addCooldown({ cooldown: { [hashId]: Number(receipt.blockNumber) }}));
+  //   } catch (err) {
+  //     console.log(err);
 
-      notification = {
-        ...notification,
-        type: 'error',
-        detail: err,
-      };
-    }
+  //     notification = {
+  //       ...notification,
+  //       type: 'error',
+  //       detail: err,
+  //     };
+  //   }
 
-    this.store.dispatch(appStateActions.upsertNotification({ notification }));
-  }
+  //   this.store.dispatch(upsertNotification({ notification }));
+  // }
 
-  async acceptBidForPhunk(phunk: Phunk): Promise<void> {
-    const hashId = phunk.hashId;
-    if (!hashId) throw new Error('Invalid hashId');
+  // async acceptBidForPhunk(phunk: Phunk): Promise<void> {
+  //   const hashId = phunk.hashId;
+  //   if (!hashId) throw new Error('Invalid hashId');
 
-    const value = phunk.bid?.value;
+  //   const value = phunk.bid?.value;
 
-    let notification: Notification = {
-      id: Date.now(),
-      slug: phunk.slug,
-      type: 'wallet',
-      function: 'acceptBidForPhunk',
-      hashId,
-      tokenId: phunk.tokenId,
-      value: Number(this.web3Svc.weiToEth(value)),
-    };
+  //   let notification: Notification = {
+  //     id: this.utilSvc.createIdFromString('acceptBidForPhunk' + hashId),
+  //     timestamp: Date.now(),
+  //     slug: phunk.slug,
+  //     type: 'wallet',
+  //     function: 'acceptBidForPhunk',
+  //     hashId,
+  //     tokenId: phunk.tokenId,
+  //     value: Number(this.web3Svc.weiToEth(value)),
+  //   };
 
-    try {
-      if (!value) throw new Error('Invalid value');
-      this.store.dispatch(appStateActions.upsertNotification({ notification }));
+  //   try {
+  //     if (!value) throw new Error('Invalid value');
+  //     this.store.dispatch(upsertNotification({ notification }));
 
-      await this.checkConsenus(hashId, phunk.owner, phunk.prevOwner);
+  //     await this.checkConsenus(hashId, phunk.owner, phunk.prevOwner);
 
-      const hash = await this.web3Svc.acceptBidForPhunk(hashId, value!);
-      notification = {
-        ...notification,
-        type: 'pending',
-        hash,
-      };
-      this.store.dispatch(appStateActions.upsertNotification({ notification }));
+  //     const hash = await this.web3Svc.acceptBidForPhunk(hashId, value!);
+  //     notification = {
+  //       ...notification,
+  //       type: 'pending',
+  //       hash,
+  //     };
+  //     this.store.dispatch(upsertNotification({ notification }));
 
-      const receipt = await this.web3Svc.pollReceipt(hash!);
-      notification = {
-        ...notification,
-        type: 'complete',
-        hash: receipt.transactionHash,
-      };
+  //     const receipt = await this.web3Svc.pollReceipt(hash!);
+  //     notification = {
+  //       ...notification,
+  //       type: 'complete',
+  //       hash: receipt.transactionHash,
+  //     };
 
-      this.store.dispatch(appStateActions.addCooldown({ cooldown: { [hashId]: Number(receipt.blockNumber) }}));
-    } catch (err) {
-      console.log(err);
+  //     this.store.dispatch(appStateActions.addCooldown({ cooldown: { [hashId]: Number(receipt.blockNumber) }}));
+  //   } catch (err) {
+  //     console.log(err);
 
-      notification = {
-        ...notification,
-        type: 'error',
-        detail: err,
-      };
-    }
+  //     notification = {
+  //       ...notification,
+  //       type: 'error',
+  //       detail: err,
+  //     };
+  //   }
 
-    this.store.dispatch(appStateActions.upsertNotification({ notification }));
-  }
+  //   this.store.dispatch(upsertNotification({ notification }));
+  // }
 
   async buyPhunk(phunk: Phunk): Promise<void> {
     const hashId = phunk.hashId;
@@ -488,7 +498,8 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
     const value = phunk.listing?.minValue;
 
     let notification: Notification = {
-      id: Date.now(),
+      id: this.utilSvc.createIdFromString('buyPhunk' + hashId),
+      timestamp: Date.now(),
       slug: phunk.slug,
       type: 'wallet',
       function: 'buyPhunk',
@@ -497,7 +508,7 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
       value: Number(this.web3Svc.weiToEth(value)),
     };
 
-    this.store.dispatch(appStateActions.upsertNotification({ notification }));
+    this.store.dispatch(upsertNotification({ notification }));
 
     try {
       await this.checkConsenus(hashId, phunk.owner, phunk.prevOwner);
@@ -509,7 +520,7 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
         type: 'pending',
         hash,
       };
-      this.store.dispatch(appStateActions.upsertNotification({ notification }));
+      this.store.dispatch(upsertNotification({ notification }));
 
       const receipt = await this.web3Svc.pollReceipt(hash!);
       notification = {
@@ -529,64 +540,66 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
       };
     }
 
-    this.store.dispatch(appStateActions.upsertNotification({ notification }));
+    this.store.dispatch(upsertNotification({ notification }));
   }
 
-  async submitBid(phunk: Phunk): Promise<void> {
-    const hashId = phunk.hashId;
-    if (!hashId) throw new Error('Invalid hashId');
+  // async submitBid(phunk: Phunk): Promise<void> {
+  //   const hashId = phunk.hashId;
+  //   if (!hashId) throw new Error('Invalid hashId');
 
-    const value = this.bidPrice.value;
-    if (!value) return;
+  //   const value = this.bidPrice.value;
+  //   if (!value) return;
 
-    let notification: Notification = {
-      id: Date.now(),
-      slug: phunk.slug,
-      type: 'wallet',
-      function: 'enterBidForPhunk',
-      hashId,
-      tokenId: phunk.tokenId,
-      value
-    };
+  //   let notification: Notification = {
+  //     id: this.utilSvc.createIdFromString('enterBidForPhunk' + hashId),
+  //     timestamp: Date.now(),
+  //     slug: phunk.slug,
+  //     type: 'wallet',
+  //     function: 'enterBidForPhunk',
+  //     hashId,
+  //     tokenId: phunk.tokenId,
+  //     value
+  //   };
 
-    try {
-      this.store.dispatch(appStateActions.upsertNotification({ notification }));
+  //   try {
+  //     this.store.dispatch(upsertNotification({ notification }));
 
-      const hash = await this.web3Svc.enterBidForPhunk(hashId, value);
-      notification = {
-        ...notification,
-        type: 'pending',
-        hash,
-      };
-      this.store.dispatch(appStateActions.upsertNotification({ notification }));
+  //     const hash = await this.web3Svc.enterBidForPhunk(hashId, value);
+  //     notification = {
+  //       ...notification,
+  //       type: 'pending',
+  //       hash,
+  //     };
+  //     this.store.dispatch(upsertNotification({ notification }));
 
-      const receipt = await this.web3Svc.pollReceipt(hash!);
-      notification = {
-        ...notification,
-        type: 'complete',
-        hash: receipt.transactionHash,
-      };
+  //     const receipt = await this.web3Svc.pollReceipt(hash!);
+  //     notification = {
+  //       ...notification,
+  //       type: 'complete',
+  //       hash: receipt.transactionHash,
+  //     };
 
-      this.store.dispatch(appStateActions.addCooldown({ cooldown: { [hashId]: Number(receipt.blockNumber) }}));
-    } catch (err) {
-      console.log(err);
-      notification = {
-        ...notification,
-        type: 'error',
-        detail: err,
-      };
-    }
+  //     this.store.dispatch(appStateActions.addCooldown({ cooldown: { [hashId]: Number(receipt.blockNumber) }}));
+  //   } catch (err) {
+  //     console.log(err);
+  //     notification = {
+  //       ...notification,
+  //       type: 'error',
+  //       detail: err,
+  //     };
+  //   }
 
-    this.store.dispatch(appStateActions.upsertNotification({ notification }));
-    this.clearAll();
-  }
+  //   this.store.dispatch(upsertNotification({ notification }));
+  //   this.clearAll();
+  // }
 
   async transferPhunk(phunk: Phunk, address?: string): Promise<void> {
     const hashId = phunk.hashId;
     if (!hashId) throw new Error('Invalid hashId');
 
     let notification: Notification = {
-      id: Date.now(),
+      id: this.utilSvc.createIdFromString('transferPhunk' + hashId),
+      timestamp: Date.now(),
       slug: phunk.slug,
       type: 'wallet',
       function: 'transferPhunk',
@@ -600,7 +613,7 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
       if (!toAddress) throw new Error('Invalid address');
 
       this.closeTransfer();
-      this.store.dispatch(appStateActions.upsertNotification({ notification }));
+      this.store.dispatch(upsertNotification({ notification }));
 
       await this.checkConsenus(hashId, phunk.owner, phunk.prevOwner);
 
@@ -610,7 +623,7 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
         type: 'pending',
         hash,
       };
-      this.store.dispatch(appStateActions.upsertNotification({ notification }));
+      this.store.dispatch(upsertNotification({ notification }));
 
       const receipt = await this.web3Svc.pollReceipt(hash!);
       notification = {
@@ -629,7 +642,7 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
       };
     }
 
-    this.store.dispatch(appStateActions.upsertNotification({ notification }));
+    this.store.dispatch(upsertNotification({ notification }));
     this.clearAll();
   }
 
@@ -638,7 +651,8 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
     if (!hashId) throw new Error('Invalid hashId');
 
     let notification: Notification = {
-      id: Date.now(),
+      id: this.utilSvc.createIdFromString('withdrawPhunk' + hashId),
+      timestamp: Date.now(),
       slug: phunk.slug,
       type: 'wallet',
       function: 'withdrawPhunk',
@@ -647,7 +661,7 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
     };
 
     try {
-      this.store.dispatch(appStateActions.upsertNotification({ notification }));
+      this.store.dispatch(upsertNotification({ notification }));
 
       const hash = await this.web3Svc.withdrawPhunk(hashId);
       if (!hash) throw new Error('Could not proccess transaction');
@@ -656,7 +670,7 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
         type: 'pending',
         hash,
       };
-      this.store.dispatch(appStateActions.upsertNotification({ notification }));
+      this.store.dispatch(upsertNotification({ notification }));
 
       const receipt = await this.web3Svc.pollReceipt(hash!);
       notification = {
@@ -664,7 +678,7 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
         type: 'complete',
         hash: receipt.transactionHash,
       };
-      this.store.dispatch(appStateActions.upsertNotification({ notification }));
+      this.store.dispatch(upsertNotification({ notification }));
 
       this.store.dispatch(appStateActions.addCooldown({ cooldown: { [hashId]: Number(receipt.blockNumber) }}));
     } catch (err) {
@@ -674,7 +688,7 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
         type: 'error',
         detail: err,
       };
-      this.store.dispatch(appStateActions.upsertNotification({ notification }));
+      this.store.dispatch(upsertNotification({ notification }));
     }
   }
 

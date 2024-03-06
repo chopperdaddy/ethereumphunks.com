@@ -4,6 +4,9 @@ import { Store } from '@ngrx/store';
 
 import { environment } from 'src/environments/environment';
 
+import { GlobalState } from '@/models/global-state';
+import { Phunk } from '@/models/db';
+
 import { Observable, catchError, filter, of, tap } from 'rxjs';
 
 import PointsAbi from '@/abi/Points.json';
@@ -11,22 +14,17 @@ import DonationsAbi from '@/abi/Contributions.json';
 import { EtherPhunksMarketABI } from '@/abi/EtherPhunksMarket';
 import AuctionAbi from '@/abi/EtherPhunksAuctionHouse.json';
 
-import { TransactionReceipt, WatchBlockNumberReturnType, decodeFunctionData, formatEther, isAddress, parseEther, zeroAddress } from 'viem';
-import { mainnet, sepolia } from 'viem/chains';
-
-import { EIP6963Connector, createWeb3Modal, walletConnectProvider } from '@web3modal/wagmi';
-import { Web3Modal } from '@web3modal/wagmi/dist/types/src/client';
-
-import { jsonRpcProvider } from '@wagmi/core/providers/jsonRpc';
-import { WalletConnectConnector } from '@wagmi/core/connectors/walletConnect';
-import { CoinbaseWalletConnector } from '@wagmi/core/connectors/coinbaseWallet';
-
-import { configureChains, createConfig, disconnect, getAccount, getNetwork, getPublicClient, getWalletClient, switchNetwork, watchAccount, InjectedConnector, GetWalletClientResult } from '@wagmi/core';
+import { reconnect, http, createConfig, Config, watchAccount, getPublicClient, getAccount, disconnect, getChainId, switchChain, getWalletClient, GetWalletClientReturnType, GetAccountReturnType } from '@wagmi/core';
+import { coinbaseWallet, walletConnect, injected } from '@wagmi/connectors';
 
 import * as appStateActions from '@/state/actions/app-state.actions';
 
-import { GlobalState } from '@/models/global-state';
-import { Phunk } from '@/models/db';
+import { Chain, mainnet, sepolia } from 'viem/chains';
+import { magma } from '@/constants/magmaChain';
+
+import { Web3Modal } from '@web3modal/wagmi/dist/types/src/client';
+import { createWeb3Modal } from '@web3modal/wagmi';
+import { Account, TransactionReceipt, WatchBlockNumberReturnType, decodeFunctionData, formatEther, isAddress, parseEther, zeroAddress } from 'viem';
 
 const marketAddress = environment.marketAddress;
 const pointsAddress = environment.pointsAddress;
@@ -35,10 +33,17 @@ const pointsAddress = environment.pointsAddress;
 
 const projectId = 'd183619f342281fd3f3ff85716b6016a';
 
+const metadata = {
+  name: 'Ethereum Phunks',
+  description: '',
+  url: 'https://ethereumphunks.com',
+  icons: []
+};
+
 const themeVariables = {
   '--w3m-font-family': 'Montserrat, sans-serif',
   '--w3m-accent': 'rgba(var(--highlight), 1)',
-  '--w3m-z-index': 999,
+  '--w3m-z-index': 99999,
   '--w3m-border-radius-master': '0',
 };
 
@@ -52,69 +57,66 @@ export class Web3Service {
   web3Connecting: boolean = false;
   connectedState!: Observable<any>;
 
+  config!: Config;
   modal!: Web3Modal;
 
   constructor(
     private store: Store<GlobalState>,
     private ngZone: NgZone
   ) {
-    const { chains, publicClient } = configureChains(
-      [mainnet, sepolia],
-      [
-        jsonRpcProvider({ rpc: () => ({ http: environment.rpcHttpProvider }) }),
-        walletConnectProvider({ projectId }),
-      ]
-    );
 
-    const metadata = {
-      name: 'Ethereum Phunks',
-      description: '',
-      url: 'https://ethereumphunks.com',
-    };
+    const chains: [Chain, ...Chain[]] = environment.chainId === 1 ? [mainnet] : [sepolia];
 
-    const wagmiConfig = createConfig({
-      autoConnect: true,
+    this.config = createConfig({
+      chains,
+      transports: {
+        [environment.chainId]: http(environment.rpcHttpProvider),
+        // 6969696969: http(environment.magmaRpcHttpProvider)
+      },
       connectors: [
-        new WalletConnectConnector({ chains, options: { projectId, showQrModal: false } }),
-        new EIP6963Connector({ chains }),
-        new InjectedConnector({ chains, options: { shimDisconnect: true } }),
-        new CoinbaseWalletConnector({ chains, options: { appName: metadata.name }}),
-      ],
-      publicClient
+        walletConnect({ projectId, metadata, showQrModal: false }),
+        injected({ shimDisconnect: true }),
+        coinbaseWallet({
+          appName: metadata.name,
+          appLogoUrl: metadata.icons[0]
+        })
+      ]
     });
 
     this.modal = createWeb3Modal({
-      wagmiConfig,
+      wagmiConfig: this.config,
       projectId,
-      chains,
+      enableAnalytics: false,
       themeVariables,
-      defaultChain: mainnet,
-    });
+    })
 
     this.createListeners();
     this.startBlockWatcher();
   }
 
   createListeners(): void {
-    this.connectedState = new Observable((observer) => watchAccount((account) => {
-      this.ngZone.run(() => observer.next(account));
+    this.connectedState = new Observable((observer) => watchAccount(this.config, {
+      onChange: (account) => this.ngZone.run(() => observer.next(account))
     }));
+
     this.connectedState.pipe(
-      tap((account) => { if (account.isDisconnected) this.disconnectWeb3(); }),
-      filter((account) => account.isConnected),
-      tap((account) => this.connectWeb3(account.address as string)),
-      // tap((account) => this.connectWeb3('0x1ba0558b8fac9c6c29dbc84ceaa654b9021937cb')),
+      tap((account: GetAccountReturnType) => {
+        this.store.dispatch(appStateActions.setConnected({ connected: account.isConnected }));
+        this.store.dispatch(appStateActions.setWalletAddress({ walletAddress: account.address }));
+      }),
       catchError((err) => {
         this.disconnectWeb3();
         return of(err);
       }),
     ).subscribe();
+
+    reconnect(this.config);
   }
 
   blockWatcher!: WatchBlockNumberReturnType | undefined;
   startBlockWatcher(): void {
     if (this.blockWatcher) return;
-    this.blockWatcher = getPublicClient().watchBlockNumber({
+    this.blockWatcher = getPublicClient(this.config)?.watchBlockNumber({
       emitOnBegin: true,
       onBlockNumber: (blockNumber) => {
         const currentBlock = Number(blockNumber);
@@ -132,44 +134,28 @@ export class Web3Service {
     }
   }
 
-  async connectWeb3(address: string): Promise<void> {
-    if (!address) return;
-    address = address.toLowerCase();
-
-    await this.switchNetwork();
-
-    this.store.dispatch(appStateActions.setWalletAddress({ walletAddress: address }));
-    this.store.dispatch(appStateActions.setConnected({ connected: true }));
-  }
-
   async disconnectWeb3(): Promise<void> {
-    if (getAccount().isConnected) {
-      await disconnect();
+    if (getAccount(this.config).isConnected) {
+      await disconnect(this.config);
       this.store.dispatch(appStateActions.setWalletAddress({ walletAddress: '' }));
-      this.store.dispatch(appStateActions.setConnected({ connected: getAccount().isConnected }));
+      this.store.dispatch(appStateActions.setConnected({ connected: false }));
     }
   }
 
   async switchNetwork(): Promise<void> {
-    const chainId = getNetwork().chain?.id;
+    const chainId = getChainId(this.config);
     if (!chainId) return;
     if (chainId !== environment.chainId) {
-      await switchNetwork({ chainId: environment.chainId });
+      await switchChain(this.config, { chainId: environment.chainId });
     }
   }
 
-  async getActiveWalletClient(): Promise<GetWalletClientResult> {
-    return await getWalletClient();
+  async getActiveWalletClient(): Promise<GetWalletClientReturnType> {
+    return await getWalletClient(this.config);
   }
 
   async checkHasWithdrawal(address: string): Promise<number> {
-    const publicClient = getPublicClient();
-    const pendingWithdrawals = await publicClient?.readContract({
-      address: marketAddress as `0x${string}`,
-      abi: EtherPhunksMarketABI,
-      functionName: 'pendingWithdrawals',
-      args: [address as `0x${string}`],
-    });
+    const pendingWithdrawals = await this.readMarketContract('pendingWithdrawalsV2', [address]);
     return Number(pendingWithdrawals);
   }
 
@@ -178,16 +164,10 @@ export class Web3Service {
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   async isInEscrow(tokenId: string): Promise<boolean> {
-    const publicClient = getPublicClient();
-    const address = getAccount().address;
+    const address = getAccount(this.config).address;
     if (!address) return false;
 
-    const isInEscrow = await publicClient?.readContract({
-      address: marketAddress as `0x${string}`,
-      abi: EtherPhunksMarketABI,
-      functionName: 'userEthscriptionPossiblyStored',
-      args: [address, tokenId as `0x${string}`],
-    });
+    const isInEscrow = await this.readMarketContract('userEthscriptionPossiblyStored', [address, tokenId]);
     return !!isInEscrow;
   }
 
@@ -200,12 +180,12 @@ export class Web3Service {
   async withdrawPhunk(hashId: string): Promise<string | undefined> {
     const escrowed = await this.isInEscrow(hashId);
     if (!escrowed) throw new Error('Phunk not in escrow');
-    return await this.marketContractInteraction('withdrawPhunk', [hashId]);
+    return await this.writeMarketContract('withdrawPhunk', [hashId]);
   }
 
   async withdrawBatch(hashIds: string[]): Promise<string | undefined> {
     if (!hashIds.length) throw new Error('No phunks selected');
-    return await this.marketContractInteraction('withdrawBatchPhunks', [hashIds]);
+    return await this.writeMarketContract('withdrawBatchPhunks', [hashIds]);
   }
 
   async decodeInputData(data: string): Promise<any> {
@@ -216,7 +196,7 @@ export class Web3Service {
     return decoded;
   }
 
-  async marketContractInteraction(
+  async writeMarketContract(
     functionName: string,
     args: any[],
     value?: string
@@ -224,15 +204,13 @@ export class Web3Service {
     if (!functionName) return;
     await this.switchNetwork();
 
-    const network = getNetwork();
-    const walletClient = await getWalletClient({ chainId: network.chain?.id });
-    const publicClient = getPublicClient();
+    const chainId = getChainId(this.config);
+    const walletClient = await getWalletClient(this.config, { chainId });
+    const publicClient = getPublicClient(this.config);
 
-    const paused = await publicClient.readContract({
-      address: marketAddress as `0x${string}`,
-      abi: EtherPhunksMarketABI,
-      functionName: 'paused'
-    });
+    if (!publicClient) throw new Error('No public client');
+
+    const paused = await this.readMarketContract('paused', []);
 
     // console.log({ paused, whitelist, functionName });
     // const whitelist = ['batchOfferPhunkForSale', 'offerPhunkForSale', 'phunkNoLongerForSale', 'withdrawPhunk'];
@@ -254,20 +232,24 @@ export class Web3Service {
     return await walletClient?.writeContract(request);
   }
 
-  async readContract(functionName: any, args: (string | undefined)[]): Promise<any> {
-    const publicClient = getPublicClient();
+  async readMarketContract(functionName: any, args: (string | undefined)[]): Promise<any> {
+    const publicClient = getPublicClient(this.config);
+    if (!publicClient) throw new Error('No public client');
+
     const call: any = await publicClient.readContract({
       address: marketAddress as `0x${string}`,
       abi: EtherPhunksMarketABI,
       functionName,
       args: args as any,
     });
-    console.log({call})
+
     return call;
   }
 
   async waitForTransaction(hash: string): Promise<TransactionReceipt> {
-    const publicClient = getPublicClient();
+    const publicClient = getPublicClient(this.config);
+    if (!publicClient) throw new Error('No public client');
+
     const transaction = await publicClient.waitForTransactionReceipt({ hash: hash as `0x${string}` });
     return transaction;
   }
@@ -278,13 +260,13 @@ export class Web3Service {
     const weiValue = value * 1e18;
     if (toAddress) {
       if (!isAddress(toAddress)) throw new Error('Invalid address');
-      return this.marketContractInteraction(
+      return this.writeMarketContract(
         'offerPhunkForSaleToAddress',
         [hashId, weiValue, toAddress]
       );
     }
 
-    return this.marketContractInteraction(
+    return this.writeMarketContract(
       'offerPhunkForSale',
       [hashId, weiValue]
     );
@@ -301,22 +283,19 @@ export class Web3Service {
     const bytes32Value = weiValue.toString(16).padStart(64, '0');
     toAddress = toAddress.toLowerCase().replace('0x', '').padStart(64, '0');
 
-    console.log({hashId, sig, bytes32Value, toAddress});
-
     return await this.batchTransferPhunks([hashId, sig, bytes32Value, toAddress], marketAddress);
   }
 
   async batchOfferPhunkForSale(hashIds: string[], listPrices: number[]): Promise<string | undefined> {
-    const weiValues = listPrices.map((price) => BigInt(price * 1e18));
-    return this.marketContractInteraction('batchOfferPhunkForSale', [hashIds, weiValues]);
+    const weiValues = listPrices.map((price) => this.ethToWei(price));
+    return this.writeMarketContract('batchOfferPhunkForSale', [hashIds, weiValues]);
   }
 
   async batchBuyPhunks(
     phunks: Phunk[]
   ): Promise<string | undefined> {
 
-    const walletClient = await getWalletClient();
-    const address = walletClient?.account?.address as `0x${string}`;
+    const address = getAccount(this.config).address;
 
     const escrowAndListing = await this.fetchMultipleEscrowAndListing(phunks);
 
@@ -348,7 +327,7 @@ export class Web3Service {
 
     console.log({ hashIds, minSalePricesInWei, total });
 
-    return this.marketContractInteraction(
+    return this.writeMarketContract(
       'batchBuyPhunk',
       [hashIds, minSalePricesInWei],
       total as any
@@ -356,7 +335,7 @@ export class Web3Service {
   }
 
   async phunkNoLongerForSale(hashId: string): Promise<string | undefined> {
-    return this.marketContractInteraction('phunkNoLongerForSale', [hashId]);
+    return this.writeMarketContract('phunkNoLongerForSale', [hashId]);
   }
 
   async transferPhunk(hashId: string, toAddress: string): Promise<string | undefined> {
@@ -365,10 +344,10 @@ export class Web3Service {
 
     await this.switchNetwork();
 
-    const wallet = await getWalletClient();
+    const wallet = await getWalletClient(this.config);
     return wallet?.sendTransaction({
-      chain: getNetwork().chain,
-      account: getAccount().address as `0x${string}`,
+      chain: wallet.chain,
+      account: getAccount(this.config).address as `0x${string}`,
       to: toAddress as `0x${string}`,
       value: BigInt(0),
       data: hashId as `0x${string}`,
@@ -382,49 +361,14 @@ export class Web3Service {
     return await this.transferPhunk(`0x${hash}`, toAddress);
   }
 
-  async enterBidForPhunk(hashId: string, value: number): Promise<string | undefined> {
-    return;
-    const weiValue = this.ethToWei(value);
-    return this.marketContractInteraction('enterBidForPhunk', [hashId], weiValue as any);
-  }
-
-  async withdrawBidForPhunk(hashId: string): Promise<string | undefined> {
-    return;
-    return this.marketContractInteraction('withdrawBidForPhunk', [hashId]);
-  }
-
-  async acceptBidForPhunk(hashId: string, minPrice: string): Promise<string | undefined> {
-    return;
-    return this.marketContractInteraction('acceptBidForPhunk', [hashId, minPrice]);
-  }
-
-  // async buyPhunk(owner: string, hashId: string, value: string): Promise<string | undefined> {
-
-  //   const escrowAndListing = await this.fetchEscrowAndListing(owner, hashId);
-
-  //   const stored = escrowAndListing[0].result;
-  //   const listing = escrowAndListing[1].result;
-
-  //   const listed = listing[0];
-  //   const listedBy = listing[2];
-
-  //   if (
-  //     !stored ||
-  //     !listed ||
-  //     listedBy.toLowerCase() !== owner.toLowerCase()
-  //   ) throw new Error('Phunk not listed for sale');
-
-  //   return this.marketContractInteraction('buyPhunk', [hashId, value], value as any);
-  // }
-
   async withdraw(): Promise<any> {
-    const hash = await this.marketContractInteraction('withdraw', []);
+    const hash = await this.writeMarketContract('withdraw', []);
     const receipt = await this.waitForTransaction(hash!);
     return await this.checkHasWithdrawal(receipt.from);
   }
 
   async getUserPoints(address: string): Promise<number> {
-    const publicClient = getPublicClient();
+    const publicClient = getPublicClient(this.config);
     const points = await publicClient?.readContract({
       address: pointsAddress as `0x${string}`,
       abi: PointsAbi,
@@ -435,7 +379,7 @@ export class Web3Service {
   }
 
   async getMultiplier(): Promise<any> {
-    const publicClient = getPublicClient();
+    const publicClient = getPublicClient(this.config);
     const multiplier = await publicClient?.readContract({
       address: pointsAddress as `0x${string}`,
       abi: PointsAbi,
@@ -446,7 +390,8 @@ export class Web3Service {
   }
 
   async fetchEscrowAndListing(prevOwner: string, hashId: string): Promise<any> {
-    const publicClient = getPublicClient();
+    const publicClient = getPublicClient(this.config);
+    if (!publicClient) throw new Error('No public client');
 
     const contract = {
       address: marketAddress as `0x${string}`,
@@ -472,7 +417,8 @@ export class Web3Service {
   }
 
   async fetchMultipleEscrowAndListing(phunks: Phunk[]): Promise<any> {
-    const publicClient = getPublicClient();
+    const publicClient = getPublicClient(this.config);
+    if (!publicClient) throw new Error('No public client');
 
     const contract = {
       address: marketAddress as `0x${string}`,
@@ -514,13 +460,13 @@ export class Web3Service {
   //////////////////////////////////
 
   async getTransaction(hash: string): Promise<any> {
-    const publicClient = getPublicClient();
+    const publicClient = getPublicClient(this.config);
     const transaction = await publicClient?.getTransaction({ hash: hash as `0x${string}` });
     return transaction;
   }
 
-  async getTransactionReceipt(hash: string): Promise<TransactionReceipt> {
-    const publicClient = getPublicClient();
+  async getTransactionReceipt(hash: string): Promise<TransactionReceipt | undefined> {
+    const publicClient = getPublicClient(this.config);
     const receipt = await publicClient?.getTransactionReceipt({ hash: hash as `0x${string}` });
     return receipt;
   }
@@ -544,7 +490,7 @@ export class Web3Service {
   }
 
   async getActiveWalletAddress(): Promise<string | null> {
-    const walletClient = await getWalletClient();
+    const walletClient = await getWalletClient(this.config);
     const address = walletClient?.account?.address as `0x${string}`;
     return address;
   }
@@ -554,7 +500,10 @@ export class Web3Service {
   //////////////////////////////////
 
   async getCurrentBlock(): Promise<number> {
-    const blockNum = await getPublicClient().getBlockNumber();
+    const publicClient = getPublicClient(this.config);
+    if (!publicClient) throw new Error('No public client');
+
+    const blockNum = await publicClient.getBlockNumber();
     return Number(blockNum);
   }
 
@@ -595,13 +544,19 @@ export class Web3Service {
   }
 
   async getEnsOwner(name: string) {
-    return await getPublicClient().getEnsAddress({ name });
+    const publicClient = getPublicClient(this.config);
+    if (!publicClient) throw new Error('No public client');
+
+    return await publicClient.getEnsAddress({ name });
   }
 
   async getEnsFromAddress(address: string | null | undefined): Promise<string | null> {
     if (!address) return null;
     try {
-      const ens = await getPublicClient().getEnsName({ address: address as `0x${string}` });
+      const publicClient = getPublicClient(this.config);
+      if (!publicClient) throw new Error('No public client');
+
+      const ens = await publicClient.getEnsName({ address: address as `0x${string}` });
       return ens;
     } catch (err) {
       return null;

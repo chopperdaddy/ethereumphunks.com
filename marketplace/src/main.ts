@@ -25,10 +25,14 @@ import { provideStoreDevtools } from '@ngrx/store-devtools';
 import { appStateReducer } from '@/state/reducers/app-state.reducers';
 import { dataStateReducer } from '@/state/reducers/data-state.reducers';
 import { marketStateReducer } from '@/state/reducers/market-state.reducers';
+import { notificationReducer } from '@/state/reducers/notification.reducers';
+import { chatReducer } from '@/state/reducers/chat.reducers';
 
 import { AppStateEffects } from '@/state/effects/app-state.effects';
 import { DataStateEffects } from '@/state/effects/data-state.effects';
 import { MarketStateEffects } from '@/state/effects/market-state.effects';
+import { NotificationEffects } from '@/state/effects/notification.effects';
+import { ChatEffects } from '@/state/effects/chat.effects';
 
 import { TokenIdParsePipe } from '@/pipes/token-id-parse.pipe';
 // import { provideServiceWorker } from '@angular/service-worker';
@@ -47,12 +51,16 @@ bootstrapApplication(AppComponent, {
       appState: appStateReducer,
       dataState: dataStateReducer,
       marketState: marketStateReducer,
+      notificationState: notificationReducer,
+      chatState: chatReducer,
       router: routerReducer
     }),
     provideEffects([
       AppStateEffects,
       DataStateEffects,
-      MarketStateEffects
+      MarketStateEffects,
+      NotificationEffects,
+      ChatEffects
     ]),
     provideStoreDevtools({
       maxAge: 25,

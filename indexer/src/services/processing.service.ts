@@ -187,6 +187,7 @@ export class ProcessingService {
     // Check if possible transfer
     const possibleTransfer = input.substring(2).length === SEGMENT_SIZE;
     if (possibleTransfer) {
+      // console.log({ possibleTransfer });
       Logger.debug(`Processing transfer (${this.web3Svc.chain})`, transaction.hash);
       const event = await this.processTransferEvent(
         input,
@@ -199,6 +200,7 @@ export class ProcessingService {
     // Check if possible batch transfer
     const possibleBatchTransfer = input.substring(2).length % SEGMENT_SIZE === 0;
     if (!possibleTransfer && possibleBatchTransfer) {
+      // console.log({ possibleBatchTransfer });
       const eventArr = await this.processEsip5(
         transaction as Transaction,
         createdAt
@@ -293,14 +295,14 @@ export class ProcessingService {
     Logger.log('Added eth phunk', `${hashId.toLowerCase()}`);
 
     return {
-      txId: txn.hash + txn.transactionIndex,
+      txId: txn.hash.toLowerCase() + txn.transactionIndex,
       type: 'created',
-      hashId,
-      from,
-      to: to || zeroAddress,
-      blockHash: txn.blockHash,
+      hashId: hashId.toLowerCase(),
+      from: from.toLowerCase(),
+      to: (to || zeroAddress).toLowerCase(),
+      blockHash: txn.blockHash.toLowerCase(),
       txIndex: txn.transactionIndex,
-      txHash: txn.hash,
+      txHash: (txn.hash).toLowerCase(),
       blockNumber: Number(txn.blockNumber),
       blockTimestamp: createdAt,
       value: BigInt(0).toString(),
@@ -353,7 +355,7 @@ export class ProcessingService {
 
     // Update the eth phunk owner
     await this.sbSvc.updateEthscriptionOwner(hashId, ethscript.owner, txn.to);
-    Logger.log('Updated ethscript owner (contract event)', `Hash: ${ethscript.hashId} -- To: ${to.toLowerCase()}`);
+    Logger.log('Updated ethscript owner (transfer event)', `Hash: ${ethscript.hashId} -- To: ${to.toLowerCase()}`);
 
     // console.log({
     //   type: 'transfer',
@@ -500,15 +502,15 @@ export class ProcessingService {
     const data = input.substring(2);
     if (data.length % SEGMENT_SIZE !== 0) return [];
 
-    const first64 = '0x' + data.substring(0, SEGMENT_SIZE);
-    const exists: boolean = await this.dataSvc.checkEthscriptionExistsByHashId(first64);
-    if (!exists) return [];
+    const allHashes = data.match(/.{1,64}/g).map((hash) => '0x' + hash);
+    const validHashes = await this.web3Svc.getValidTransactions(allHashes);
+    if (!validHashes.length) return [];
 
     const events = [];
     Logger.debug(`Processing batch transfer (${this.web3Svc.chain})`, txn.hash);
-    for (let i = 0; i < data.length; i += SEGMENT_SIZE) {
+    for (let i = 0; i < validHashes.length; i++) {
       try {
-        const hashId = '0x' + data.substring(i, i + SEGMENT_SIZE).toLowerCase();
+        const hashId = validHashes[i].toLowerCase();
         const event = await this.processTransferEvent(hashId, txn, createdAt, i);
         if (event) events.push(event);
       } catch (error) {
@@ -548,6 +550,8 @@ export class ProcessingService {
         decoded,
         log
       );
+
+      // console.log({ event });
 
       if (event) events.push(event);
     }
@@ -664,7 +668,7 @@ export class ProcessingService {
       // We do this here because this event is emitted after
       // transfer of ownership. If the listing was NOT created
       // by the previous owner, we should ignore it.
-      if (txn.from !== phunk.prevOwner) {
+      if (phunk.prevOwner && txn.from !== phunk.prevOwner) {
         await writeFile(`./${hashId}.json`, JSON.stringify({ txn: txn.hash, phunk }));
         Logger.error('Listing not created by previous owner', `${hashId.toLowerCase()}`);
 
@@ -673,6 +677,8 @@ export class ProcessingService {
         await this.sbSvc.removeListing(hashId);
         return;
       }
+
+      // console.log({ hashId, toAddress, minValue });
 
       await this.sbSvc.createListing(txn, createdAt, hashId, toAddress, minValue);
       return {

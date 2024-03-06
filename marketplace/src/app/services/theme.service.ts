@@ -6,7 +6,6 @@ import { Theme, ThemeProperties, ThemeStyles } from '@/models/theme';
 @Injectable({
   providedIn: 'root'
 })
-
 export class ThemeService {
 
   themeStyles: ThemeStyles = {

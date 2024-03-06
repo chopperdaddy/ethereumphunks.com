@@ -52,6 +52,8 @@
   height: 100%;
 
   .messages-wrapper {
+    position: relative;
+
     overflow: auto;
     overflow-x: hidden;
 
@@ -90,6 +92,26 @@
           background-color: rgba(var(--base-color), 1);
           color: rgba(var(--black), 1);
         }
+      }
+    }
+
+    .error {
+      position: absolute;
+      top: 0;
+      left: 0;
+
+      width: 100%;
+      height: auto;
+
+      padding: 1rem;
+      background-color: rgba(var(--pink), 1);
+
+      p {
+        font-size: 1.2rem;
+        color: rgba(var(--white), 1);
+        font-weight: 400;
+
+        margin: 0;
       }
     }
   }

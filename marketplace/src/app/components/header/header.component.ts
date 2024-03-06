@@ -17,6 +17,7 @@ import { FormatCashPipe } from '@/pipes/format-cash.pipe';
 import { GlobalState } from '@/models/global-state';
 
 import * as appStateSelectors from '@/state/selectors/app-state.selectors';
+import * as notificationSelectors from '@/state/selectors/notification.selectors';
 import * as dataStateSelectors from '@/state/selectors/data-state.selectors';
 
 import * as appStateActions from '@/state/actions/app-state.actions';
@@ -49,7 +50,7 @@ export class HeaderComponent {
   activeCollection$ = this.store.select(dataStateSelectors.selectActiveCollection);
   menuActive$ = this.store.select(appStateSelectors.selectMenuActive);
   theme$ = this.store.select(appStateSelectors.selectTheme);
-  notifications$ = this.store.select(appStateSelectors.selectNotifications).pipe(
+  notifications$ = this.store.select(notificationSelectors.selectNotifications).pipe(
     map((res) => res.filter((tx) => !tx.dismissed && tx.isNotification).length),
   );
 

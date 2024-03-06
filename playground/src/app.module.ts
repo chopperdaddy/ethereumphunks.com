@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { HttpModule } from '@nestjs/axios';
 
 import { AppController } from './app.controller';
 
@@ -7,9 +8,10 @@ import { Web3Service } from './services/web3.service';
 import { SupabaseService } from './services/supabase.service';
 import { UtilityService } from './utils/utility.service';
 import { CollectionService } from './services/collection.service';
+import { DataService } from './services/data.service';
 
 @Module({
-  imports: [],
+  imports: [HttpModule],
   controllers: [AppController],
   providers: [
     // App Service handles the main logic of the indexer
@@ -19,6 +21,7 @@ import { CollectionService } from './services/collection.service';
     // Supabase Service handles all interactions with the Supabase database
     SupabaseService,
     CollectionService,
+    DataService,
     // Processing Service handles the logic of processing transactions
     // ProcessingService,
     // Time service gets estimates of block times

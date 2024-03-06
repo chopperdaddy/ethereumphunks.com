@@ -1,15 +1,32 @@
 import { Pipe, PipeTransform } from '@angular/core';
 
-import { Notification } from '@/models/global-state';
+import { Notification, TxFunction } from '@/models/global-state';
+
+type NotificationTexts = {
+  titles: {
+    [key in TxFunction]: string;
+  } & { // Use intersection type to add 'batch' separately
+    batch: {
+      [key in TxFunction]?: string;
+    };
+  };
+  body: {
+    [key in Notification['type']]: {
+      message: string;
+    };
+  };
+  classes: {
+    [key in TxFunction]: string;
+  };
+};
 
 @Pipe({
   standalone: true,
   name: 'notifText'
 })
+export class NotificationPipe implements PipeTransform {
 
-export class NotifPipe implements PipeTransform {
-
-  notifs: any = {
+  notifs: NotificationTexts = {
     titles: {
       sendToEscrow: 'Send to Escrow',
       phunkNoLongerForSale: 'Delist %singleName%',
@@ -32,7 +49,7 @@ export class NotifPipe implements PipeTransform {
         enterBidForPhunk: 'Enter Bid For <span class="highlight">%length%</span> items',
         transferPhunk: 'Transfer <span class="highlight">%length%</span> items',
         withdrawPhunk: 'Withdraw <span class="highlight">%length%</span> items from Escrow',
-      }
+      },
     },
     body: {
       event: {
@@ -51,8 +68,8 @@ export class NotifPipe implements PipeTransform {
         message: 'There was an <strong>error</strong> with your transaction.'
       },
       chat: {
-        message: 'New message from <strong>%chatAddress%</strong>'
-      }
+        message: 'New message'
+      },
     },
     classes: {
       sendToEscrow: 'escrow',
@@ -73,18 +90,21 @@ export class NotifPipe implements PipeTransform {
     notif: Notification,
     collections: any,
     type: 'title' | 'body' | 'class'
-  ): string {
+  ): string | null {
+
+    if (!notif) return null;
 
     // console.log({ notif, collections, type })
 
-    if (type === 'class') return this.notifs.classes[notif.function];
+    if (type === 'class') {
+      return this.notifs.classes[notif.function];
+    }
 
     if (type === 'title') {
       let title = this.notifs.titles[notif.function];
 
       if (notif.isBatch && notif.hashIds) {
-        title = this.notifs.titles.batch[notif.function]
-          .replace('%length%', notif.hashIds.length);
+        title = this.notifs.titles.batch[notif.function]!.replace('%length%', `${notif.hashIds.length}`);
       }
 
       if (notif.slug) {
@@ -99,13 +119,15 @@ export class NotifPipe implements PipeTransform {
     }
 
     if (type === 'body') {
-      if (notif.type === 'event') return this.notifs.body.event.message.replace('%value%', notif.value);
+      if (notif.type === 'event') {
+        return this.notifs.body.event.message.replace('%value%', `${notif.value}`);
+      }
 
-      if (notif.isBatch && notif.hashIds) return this.notifs.body[notif.type].message;
+      if (notif.isBatch && notif.hashIds) {
+        return this.notifs.body[notif.type].message;
+      }
 
-      if (notif.chatAddress) return this.notifs.body.chat.message.replace('%chatAddress%', notif.chatAddress);
-
-      return this.notifs.body[notif.type].message.replace('%tokenId%', notif.tokenId);
+      return this.notifs.body[notif.type].message.replace('%tokenId%', `${notif.tokenId}`);
     }
 
     return '';

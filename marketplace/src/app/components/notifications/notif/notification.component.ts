@@ -8,19 +8,20 @@ import { TimeagoModule } from 'ngx-timeago';
 import { PhunkImageComponent } from '@/components/shared/phunk-image/phunk-image.component';
 import { WalletAddressDirective } from '@/directives/wallet-address.directive';
 
-import { NotifPipe } from './notif.pipe';
+import { NotificationPipe } from './notification.pipe';
 
 import { environment } from 'src/environments/environment';
 
 import { GlobalState, Notification } from '@/models/global-state';
 
-import * as appStateActions from '@/state/actions/app-state.actions';
-import * as dataStateSelectors from '@/state/selectors/data-state.selectors';
-import { map, tap } from 'rxjs';
+import { map } from 'rxjs';
 
+import * as dataStateSelectors from '@/state/selectors/data-state.selectors';
+
+import { removeNotification, setNotifHoverState } from '@/state/actions/notification.actions';
 
 @Component({
-  selector: 'app-notif',
+  selector: 'app-notification',
   standalone: true,
   imports: [
     CommonModule,
@@ -31,16 +32,16 @@ import { map, tap } from 'rxjs';
 
     WalletAddressDirective,
 
-    NotifPipe
+    NotificationPipe
   ],
-  templateUrl: './notif.component.html',
-  styleUrls: ['./notif.component.scss'],
+  templateUrl: './notification.component.html',
+  styleUrls: ['./notification.component.scss'],
   host: {
     '(mouseenter)': 'onMouseEnter(txn.id)',
     '(mouseleave)': 'onMouseLeave(txn.id)'
   }
 })
-export class NotifComponent {
+export class NotificationComponent {
 
   @Input() txn: Notification | undefined;
   @Input() dismissible: boolean = true;
@@ -62,17 +63,17 @@ export class NotifComponent {
   ) {}
 
   dismiss(txn: Notification) {
-    this.store.dispatch(appStateActions.removeNotification({ txId: txn.id }));
+    this.store.dispatch(removeNotification({ txId: txn.id }));
   }
 
   onMouseEnter(notificationId: string) {
     if (this.isMenu) return;
-    this.store.dispatch(appStateActions.setNotifHoverState({ notifHoverState: { [notificationId]: true } }));
+    this.store.dispatch(setNotifHoverState({ notifHoverState: { [notificationId]: true } }));
   }
 
   onMouseLeave(notificationId: string) {
     if (this.isMenu) return;
-    this.store.dispatch(appStateActions.setNotifHoverState({ notifHoverState: { [notificationId]: false } }));
+    this.store.dispatch(setNotifHoverState({ notifHoverState: { [notificationId]: false } }));
   }
 
 }

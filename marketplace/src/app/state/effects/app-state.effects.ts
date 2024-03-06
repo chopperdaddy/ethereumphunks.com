@@ -19,6 +19,7 @@ import * as marketStateActions from '@/state/actions/market-state.actions';
 import * as marketStateSelectors from '@/state/selectors/market-state.selectors';
 
 import { environment } from 'src/environments/environment';
+import { ChatService } from '@/services/chat.service';
 
 @Injectable()
 export class AppStateEffects {
@@ -36,13 +37,9 @@ export class AppStateEffects {
     ofType(appStateActions.setWalletAddress),
     tap((action) => {
       const address = action.walletAddress;
-      const notifications = JSON.parse(
-        localStorage.getItem(`EtherPhunks_txns__${environment.chainId}__${address}`) || '[]')
-          .filter((txn: Notification) => txn.type === 'complete' || txn.type === 'event'
-      );
-      this.store.dispatch(appStateActions.setNotifications({ notifications }));
       this.store.dispatch(appStateActions.checkHasWithdrawal());
       this.store.dispatch(appStateActions.fetchUserPoints());
+      this.store.dispatch(appStateActions.reconnectChat());
       // this.store.dispatch(dataStateActions.fetchOwnedPhunks());
     }),
   ), { dispatch: false });
@@ -51,7 +48,7 @@ export class AppStateEffects {
     ofType(appStateActions.checkHasWithdrawal),
     withLatestFrom(this.store.select(appStateSelectors.selectWalletAddress)),
     filter(([action, address]) => !!address),
-    switchMap(([action, address]) => from(this.web3Svc.checkHasWithdrawal(address))),
+    switchMap(([action, address]) => from(this.web3Svc.checkHasWithdrawal(address!))),
     map(has => appStateActions.setHasWithdrawal({ hasWithdrawal: has })
   )));
 
@@ -59,7 +56,7 @@ export class AppStateEffects {
     ofType(appStateActions.fetchUserPoints),
     withLatestFrom(this.store.select(appStateSelectors.selectWalletAddress)),
     filter(([action, address]) => !!address),
-    switchMap(([action, address]) => from(this.web3Svc.getUserPoints(address))),
+    switchMap(([action, address]) => from(this.web3Svc.getUserPoints(address!))),
     map((userPoints) => appStateActions.setUserPoints({ userPoints }))
   ));
 
@@ -120,43 +117,8 @@ export class AppStateEffects {
     })
   ));
 
-  onNotificationEvent$ = createEffect(() => this.actions$.pipe(
-    ofType(
-      appStateActions.upsertNotification,
-      appStateActions.removeNotification
-    ),
-    withLatestFrom(
-      this.store.select(appStateSelectors.selectNotifications),
-      this.store.select(appStateSelectors.selectWalletAddress),
-    ),
-    tap(([_, notifications, address]) => {
-      localStorage.setItem(
-        `EtherPhunks_txns__${environment.chainId}__${address}`,
-        JSON.stringify(notifications.filter((txn: Notification) => txn.type === 'complete' || txn.type === 'event'))
-      );
-    }),
-    concatMap(([action]) =>
-      action.type === '[App State] Upsert Notification'
-      && (
-        action.notification.type === 'complete'
-        || action.notification.type === 'error'
-      ) ?
-      of(action).pipe(
-        tap(() => this.store.dispatch(appStateActions.checkHasWithdrawal())),
-        delay(5000),
-        withLatestFrom(this.store.select(appStateSelectors.selectNotifHoverState)),
-        tap(([action, notifHoverState]) => {
-          if (!notifHoverState[action.notification.id]) {
-            this.store.dispatch(appStateActions.removeNotification({ txId: action.notification.id }));
-          }
-        })
-      ) :
-      EMPTY
-    )
-  ), { dispatch: false });
-
-  onMouseUp$ = createEffect(() => this.actions$.pipe(
-    ofType(appStateActions.mouseUp),
+  onMouseDown$ = createEffect(() => this.actions$.pipe(
+    ofType(appStateActions.mouseDown),
     withLatestFrom(
       this.store.select(appStateSelectors.selectMenuActive),
       this.store.select(appStateSelectors.selectSlideoutActive),
@@ -207,10 +169,25 @@ export class AppStateEffects {
     })
   ));
 
+  onReconnectChat$ = createEffect(() => this.actions$.pipe(
+    ofType(appStateActions.reconnectChat),
+    withLatestFrom(this.store.select(appStateSelectors.selectWalletAddress)),
+    filter(([action, address]) => !!address),
+    switchMap(([action, address]) => from(this.chatSvc.reconnectXmtp(address!))),
+  ), { dispatch: false });
+
+  closeModal$ = createEffect(() => this.actions$.pipe(
+    ofType(appStateActions.mouseDown),
+    withLatestFrom(this.store.select(appStateSelectors.selectModalActive)),
+    tap(([action, modalActive]) => console.log({ action, modalActive })),
+    // map(([action, modalActive]) => appStateActions.setModalActive({ modalActive: !modalActive })),
+  ), { dispatch: false });
+
   constructor(
     private store: Store<GlobalState>,
     private actions$: Actions,
     private web3Svc: Web3Service,
-    private themeSvc: ThemeService
+    private themeSvc: ThemeService,
+    private chatSvc: ChatService,
   ) {}
 }

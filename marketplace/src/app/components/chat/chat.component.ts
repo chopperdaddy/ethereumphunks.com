@@ -4,11 +4,20 @@ import { ConversationComponent } from './conversation/conversation.component';
 import { ConversationsComponent } from './conversations/conversations.component';
 import { LoginComponent } from './login/login.component';
 
-import anime from 'animejs';
+import { selectChatActive, selectChatConnected, selectToUser } from '@/state/selectors/chat.selectors';
+import { GlobalState } from '@/models/global-state';
+import { Store } from '@ngrx/store';
+
+import { Observable, map, switchMap, withLatestFrom } from 'rxjs';
+import { AsyncPipe } from '@angular/common';
+
+// import anime from 'animejs';
 
 @Component({
   standalone: true,
   imports: [
+    AsyncPipe,
+
     LoginComponent,
     ConversationsComponent,
     ConversationComponent,
@@ -19,26 +28,21 @@ import anime from 'animejs';
 })
 export class ChatComponent {
 
-  @Input() withUser!: string;
-  @Input() standalone = false;
+  activeView$: Observable<'conversations' | 'conversation' | 'login'> = this.store.select(selectToUser).pipe(
+    switchMap((user) => {
+      return this.store.select(selectChatConnected).pipe(
+        map((chatConnected) => {
+          console.log({ user, chatConnected });
+          if (chatConnected) return user ? 'conversation' : 'conversations';
+          return 'login';
+        })
+      )
+    }),
+  );
 
-  activeView: 'login' | 'conversations' | 'conversation' = 'login';
-
-  constructor() {}
-
-  selectConversation($event: string) {
-    this.withUser = $event;
-    this.activeView = 'conversation';
-  }
-
-  signedIn($event: boolean) {
-    // this.activeView = 'conversations';
-    if (this.withUser && this.standalone) {
-      this.activeView = 'conversation';
-    } else {
-      this.activeView = 'conversations';
-    }
-  }
+  constructor(
+    private store: Store<GlobalState>,
+  ) {}
 
   // setView() {
   //   anime.timeline({
@@ -49,5 +53,4 @@ export class ChatComponent {
   //     translateX: this.active ? '0' : '100%',
   //   });
   // }
-
 }

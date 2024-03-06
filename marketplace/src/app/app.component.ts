@@ -11,8 +11,10 @@ import { GlobalState } from '@/models/global-state';
 import { HeaderComponent } from '@/components/header/header.component';
 import { FooterComponent } from '@/components/footer/footer.component';
 import { MenuComponent } from '@/components/menu/menu.component';
-import { TxModalComponent } from '@/components/tx-modal/tx-modal.component';
+import { NotificationsComponent } from '@/components/notifications/notifications.component';
 import { StatusBarComponent } from '@/components/status-bar/status-bar.component';
+import { ModalComponent } from './components/shared/modal/modal.component';
+import { ChatComponent } from './components/chat/chat.component';
 
 import { Web3Service } from '@/services/web3.service';
 import { DataService } from '@/services/data.service';
@@ -20,6 +22,8 @@ import { ThemeService } from '@/services/theme.service';
 
 import { debounceTime, filter, observeOn, scan, tap } from 'rxjs/operators';
 import { asyncScheduler, fromEvent } from 'rxjs';
+
+import { selectChatActive } from './state/selectors/chat.selectors';
 
 import * as appStateActions from '@/state/actions/app-state.actions';
 import * as dataStateActions from '@/state/actions/data-state.actions';
@@ -36,8 +40,10 @@ import * as marketStateActions from '@/state/actions/market-state.actions';
     MenuComponent,
     HeaderComponent,
     FooterComponent,
-    TxModalComponent,
-    StatusBarComponent
+    NotificationsComponent,
+    StatusBarComponent,
+    ModalComponent,
+    ChatComponent
   ],
   selector: 'app-root',
   templateUrl: './app.component.html',
@@ -45,6 +51,8 @@ import * as marketStateActions from '@/state/actions/market-state.actions';
 })
 
 export class AppComponent {
+
+  chatActive$ = this.store.select(selectChatActive);
 
   constructor(
     @Inject(DOCUMENT) private document: Document,
@@ -92,6 +100,13 @@ export class AppComponent {
       tap(($event: Event) => {
         $event.stopPropagation();
         this.store.dispatch(appStateActions.mouseUp({ event: $event as MouseEvent }));
+      })
+    ).subscribe();
+
+    fromEvent(this.document, 'mousedown').pipe(
+      tap(($event: Event) => {
+        $event.stopPropagation();
+        this.store.dispatch(appStateActions.mouseDown({ event: $event as MouseEvent }));
       })
     ).subscribe();
 

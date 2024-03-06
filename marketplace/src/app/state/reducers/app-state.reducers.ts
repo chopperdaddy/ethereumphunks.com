@@ -26,14 +26,13 @@ export const initialState: AppState = {
   indexerBlock: 0,
   blocksBehind: 0,
 
-  notifications: [],
   cooldowns: JSON.parse(localStorage.getItem('EtherPhunks_cooldowns') || '{}'),
-
-  notifHoverState: {},
 
   searchHistory: JSON.parse(localStorage.getItem('EtherPhunks_searchHistory') || '[]'),
   searchHistoryActive: false,
   isSearchResult: false,
+
+  modalActive: false,
 };
 
 export const appStateReducer: ActionReducer<AppState, Action> = createReducer(
@@ -49,7 +48,7 @@ export const appStateReducer: ActionReducer<AppState, Action> = createReducer(
   on(actions.setWalletAddress, (state, { walletAddress }) => {
     const setWalletAddress = {
       ...state,
-      walletAddress: walletAddress.toLowerCase(),
+      walletAddress: walletAddress?.toLowerCase(),
     };
     return setWalletAddress
   }),
@@ -110,45 +109,6 @@ export const appStateReducer: ActionReducer<AppState, Action> = createReducer(
     };
     return setTheme
   }),
-  on(actions.removeNotification, (state, { txId }) => {
-    const removeTransaction = {
-      ...state,
-      notifications: state.notifications.map(tx => tx.id === txId ? { ...tx, dismissed: true } : tx)
-    };
-    return removeTransaction
-  }),
-  on(actions.upsertNotification, (state, { notification }) => {
-    const txns = [...state.notifications];
-    const index = txns.findIndex(tx => tx.hashId === notification.hashId);
-    if (index > -1) txns.splice(index, 1, notification);
-    else txns.push(notification);
-    const upsertNotification = {
-      ...state,
-      notifications: txns
-    };
-    return upsertNotification
-  }),
-  on(actions.clearNotifications, (state) => {
-    const clearTransactions = {
-      ...state,
-      notifications: []
-    };
-    return clearTransactions
-  }),
-  on(actions.setNotifications, (state, { notifications }) => {
-    const setTransactions = {
-      ...state,
-      notifications
-    };
-    return setTransactions
-  }),
-  on(actions.setIsMobile, (state, { isMobile }) => {
-    const setIsMobile = {
-      ...state,
-      isMobile
-    };
-    return setIsMobile
-  }),
   on(actions.addCooldown, (state, { cooldown }) => {
     // console.log('addCooldown', cooldown);
     const setCooldowns = {
@@ -185,13 +145,6 @@ export const appStateReducer: ActionReducer<AppState, Action> = createReducer(
       blocksBehind: (state.currentBlock - indexerBlock)
     };
     return setIndexerBlock;
-  }),
-  on(actions.setNotifHoverState, (state, { notifHoverState }) => {
-    const setNotifHoverState = {
-      ...state,
-      notifHoverState
-    };
-    return setNotifHoverState
   }),
   on(actions.setSearchHistory, (state, { searchHistory }) => {
     const setSearchHistory = {
@@ -239,5 +192,12 @@ export const appStateReducer: ActionReducer<AppState, Action> = createReducer(
       isSearchResult
     };
     return setIsSearchResult
+  }),
+  on(actions.setModalActive, (state, { modalActive }) => {
+    const setModalActive = {
+      ...state,
+      modalActive
+    };
+    return setModalActive
   }),
 );

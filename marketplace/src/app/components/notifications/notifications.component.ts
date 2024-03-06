@@ -6,34 +6,34 @@ import { Store } from '@ngrx/store';
 import { GlobalState, Notification } from '@/models/global-state';
 
 import { PhunkImageComponent } from '@/components/shared/phunk-image/phunk-image.component';
-import { NotifComponent } from '../shared/notif/notif.component';
+import { NotificationComponent } from './notif/notification.component';
 
 import { WalletAddressDirective } from '@/directives/wallet-address.directive';
 
-import * as appStateSelectors from '@/state/selectors/app-state.selectors';
+import * as notificationSelectors from '@/state/selectors/notification.selectors';
 
 import { map } from 'rxjs';
 
 export type TxFunction = 'sendToEscrow' | 'phunkNoLongerForSale' | 'offerPhunkForSale' | 'withdrawBidForPhunk' | 'acceptBidForPhunk' | 'buyPhunk' | 'enterBidForPhunk' | 'transferPhunk' | 'withdrawPhunk';
 
 @Component({
-  selector: 'app-tx-modal',
+  selector: 'app-notifications',
   standalone: true,
   imports: [
     CommonModule,
     RouterModule,
 
     PhunkImageComponent,
-    NotifComponent,
+    NotificationComponent,
     WalletAddressDirective
   ],
-  templateUrl: './tx-modal.component.html',
-  styleUrls: ['./tx-modal.component.scss']
+  templateUrl: './notifications.component.html',
+  styleUrls: ['./notifications.component.scss']
 })
-export class TxModalComponent {
+export class NotificationsComponent {
 
-  transactions$ = this.store.select(appStateSelectors.selectNotifications).pipe(
-    map((txns: Notification[]) => [...txns].sort((a, b) => b.id - a.id))
+  transactions$ = this.store.select(notificationSelectors.selectNotifications).pipe(
+    map((txns: Notification[]) => [...txns].sort((a, b) => b.timestamp - a.timestamp))
   );
 
   constructor(

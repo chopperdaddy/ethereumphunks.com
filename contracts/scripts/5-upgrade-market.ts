@@ -3,10 +3,10 @@
 import { ethers } from 'hardhat';
 import hre, { upgrades } from 'hardhat';
 
-const contractName = 'EtherPhunksMarketV7';
+const contractName = 'EtherPhunksMarketV2';
 
 const _version = 2;
-const _proxyAddress = '0x6f67A6F9a1d334CD105170bCd685C518D5610601';
+const _proxyAddress = '0x3dfbc8c62d3ce0059bdaf21787ec24d5d116fe1e';
 
 export async function upgradeMarket() {
   const [signer] = await hre.ethers.getSigners();
@@ -19,10 +19,11 @@ export async function upgradeMarket() {
 
   // const args: any[] = [];
 
-  // Deploy upgradeable contract
+  // Upgrade the contract
   const contract = await upgrades.upgradeProxy(
     _proxyAddress,
-    ContractFactory
+    ContractFactory,
+    // { call: { fn: 'initializeV2', args: [_version] } }
   );
 
   await contract.waitForDeployment();

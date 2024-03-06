@@ -18,8 +18,8 @@ import * as MerkleTree from './abi/tree.json'
 import dotenv from 'dotenv';
 dotenv.config();
 
-const chain: 'mainnet' | 'goerli' = process.env.CHAIN_ID === '1' ? 'mainnet' : 'goerli';
-const originBlock = Number(chain === 'mainnet' ? process.env.ORIGIN_BLOCK_MAINNET : process.env.ORIGIN_BLOCK_GOERLI);
+const chain: 'mainnet' | 'sepolia' = process.env.CHAIN_ID === '1' ? 'mainnet' : 'sepolia';
+const originBlock = Number(chain === 'mainnet' ? process.env.ORIGIN_BLOCK_MAINNET : process.env.ORIGIN_BLOCK_SEPOLIA);
 
 @Injectable()
 export class AppService {

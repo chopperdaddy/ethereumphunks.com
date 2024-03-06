@@ -12,6 +12,8 @@ import { PhunkGridComponent } from '@/components/shared/phunk-grid/phunk-grid.co
 import { MarketFiltersComponent } from '@/components/market-filters/market-filters.component';
 import { ModalComponent } from '@/components/shared/modal/modal.component';
 import { ChatComponent } from '@/components/chat/chat.component';
+import { SlideoutComponent } from '@/components/slideout/slideout.component';
+import { ConversationComponent } from '@/components/chat/conversation/conversation.component';
 
 import { WalletAddressDirective } from '@/directives/wallet-address.directive';
 
@@ -23,23 +25,23 @@ import { Phunk } from '@/models/db';
 
 import { DataService } from '@/services/data.service';
 import { Web3Service } from '@/services/web3.service';
-
-import { SlideoutComponent } from '@/components/slideout/slideout.component';
+import { UtilService } from '@/services/util.service';
 
 import { WeiToEthPipe } from '@/pipes/wei-to-eth.pipe';
+import { CalcPipe } from '@/pipes/calculate.pipe';
+import { FormatCashPipe } from '@/pipes/format-cash.pipe';
 
 import * as appStateSelectors from '@/state/selectors/app-state.selectors';
 import * as appStateActions from '@/state/actions/app-state.actions';
 import * as dataStateSelectors from '@/state/selectors/data-state.selectors';
 import * as marketStateSelectors from '@/state/selectors/market-state.selectors';
 import * as marketStateActions from '@/state/actions/market-state.actions';
+import { upsertNotification } from '@/state/actions/notification.actions';
 
 import { environment } from 'src/environments/environment';
 
 import { firstValueFrom, map, tap } from 'rxjs';
-import { CalcPipe } from '@/pipes/calculate.pipe';
-import { FormatCashPipe } from '@/pipes/format-cash.pipe';
-import { ConversationComponent } from '@/components/chat/conversation/conversation.component';
+import { setChatActive, setToUser } from '@/state/actions/chat.actions';
 
 const defaultActionState = {
   canList: false,
@@ -167,6 +169,7 @@ export class MarketComponent {
     public route: ActivatedRoute,
     public dataSvc: DataService,
     public web3Svc: Web3Service,
+    private utilSvc: UtilService,
     private fb: FormBuilder
   ) {}
 
@@ -291,7 +294,8 @@ export class MarketComponent {
     if (!this.transferAddress.value) return;
 
     let notification: Notification = {
-      id: Date.now(),
+      id: this.utilSvc.createIdFromString('transferPhunk' + hashIds.map((hashId: string) => hashId.substring(2)).join('')),
+      timestamp: Date.now(),
       type: 'wallet',
       function: 'transferPhunk',
       hashId: hashIds[0],
@@ -299,7 +303,7 @@ export class MarketComponent {
       isBatch: true,
     };
 
-    this.store.dispatch(appStateActions.upsertNotification({ notification }));
+    this.store.dispatch(upsertNotification({ notification }));
     this.closeModal();
 
     try {
@@ -315,7 +319,7 @@ export class MarketComponent {
         type: 'pending',
         hash,
       };
-      this.store.dispatch(appStateActions.upsertNotification({ notification }));
+      this.store.dispatch(upsertNotification({ notification }));
 
       const receipt = await this.web3Svc.pollReceipt(hash!);
       notification = {
@@ -323,7 +327,7 @@ export class MarketComponent {
         type: 'complete',
         hash: receipt.transactionHash,
       };
-      this.store.dispatch(appStateActions.upsertNotification({ notification }));
+      this.store.dispatch(upsertNotification({ notification }));
       this.clearSelectedAndClose();
     } catch (err) {
       console.log(err);
@@ -332,7 +336,7 @@ export class MarketComponent {
         type: 'error',
         detail: err,
       };
-      this.store.dispatch(appStateActions.upsertNotification({ notification }));
+      this.store.dispatch(upsertNotification({ notification }));
     }
   }
 
@@ -342,6 +346,8 @@ export class MarketComponent {
     const newListings = this.bulkActionsForm.value.listingPhunks
       .filter((phunk: any) => phunk.listPrice);
 
+    console.log({newListings})
+
     if (!newListings.length) return;
 
     const listings = newListings.map((phunk: any) => ({ hashId: phunk.hashId, listPrice: phunk.listPrice }))|| [];
@@ -350,7 +356,8 @@ export class MarketComponent {
     if (!hashIds?.length) return;
 
     let notification: Notification = {
-      id: Date.now(),
+      id: this.utilSvc.createIdFromString('offerPhunkForSale' + hashIds.map((hashId: string) => hashId.substring(2)).join('')),
+      timestamp: Date.now(),
       type: 'wallet',
       function: 'offerPhunkForSale',
       hashId: hashIds[0],
@@ -358,7 +365,7 @@ export class MarketComponent {
       isBatch: true,
     };
 
-    this.store.dispatch(appStateActions.upsertNotification({ notification }));
+    this.store.dispatch(upsertNotification({ notification }));
     this.closeModal();
 
     try {
@@ -373,7 +380,7 @@ export class MarketComponent {
         type: 'pending',
         hash,
       };
-      this.store.dispatch(appStateActions.upsertNotification({ notification }));
+      this.store.dispatch(upsertNotification({ notification }));
 
       const receipt = await this.web3Svc.pollReceipt(hash!);
       notification = {
@@ -381,7 +388,7 @@ export class MarketComponent {
         type: 'complete',
         hash: receipt.transactionHash,
       };
-      this.store.dispatch(appStateActions.upsertNotification({ notification }));
+      this.store.dispatch(upsertNotification({ notification }));
 
       this.clearSelectedAndClose();
     } catch (err) {
@@ -391,7 +398,7 @@ export class MarketComponent {
         type: 'error',
         detail: err,
       };
-      this.store.dispatch(appStateActions.upsertNotification({ notification }));
+      this.store.dispatch(upsertNotification({ notification }));
     }
   }
 
@@ -410,7 +417,8 @@ export class MarketComponent {
     const hex = `0x${hexString}`;
 
     let notification: Notification = {
-      id: Date.now(),
+      id: this.utilSvc.createIdFromString('sendToEscrow' + hashIds.map((hashId: string) => hashId.substring(2)).join('')),
+      timestamp: Date.now(),
       type: 'wallet',
       function: 'sendToEscrow',
       hashId: hashIds[0],
@@ -418,7 +426,7 @@ export class MarketComponent {
       isBatch: true,
     }
 
-    this.store.dispatch(appStateActions.upsertNotification({ notification }));
+    this.store.dispatch(upsertNotification({ notification }));
     this.closeModal();
 
     try {
@@ -432,7 +440,7 @@ export class MarketComponent {
         type: 'pending',
         hash,
       };
-      this.store.dispatch(appStateActions.upsertNotification({ notification }));
+      this.store.dispatch(upsertNotification({ notification }));
 
       const receipt = await this.web3Svc.pollReceipt(hash!);
       notification = {
@@ -440,7 +448,7 @@ export class MarketComponent {
         type: 'complete',
         hash: receipt.transactionHash,
       };
-      this.store.dispatch(appStateActions.upsertNotification({ notification }));
+      this.store.dispatch(upsertNotification({ notification }));
       this.clearSelectedAndClose();
     } catch (err) {
       console.log(err);
@@ -449,7 +457,7 @@ export class MarketComponent {
         type: 'error',
         detail: err,
       };
-      this.store.dispatch(appStateActions.upsertNotification({ notification }));
+      this.store.dispatch(upsertNotification({ notification }));
     }
   }
 
@@ -465,7 +473,8 @@ export class MarketComponent {
     const hashIds = Object.values(selected).map((phunk: Phunk) => phunk.hashId);
 
     let notification: Notification = {
-      id: Date.now(),
+      id: this.utilSvc.createIdFromString('withdrawPhunk' + hashIds.map((hashId: string) => hashId.substring(2)).join('')),
+      timestamp: Date.now(),
       type: 'wallet',
       function: 'withdrawPhunk',
       hashId: hashIds[0],
@@ -473,7 +482,7 @@ export class MarketComponent {
       isBatch: true,
     };
 
-    this.store.dispatch(appStateActions.upsertNotification({ notification }));
+    this.store.dispatch(upsertNotification({ notification }));
     this.closeModal();
 
     try {
@@ -487,7 +496,7 @@ export class MarketComponent {
         type: 'pending',
         hash,
       };
-      this.store.dispatch(appStateActions.upsertNotification({ notification }));
+      this.store.dispatch(upsertNotification({ notification }));
 
       const receipt = await this.web3Svc.pollReceipt(hash!);
       notification = {
@@ -495,7 +504,7 @@ export class MarketComponent {
         type: 'complete',
         hash: receipt.transactionHash,
       };
-      this.store.dispatch(appStateActions.upsertNotification({ notification }));
+      this.store.dispatch(upsertNotification({ notification }));
       this.clearSelectedAndClose();
     } catch (err) {
       console.log(err);
@@ -504,7 +513,7 @@ export class MarketComponent {
         type: 'error',
         detail: err,
       };
-      this.store.dispatch(appStateActions.upsertNotification({ notification }));
+      this.store.dispatch(upsertNotification({ notification }));
     }
   }
 
@@ -520,7 +529,8 @@ export class MarketComponent {
     const hashIds = Object.keys(selected);
 
     let notification: Notification = {
-      id: Date.now(),
+      id: this.utilSvc.createIdFromString('buyPhunk' + hashIds.map((hashId: string) => hashId.substring(2)).join('')),
+      timestamp: Date.now(),
       type: 'wallet',
       function: 'buyPhunk',
       hashId: hashIds[0],
@@ -528,7 +538,7 @@ export class MarketComponent {
       isBatch: true,
     };
 
-    this.store.dispatch(appStateActions.upsertNotification({ notification }));
+    this.store.dispatch(upsertNotification({ notification }));
     this.closeModal();
 
     try {
@@ -542,7 +552,7 @@ export class MarketComponent {
         type: 'pending',
         hash,
       };
-      this.store.dispatch(appStateActions.upsertNotification({ notification }));
+      this.store.dispatch(upsertNotification({ notification }));
 
       const receipt = await this.web3Svc.pollReceipt(hash!);
       notification = {
@@ -550,7 +560,7 @@ export class MarketComponent {
         type: 'complete',
         hash: receipt.transactionHash,
       };
-      this.store.dispatch(appStateActions.upsertNotification({ notification }));
+      this.store.dispatch(upsertNotification({ notification }));
       this.clearSelectedAndClose();
     } catch (err) {
       console.log(err);
@@ -559,7 +569,7 @@ export class MarketComponent {
         type: 'error',
         detail: err,
       };
-      this.store.dispatch(appStateActions.upsertNotification({ notification }));
+      this.store.dispatch(upsertNotification({ notification }));
     }
   }
 
@@ -621,6 +631,11 @@ export class MarketComponent {
     this.isWithdrawingBulk = false;
     this.isBuyingBulk = false;
     this.selectedPhunksFormArray = this.fb.array([]);
+  }
+
+  setChatActive(address: string) {
+    this.store.dispatch(setChatActive({ active: true }));
+    this.store.dispatch(setToUser({ address }));
   }
 
   // Submissions

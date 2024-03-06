@@ -8,7 +8,9 @@ import { Observable } from 'rxjs';
 import { GlobalState, Notification } from '@/models/global-state';
 
 import { Web3Service } from './web3.service';
-import { upsertNotification } from '@/state/actions/app-state.actions';
+import { UtilService } from './util.service';
+
+import { upsertNotification } from '@/state/actions/notification.actions';
 
 @Injectable({
   providedIn: 'root'
@@ -19,35 +21,60 @@ export class ChatService {
 
   client!: Client;
 
+  clientOptions: any = {
+    env: 'production',
+  };
+
   constructor(
     private store: Store<GlobalState>,
-    private readonly web3Svc: Web3Service
+    private web3Svc: Web3Service,
+    private utilSvc: UtilService
   ) {}
 
-  async signInToXmtp(): Promise<void> {
+  async signInToXmtp(): Promise<boolean> {
+    try {
+      const signer = await this.web3Svc.getActiveWalletClient();
+      const address = signer?.account.address;
 
-    const clientOptions: any = {
-      env: 'production',
-    };
+      console.log({ address });
+      if (!address) throw new Error('No address found');
 
-    const signer = await this.web3Svc.getActiveWalletClient();
-    const address = signer?.account.address;
-    if (!address) throw new Error('No address found');
+      let keys = this.loadKeys(address);
+      if (!keys) {
+        keys = await Client.getKeys(signer as any, {
+          ...this.clientOptions
+        });
+        this.storeKeys(address, keys);
+      }
 
-    let keys = this.loadKeys(address);
-    if (!keys) {
-      keys = await Client.getKeys(signer, {
-        ...clientOptions
+      this.client = await Client.create(null, {
+        ...this.clientOptions,
+        privateKeyOverride: keys
       });
-      this.storeKeys(address, keys);
+
+      this.streamAllMessages();
+
+      if (this.client) return true;
+    } catch (error) {
+      console.error('Error signing in to XMTP', error);
     }
 
+    return false;
+  }
+
+  async reconnectXmtp(address: string): Promise<boolean> {
+    let keys = this.loadKeys(address);
+    if (!keys) return false;
+
     this.client = await Client.create(null, {
-      ...clientOptions,
+      ...this.clientOptions,
       privateKeyOverride: keys
     });
 
     this.streamAllMessages();
+
+    if (this.client) return true;
+    return false;
   }
 
   async createConversationWithUser(userAddress: string): Promise<Conversation> {
@@ -117,15 +144,18 @@ export class ChatService {
 
   async streamAllMessages() {
     for await (const message of await this.client.conversations.streamAllMessages()) {
+
+      // console.log({ message })
       if (message.senderAddress === this.client.address) continue;
-      console.log(`New message from ${message.senderAddress}: ${message.content}`);
 
       const isOld = new Date(message.sent).getTime() < (new Date().getTime() - 10000);
+      if (isOld) continue;
 
-      console.log({ isOld });
+      console.log({ message })
 
       let notification: Notification = {
-        id: Date.now(),
+        id: this.utilSvc.createIdFromString(message.id),
+        timestamp: new Date(message.sent).getTime(),
         type: 'chat',
         function: 'chatMessage',
         chatAddress: message.senderAddress,
@@ -135,30 +165,38 @@ export class ChatService {
     }
   }
 
+  keysExist(address: string): boolean {
+    return !!this.loadKeys(address);
+  }
 
   // DEV ONLY ========================================== //
   // Utility functions for storing keys in local storage //
 
-  getEnv = (): "dev" | "production" | "local" => {
+  private getEnv = (): "dev" | "production" | "local" => {
     return "production";
   };
 
-  buildLocalStorageKey = (walletAddress: string) =>
-    walletAddress ? `xmtp:${this.getEnv()}:keys:${walletAddress}` : "";
+  private buildLocalStorageKey = (walletAddress: string) => {
+    walletAddress = walletAddress.toLowerCase();
+    return walletAddress ? `xmtp:${this.getEnv()}:keys:${walletAddress}` : "";
+  }
 
-  loadKeys = (walletAddress: string): Uint8Array | null => {
+  private loadKeys = (walletAddress: string): Uint8Array | null => {
+    walletAddress = walletAddress.toLowerCase();
     const val = sessionStorage.getItem(this.buildLocalStorageKey(walletAddress));
     return val ? Buffer.from(val, this.ENCODING) : null;
   };
 
-  storeKeys = (walletAddress: string, keys: Uint8Array) => {
+  private storeKeys = (walletAddress: string, keys: Uint8Array) => {
+    walletAddress = walletAddress.toLowerCase();
     sessionStorage.setItem(
       this.buildLocalStorageKey(walletAddress),
       Buffer.from(keys).toString(this.ENCODING),
     );
   };
 
-  wipeKeys = (walletAddress: string) => {
+  private wipeKeys = (walletAddress: string) => {
+    walletAddress = walletAddress.toLowerCase();
     // This will clear the conversation cache + the private keys
     sessionStorage.removeItem(this.buildLocalStorageKey(walletAddress));
   };

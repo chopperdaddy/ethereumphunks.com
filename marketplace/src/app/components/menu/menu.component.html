@@ -113,12 +113,15 @@
       </div>
     }
 
-    @if ((transactions$ | async); as txns) {
+    @if ((notifications$ | async); as notifs) {
       <div class="notifications-wrapper">
         <h3>Your Activity</h3>
-        <div class="notifications" [class.scrollbar]="txns.length > 4">
-          @if (txns.length) {
-            @for (txn of txns; track txn) { <app-notif [txn]="txn" [dismissible]="false" [isMenu]="true" /> }
+        <div class="notifications" [class.scrollbar]="notifs.length > 4">
+          @if (notifs.length) {
+            @for (txn of notifs; track txn.id) {
+              <!-- {{ txn.id }} -->
+              <app-notification [txn]="txn" [dismissible]="false" [isMenu]="true" />
+            }
           } @else {
             <p class="no-activity">No recent activity.</p>
           }

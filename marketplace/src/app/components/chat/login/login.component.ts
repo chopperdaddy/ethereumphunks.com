@@ -1,6 +1,10 @@
-import { Component, EventEmitter, Output } from '@angular/core';
+import { Component } from '@angular/core';
+import { Store } from '@ngrx/store';
 
 import { ChatService } from '@/services/chat.service';
+
+import { GlobalState } from '@/models/global-state';
+import { setChatActive } from '@/state/actions/chat.actions';
 
 @Component({
   selector: 'app-login',
@@ -11,14 +15,17 @@ import { ChatService } from '@/services/chat.service';
 })
 export class LoginComponent {
 
-  @Output() signedIn: EventEmitter<boolean> = new EventEmitter<boolean>(false);
-
   constructor(
+    private store: Store<GlobalState>,
     private chatSvc: ChatService
   ) {}
 
   async signIn(): Promise<void> {
-    await this.chatSvc.signInToXmtp();
-    this.signedIn.emit(true);
+    try {
+      const signedIn = await this.chatSvc.signInToXmtp();
+      this.store.dispatch(setChatActive({ active: signedIn }));
+    } catch (error) {
+      console.error('Error signing in to XMTP', error);
+    }
   }
 }

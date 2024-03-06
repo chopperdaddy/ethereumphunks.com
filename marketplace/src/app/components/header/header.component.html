@@ -15,7 +15,7 @@
     </div>
 
     <div class="connect-menu">
-
+      <!-- {{ connected$ | async | json }} -->
       @if ((connected$ | async)) {
         @if ((walletAddress$ | async); as address) {
           <a

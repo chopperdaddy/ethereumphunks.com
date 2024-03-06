@@ -149,9 +149,10 @@ export class MarketStateEffects {
       marketStateActions.triggerDataRefresh
     ),
     withLatestFrom(this.store.select(appStateSelectors.selectWalletAddress)),
+    filter(([action, address]) => !!address),
     switchMap(([_, address]) => {
       return this.store.select(marketStateSelectors.selectMarketSlug).pipe(
-        switchMap((slug) => this.dataSvc.fetchOwned(address, slug)),
+        switchMap((slug) => this.dataSvc.fetchOwned(address!, slug)),
       );
     }),
     map((phunks) => marketStateActions.setOwned({ owned: phunks })),

@@ -38,9 +38,19 @@
     background-color: rgba(var(--pink), 1);
   }
 
-  app-phunk-image {
-    width: 5rem;
-    height: 5rem;
+  .single-image {
+    app-phunk-image {
+      width: 5rem;
+      height: 5rem;
+    }
+
+    img {
+      display: block;
+      width: 5rem;
+      height: 5rem;
+      object-fit: contain;
+      image-rendering: pixelated;
+    }
   }
 
   .batch-image {
@@ -182,15 +192,17 @@
     }
   }
   &.chat {
-    box-shadow: -.3rem .3rem 0 0 rgba(var(--bid-color), 1);
+    box-shadow: -.3rem .3rem 0 0 rgba(var(--pink), 1);
 
-    app-phunk-image {
-      background-color: rgba(var(--bid-color), 1);
+    .single-image {
+      img {
+        background-color: rgba(var(--pink), 1);
+      }
     }
 
     .txn-info {
       h4 {
-        color: rgba(var(--bid-color), 1);
+        color: rgba(var(--pink), 1);
       }
     }
   }
