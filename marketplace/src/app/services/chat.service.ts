@@ -144,24 +144,20 @@ export class ChatService {
 
   async streamAllMessages() {
     for await (const message of await this.client.conversations.streamAllMessages()) {
-
-      // console.log({ message })
       if (message.senderAddress === this.client.address) continue;
 
       const isOld = new Date(message.sent).getTime() < (new Date().getTime() - 10000);
       if (isOld) continue;
 
-      console.log({ message })
+      // let notification: Notification = {
+      //   id: this.utilSvc.createIdFromString(message.id),
+      //   timestamp: new Date(message.sent).getTime(),
+      //   type: 'chat',
+      //   function: 'chatMessage',
+      //   chatAddress: message.senderAddress,
+      // };
 
-      let notification: Notification = {
-        id: this.utilSvc.createIdFromString(message.id),
-        timestamp: new Date(message.sent).getTime(),
-        type: 'chat',
-        function: 'chatMessage',
-        chatAddress: message.senderAddress,
-      };
-
-      this.store.dispatch(upsertNotification({ notification }));
+      // this.store.dispatch(upsertNotification({ notification }));
     }
   }
 
