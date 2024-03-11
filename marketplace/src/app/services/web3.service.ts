@@ -562,4 +562,11 @@ export class Web3Service {
       return null;
     }
   }
+
+  async getEnsAvatar(name: string): Promise<string | null> {
+    if (!name) return null;
+    const publicClient = getPublicClient(this.config);
+    if (!publicClient) return null;
+    return await publicClient.getEnsAvatar({ name });
+  }
 }

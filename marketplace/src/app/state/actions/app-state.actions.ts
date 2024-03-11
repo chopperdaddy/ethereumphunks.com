@@ -95,7 +95,8 @@ export const mouseDown = createAction(
 );
 
 export const fetchUserPoints = createAction(
-  '[App State] Fetch User Points'
+  '[App State] Fetch User Points',
+  props<{ address: string | undefined }>()
 );
 
 export const setUserPoints = createAction(

@@ -66,4 +66,8 @@
       }
     }
   }
+
+  @media (max-width: $mobile) {
+    padding: 0 1rem;
+  }
 }

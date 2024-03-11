@@ -143,6 +143,7 @@
           [phunkData]="phunkData.data"
           [total]="phunkData.total"
           [selectAll]="selectAll"
+          [walletAddress]="(walletAddress$ | async)"
           [selectable]="
             selectMutipleActive
             && (((marketType === 'owned')
@@ -156,17 +157,21 @@
   </div>
 }
 
-<app-slideout [active]="!!(slidseoutActive$ | async)">
+<app-slideout [active]="!!(slideoutActive$ | async)">
+
+  <!-- @if (blocksBehind$ | async) {
+    <div class="transacting-disabled">
+      <h2 i18n>Transacting Disabled</h2>
+      <p i18n>Transacting is disabled until indexer catches up.</p>
+    </div>
+  } -->
+
   @if (isListingBulk) {
     <form [formGroup]="bulkActionsForm" class="list">
       <div class="top-bar">
         <h2 i18n>Bulk List <span class="highlight">{{ bulkActionsForm.value.listingPhunks?.length }}</span> items</h2>
         @if (deselected.length) {
-          <h3>
-            <span class="highlight">
-              {{ deselected.length }}
-            </span> Selected items are not eligible to be listed
-          </h3>
+          <div class="ineligible">{{ deselected.length }} Selected items are not eligible to be listed</div>
         }
 
         <p class="description">Items with no value will not be listed.</p>
@@ -214,11 +219,7 @@
       <div class="top-bar">
         <h2 i18n>Bulk transfer <span class="highlight">{{ bulkActionsForm.value.transferPhunks?.length }}</span> Phunks</h2>
         @if (deselected.length) {
-          <h3>
-            <span class="highlight">
-              {{ deselected.length }}
-            </span> Selected items are not eligible to be transferred
-          </h3>
+          <div class="ineligible">{{ deselected.length }} Selected items are not eligible to be transferred</div>
         }
       </div>
 
@@ -233,27 +234,25 @@
         }
       </div>
 
-      <div class="form-group">
-        <label i18n for="transfer-address">Transfer to address</label>
-        <input #transferAddressInput type="text" id="transfer-address" [formControl]="transferAddress"
-          placeholder="0x or .ens" role="presentation" autocomplete="off" />
-      </div>
+      @if (bulkActionsForm.value.transferPhunks?.length) {
+        <div class="form-group">
+          <label i18n for="transfer-address">Transfer to address</label>
+          <input #transferAddressInput type="text" id="transfer-address" [formControl]="transferAddress"
+            placeholder="0x or .ens" role="presentation" autocomplete="off" />
+        </div>
 
-      <div class="form-actions">
-        <button type="reset" (click)="closeModal()">Cancel</button>
-        <button type="submit" (click)="submitBatchTransfer()">Transfer All</button>
-      </div>
+        <div class="form-actions">
+          <button type="reset" (click)="closeModal()">Cancel</button>
+          <button type="submit" (click)="submitBatchTransfer()">Transfer All</button>
+        </div>
+      }
     </form>
   } @else if (isEscrowingBulk) {
     <form [formGroup]="bulkActionsForm" class="escrow">
       <div class="top-bar">
         <h2 i18n>Bulk Escrow <span class="highlight">{{ bulkActionsForm.value.escrowPhunks?.length }}</span> items</h2>
         @if (deselected.length) {
-          <h3>
-            <span class="highlight">
-              {{ deselected.length }}
-            </span> Selected items are not eligible to be listed
-          </h3>
+          <div class="ineligible">{{ deselected.length }} Selected items are not eligible to be listed</div>
         }
       </div>
 
@@ -268,21 +267,19 @@
         }
       </div>
 
-      <div class="form-actions">
-        <button type="reset" (click)="closeModal()">Cancel</button>
-        <button type="submit" (click)="submitBatchEscrow()">Escrow All</button>
-      </div>
+      @if (bulkActionsForm.value.escrowPhunks?.length) {
+        <div class="form-actions">
+          <button type="reset" (click)="closeModal()">Cancel</button>
+          <button type="submit" (click)="submitBatchEscrow()">Escrow All</button>
+        </div>
+      }
     </form>
   } @else if (isWithdrawingBulk) {
     <form [formGroup]="bulkActionsForm" class="withdraw">
       <div class="top-bar">
         <h2 i18n>Bulk Withdraw <span class="highlight">{{ bulkActionsForm.value.withdrawPhunks?.length }}</span> items</h2>
         @if (deselected.length) {
-          <h3>
-            <span class="highlight">
-              {{ deselected.length }}
-            </span> Selected items are not eligible to be withdrawn
-          </h3>
+          <div class="ineligible">{{ deselected.length }} Selected items are not eligible to be withdrawn</div>
         }
       </div>
 
@@ -297,21 +294,19 @@
         }
       </div>
 
-      <div class="form-actions">
-        <button type="reset" (click)="closeModal()">Cancel</button>
-        <button type="submit" (click)="submitBatchWithdraw()">Withdraw All</button>
-      </div>
+      @if (bulkActionsForm.value.withdrawPhunks?.length) {
+        <div class="form-actions">
+          <button type="reset" (click)="closeModal()">Cancel</button>
+          <button type="submit" (click)="submitBatchWithdraw()">Withdraw All</button>
+        </div>
+      }
     </form>
   } @else if (isBuyingBulk) {
     <form [formGroup]="bulkActionsForm" class="buy">
       <div class="top-bar">
         <h2 i18n>Buy <span class="highlight">{{ bulkActionsForm.value.buyPhunks?.length }}</span> items</h2>
         @if (deselected.length) {
-          <h3>
-            <span class="highlight">
-              {{ deselected.length }}
-            </span> Selected items are not eligible to be purchased
-          </h3>
+          <div class="ineligible">{{ deselected.length }} Selected items are not eligible to be purchased</div>
         }
       </div>
 
@@ -336,7 +331,6 @@
           </div>
         }
       </div>
-
       <div class="total-wrapper">
         <div class="label">Total</div>
         <div class="value-wrapper">
@@ -347,14 +341,23 @@
             <span class="usd">
               ${{ (totalValue * ((usd$ | async) || 0)) | formatCash }}
             </span>
+          } @else {
+            <span class="eth">0Ξ</span>
+            <span class="usd">$0</span>
           }
         </div>
       </div>
 
-      <div class="form-actions">
-        <button type="reset" (click)="closeModal()">Cancel</button>
-        <button type="submit" (click)="submitBatchBuy()">Buy All</button>
-      </div>
+      @if (bulkActionsForm.value.buyPhunks?.length) {
+        <div class="form-actions">
+          <button type="reset" (click)="closeModal()">Cancel</button>
+          <button type="submit" (click)="submitBatchBuy()">Buy All</button>
+        </div>
+      } @else {
+        <div class="form-actions">
+          <button type="reset" (click)="closeModal()">Close</button>
+        </div>
+      }
     </form>
   }
 </app-slideout>

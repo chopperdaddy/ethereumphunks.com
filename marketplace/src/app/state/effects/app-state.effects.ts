@@ -35,14 +35,15 @@ export class AppStateEffects {
 
   addressChanged$ = createEffect(() => this.actions$.pipe(
     ofType(appStateActions.setWalletAddress),
-    tap((action) => {
-      const address = action.walletAddress;
-      this.store.dispatch(appStateActions.checkHasWithdrawal());
-      this.store.dispatch(appStateActions.fetchUserPoints());
-      this.store.dispatch(appStateActions.reconnectChat());
-      // this.store.dispatch(dataStateActions.fetchOwnedPhunks());
+    mergeMap((action) => {
+      const address = action.walletAddress?.toLowerCase();
+      return [
+        appStateActions.fetchUserPoints({ address }),
+        appStateActions.checkHasWithdrawal(),
+        appStateActions.reconnectChat(),
+      ];
     }),
-  ), { dispatch: false });
+  ));
 
   checkHasWithdrawal$ = createEffect(() => this.actions$.pipe(
     ofType(appStateActions.checkHasWithdrawal),
@@ -55,7 +56,7 @@ export class AppStateEffects {
   fetchUserPoints$ = createEffect(() => this.actions$.pipe(
     ofType(appStateActions.fetchUserPoints),
     withLatestFrom(this.store.select(appStateSelectors.selectWalletAddress)),
-    filter(([action, address]) => !!address),
+    filter(([action, address]) => !!action.address && action.address === address),
     switchMap(([action, address]) => from(this.web3Svc.getUserPoints(address!))),
     map((userPoints) => appStateActions.setUserPoints({ userPoints }))
   ));

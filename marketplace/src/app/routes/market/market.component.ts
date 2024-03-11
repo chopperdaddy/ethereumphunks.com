@@ -40,7 +40,7 @@ import { upsertNotification } from '@/state/actions/notification.actions';
 
 import { environment } from 'src/environments/environment';
 
-import { firstValueFrom, map, tap } from 'rxjs';
+import { filter, firstValueFrom, map, tap } from 'rxjs';
 import { setChatActive, setToUser } from '@/state/actions/chat.actions';
 
 const defaultActionState = {
@@ -137,7 +137,7 @@ export class MarketComponent {
 
   activeCollection$ = this.store.select(dataStateSelectors.selectActiveCollection);
   walletAddress$ = this.store.select(appStateSelectors.selectWalletAddress);
-  slidseoutActive$ = this.store.select(appStateSelectors.selectSlideoutActive).pipe(
+  slideoutActive$ = this.store.select(appStateSelectors.selectSlideoutActive).pipe(
     tap((slideoutActive: boolean) => {
       if (!slideoutActive) this.resetState();
     })
@@ -154,6 +154,12 @@ export class MarketComponent {
   );
   activeSort$ = this.store.select(marketStateSelectors.selectActiveSort).pipe(
     tap((sort: any) => this.activeSortModel = sort)
+  );
+
+  blocksBehind$ = this.store.select(appStateSelectors.selectBlocksBehind).pipe(
+    filter((blocksBehind) => !!blocksBehind),
+    map((blocksBehind) => blocksBehind > 6),
+    map((blocksBehind) => true)
   );
 
   ceil = Math.ceil;
@@ -192,7 +198,7 @@ export class MarketComponent {
     this.isBuyingBulk = true;
     this.store.dispatch(appStateActions.setSlideoutActive({ slideoutActive: true }));
 
-    const { inEscrow, notInEscrow, invalid } = await this.getSelectedEscrowed(false, false, true);
+    const { inEscrow, notInEscrow, invalid } = await this.checkSelected(true);
     this.deselected = [ ...notInEscrow, ...invalid ];
 
     const formArray = this.fb.array(inEscrow.map((phunk: Phunk) => this.fb.group({
@@ -212,7 +218,7 @@ export class MarketComponent {
     this.isTransferingBulk = true;
     this.store.dispatch(appStateActions.setSlideoutActive({ slideoutActive: true }));
 
-    const { inEscrow, notInEscrow, invalid } = await this.getSelectedEscrowed(false, true);
+    const { inEscrow, notInEscrow, invalid } = await this.checkSelected();
     this.deselected = [ ...inEscrow, ...invalid ];
 
     const formArray = this.fb.array(notInEscrow.map((phunk: Phunk) => this.fb.group({
@@ -232,7 +238,7 @@ export class MarketComponent {
     this.isListingBulk = true;
     this.store.dispatch(appStateActions.setSlideoutActive({ slideoutActive: true }));
 
-    const { inEscrow, notInEscrow } = await this.getSelectedEscrowed();
+    const { inEscrow, notInEscrow } = await this.checkSelected();
     this.deselected = notInEscrow;
 
     const formArray = this.fb.array(inEscrow.map((phunk: Phunk) => this.fb.group({
@@ -251,7 +257,7 @@ export class MarketComponent {
     this.isEscrowingBulk = true;
     this.store.dispatch(appStateActions.setSlideoutActive({ slideoutActive: true }));
 
-    const { inEscrow, notInEscrow, invalid } = await this.getSelectedEscrowed(true, true);
+    const { inEscrow, notInEscrow, invalid } = await this.checkSelected();
     this.deselected = [ ...inEscrow, ...invalid ];
 
     const formArray = this.fb.array(notInEscrow.map((phunk: Phunk) => this.fb.group({
@@ -270,7 +276,7 @@ export class MarketComponent {
     this.isWithdrawingBulk = true;
     this.store.dispatch(appStateActions.setSlideoutActive({ slideoutActive: true }));
 
-    const { inEscrow, notInEscrow } = await this.getSelectedEscrowed();
+    const { inEscrow, notInEscrow } = await this.checkSelected();
     this.deselected = notInEscrow;
 
     const formArray = this.fb.array(inEscrow.map((phunk: Phunk) => this.fb.group({
@@ -346,8 +352,6 @@ export class MarketComponent {
     const newListings = this.bulkActionsForm.value.listingPhunks
       .filter((phunk: any) => phunk.listPrice);
 
-    console.log({newListings})
-
     if (!newListings.length) return;
 
     const listings = newListings.map((phunk: any) => ({ hashId: phunk.hashId, listPrice: phunk.listPrice }))|| [];
@@ -405,7 +409,7 @@ export class MarketComponent {
   async submitBatchEscrow(): Promise<void> {
     if (!this.bulkActionsForm.value.escrowPhunks) return;
 
-    const { notInEscrow } = await this.getSelectedEscrowed();
+    const { notInEscrow } = await this.checkSelected();
 
     const selected: { [string: Phunk['hashId']]: Phunk } = {};
     notInEscrow.forEach((phunk: Phunk) => selected[phunk.hashId] = phunk);
@@ -464,7 +468,7 @@ export class MarketComponent {
   async submitBatchWithdraw(): Promise<void> {
     if (!this.bulkActionsForm.value.withdrawPhunks) return;
 
-    const { inEscrow } = await this.getSelectedEscrowed();
+    const { inEscrow } = await this.checkSelected();
 
     const selected: { [string: Phunk['hashId']]: Phunk } = {};
     inEscrow.forEach((phunk: Phunk) => selected[phunk.hashId] = phunk);
@@ -520,7 +524,7 @@ export class MarketComponent {
   async submitBatchBuy(): Promise<void> {
     if (!this.bulkActionsForm.value.buyPhunks) return;
 
-    const { inEscrow } = await this.getSelectedEscrowed(false, false, true);
+    const { inEscrow } = await this.checkSelected(true);
 
     const selected: { [string: Phunk['hashId']]: Phunk } = {};
     inEscrow.forEach((phunk: Phunk) => selected[phunk.hashId] = phunk);
@@ -639,54 +643,50 @@ export class MarketComponent {
   }
 
   // Submissions
-  async getSelectedEscrowed(
-    checkPrevOwner = true,
-    checkConsensus = false,
+  async checkSelected(
     removeOwnedItems = false
   ): Promise<{ notInEscrow: Phunk[], inEscrow: Phunk[], invalid: Phunk[]}> {
 
-    let selectedHashIds = Object.keys(this.selected);
-
-    let inEscrow: Phunk[] = [];
-    const escrow = await firstValueFrom(
-      this.dataSvc.phunksAreInEscrow(selectedHashIds, checkPrevOwner)
-    );
-
-    let notInEscrow: Phunk[] = [];
-    const noEscrow = selectedHashIds
-      .filter(hashId => !escrow.find((phunk: Phunk) => phunk.hashId === hashId))
-      .map(hashId => this.selected[hashId]);
-
+    let selected = Object.values(this.selected);
     let invalid: Phunk[] = [];
-    if (checkConsensus) {
-      const checkPromises = selectedHashIds.map(async (hashId: string) => {
-        const phunk = this.selected[hashId];
-        const hasConsensus = await this.dataSvc.checkConsensus(hashId, phunk.owner, phunk.prevOwner);
-        return { hashId, hasConsensus };
-      });
-
-      const checkResults: { hashId: string, hasConsensus: boolean }[] = await Promise.all(checkPromises);
-      invalid = checkResults.filter(result => !result.hasConsensus).map(result => this.selected[result.hashId]);
-    }
 
     if (removeOwnedItems) {
-      const address = await this.web3Svc.getActiveWalletAddress();
-      const owned = [...escrow, ...noEscrow].filter((phunk: Phunk) => phunk.prevOwner?.toLowerCase() === address?.toLowerCase());
-      invalid = [...invalid, ...owned];
+      [ selected, invalid ] = await this.filterOwnedItems(selected);
     }
 
-    inEscrow = escrow
-      .filter((phunk: Phunk) => !invalid.find((invalidPhunk: Phunk) => invalidPhunk.hashId === phunk.hashId));
+    selected = await this.dataSvc.checkConsensus(Object.values(selected));
 
-    notInEscrow = noEscrow
-      .filter((phunk: Phunk) => !invalid.find((invalidPhunk: Phunk) => invalidPhunk.hashId === phunk.hashId));
+    const consensusInvalid = selected.filter((phunk: Phunk) => phunk.consensus === false);
+    invalid = [...invalid, ...consensusInvalid];
 
+    const inEscrow = selected.filter(
+      (phunk: Phunk) => phunk.owner.toLowerCase() === environment.marketAddress.toLowerCase()
+    );
+
+    const notInEscrow = selected.filter(
+      (phunk: Phunk) => phunk.owner.toLowerCase() !== environment.marketAddress.toLowerCase()
+    );
+
+    console.log({ notInEscrow, inEscrow, invalid });
     return { notInEscrow, inEscrow, invalid };
   }
 
-  async checkConsenus(hashId: string, owner: string, prevOwner: string | null): Promise<boolean> {
-    const consensus = await this.dataSvc.checkConsensus(hashId, owner, prevOwner);
-    if (!consensus) throw new Error('Consensus not reached. Contact Support @etherphunks');
-    return consensus;
+  async filterOwnedItems(phunks: Phunk[]): Promise<[Phunk[], Phunk[]]> {
+    const walletAddress = (await this.web3Svc.getActiveWalletAddress())?.toLowerCase();
+    const marketAddress = environment.marketAddress.toLowerCase();
+    let validItems: Phunk[] = [];
+    let invalidItems: Phunk[] = [];
+
+    phunks.forEach(phunk => {
+      const owner = phunk.owner.toLowerCase();
+      if ((owner === marketAddress && phunk.prevOwner === walletAddress) || owner === walletAddress) {
+        invalidItems.push(phunk);
+      } else {
+        validItems.push(phunk);
+      }
+    });
+
+    return [validItems, invalidItems];
   }
+
 }

@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 
 import { Store } from '@ngrx/store';
 
@@ -64,6 +64,14 @@ export class DataService {
     // this.fetchStats(90, undefined).subscribe((res: any) => {
     //   console.log('fetchStats', res);
     // });
+
+    // this.fetchUserEvents(
+    //   '0xf1Aa941d56041d47a9a18e99609A047707Fe96c7',
+    //   10,
+    //   0
+    // ).subscribe((res: any) => {
+    //   console.log('fetchUserEvents', res);
+    // });
   }
 
   createListeners() {
@@ -85,7 +93,10 @@ export class DataService {
         { event: '*', schema: 'public', table: 'users' + this.prefix },
         (payload) => {
           this.store.dispatch(dataStateActions.fetchLeaderboard());
-          this.store.dispatch(appStateActions.fetchUserPoints());
+
+          const newData = payload.new as any;
+          const address = newData.address;
+          this.store.dispatch(appStateActions.fetchUserPoints({ address }));
         },
       ).subscribe();
 
@@ -141,6 +152,32 @@ export class DataService {
         }));
       }),
     );
+  }
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  // COLLECTION ////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  fetchMultipleByHashId(hashIds: Phunk['hashId'][]): Observable<any> {
+    const query = supabase
+      .from('ethscriptions' + this.prefix)
+      .select(`
+        *,
+        listings${this.prefix}(minValue)
+      `)
+      .in('hashId', hashIds)
+      .limit(1000);
+
+    return from(query).pipe(map((res: any) => {
+      return res.data.map((item: any) => {
+        const listing = item[`listings${this.prefix}`];
+        delete item[`listings${this.prefix}`];
+        return {
+          ...item,
+          listing,
+        };
+      });
+    }));
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -273,6 +310,26 @@ export class DataService {
     );
   }
 
+  fetchUserEvents(
+    address: string,
+    limit: number,
+    fromBlock?: number
+  ): Observable<any> {
+
+    const query = supabase
+      .from('events' + this.prefix)
+      .select('*')
+      .or(`from.eq.${address.toLowerCase()},to.eq.${address.toLowerCase()}`)
+      .order('blockNumber', { ascending: false })
+      .limit(limit);
+
+    if (fromBlock) query.gt('blockNumber', fromBlock);
+
+    return from(query).pipe(
+      map((res: any) => res.data),
+    );
+  }
+
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   // TOP SALES /////////////////////////////////////////////////////////////////////////////////////////////////////////
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -386,29 +443,31 @@ export class DataService {
     }
   }
 
-  async checkConsensus(
-    hashId: string,
-    owner: string,
-    prevOwner: string | null,
-  ): Promise<boolean> {
-    if (!hashId || !owner) return false;
+  async checkConsensus(phunks: Phunk[]): Promise<Phunk[]> {
+    if (!phunks.length) return [];
 
-    const prefix = this.prefix ? (this.prefix.replace('_', '') + '-') : '';
+    const prefix = this.prefix.replace('_', '');
+
+    const hashIds = phunks.map((item: Phunk) => item.hashId);
+    let params = new HttpParams();
+    for (let i = 0; i < hashIds.length; i++) {
+      params = params.append('transaction_hashes[]', hashIds[i]);
+    }
 
     return await firstValueFrom(
-      this.http.get(`https://${prefix}api-v2.ethscriptions.com/api/ethscriptions/${hashId}`).pipe(
-        tap((res: any) => console.log('checkConsensus', res)),
+      this.http.get(`https://ethscriptions-api-${prefix}.flooredape.io/ethscriptions/consensus`, { params }).pipe(
+        map((res: any) => res.result),
         map((res: any) => {
-          console.log({res})
-          if (!res) return false;
-          res = res.result || res;
+          return res.map((item: any) => {
+            const phunk = phunks.find((p: Phunk) => p.hashId === item.transaction_hash);
+            const consensus =
+              !!phunk &&
+              phunk.owner === item.current_owner &&
+              (phunk.prevOwner === item.previous_owner || !phunk.prevOwner);
 
-          if (res.current_owner.toLowerCase() !== owner.toLowerCase()) return false;
-
-          // This should be enabled in prod
-          // if (res.previous_owner.toLowerCase() !== prevOwner?.toLowerCase()) return false;
-          return true;
-        }),
+            return { ...phunk, consensus };
+          });
+        })
       )
     )
   }
@@ -416,37 +475,6 @@ export class DataService {
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   // CHECKS ////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-  phunksAreInEscrow(hashIds: Phunk['hashId'][], checkPrevOwner = true): Observable<any> {
-    return this.walletAddress$.pipe(
-      switchMap((address) => {
-        const query = supabase
-          .from('ethscriptions' + this.prefix)
-          .select(`
-            *,
-            listings${this.prefix}(minValue)
-          `)
-          .in('hashId', hashIds)
-          .eq('owner', this.escrowAddress)
-          .limit(1000);
-
-        if (checkPrevOwner) query.eq('prevOwner', address);
-
-        return from(query).pipe(map((res: any) => {
-          // console.log('phunksAreInEscrow', { res, address, hashIds });
-          return res.data.map((item: any) => {
-            // console.log(item)
-            const listing = item[`listings${this.prefix}`];
-            delete item[`listings${this.prefix}`];
-            return {
-              ...item,
-              listing,
-            };
-          });
-        }));
-      }),
-    );
-  }
 
   addressesAreHolders(addresses: string[]): Observable<any> {
     if (!addresses.length) return of([]);

@@ -40,6 +40,8 @@ export interface Phunk {
   singleName?: string | null
   collectionName?: string | null
   supply?: number | null
+
+  consensus?: boolean
 }
 
 export interface Bid {

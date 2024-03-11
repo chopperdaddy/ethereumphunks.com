@@ -80,7 +80,6 @@ interface TxStatuses {
   templateUrl: './item-view.component.html',
   styleUrls: ['./item-view.component.scss']
 })
-
 export class ItemViewComponent implements AfterViewInit, OnDestroy {
 
   @ViewChild('bidPriceInput') bidPriceInput!: ElementRef<HTMLInputElement>;
@@ -237,7 +236,7 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
     this.store.dispatch(upsertNotification({ notification }));
 
     try {
-      await this.checkConsenus(hashId, phunk.owner, phunk.prevOwner);
+      await this.checkConsenus(phunk);
 
       if (address) {
         if (address?.endsWith('.eth')) {
@@ -307,7 +306,7 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
     this.store.dispatch(upsertNotification({ notification }));
 
     try {
-      await this.checkConsenus(hashId, phunk.owner, phunk.prevOwner);
+      await this.checkConsenus(phunk);
 
       const tokenId = phunk.hashId;
       const hash = await this.web3Svc.sendEthscriptionToContract(tokenId);
@@ -390,107 +389,6 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
     this.store.dispatch(upsertNotification({ notification }));
   }
 
-  // async withdrawBidForPhunk(phunk: Phunk): Promise<void> {
-  //   const hashId = phunk.hashId;
-  //   if (!hashId) throw new Error('Invalid hashId');
-
-  //   let notification: Notification = {
-  //     id: this.utilSvc.createIdFromString('withdrawBidForPhunk' + hashId),
-  //     timestamp: Date.now(),
-  //     slug: phunk.slug,
-  //     type: 'wallet',
-  //     function: 'withdrawBidForPhunk',
-  //     hashId,
-  //     tokenId: phunk.tokenId,
-  //   };
-
-  //   this.store.dispatch(upsertNotification({ notification }));
-
-  //   try {
-
-  //     const hash = await this.web3Svc.withdrawBidForPhunk(hashId);
-
-  //     notification = {
-  //       ...notification,
-  //       type: 'pending',
-  //       hash,
-  //     };
-  //     this.store.dispatch(upsertNotification({ notification }));
-
-  //     const receipt = await this.web3Svc.pollReceipt(hash!);
-
-  //     notification = {
-  //       ...notification,
-  //       type: 'complete',
-  //       hash: receipt.transactionHash,
-  //     };
-
-  //     this.store.dispatch(appStateActions.addCooldown({ cooldown: { [hashId]: Number(receipt.blockNumber) }}));
-  //   } catch (err) {
-  //     console.log(err);
-
-  //     notification = {
-  //       ...notification,
-  //       type: 'error',
-  //       detail: err,
-  //     };
-  //   }
-
-  //   this.store.dispatch(upsertNotification({ notification }));
-  // }
-
-  // async acceptBidForPhunk(phunk: Phunk): Promise<void> {
-  //   const hashId = phunk.hashId;
-  //   if (!hashId) throw new Error('Invalid hashId');
-
-  //   const value = phunk.bid?.value;
-
-  //   let notification: Notification = {
-  //     id: this.utilSvc.createIdFromString('acceptBidForPhunk' + hashId),
-  //     timestamp: Date.now(),
-  //     slug: phunk.slug,
-  //     type: 'wallet',
-  //     function: 'acceptBidForPhunk',
-  //     hashId,
-  //     tokenId: phunk.tokenId,
-  //     value: Number(this.web3Svc.weiToEth(value)),
-  //   };
-
-  //   try {
-  //     if (!value) throw new Error('Invalid value');
-  //     this.store.dispatch(upsertNotification({ notification }));
-
-  //     await this.checkConsenus(hashId, phunk.owner, phunk.prevOwner);
-
-  //     const hash = await this.web3Svc.acceptBidForPhunk(hashId, value!);
-  //     notification = {
-  //       ...notification,
-  //       type: 'pending',
-  //       hash,
-  //     };
-  //     this.store.dispatch(upsertNotification({ notification }));
-
-  //     const receipt = await this.web3Svc.pollReceipt(hash!);
-  //     notification = {
-  //       ...notification,
-  //       type: 'complete',
-  //       hash: receipt.transactionHash,
-  //     };
-
-  //     this.store.dispatch(appStateActions.addCooldown({ cooldown: { [hashId]: Number(receipt.blockNumber) }}));
-  //   } catch (err) {
-  //     console.log(err);
-
-  //     notification = {
-  //       ...notification,
-  //       type: 'error',
-  //       detail: err,
-  //     };
-  //   }
-
-  //   this.store.dispatch(upsertNotification({ notification }));
-  // }
-
   async buyPhunk(phunk: Phunk): Promise<void> {
     const hashId = phunk.hashId;
     if (!hashId) throw new Error('Invalid hashId');
@@ -511,7 +409,7 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
     this.store.dispatch(upsertNotification({ notification }));
 
     try {
-      await this.checkConsenus(hashId, phunk.owner, phunk.prevOwner);
+      await this.checkConsenus(phunk);
       if (!phunk.prevOwner) throw new Error('Invalid prevOwner');
 
       const hash = await this.web3Svc.batchBuyPhunks([phunk]);
@@ -543,56 +441,6 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
     this.store.dispatch(upsertNotification({ notification }));
   }
 
-  // async submitBid(phunk: Phunk): Promise<void> {
-  //   const hashId = phunk.hashId;
-  //   if (!hashId) throw new Error('Invalid hashId');
-
-  //   const value = this.bidPrice.value;
-  //   if (!value) return;
-
-  //   let notification: Notification = {
-  //     id: this.utilSvc.createIdFromString('enterBidForPhunk' + hashId),
-  //     timestamp: Date.now(),
-  //     slug: phunk.slug,
-  //     type: 'wallet',
-  //     function: 'enterBidForPhunk',
-  //     hashId,
-  //     tokenId: phunk.tokenId,
-  //     value
-  //   };
-
-  //   try {
-  //     this.store.dispatch(upsertNotification({ notification }));
-
-  //     const hash = await this.web3Svc.enterBidForPhunk(hashId, value);
-  //     notification = {
-  //       ...notification,
-  //       type: 'pending',
-  //       hash,
-  //     };
-  //     this.store.dispatch(upsertNotification({ notification }));
-
-  //     const receipt = await this.web3Svc.pollReceipt(hash!);
-  //     notification = {
-  //       ...notification,
-  //       type: 'complete',
-  //       hash: receipt.transactionHash,
-  //     };
-
-  //     this.store.dispatch(appStateActions.addCooldown({ cooldown: { [hashId]: Number(receipt.blockNumber) }}));
-  //   } catch (err) {
-  //     console.log(err);
-  //     notification = {
-  //       ...notification,
-  //       type: 'error',
-  //       detail: err,
-  //     };
-  //   }
-
-  //   this.store.dispatch(upsertNotification({ notification }));
-  //   this.clearAll();
-  // }
-
   async transferPhunk(phunk: Phunk, address?: string): Promise<void> {
     const hashId = phunk.hashId;
     if (!hashId) throw new Error('Invalid hashId');
@@ -615,7 +463,7 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
       this.closeTransfer();
       this.store.dispatch(upsertNotification({ notification }));
 
-      await this.checkConsenus(hashId, phunk.owner, phunk.prevOwner);
+      await this.checkConsenus(phunk);
 
       const hash = await this.web3Svc.transferPhunk(hashId, toAddress);
       notification = {
@@ -697,10 +545,9 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
     return { [item.k.replace(/ /g, '-').toLowerCase()]: item.v.replace(/ /g, '-').toLowerCase() };
   }
 
-  async checkConsenus(hashId: string, owner: string, prevOwner: string | null): Promise<boolean> {
-    const consensus = await this.dataSvc.checkConsensus(hashId, owner, prevOwner);
-    if (!consensus) throw new Error('Consensus not reached. Contact Support @etherphunks');
-    return consensus;
+  async checkConsenus(phunk: Phunk): Promise<void> {
+    const res = await this.dataSvc.checkConsensus([phunk]);
+    if (!res[0]?.consensus) throw new Error('Consensus not reached. Contact Support @etherphunks');
   }
 
   // async sendToAuction(hashId: string) {

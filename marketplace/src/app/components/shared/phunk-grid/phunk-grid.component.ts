@@ -25,8 +25,7 @@ import { ImagePipe } from '@/pipes/image.pipe';
 import { environment } from 'src/environments/environment';
 
 import * as dataStateSelectors from '@/state/selectors/data-state.selectors';
-
-import * as marketStateSelectors from '@/state/selectors/market-state.selectors';
+import { selectWalletAddress } from '@/state/selectors/app-state.selectors';
 import * as marketStateActions from '@/state/actions/market-state.actions';
 
 @Component({
@@ -74,6 +73,8 @@ export class PhunkGridComponent implements OnChanges {
 
   @Input() selectable: boolean = false;
   @Input() selectAll: boolean = false;
+
+  @Input() walletAddress!: string | null | undefined;
 
   @Output() selectedChange = new EventEmitter<{ [string: Phunk['hashId']]: Phunk }>();
   @Input() selected: { [string: Phunk['hashId']]: Phunk } = {};

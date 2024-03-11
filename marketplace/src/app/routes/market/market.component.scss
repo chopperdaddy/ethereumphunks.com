@@ -310,11 +310,14 @@ form {
       padding-bottom: .5rem;
     }
 
-    h3 {
+    .ineligible {
       font-size: 1rem;
       font-weight: normal;
-      opacity: .75;
       line-height: 1.2;
+      padding: .25rem;
+
+      background-color: rgba(var(--highlight), 1);
+      color: rgba(var(--background), 1);
     }
 
     .description {
