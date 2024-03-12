@@ -12,8 +12,8 @@ import { Attribute, Bid, Event, Listing, Phunk } from '@/models/db';
 
 import { createClient } from '@supabase/supabase-js'
 
-import { Observable, of, BehaviorSubject, from, forkJoin, firstValueFrom } from 'rxjs';
-import { catchError, map, switchMap, tap } from 'rxjs/operators';
+import { Observable, of, BehaviorSubject, from, forkJoin, firstValueFrom, EMPTY } from 'rxjs';
+import { catchError, expand, map, reduce, switchMap, tap } from 'rxjs/operators';
 
 import { NgForage } from 'ngforage';
 
@@ -306,7 +306,7 @@ export class DataService {
           };
         });
       }),
-      tap((res) => console.log('fetchSingleTokenEvents', res)),
+      // tap((res) => console.log('fetchSingleTokenEvents', res)),
     );
   }
 
@@ -388,7 +388,7 @@ export class DataService {
         from(this.getListingFromHashId(res.hashId))
       ])),
       map(([[res], listing]) => {
-        console.log({res, listing})
+        // console.log({res, listing})
         return {
           ...res,
           listing: listing?.listedBy.toLowerCase() === res.prevOwner?.toLowerCase() ? listing : null,
@@ -449,27 +449,33 @@ export class DataService {
     const prefix = this.prefix.replace('_', '');
 
     const hashIds = phunks.map((item: Phunk) => item.hashId);
-    let params = new HttpParams();
+    let params: any = new HttpParams().set('consensus', 'true');
     for (let i = 0; i < hashIds.length; i++) {
-      params = params.append('transaction_hashes[]', hashIds[i]);
+      params = params.append('transaction_hash[]', hashIds[i]);
     }
 
-    return await firstValueFrom(
-      this.http.get(`https://ethscriptions-api-${prefix}.flooredape.io/ethscriptions/consensus`, { params }).pipe(
-        map((res: any) => res.result),
-        map((res: any) => {
-          return res.map((item: any) => {
-            const phunk = phunks.find((p: Phunk) => p.hashId === item.transaction_hash);
-            const consensus =
-              !!phunk &&
-              phunk.owner === item.current_owner &&
-              (phunk.prevOwner === item.previous_owner || !phunk.prevOwner);
+    const fetchPage = (key?: string): Observable<any> => {
+      if (key) {
+        params = params.set('page_key', key);
+      }
+      return this.http.get<any>(`https://ethscriptions-api-${prefix}.flooredape.io/ethscriptions`, { params }).pipe(
+        tap((res: any) => { if (res) console.log('checkConsensus', res); }),
+      );
+    };
 
-            return { ...phunk, consensus };
-          });
-        })
+    return await firstValueFrom(
+      fetchPage().pipe(
+        // Use expand to recursively call fetchPage until there's no more data
+        expand((res: any) => res.pagination.has_more ? fetchPage(res.pagination.page_key) : EMPTY),
+        reduce((acc: any, res) => res ? [...acc, ...res.result] : acc, []),
+        // Map the final result to your structure
+        map((res: any) => res.map((item: any) => {
+          const phunk = phunks.find(p => p.hashId === item.transaction_hash);
+          const consensus = !!phunk && phunk.owner === item.current_owner && (phunk.prevOwner === item.previous_owner || !phunk.prevOwner);
+          return { ...phunk, consensus };
+        }))
       )
-    )
+    );
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -483,7 +489,7 @@ export class DataService {
       .rpc('addresses_are_holders_sepolia', { addresses });
 
     return from(query).pipe(
-      tap((res) => console.log(res)),
+      // tap((res) => console.log(res)),
       map((res: any) => res.data),
     );
   }
@@ -563,7 +569,7 @@ export class DataService {
         )
       }),
       catchError((err) => {
-        console.log('fetchAllWithPagination', err);
+        // console.log('fetchAllWithPagination', err);
         return of({ data: [], total: 0 });
       })
     );

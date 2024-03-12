@@ -104,7 +104,7 @@ export class MarketStateEffects {
     switchMap(([action, marketSlug]) => {
       return this.dataSvc.fetchAllWithPagination(marketSlug, 0, 110, {}).pipe(
         map((data: MarketState['activeMarketRouteData']) => data.data),
-        tap((data) => console.log('fetchAll$', data))
+        // tap((data) => console.log('fetchAll$', data))
       );
     }),
     map((phunks: Phunk[]) => marketStateActions.setAll({ all: phunks }))

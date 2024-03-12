@@ -35,42 +35,26 @@
             [class.disabled]="blocksBehind$ | async">
 
             <div class="market-status">
-              <!-- @if (phunk.auction) {
-                <h2 i18n>Auction</h2>
-                <app-auction
-                  [auction]="phunk.auction"
-                />
-              } @else { -->
-                <h2 i18n>Market Status</h2>
+              <h2 i18n>Market Status</h2>
 
-                @if (phunk.isEscrowed) {
-                  <!-- Owner -->
-                  @if (phunk.prevOwner; as owner) {
-                    <p i18n>This {{ phunk.singleName }} is held in <a [routerLink]="['/', 'curated', phunk.slug, 'market', 'owned']" [queryParams]="{ address: escrowAddress }">escrow</a> for <a [routerLink]="['/', 'curated', phunk.slug, 'market', 'owned']" [queryParams]="{ address: owner }"><app-address [address]="owner" /></a>.</p>
-                  }
-                } @else {
-                  <!-- Owner -->
-                  @if (phunk.owner; as owner) {
-                    <p i18n>This {{ phunk.singleName }} is owned by <a [routerLink]="['/', 'curated', phunk.slug, 'market', 'owned']" [queryParams]="{ address: owner }"><app-address [address]="owner" /></a>.</p>
-                  }
+              @if (phunk.isEscrowed) {
+                <!-- Owner -->
+                @if (phunk.prevOwner; as owner) {
+                  <p i18n>This {{ phunk.singleName }} is held in <a [routerLink]="['/', 'curated', phunk.slug, 'market', 'owned']" [queryParams]="{ address: escrowAddress }">escrow</a> for <a [routerLink]="['/', 'curated', phunk.slug, 'market', 'owned']" [queryParams]="{ address: owner }"><app-address [address]="owner" /></a>.</p>
                 }
+              } @else {
+                <!-- Owner -->
+                @if (phunk.owner; as owner) {
+                  <p i18n>This {{ phunk.singleName }} is owned by <a [routerLink]="['/', 'curated', phunk.slug, 'market', 'owned']" [queryParams]="{ address: owner }"><app-address [address]="owner" /></a>.</p>
+                }
+              }
 
-                <!-- Value (Listing) -->
-                @if (phunk.listing?.minValue; as value) {
-                  <p i18n>This {{ phunk.singleName }} is for sale for <span class="highlight">{{ (value | weiToEth) }} ETH</span><span class="bold"> (${{ ((value | weiToEth) * ((usd$ | async) || 0)) | formatCash }})</span>.</p>
-                } @else {
-                  <p i18n>This {{ phunk.singleName }} is not for sale.</p>
-                }
-
-                <!-- Has bid -->
-                @if (phunk.bid; as bid) {
-                  @if (bid.value && bid.fromAddress) {
-                    <p i18n>There is a bid of <span class="bold">{{ bid.value | weiToEth }} ETH</span> ({{ ((bid.value | weiToEth) * ((usd$ | async) || 0)) | currency }}) for this {{ phunk.singleName }} from <a [routerLink]="['/', 'curated', phunk.slug, 'market', 'owned']" [queryParams]="{ address: bid.fromAddress }"><app-address [address]="bid.fromAddress" /></a>.</p>
-                  }
-                } @else {
-                  <p i18n>There are no bids on this {{ phunk.singleName }}.</p>
-                }
-              <!-- } -->
+              <!-- Value (Listing) -->
+              @if (phunk.listing?.minValue; as value) {
+                <p i18n>This {{ phunk.singleName }} is for sale for <span class="highlight">{{ (value | weiToEth) }} ETH</span><span class="bold"> (${{ ((value | weiToEth) * ((usd$ | async) || 0)) | formatCash }})</span>.</p>
+              } @else {
+                <p i18n>This {{ phunk.singleName }} is not for sale.</p>
+              }
             </div>
 
             <div class="actions-wrapper">
@@ -108,12 +92,24 @@
                         <ng-container *ngTemplateOutlet="escrowAndSellForm; context:{ $implicit: phunk }" />
                       }
                     }
+                  }
 
-                    @if (phunk.isEscrowed) {
-                      <button class="withdraw" (click)="withdrawPhunk(phunk)">
-                        <span>Withdraw from escrow</span>
-                        <ng-container *ngTemplateOutlet="pending; context:{ $implicit: 'withdrawPhunk' }" />
-                      </button>
+                  <!-- Escrow actions -->
+                  @if (phunk.isEscrowed && (phunk.prevOwner | lowercase) === (address | lowercase)) {
+                    <button class="withdraw" (click)="withdrawPhunk(phunk)">
+                      <span>Withdraw from escrow</span>
+                      <ng-container *ngTemplateOutlet="pending; context:{ $implicit: 'withdrawPhunk' }" />
+                    </button>
+                  }
+
+                  @if (!phunk.isEscrowed && (owner | lowercase) === (address | lowercase)) {
+                    <button class="send-to-escrow" (click)="escrowPhunk()" [class.active]="escrowActive">
+                      <span>Send to escrow</span>
+                      <ng-container *ngTemplateOutlet="pending; context:{ $implicit: 'sendToEscrow' }" />
+                    </button>
+
+                    @if (escrowActive) {
+                      <ng-container *ngTemplateOutlet="escrowForm; context:{ $implicit: phunk }" />
                     }
                   }
 
@@ -124,11 +120,10 @@
                       <ng-container *ngTemplateOutlet="pending; context:{ $implicit: 'transferPhunk' }" />
                     </button>
 
-                    <!-- Transfer Actions -->
+                    <!-- Transfer actions -->
                     @if (transferActive) {
                       <ng-container *ngTemplateOutlet="transferForm; context:{ $implicit: phunk }" />
                     }
-
                     <!-- <button (click)="sendToAuction(phunk.hashId)">Send to Auction</button> -->
                   }
 
@@ -143,50 +138,6 @@
                       <ng-container *ngTemplateOutlet="pending; context:{ $implicit: 'phunkNoLongerForSale' }" />
                     </button>
                   }
-
-                  <!-- Bid -->
-                  <!-- @if (
-                    (owner | lowercase) !== (address | lowercase) &&
-                    (phunk.prevOwner | lowercase) !== (address | lowercase)
-                  ) {
-                    <button [class.active]="bidActive" class="sell" (click)="bidOnPhunk()">
-                      <span>Place Bid</span>
-                      <ng-container *ngTemplateOutlet="pending; context:{ $implicit: 'enterBidForPhunk' }" />
-                    </button> -->
-
-                    <!-- Bid Actions -->
-                    <!-- @if (bidActive) {
-                      <ng-container *ngTemplateOutlet="bidForm; context:{ $implicit: phunk }" />
-                    } -->
-                  <!-- } -->
-
-                  <!-- Withdraw Bid button -->
-                  <!-- @if ((phunk.bid?.fromAddress | lowercase) === (address | lowercase)) {
-                    <button class="sell" (click)="withdrawBidForPhunk(phunk)">
-                      <span>Withdraw Bid</span>
-                      <ng-container *ngTemplateOutlet="pending; context:{ $implicit: 'withdrawBidForPhunk' }" />
-                    </button>
-                  } -->
-
-                  <!-- Accept Bid button -->
-                  <!-- @if (phunk.bid) {
-                    @if (
-                      ((owner | lowercase) === (escrowAddress | lowercase)) &&
-                      (phunk.prevOwner | lowercase) === (address | lowercase)
-                    ) {
-                      <button i18n class="sell" (click)="acceptBidForPhunk(phunk)">
-                        Accept Top Bid
-                      </button>
-                    } @else if ((owner | lowercase) === (address | lowercase)) {
-                      <button i18n class="sell" [class.active]="acceptbidActive" (click)="acceptBid()">
-                        Accept Top Bid
-                      </button>
-
-                      @if (acceptbidActive) {
-                        <ng-container *ngTemplateOutlet="escrowForm; context:{ $implicit: phunk, type: 'bid' }" />
-                      }
-                    }
-                  } -->
                 }
 
               } @else {
@@ -301,21 +252,6 @@
   </form>
 </ng-template>
 
-<!-- Bid Form -->
-<!-- <ng-template #bidForm let-phunk>
-  <form class="form-wrapper">
-    <div class="form-group">
-      <label i18n for="bid-price">Bid Price (Ξ)</label>
-      <input #bidPriceInput type="number" id="bid-price" [formControl]="bidPrice" />
-    </div>
-
-    <div class="form-actions">
-      <button i18n type="reset" class="cancel" (click)="closeBid()">Cancel</button>
-      <button i18n type="submit" class="submit" (click)="submitBid(phunk)">Submit</button>
-    </div>
-  </form>
-</ng-template> -->
-
 <!-- Sell Form -->
 <ng-template #sellForm let-phunk>
   <form class="form-wrapper">
@@ -365,15 +301,12 @@
 </ng-template>
 
 <!-- Escrow Form -->
-<ng-template #escrowForm let-phunk let-type="type">
+<ng-template #escrowForm let-phunk>
   <div class="form-wrapper">
     <ng-template [ngTemplateOutlet]="cooldown" />
 
-    @if (type === 'bid') {
-      <p i18n>Your {{ phunk.singleName }} must be held in escrow in order have a bid accepted on it. <span class="small">You'll need to wait the default 4 blocks before accepting the bid once the {{ phunk.singleName }} is in escrow.</span></p>
-    } @else if (type === 'list') {
-      <p i18n>Your {{ phunk.singleName }} must be held in escrow in order to be listed. <span class="small">While held in escrow, your Phunk will not show in your wallet on other apps/marketplaces.</span></p>
-    }
+    <p i18n>Your {{ phunk.singleName }} must be held in escrow in order to be listed. <span class="small">While held in escrow, your Phunk will not show in your wallet on other apps/marketplaces.</span></p>
+
     <button i18n class="sell" (click)="sendToEscrow(phunk)">
       Send to Escrow
     </button>

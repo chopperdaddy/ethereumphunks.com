@@ -227,7 +227,7 @@ export class Web3Service {
     if (value) tx.value = value;
 
     const { request, result } = await publicClient.simulateContract(tx);
-    console.log(request, result);
+    // console.log(request, result);
 
     return await walletClient?.writeContract(request);
   }
@@ -325,7 +325,7 @@ export class Web3Service {
 
     if (!hashIds.length || !minSalePricesInWei.length) throw new Error('No phunks selected');
 
-    console.log({ hashIds, minSalePricesInWei, total });
+    // console.log({ hashIds, minSalePricesInWei, total });
 
     return this.writeMarketContract(
       'batchBuyPhunk',
@@ -411,7 +411,7 @@ export class Web3Service {
       }]
     });
 
-    console.log({multicall});
+    // console.log({multicall});
 
     return multicall;
   }
@@ -441,7 +441,7 @@ export class Web3Service {
 
     const res = await publicClient.multicall({ contracts: calls });
 
-    console.log({res})
+    // console.log({res})
 
     const combined: any = {};
     for (let i = 0; i < res.length; i += 2) {
@@ -475,7 +475,7 @@ export class Web3Service {
     let resolved = false;
     return new Promise(async (resolve, reject) => {
       while (!resolved) {
-        console.log('polling');
+        // console.log('polling');
         try {
           const receipt = await this.waitForTransaction(hash);
           if (receipt) {

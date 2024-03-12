@@ -32,7 +32,7 @@ export class ChatComponent {
     switchMap((user) => {
       return this.store.select(selectChatConnected).pipe(
         map((chatConnected) => {
-          console.log({ user, chatConnected });
+          // console.log({ user, chatConnected });
           if (chatConnected) return user ? 'conversation' : 'conversations';
           return 'login';
         })

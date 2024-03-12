@@ -27,7 +27,7 @@ import { UtilService } from '@/services/util.service';
 import { Phunk } from '@/models/db';
 import { GlobalState, Notification } from '@/models/global-state';
 
-import { Subject, filter, firstValueFrom, map, switchMap, takeUntil, tap, withLatestFrom } from 'rxjs';
+import { Subject, filter, map, switchMap, takeUntil, tap } from 'rxjs';
 
 import { environment } from 'src/environments/environment';
 
@@ -82,7 +82,6 @@ interface TxStatuses {
 })
 export class ItemViewComponent implements AfterViewInit, OnDestroy {
 
-  @ViewChild('bidPriceInput') bidPriceInput!: ElementRef<HTMLInputElement>;
   @ViewChild('sellPriceInput') sellPriceInput!: ElementRef<HTMLInputElement>;
   @ViewChild('transferAddressInput') transferAddressInput!: ElementRef<HTMLInputElement>;
 
@@ -90,13 +89,11 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
   escrowAddress = environment.marketAddress;
 
   sellActive: boolean = false;
-  bidActive: boolean = false;
   withdrawActive: boolean = false;
   transferActive: boolean = false;
-  acceptbidActive: boolean = false;
+  escrowActive: boolean = false;
 
   transferAddress = new FormControl<string | null>('');
-  bidPrice = new FormControl<number | undefined>(undefined);
   listPrice = new FormControl<number | undefined>(undefined);
   listToAddress = new FormControl<string | null>('');
 
@@ -161,26 +158,15 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
     setTimeout(() => this.sellPriceInput?.nativeElement.focus(), 0);
   }
 
+  escrowPhunk(): void {
+    this.closeAll();
+    this.escrowActive = true;
+  }
+
   transferPhunkAction(): void {
     this.closeAll();
     this.transferActive = true;
     setTimeout(() => this.transferAddressInput?.nativeElement.focus(), 0);
-  }
-
-  bidOnPhunk(): void {
-    this.closeAll();
-    this.bidActive = true;
-    setTimeout(() => this.bidPriceInput?.nativeElement.focus(), 0);
-  }
-
-  acceptBid(): void {
-    this.closeAll();
-    this.acceptbidActive = true;
-  }
-
-  closeAcceptBid(): void {
-    this.acceptbidActive = false;
-    this.clearAll();
   }
 
   closeListing(): void {
@@ -188,28 +174,25 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
     this.clearAll();
   }
 
+  closeEscrow(): void {
+    this.escrowActive = false;
+  }
+
   closeTransfer(): void {
     this.transferActive = false;
     this.clearAll();
   }
 
-  closeBid(): void {
-    this.bidActive = false;
-    this.clearAll();
-  }
-
   clearAll(): void {
     this.listPrice.setValue(undefined);
-    this.bidPrice.setValue(undefined);
     this.listToAddress.setValue('');
     this.transferAddress.setValue('');
   }
 
   closeAll(): void {
-    this.closeAcceptBid();
     this.closeListing();
     this.closeTransfer();
-    this.closeBid();
+    this.closeEscrow();
   }
 
   async submitListing(phunk: Phunk): Promise<void> {

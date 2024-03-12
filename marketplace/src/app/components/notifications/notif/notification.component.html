@@ -48,7 +48,9 @@
           }
 
           @if (txn.type === 'error') {
-            <span class="error">{{ txn.detail.shortMessage || txn.detail.message || txn.detail }}</span>
+            <span class="error">
+              {{ txn.detail.metaMessages?.["0"] || txn.detail.shortMessage || txn.detail.message || txn.detail }}
+            </span>
           }
 
           <!-- @if (!dismissible) {
