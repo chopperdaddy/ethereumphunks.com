@@ -61,9 +61,9 @@ export class DataService {
     this.createListeners();
     this.fetchUSDPrice();
 
-    // this.fetchStats(90, undefined).subscribe((res: any) => {
-    //   console.log('fetchStats', res);
-    // });
+    this.fetchStats(90, undefined).subscribe((res: any) => {
+      console.log('fetchStats', res);
+    });
 
     // this.fetchUserEvents(
     //   '0xf1Aa941d56041d47a9a18e99609A047707Fe96c7',
@@ -83,20 +83,6 @@ export class DataService {
         (payload) => {
           if (!payload) return;
           this.store.dispatch(dataStateActions.dbEventTriggered({ payload }));
-        },
-      ).subscribe();
-
-    supabase
-      .channel('users')
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'users' + this.prefix },
-        (payload) => {
-          this.store.dispatch(dataStateActions.fetchLeaderboard());
-
-          const newData = payload.new as any;
-          const address = newData.address;
-          this.store.dispatch(appStateActions.fetchUserPoints({ address }));
         },
       ).subscribe();
 
@@ -155,32 +141,6 @@ export class DataService {
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  // COLLECTION ////////////////////////////////////////////////////////////////////////////////////////////////////////
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-  fetchMultipleByHashId(hashIds: Phunk['hashId'][]): Observable<any> {
-    const query = supabase
-      .from('ethscriptions' + this.prefix)
-      .select(`
-        *,
-        listings${this.prefix}(minValue)
-      `)
-      .in('hashId', hashIds)
-      .limit(1000);
-
-    return from(query).pipe(map((res: any) => {
-      return res.data.map((item: any) => {
-        const listing = item[`listings${this.prefix}`];
-        delete item[`listings${this.prefix}`];
-        return {
-          ...item,
-          listing,
-        };
-      });
-    }));
-  }
-
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   // OWNED /////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -217,7 +177,7 @@ export class DataService {
     ) as Observable<Phunk[]>;
   }
 
-  fetchMissedEvents(address: string, lastBlock: number): Observable<Event[]> {
+  fetchMissedEvents(address: string, fromBlock: number): Observable<Event[]> {
     address = address.toLowerCase();
 
     const request = supabase
@@ -226,7 +186,7 @@ export class DataService {
         *,
         ethscriptions${this.prefix}(tokenId,slug)
       `)
-      .gt('blockNumber', lastBlock)
+      .gte('blockNumber', fromBlock)
       .or(`from.eq.${address},to.eq.${address}`)
       .eq('type', 'PhunkBought');
 
@@ -526,7 +486,7 @@ export class DataService {
   ): Observable<any> {
 
     const query = supabase
-      .rpc('get_total_volume', {
+      .rpc(`get_total_volume${this.prefix}`, {
         start_date: new Date(new Date().getTime() - ((1000 * 60 * 60 * 24) * days)),
         end_date: new Date(),
         slug_filter: slug,

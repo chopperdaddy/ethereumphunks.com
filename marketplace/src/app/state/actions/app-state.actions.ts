@@ -94,6 +94,11 @@ export const mouseDown = createAction(
   props<{ event: MouseEvent }>()
 );
 
+export const pointsChanged = createAction(
+  '[App State] Points Changed',
+  props<{ log: any }>()
+);
+
 export const fetchUserPoints = createAction(
   '[App State] Fetch User Points',
   props<{ address: string | undefined }>()

@@ -12,7 +12,7 @@ import { WalletAddressDirective } from '@/directives/wallet-address.directive';
 
 import * as notificationSelectors from '@/state/selectors/notification.selectors';
 
-import { map } from 'rxjs';
+import { map, tap } from 'rxjs';
 
 export type TxFunction = 'sendToEscrow' | 'phunkNoLongerForSale' | 'offerPhunkForSale' | 'withdrawBidForPhunk' | 'acceptBidForPhunk' | 'buyPhunk' | 'enterBidForPhunk' | 'transferPhunk' | 'withdrawPhunk';
 
@@ -33,6 +33,7 @@ export type TxFunction = 'sendToEscrow' | 'phunkNoLongerForSale' | 'offerPhunkFo
 export class NotificationsComponent {
 
   transactions$ = this.store.select(notificationSelectors.selectNotifications).pipe(
+    // tap((res) => console.log({res})),
     map((txns: Notification[]) => [...txns].sort((a, b) => b.timestamp - a.timestamp))
   );
 

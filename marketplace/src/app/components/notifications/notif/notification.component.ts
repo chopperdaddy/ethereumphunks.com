@@ -19,6 +19,7 @@ import { map } from 'rxjs';
 import * as dataStateSelectors from '@/state/selectors/data-state.selectors';
 
 import { removeNotification, setNotifHoverState } from '@/state/actions/notification.actions';
+import { setChatActive, setToUser } from '@/state/actions/chat.actions';
 
 @Component({
   selector: 'app-notification',
@@ -74,6 +75,12 @@ export class NotificationComponent {
   onMouseLeave(notificationId: string) {
     if (this.isMenu) return;
     this.store.dispatch(setNotifHoverState({ notifHoverState: { [notificationId]: false } }));
+  }
+
+  setChatActive(address: string) {
+    this.store.dispatch(setChatActive({ active: true }));
+    this.store.dispatch(setToUser({ address }));
+    this.store.dispatch(removeNotification({ txId: this.txn?.id || '' }));
   }
 
 }

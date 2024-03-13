@@ -149,15 +149,15 @@ export class ChatService {
       const isOld = new Date(message.sent).getTime() < (new Date().getTime() - 10000);
       if (isOld) continue;
 
-      // let notification: Notification = {
-      //   id: this.utilSvc.createIdFromString(message.id),
-      //   timestamp: new Date(message.sent).getTime(),
-      //   type: 'chat',
-      //   function: 'chatMessage',
-      //   chatAddress: message.senderAddress,
-      // };
+      let notification: Notification = {
+        id: this.utilSvc.createIdFromString(message.id),
+        timestamp: new Date(message.sent).getTime(),
+        type: 'chat',
+        function: 'chatMessage',
+        chatAddress: message.senderAddress,
+      };
 
-      // this.store.dispatch(upsertNotification({ notification }));
+      this.store.dispatch(upsertNotification({ notification }));
     }
   }
 

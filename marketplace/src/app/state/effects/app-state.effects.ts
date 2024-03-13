@@ -61,6 +61,13 @@ export class AppStateEffects {
     map((userPoints) => appStateActions.setUserPoints({ userPoints }))
   ));
 
+  pointsChanged$ = createEffect(() => this.actions$.pipe(
+    ofType(appStateActions.pointsChanged),
+    withLatestFrom(this.store.select(appStateSelectors.selectWalletAddress)),
+    filter(([action, address]) => !!action.log?.args?.user && action.log.args.user.toLowerCase() === address),
+    map(([action, address]) => appStateActions.fetchUserPoints({ address }))
+  ));
+
   fetchActiveMultiplier$ = createEffect(() => this.actions$.pipe(
     ofType(appStateActions.fetchActiveMultiplier),
     switchMap(() => from(this.web3Svc.getMultiplier())),

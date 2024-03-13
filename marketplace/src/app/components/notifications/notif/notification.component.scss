@@ -90,39 +90,44 @@
         color: rgba(var(--highlight), 1);
       }
     }
-  }
 
-  .footer {
-    display: flex;
-    align-items: flex-end;
-    justify-content: space-between;
+    .footer {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
 
-    padding-top: .75rem;
+      padding-top: .75rem;
 
-    a,
-    span {
-      display: inline-flex;
-      align-items: center;
+      a,
+      button,
+      span {
+        display: inline-flex;
+        align-items: center;
 
-      font-size: 1rem;
-      color: rgba(var(--highlight), 1);
-      font-weight: normal;
+        font-family: $secondary-font-stack;
+        font-size: 1rem;
+        color: rgba(var(--highlight), 1);
+        font-weight: normal;
 
-      svg {
-        margin-left: .5rem;
-        path {
-          fill: rgba(var(--highlight), 1);
+        background: none;
+        padding: 0;
+
+        svg {
+          margin-left: .5rem;
+          path {
+            fill: rgba(var(--highlight), 1);
+          }
         }
       }
-    }
 
-    .timestamp {
-      font-size: 1rem;
-      color: rgba(var(--white), .75);
-      font-weight: normal;
+      .timestamp {
+        font-size: 1rem;
+        color: rgba(var(--white), .75);
+        font-weight: normal;
 
-      padding: 0;
-      margin: 0;
+        padding: 0;
+        margin: 0;
+      }
     }
   }
 
@@ -203,6 +208,12 @@
     .txn-info {
       h4 {
         color: rgba(var(--pink), 1);
+      }
+
+      .footer {
+        button {
+
+        }
       }
     }
   }

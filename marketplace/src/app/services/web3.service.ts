@@ -24,7 +24,7 @@ import { magma } from '@/constants/magmaChain';
 
 import { Web3Modal } from '@web3modal/wagmi/dist/types/src/client';
 import { createWeb3Modal } from '@web3modal/wagmi';
-import { Account, TransactionReceipt, WatchBlockNumberReturnType, decodeFunctionData, formatEther, isAddress, parseEther, zeroAddress } from 'viem';
+import { Account, Log, TransactionReceipt, WatchBlockNumberReturnType, WatchContractEventReturnType, decodeFunctionData, formatEther, isAddress, parseEther, zeroAddress } from 'viem';
 
 const marketAddress = environment.marketAddress;
 const pointsAddress = environment.pointsAddress;
@@ -92,6 +92,7 @@ export class Web3Service {
 
     this.createListeners();
     this.startBlockWatcher();
+    this.startPointsWatcher();
   }
 
   createListeners(): void {
@@ -121,6 +122,23 @@ export class Web3Service {
       onBlockNumber: (blockNumber) => {
         const currentBlock = Number(blockNumber);
         this.store.dispatch(appStateActions.setCurrentBlock({ currentBlock }));
+      }
+    });
+  }
+
+  pointsWatcher!: WatchContractEventReturnType | undefined;
+  startPointsWatcher(): void {
+    if (this.pointsWatcher) return;
+
+    this.pointsWatcher = getPublicClient(this.config)?.watchContractEvent({
+      address: pointsAddress as `0x${string}`,
+      abi: PointsAbi,
+      onLogs: (logs) => {
+        logs.forEach((log: any) => {
+          if (log.eventName === 'PointsAdded') this.store.dispatch(appStateActions.pointsChanged({ log }));
+          // TODO: Add event to smart contract
+          if (log.eventName === 'MultiplierSet') {}
+        });
       }
     });
   }

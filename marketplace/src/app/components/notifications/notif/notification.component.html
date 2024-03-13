@@ -37,7 +37,7 @@
 
         <div class="footer">
           @if (txn.type === 'chat' && txn.chatAddress) {
-            <a href="#">View message</a>
+            <button (click)="setChatActive(txn.chatAddress)">View message</button>
           }
 
           @if (txn.hash) {
@@ -53,9 +53,9 @@
             </span>
           }
 
-          <!-- @if (!dismissible) {
+          @if (txn.type === 'chat') {
             <div class="timestamp">{{ txn.timestamp | timeago : true }}</div>
-          } -->
+          }
         </div>
       </div>
     </div>

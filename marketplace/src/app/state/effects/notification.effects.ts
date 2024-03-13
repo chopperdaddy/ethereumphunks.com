@@ -28,14 +28,15 @@ export class NotificationEffects {
   addressChanged$ = createEffect(() => this.actions$.pipe(
     ofType(setWalletAddress),
     map((action) => {
-      const stored = localStorage.getItem(`EtherPhunks_notifs__${environment.chainId}__${action.walletAddress}`);
+      const address = action.walletAddress?.toLowerCase();
+      const stored = localStorage.getItem(`EtherPhunks_notifs__${environment.chainId}__${address}`);
       const notifications = JSON.parse(stored || '[]')
       return setNotifications({ notifications });
     })
   ));
 
-  onNotificationEvent$ = createEffect(() => this.actions$.pipe(
-    ofType(upsertNotification, removeNotification),
+  onRemoveNotification$ = createEffect(() => this.actions$.pipe(
+    ofType(removeNotification),
     withLatestFrom(
       this.store.select(selectNotifications),
       this.store.select(selectWalletAddress),
@@ -46,23 +47,35 @@ export class NotificationEffects {
         JSON.stringify(notifications.filter((txn: Notification) => txn.type === 'complete' || txn.type === 'event'))
       );
     }),
-    concatMap(([action]) =>
-      action.type === '[App State] Upsert Notification'
-      && (
-        action.notification.type === 'complete'
-        || action.notification.type === 'error'
-      ) ?
-      of(action).pipe(
-        delay(5000),
-        withLatestFrom(this.store.select(selectNotifHoverState)),
-        tap(([action, notifHoverState]) => {
-          if (!notifHoverState[action.notification.id]) {
-            this.store.dispatch(removeNotification({ txId: action.notification.id }));
-          }
-        })
-      ) :
-      EMPTY
-    )
+  ), { dispatch: false });
+
+  onNotificationEvent$ = createEffect(() => this.actions$.pipe(
+    ofType(upsertNotification),
+    withLatestFrom(
+      this.store.select(selectNotifications),
+      this.store.select(selectWalletAddress),
+    ),
+    tap(([_, notifications, address]) => {
+      localStorage.setItem(
+        `EtherPhunks_notifs__${environment.chainId}__${address}`,
+        JSON.stringify(notifications.filter((txn: Notification) => txn.type === 'complete' || txn.type === 'event'))
+      );
+    }),
+    switchMap(([action]) => {
+      // If the notification is a complete or error, remove it after 5 seconds
+      if (action.notification.type === 'complete' || action.notification.type === 'error') {
+        return of(action).pipe(
+          delay(5000),
+          withLatestFrom(this.store.select(selectNotifHoverState)),
+          tap(([action, notifHoverState]) => {
+            if (!notifHoverState[action.notification.id]) {
+              this.store.dispatch(removeNotification({ txId: action.notification.id }));
+            }
+          })
+        );
+      }
+      return EMPTY;
+    })
   ), { dispatch: false });
 
   onBlockNumber$ = createEffect(() => this.actions$.pipe(
@@ -71,9 +84,11 @@ export class NotificationEffects {
     switchMap(([action, address]) => {
       const currentBlock = action.currentBlock;
       const storedBlock = localStorage.getItem('EtherPhunks_currentBlock');
-      if (address && storedBlock && (currentBlock - Number(storedBlock)) > 2) {
+      // console.log({currentBlock, storedBlock}, currentBlock - Number(storedBlock));
+      if (address && storedBlock && (currentBlock - Number(storedBlock)) > 0) {
         return this.dataSvc.fetchMissedEvents(address, Number(storedBlock)).pipe(
           tap((events) => {
+            // console.log('missed events', events);
             for (const event of events) this.checkEventForPurchaseFromUser(event, address);
           }),
           catchError((err) => of([])),

@@ -17,7 +17,7 @@ import * as dataStateSelectors from '@/state/selectors/data-state.selectors';
 import * as marketStateActions from '@/state/actions/market-state.actions';
 import * as marketStateSelectors from '@/state/selectors/market-state.selectors';
 
-import { asyncScheduler, filter, map, mergeMap, switchMap, throttleTime, withLatestFrom } from 'rxjs';
+import { asyncScheduler, filter, map, mergeMap, switchMap, tap, throttleTime, withLatestFrom } from 'rxjs';
 
 @Injectable()
 export class DataStateEffects {
