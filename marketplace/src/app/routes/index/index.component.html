@@ -21,7 +21,8 @@
                   <a
                     class="highlight"
                     [routerLink]="['market', 'owned']"
-                    [queryParams]="{ address }">
+                    [queryParams]="{ address }"
+                    [relativeTo]="route">
 
                     ({{ ownedData.length | number }}) view all.
                   </a>
@@ -51,7 +52,7 @@
               <p i18n>The lowest price {{ (activeCollection$ | async)?.singleName }} currently for sale is <span class="bold">Ξ{{ ethPrice | number }} ({{ (ethPrice * ((usd$ | async) || 0)) | currency }} USD)</span>.</p>
             }
 
-            <p i18n>Showing lowest price offers, <a class="highlight" [routerLink]="['market', 'listings']">({{ listings.length | number }}) view all.</a></p>
+            <p i18n>Showing lowest price offers, <a class="highlight" [routerLink]="['market', 'listings']" [relativeTo]="route">({{ listings.length | number }}) view all.</a></p>
           </div>
 
           <app-phunk-grid
@@ -98,7 +99,15 @@
         @if ((all$ | async); as allPhunks) {
           @if ((activeCollection$ | async); as activeCollection) {
             <div class="section-stats-wrapper">
-              <p i18n><a class="highlight" [routerLink]="['market', 'all']">View all {{ activeCollection.supply | number }} {{ activeCollection.singleName }}s.</a></p>
+              <p i18n>
+                <a
+                  class="highlight"
+                  [routerLink]="['market', 'all']"
+                  [relativeTo]="route">
+
+                  View all {{ activeCollection.supply | number }} {{ activeCollection.singleName }}s.
+                </a>
+              </p>
             </div>
 
             <app-phunk-grid

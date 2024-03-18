@@ -27,7 +27,7 @@ import { UtilService } from '@/services/util.service';
 import { Phunk } from '@/models/db';
 import { GlobalState, Notification } from '@/models/global-state';
 
-import { Subject, filter, map, switchMap, takeUntil, tap } from 'rxjs';
+import { Subject, filter, firstValueFrom, map, switchMap, takeUntil, tap } from 'rxjs';
 
 import { environment } from 'src/environments/environment';
 
@@ -39,6 +39,8 @@ import * as dataStateSelectors from '@/state/selectors/data-state.selectors';
 
 import { selectNotifications } from '@/state/selectors/notification.selectors';
 import { upsertNotification } from '@/state/actions/notification.actions';
+import { signMessage } from '@wagmi/core';
+import { HttpClient } from '@angular/common/http';
 
 interface TxStatus {
   title: string;
@@ -131,6 +133,7 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
 
   constructor(
     private store: Store<GlobalState>,
+    private http: HttpClient,
     public route: ActivatedRoute,
     public router: Router,
     public dataSvc: DataService,
@@ -531,6 +534,26 @@ export class ItemViewComponent implements AfterViewInit, OnDestroy {
   async checkConsenus(phunk: Phunk): Promise<void> {
     const res = await this.dataSvc.checkConsensus([phunk]);
     if (!res[0]?.consensus) throw new Error('Consensus not reached. Contact Support @etherphunks');
+  }
+
+  async bridgePhunk(phunk: Phunk): Promise<void> {
+
+    const config = this.web3Svc.config;
+    const signature = await signMessage(config, {
+      message: 'bridge-phunk',
+    });
+    console.log({ phunk, signature });
+
+    const url = `http://localhost:3000/bridge-phunk`;
+    const res = await firstValueFrom(
+      this.http.post(url, {
+        hashId: phunk.hashId,
+        sha: phunk.sha,
+        signature
+      })
+    );
+
+    console.log({res});
   }
 
   // async sendToAuction(hashId: string) {

@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
+import { ActivatedRoute, RouterModule } from '@angular/router';
 import { IntersectionObserverModule } from '@ng-web-apis/intersection-observer';
 
 import { Store } from '@ngrx/store';
@@ -65,5 +65,6 @@ export class IndexComponent {
     private store: Store<GlobalState>,
     public themeSvc: ThemeService,
     public dataSvc: DataService,
+    public route: ActivatedRoute
   ) {}
 }

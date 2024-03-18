@@ -19,10 +19,10 @@ export const routes: Routes = [
     path: 'details/:tokenId',
     loadComponent: () => import('./routes/item-view/item-view.component').then(mod => mod.ItemViewComponent)
   },
-  {
-    path: 'tests',
-    loadComponent: () => import('./routes/tests/tests.component').then(mod => mod.TestsComponent)
-  },
+  // {
+  //   path: 'tests',
+  //   loadComponent: () => import('./routes/tests/tests.component').then(mod => mod.TestsComponent)
+  // },
   {
     path: 'curated',
     loadComponent: () => import('./routes/curated/curated.component').then(mod => mod.CuratedComponent)
