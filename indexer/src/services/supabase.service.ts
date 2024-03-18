@@ -173,7 +173,7 @@ export class SupabaseService {
     const response: EthscriptionResponse = await supabase
       .from('ethscriptions' + this.suffix)
       .select('*')
-      .eq('hashId', hash.toLowerCase());
+      .eq('hashId', hash?.toLowerCase());
 
     const { data, error } = response;
 

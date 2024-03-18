@@ -52,6 +52,8 @@ export class ProcessingService {
     const latestBlock = await this.web3Svc.getBlock();
     const latestBlockNum = Number(latestBlock.number);
 
+    if (startBlock > latestBlockNum) throw new Error('RPC Error: Start block is greater than latest block');
+
     while (startBlock < latestBlockNum) {
       await this.addBlockToQueue(startBlock, new Date().getTime());
       startBlock++;
@@ -530,8 +532,6 @@ export class ProcessingService {
     for (const log of marketplaceLogs) {
       if (!this.web3Svc.marketAddress.includes(log.address?.toLowerCase())) continue;
 
-      // console.log({marketplaceLogs, transaction, createdAt});
-
       let decoded: DecodeEventLogReturnType;
       try {
         decoded = decodeEventLog({
@@ -550,8 +550,6 @@ export class ProcessingService {
         decoded,
         log
       );
-
-      // console.log({ event });
 
       if (event) events.push(event);
     }
@@ -605,42 +603,6 @@ export class ProcessingService {
       };
     }
 
-    // if (eventName === 'PhunkBidEntered') {
-    //   const { phunkId: hashId, fromAddress, value } = args;
-    //   await this.sbSvc.createBid(txn, createdAt, hashId, fromAddress, value);
-    //   return {
-    //     txId: txn.hash + log.logIndex,
-    //     type: eventName,
-    //     hashId: hashId.toLowerCase(),
-    //     from: txn.from?.toLowerCase(),
-    //     to: zeroAddress,
-    //     blockHash: txn.blockHash,
-    //     txIndex: txn.transactionIndex,
-    //     txHash: txn.hash,
-    //     blockNumber: Number(txn.blockNumber),
-    //     blockTimestamp: createdAt,
-    //     value: value.toString(),
-    //   };
-    // }
-
-    // if (eventName === 'PhunkBidWithdrawn') {
-    //   const { phunkId: hashId } = args;
-    //   await this.sbSvc.removeBid(hashId);
-    //   return {
-    //     txId: txn.hash + log.logIndex,
-    //     type: eventName,
-    //     hashId: hashId.toLowerCase(),
-    //     from: txn.from?.toLowerCase(),
-    //     to: zeroAddress,
-    //     blockHash: txn.blockHash,
-    //     txIndex: txn.transactionIndex,
-    //     txHash: txn.hash,
-    //     blockNumber: Number(txn.blockNumber),
-    //     blockTimestamp: createdAt,
-    //     value: BigInt(0).toString(),
-    //   };
-    // }
-
     if (eventName === 'PhunkNoLongerForSale') {
       const { phunkId: hashId } = args;
       await this.sbSvc.removeListing(hashId);
@@ -668,7 +630,7 @@ export class ProcessingService {
       // We do this here because this event is emitted after
       // transfer of ownership. If the listing was NOT created
       // by the previous owner, we should ignore it.
-      if (phunk.prevOwner && txn.from !== phunk.prevOwner) {
+      if (phunk.prevOwner && (phunk.prevOwner !== txn.from)) {
         await writeFile(`./${hashId}.json`, JSON.stringify({ txn: txn.hash, phunk }));
         Logger.error('Listing not created by previous owner', `${hashId.toLowerCase()}`);
 

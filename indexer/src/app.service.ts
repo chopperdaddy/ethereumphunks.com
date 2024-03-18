@@ -43,7 +43,7 @@ export class AppService {
       await this.utilSvc.delay(10000);
       await this.blockSvc.pauseQueue();
 
-      const startBlock = await this.sbSvc.getLastBlock(Number(process.env.CHAIN_ID)) || originBlock;
+      const startBlock = (await this.sbSvc.getLastBlock(Number(process.env.CHAIN_ID)));
 
       Logger.debug('Starting Backfill', chain.toUpperCase());
       await this.processSvc.startBackfill(startBlock);

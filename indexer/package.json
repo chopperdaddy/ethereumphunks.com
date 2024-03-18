@@ -11,7 +11,7 @@
     "start": "nest start",
     "start:dev": "nest start --watch",
     "start:prod": "node dist/main",
-    "engage": "nest build goerli && nest build mainnet && pm2 start pm2.config.js",
+    "engage": "nest build sepolia && nest build mainnet && pm2 start pm2.config.js",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
     "copy:assets": "cp -rv ./src/temp ./dist/temp"
   },

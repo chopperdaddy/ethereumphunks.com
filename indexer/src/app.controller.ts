@@ -1,9 +1,20 @@
-import { Controller, Get, Query, Req, Res } from '@nestjs/common';
+import { Body, Controller, Get, Post, Query, Req, Res } from '@nestjs/common';
 import { AppService } from './app.service';
+import { VerificationService } from './services/verification.service';
 
 @Controller()
 export class AppController {
-  constructor(private readonly appService: AppService) {}
+
+  constructor(
+    private readonly appService: AppService,
+    private readonly verifSvc: VerificationService
+  ) {}
+
+  @Post('bridge-phunk')
+  async bridgePhunk(@Body() body): Promise<any> {
+    console.log({ body })
+    return await this.verifSvc.verifySignature(body);
+  }
 
   // get merkloe proofs from leaf
   @Get('merkle-proofs')

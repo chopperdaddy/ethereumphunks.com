@@ -15,6 +15,7 @@ import { DataService } from './services/data.service';
 import { UtilityService } from './utils/utility.service';
 import { CuratedService } from './services/curated.service';
 import { TelegramService } from './modules/notifs/services/telegram.service';
+import { VerificationService } from './services/verification.service';
 
 @Module({
   imports: [
@@ -36,6 +37,7 @@ import { TelegramService } from './modules/notifs/services/telegram.service';
     DataService,
     CuratedService,
     TelegramService,
+    VerificationService,
     // Time service gets estimates of block times
     // TimeService,
     // PG service is for fun
