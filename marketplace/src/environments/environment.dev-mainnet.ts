@@ -21,6 +21,7 @@ export const environment = {
   pointsAddress: '0x24d667C5195a767819C9313D6ceEC09D0Dc06Cfd'.toLowerCase(),
   bridgeAddress: ''.toLowerCase(),
   bridgeAddressL2: '0x26e8fD77346b4B006C5Df61f9706581933560F12'.toLowerCase(),
+  auctionHouseAddress: ''.toLowerCase(),
 
   // relayUrl: 'https://relay.ethereumphunks.com',
   relayUrl: 'http://10.0.0.73:3002',
