@@ -16,6 +16,10 @@ import { AdminModule } from '@/modules/admin/admin.module';
 import { ProcessingModule } from '@/modules/processing/processing.module';
 import { EvmModule } from '@/modules/evm/evm.module';
 
+import { AuctionsModule } from '@/modules/auctions/auctions.module';
+import { MarketplaceModule } from '@/modules/marketplace/marketplace.module';
+import { PointsModule } from '@/modules/points/points.module';
+
 import { AppService } from '@/app.service';
 import { AppController } from '@/app.controller';
 import { AppGateway } from '@/app.gateway';
@@ -25,6 +29,7 @@ import { ProcessingService } from '@/modules/processing/processing.service';
 
 import { ApiKeyMiddleware } from '@/middleware/api-key.middleware';
 import { AppConfigModule } from '@/config/config.module';
+
 @Module({
   imports: [
     AppConfigModule,
@@ -41,6 +46,10 @@ import { AppConfigModule } from '@/config/config.module';
     StorageModule,
     AdminModule,
     ProcessingModule,
+
+    MarketplaceModule,
+    PointsModule,
+    AuctionsModule,
 
     ConditionalModule.registerWhen(
       BridgeL1Module,

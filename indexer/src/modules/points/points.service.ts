@@ -1,9 +1,11 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
 
-import { decodeEventLog } from 'viem';
+import { ContractEventName, decodeEventLog, DecodeEventLogReturnType, Log, Transaction, TransactionReceipt } from 'viem';
+import { ExtractAbiEvent } from 'abitype';
 
-import { pointsL1 } from '@/abi';
+import { marketL1, pointsL1 } from '@/abi';
 
+import { AppConfigService } from '@/config/config.service';
 import { StorageService } from '@/modules/storage/storage.service';
 import { Web3Service } from '@/modules/shared/services/web3.service';
 
@@ -13,6 +15,7 @@ export class PointsService {
   constructor(
     @Inject('WEB3_SERVICE_L1') private readonly web3SvcL1: Web3Service,
     private readonly storageSvc: StorageService,
+    private readonly configSvc: AppConfigService,
   ) {}
 
   /**
@@ -20,28 +23,42 @@ export class PointsService {
    * @param pointsLogs - An array of points event logs.
    * @returns A Promise that resolves when the processing is complete.
    */
-  async processPointsEvent(pointsLogs: any[]): Promise<void> {
+  async processPointsEvents(receipt: TransactionReceipt): Promise<void> {
 
-    const usersToUpdate = new Set<`0x${string}`>();
+    const logs = receipt.logs as Log<bigint, number, false, ExtractAbiEvent<typeof pointsL1, ContractEventName<typeof pointsL1>>>[];
+    const pointsLogs = logs.filter(
+      (log) => log.address.toLowerCase() === this.configSvc.contracts.points.l1.toLowerCase()
+    );
+    if (pointsLogs.length) {
+      Logger.debug(
+        `Processing Points event (L1)`,
+        receipt.transactionHash
+      );
 
-    for (const log of pointsLogs) {
-      const decoded = decodeEventLog({
-        abi: pointsL1,
-        data: log.data,
-        topics: log.topics,
-      });
+      const usersToUpdate = new Set<`0x${string}`>();
 
-      const { args, eventName } = decoded as any;
+      for (const log of pointsLogs) {
+        if (!this.configSvc.contracts.points.l1.includes(log.address?.toLowerCase())) continue;
 
-      if (!eventName || !args) return;
-      if (eventName === 'PointsAdded') {
-        const { user, amount } = args;
-        usersToUpdate.add(user);
+        let decoded: DecodeEventLogReturnType<typeof pointsL1, ContractEventName<typeof pointsL1>>;
+        try {
+          decoded = decodeEventLog({
+            abi: pointsL1,
+            data: log.data,
+            topics: log.topics,
+          });
+        } catch (error) {
+          console.log(error);
+          continue;
+        }
+
+        const { args, eventName } = decoded;
+        if (!eventName || !args) continue;
+
+        if (eventName === 'PointsAdded') usersToUpdate.add(args.user);
       }
-    }
 
-    for (const user of usersToUpdate) {
-      await this.distributePoints(user);
+      for (const user of usersToUpdate) await this.distributePoints(user);
     }
   }
 

@@ -40,6 +40,7 @@ export class MarketplaceService {
     const marketplaceLogs = logs.filter(
       (log) => log.address.toLowerCase() === this.configSvc.contracts.market.l1.toLowerCase()
     );
+
     if (marketplaceLogs.length) {
       Logger.debug(
         `Processing EtherPhunk Marketplace event (L1)`,

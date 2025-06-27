@@ -8,11 +8,12 @@ import { UtilityService } from '@/modules/shared/services/utility.service';
 import { TimeService } from '@/modules/shared/services/time.service';
 import { EthscriptionsService } from '@/modules/ethscriptions/ethscriptions.service';
 import { CommentsService } from '@/modules/comments/comments.service';
+import { MarketplaceService } from '@/modules/marketplace/marketplace.service';
+import { PointsService } from '@/modules/points/points.service';
 
 import { Event } from '@/modules/storage/models/db';
 
 import { FormattedTransaction, GetBlockReturnType, Transaction, TransactionReceipt } from 'viem';
-import { MarketplaceService } from '../marketplace/marketplace.service';
 
 const CONFIRMATIONS = 6;
 const BLOCK_HISTORY = 30;
@@ -37,6 +38,7 @@ export class ProcessingService {
     private readonly ethsSvc: EthscriptionsService,
     private readonly commentsSvc: CommentsService,
     private readonly marketplaceSvc: MarketplaceService,
+    private readonly pointsSvc: PointsService,
     private readonly telegramSvc: TelegramService
   ) {}
 
@@ -187,24 +189,8 @@ export class ProcessingService {
     );
     if (marketplaceEvents?.length) events.push(...marketplaceEvents);
 
-    // const pointsLogs = receipt.logs.filter(
-    //   (log: any) => log.address.toLowerCase() === this.configSvc.contracts.points.l1.toLowerCase()
-    // );
-    // if (pointsLogs.length) {
-    //   Logger.debug(
-    //     `Processing Points event (L1)`,
-    //     transaction.hash
-    //   );
-    //   await this.processPointsEvent(pointsLogs);
-    // }
-
-    //   // Check if there are any events
-    //   // If there aer no events, it means either:
-    //   // 1. The listing was not created by the previous owner
-    //   // 2. The listing was not removed
-    //   if (!eventArr?.length) return events;
-    //   events.push(...eventArr);
-    // }
+    // Process points events
+    await this.pointsSvc.processPointsEvents(receipt);
 
     // const bridgeMainnetLogs = receipt.logs.filter(
     //   (log: any) => log.address.toLowerCase() === bridgeAddressL1.toLowerCase()
