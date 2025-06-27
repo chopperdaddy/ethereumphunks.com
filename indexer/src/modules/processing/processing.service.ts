@@ -12,6 +12,7 @@ import { CommentsService } from '@/modules/comments/comments.service';
 import { Event } from '@/modules/storage/models/db';
 
 import { FormattedTransaction, GetBlockReturnType, Transaction, TransactionReceipt } from 'viem';
+import { MarketplaceService } from '../marketplace/marketplace.service';
 
 const CONFIRMATIONS = 6;
 const BLOCK_HISTORY = 30;
@@ -35,6 +36,7 @@ export class ProcessingService {
     private readonly timeSvc: TimeService,
     private readonly ethsSvc: EthscriptionsService,
     private readonly commentsSvc: CommentsService,
+    private readonly marketplaceSvc: MarketplaceService,
     private readonly telegramSvc: TelegramService
   ) {}
 
@@ -80,23 +82,6 @@ export class ProcessingService {
     // Add the block to the processed blocks
     this.processedBlocks.push({ number: blockNumber, hash, parentHash, confirmed: false });
     if (this.processedBlocks.length > BLOCK_HISTORY) this.processedBlocks.shift();
-  }
-
-  /**
-   * Processes a single transaction.
-   * @param hash - The hash of the transaction to process.
-   */
-  async processSingleTransaction(hash: `0x${string}`) {
-    const txn = await this.web3SvcL1.getTransaction(hash);
-    const receipt = await this.web3SvcL1.getTransactionReceipt(hash);
-
-    const block = await this.web3SvcL1.getBlock({ blockNumber: Number(txn.blockNumber) });
-    const createdAt = new Date(Number(block.timestamp) * 1000);
-
-    // Process the transactions & get the events
-    const events = await this.processTransactions([{ transaction: txn, receipt }], createdAt);
-    // Add the events to the database
-    if (events.length) await this.storageSvc.addEvents(events);
   }
 
   /**
@@ -194,6 +179,45 @@ export class ProcessingService {
       createdAt
     );
 
+    // Process marketplace events
+    const marketplaceEvents = await this.marketplaceSvc.processEtherPhunkMarketplaceEvents(
+      transaction,
+      receipt,
+      createdAt
+    );
+    if (marketplaceEvents?.length) events.push(...marketplaceEvents);
+
+    // const pointsLogs = receipt.logs.filter(
+    //   (log: any) => log.address.toLowerCase() === this.configSvc.contracts.points.l1.toLowerCase()
+    // );
+    // if (pointsLogs.length) {
+    //   Logger.debug(
+    //     `Processing Points event (L1)`,
+    //     transaction.hash
+    //   );
+    //   await this.processPointsEvent(pointsLogs);
+    // }
+
+    //   // Check if there are any events
+    //   // If there aer no events, it means either:
+    //   // 1. The listing was not created by the previous owner
+    //   // 2. The listing was not removed
+    //   if (!eventArr?.length) return events;
+    //   events.push(...eventArr);
+    // }
+
+    // const bridgeMainnetLogs = receipt.logs.filter(
+    //   (log: any) => log.address.toLowerCase() === bridgeAddressL1.toLowerCase()
+    // );
+    // if (bridgeMainnetLogs.length) {
+    //   Logger.debug(
+    //     `Processing Points event (${chain})`,
+    //     transaction.hash
+    //   );
+    //   await this.processBridgeMainnetEvents(bridgeMainnetLogs);
+    //   return events;
+    // }
+
     // Process nft events
     // const nftEvents = await this.nftSvc.processNftEvents(
     //   transaction,
@@ -203,6 +227,23 @@ export class ProcessingService {
     // if (nftEvents?.length) events.push(...nftEvents);
 
     return events;
+  }
+
+  /**
+   * Processes a single transaction.
+   * @param hash - The hash of the transaction to process.
+   */
+  async processSingleTransaction(hash: `0x${string}`) {
+    const txn = await this.web3SvcL1.getTransaction(hash);
+    const receipt = await this.web3SvcL1.getTransactionReceipt(hash);
+
+    const block = await this.web3SvcL1.getBlock({ blockNumber: Number(txn.blockNumber) });
+    const createdAt = new Date(Number(block.timestamp) * 1000);
+
+    // Process the transactions & get the events
+    const events = await this.processTransactions([{ transaction: txn, receipt }], createdAt);
+    // Add the events to the database
+    if (events.length) await this.storageSvc.addEvents(events);
   }
 
   /**

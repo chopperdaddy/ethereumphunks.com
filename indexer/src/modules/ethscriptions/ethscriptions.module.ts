@@ -1,4 +1,6 @@
 import { Module, forwardRef } from '@nestjs/common';
+import { ConditionalModule } from '@nestjs/config';
+
 import { HttpModule } from '@nestjs/axios';
 
 import { AppConfigModule } from '@/config/config.module';
@@ -10,7 +12,9 @@ import { StorageModule } from '@/modules/storage/storage.module';
 
 import { EthscriptionsController } from './ethscriptions.controller';
 import { EthscriptionsService } from './ethscriptions.service';
-import { ConditionalModule } from '@nestjs/config';
+
+import { MarketplaceModule } from '@/modules/marketplace/marketplace.module';
+import { PointsModule } from '@/modules/points/points.module';
 
 @Module({
   imports: [
@@ -20,6 +24,8 @@ import { ConditionalModule } from '@nestjs/config';
     SharedModule,
     NotifsModule,
     StorageModule,
+    MarketplaceModule,
+    PointsModule,
 
     ConditionalModule.registerWhen(
       forwardRef(() => QueueModule),

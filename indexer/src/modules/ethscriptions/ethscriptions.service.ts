@@ -1,20 +1,21 @@
 import { Inject, Injectable, Logger, Optional } from '@nestjs/common';
 
+import { AppConfigService } from '@/config/config.service';
 import { UtilityService } from '@/modules/shared/services/utility.service';
 import { Web3Service } from '@/modules/shared/services/web3.service';
 import { StorageService } from '@/modules/storage/storage.service';
-import { AppConfigService } from '@/config/config.service';
+import { MarketplaceService } from '@/modules/marketplace/marketplace.service';
+import { PointsService } from '@/modules/points/points.service';
 
 import { BridgeProcessingQueue } from '@/modules/queue/queues/bridge-processing.queue';
 
 import * as esips from '@/modules/ethscriptions/constants/esips';
-import { esip1, esip2, bridgeL1, marketL1, pointsL1 } from '@/abi';
+import { esip1, esip2, bridgeL1 } from '@/abi';
 
 import { AttributeItem, Ethscription, Event } from '@/modules/storage/models/db';
 
-import { ContractEventName, DecodeEventLogReturnType, Log, Transaction, TransactionReceipt, decodeEventLog, hexToString, zeroAddress } from 'viem';
+import { Log, Transaction, TransactionReceipt, decodeEventLog, hexToString, zeroAddress } from 'viem';
 
-import { mkdir, writeFile } from 'fs/promises';
 import { createHash } from 'crypto';
 
 @Injectable()
@@ -26,7 +27,9 @@ export class EthscriptionsService {
     @Inject('WEB3_SERVICE_L2') private readonly web3SvcL2: Web3Service,
     private readonly storageSvc: StorageService,
     private readonly utilitySvc: UtilityService,
-    private readonly configSvc: AppConfigService
+    private readonly configSvc: AppConfigService,
+    private readonly marketplaceSvc: MarketplaceService,
+    private readonly pointsSvc: PointsService,
   ) {}
 
   /**
@@ -124,54 +127,6 @@ export class EthscriptionsService {
       if (eventArr?.length) events.push(...eventArr);
     }
 
-    // console.log(receipt);
-
-    // Filter logs for EtherPhunk Marketplace events
-    const marketplaceLogs = receipt.logs.filter(
-      (log: any) => log.address.toLowerCase() === this.configSvc.contracts.market.l1.toLowerCase()
-    );
-    if (marketplaceLogs.length) {
-      Logger.debug(
-        `Processing EtherPhunk Marketplace event (L1)`,
-        transaction.hash
-      );
-      const eventArr = await this.processEtherPhunkMarketplaceEvents(
-        marketplaceLogs,
-        transaction,
-        createdAt
-      );
-
-      // Check if there are any events
-      // If there aer no events, it means either:
-      // 1. The listing was not created by the previous owner
-      // 2. The listing was not removed
-      if (!eventArr?.length) return events;
-      events.push(...eventArr);
-    }
-
-    // const bridgeMainnetLogs = receipt.logs.filter(
-    //   (log: any) => log.address.toLowerCase() === bridgeAddressL1.toLowerCase()
-    // );
-    // if (bridgeMainnetLogs.length) {
-    //   Logger.debug(
-    //     `Processing Points event (${chain})`,
-    //     transaction.hash
-    //   );
-    //   await this.processBridgeMainnetEvents(bridgeMainnetLogs);
-    //   return events;
-    // }
-
-    const pointsLogs = receipt.logs.filter(
-      (log: any) => log.address.toLowerCase() === this.configSvc.contracts.points.l1.toLowerCase()
-    );
-    if (pointsLogs.length) {
-      Logger.debug(
-        `Processing Points event (L1)`,
-        transaction.hash
-      );
-      await this.processPointsEvent(pointsLogs);
-    }
-
     return events;
   }
 
@@ -207,99 +162,6 @@ export class EthscriptionsService {
       blockTimestamp: createdAt,
       value: BigInt(0).toString(),
     };
-  }
-
-  /**
-   * Processes the bridge mainnet (L1) events.
-   *
-   * @param bridgeMainnetLogs - An array of bridge mainnet logs.
-   * @returns A promise that resolves to void.
-   */
-  async processBridgeMainnetEvents(bridgeMainnetLogs: any[]): Promise<void> {
-    for (const log of bridgeMainnetLogs) {
-      const decoded = decodeEventLog({
-        abi: bridgeL1,
-        data: log.data,
-        topics: log.topics,
-      });
-
-      const { args, eventName } = decoded as any;
-      if (!eventName || !args) return;
-
-      if (eventName === 'HashLocked') {
-        const { hashId, prevOwner } = args;
-
-        const locked = await this.storageSvc.lockEthscription(hashId);
-        if (!locked) throw new Error('Failed to lock ethscription');
-
-        // Bridge the ethscription
-        this.bridgeQueue.addHashLockedToQueue(hashId, prevOwner);
-
-        // args
-        // address prevOwner,
-        // bytes32 hashId,
-        // uint256 nonce,
-        // uint256 value
-      }
-
-      if (eventName === 'HashUnlocked') {
-        const { hashId, prevOwner } = args;
-        // const locked = await this.sbSvc.unlockEthscription(hashId);
-        // if (locked) throw new Error('Failed to unlock ethscription');
-
-        // args
-        // address prevOwner,
-        // bytes32 hashId
-      }
-    }
-  }
-
-  /**
-   * Processes the points event logs and updates the users' points.
-   * @param pointsLogs - An array of points event logs.
-   * @returns A Promise that resolves when the processing is complete.
-   */
-  async processPointsEvent(pointsLogs: any[]): Promise<void> {
-
-    const usersToUpdate = new Set<`0x${string}`>();
-
-    for (const log of pointsLogs) {
-      const decoded = decodeEventLog({
-        abi: pointsL1,
-        data: log.data,
-        topics: log.topics,
-      });
-
-      const { args, eventName } = decoded as any;
-
-      if (!eventName || !args) return;
-      if (eventName === 'PointsAdded') {
-        const { user, amount } = args;
-        usersToUpdate.add(user);
-      }
-    }
-
-    for (const user of usersToUpdate) {
-      await this.distributePoints(user);
-    }
-  }
-
-  /**
-   * Distributes points to a user from a given address.
-   * @param fromAddress The address from which the points will be distributed.
-   * @returns A Promise that resolves when the points are successfully distributed.
-   */
-  async distributePoints(fromAddress: `0x${string}`): Promise<void> {
-    try {
-      const points = await this.web3SvcL1.getPoints(fromAddress);
-      await this.storageSvc.updateUserPoints(fromAddress, Number(points));
-      Logger.log(
-        `Updated user points to ${points.toString()}`,
-        fromAddress
-      );
-    } catch (error) {
-      console.log(error);
-    }
   }
 
   /**
@@ -384,8 +246,6 @@ export class EthscriptionsService {
 
     const isMatchedHashId = ethscript.hashId.toLowerCase() === hashId.toLowerCase();
     const transferrerIsOwner = ethscript.owner.toLowerCase() === from.toLowerCase();
-
-    // console.log({ isMatchedHashId, transferrerIsOwner, ethscript });
 
     const samePrevOwner = (ethscript.prevOwner && prevOwner)
       ? ethscript.prevOwner.toLowerCase() === prevOwner.toLowerCase()
@@ -541,211 +401,49 @@ export class EthscriptionsService {
     return events;
   }
 
+  // TODO: Move this to the bridge module
   /**
-   * Processes the EtherPhunk marketplace contract events.
+   * Processes the bridge mainnet (L1) events.
    *
-   * @param marketplaceLogs - The array of marketplace logs.
-   * @param transaction - The transaction object.
-   * @param createdAt - The creation date of the events.
-   * @returns A promise that resolves to an array of events.
+   * @param bridgeMainnetLogs - An array of bridge mainnet logs.
+   * @returns A promise that resolves to void.
    */
-  async processEtherPhunkMarketplaceEvents(
-    marketplaceLogs: any[],
-    transaction: Transaction,
-    createdAt: Date
-  ): Promise<Event[]> {
+  async processBridgeMainnetEvents(bridgeMainnetLogs: any[]): Promise<void> {
+    for (const log of bridgeMainnetLogs) {
+      const decoded = decodeEventLog({
+        abi: bridgeL1,
+        data: log.data,
+        topics: log.topics,
+      });
 
-    const events = [];
-    for (const log of marketplaceLogs) {
-      if (!this.configSvc.contracts.market.l1.includes(log.address?.toLowerCase())) continue;
+      const { args, eventName } = decoded as any;
+      if (!eventName || !args) return;
 
-    // DecodeEventLogReturnType<typeof marketL1, ContractEventName<typeof marketL1>>
-      let decoded: DecodeEventLogReturnType<typeof marketL1, ContractEventName<typeof marketL1>>;
-      try {
-        decoded = decodeEventLog({
-          abi: marketL1,
-          data: log.data,
-          topics: log.topics,
-        });
-      } catch (error) {
-        console.log(error);
-        continue;
+      if (eventName === 'HashLocked') {
+        const { hashId, prevOwner } = args;
+
+        const locked = await this.storageSvc.lockEthscription(hashId);
+        if (!locked) throw new Error('Failed to lock ethscription');
+
+        // Bridge the ethscription
+        this.bridgeQueue.addHashLockedToQueue(hashId, prevOwner);
+
+        // args
+        // address prevOwner,
+        // bytes32 hashId,
+        // uint256 nonce,
+        // uint256 value
       }
 
-      const event = await this.processEtherPhunkMarketplaceEvent(
-        transaction,
-        createdAt,
-        decoded,
-        log
-      );
+      if (eventName === 'HashUnlocked') {
+        const { hashId, prevOwner } = args;
+        // const locked = await this.sbSvc.unlockEthscription(hashId);
+        // if (locked) throw new Error('Failed to unlock ethscription');
 
-      if (event) events.push(event);
-    }
-    return events;
-  }
-
-  /**
-   * Processes an individual EtherPhunk marketplace event.
-   *
-   * @param txn - The transaction object.
-   * @param createdAt - The timestamp when the event was created.
-   * @param decoded - The decoded event log.
-   * @param log - The log object.
-   * @returns A promise that resolves to an Event object.
-   */
-  async processEtherPhunkMarketplaceEvent(
-    txn: Transaction,
-    createdAt: Date,
-    decoded: DecodeEventLogReturnType<typeof marketL1, ContractEventName<typeof marketL1>>,
-    log: Log
-  ): Promise<Event> {
-    const { eventName } = decoded;
-    const { args } = decoded as any;
-
-    if (!eventName || !args) return;
-
-    const hashId =
-      args.id ||
-      args.phunkId ||
-      args.potentialEthscriptionId;
-
-    if (!hashId) return;
-
-    const phunk = await this.storageSvc.checkEthscriptionExistsByHashId(hashId);
-    if (!phunk) return;
-
-    if (eventName === 'PhunkBought') {
-      const { phunkId: hashId, fromAddress, toAddress, value } = args;
-
-      const removedListing = await this.storageSvc.removeListing(hashId);
-      if (!removedListing) return;
-
-      return {
-        txId: txn.hash + log.logIndex,
-        type: eventName,
-        hashId: hashId.toLowerCase(),
-        from: fromAddress.toLowerCase(),
-        to: toAddress.toLowerCase(),
-        blockHash: txn.blockHash,
-        txIndex: txn.transactionIndex,
-        txHash: txn.hash,
-        blockNumber: Number(txn.blockNumber),
-        blockTimestamp: createdAt,
-        value: value.toString(),
-      };
-    }
-
-    if (eventName === 'PhunkNoLongerForSale') {
-      const { phunkId: hashId } = args;
-
-      const removedListing = await this.storageSvc.removeListing(hashId);
-      if (!removedListing) return;
-
-      if (txn.from === phunk.prevOwner) {
-        return {
-          txId: txn.hash + log.logIndex,
-          type: eventName,
-          hashId: hashId.toLowerCase(),
-          from: txn.from?.toLowerCase(),
-          to: zeroAddress,
-          blockHash: txn.blockHash,
-          txIndex: txn.transactionIndex,
-          txHash: txn.hash,
-          blockNumber: Number(txn.blockNumber),
-          blockTimestamp: createdAt,
-          value: BigInt(0).toString(),
-        };
+        // args
+        // address prevOwner,
+        // bytes32 hashId
       }
-    }
-
-    if (eventName === 'PhunkOffered') {
-      const { phunkId: hashId, toAddress, minValue } = args;
-
-      // We do this here because this event is emitted after
-      // transfer of ownership. If the listing was NOT created
-      // by the previous owner, we should ignore it.
-      if (phunk.prevOwner && (phunk.prevOwner !== txn.from)) {
-
-        // Write the failed listing to a file
-        try { await mkdir('./failed'); } catch (error) {}
-        await writeFile(`./failed/${hashId}.json`, JSON.stringify({ txn: txn.hash, phunk }));
-        Logger.error(
-          'Listing not created by previous owner',
-          hashId
-        );
-
-        // Since this listing will STILL overwrite existing listings
-        // on the smart contract, we must delete it from the database
-        await this.storageSvc.removeListing(hashId);
-        return;
-      }
-
-      // console.log({ hashId, toAddress, minValue });
-
-      await this.storageSvc.createListing(txn, createdAt, hashId, toAddress, minValue);
-      return {
-        txId: txn.hash + log.logIndex,
-        type: eventName,
-        hashId: hashId.toLowerCase(),
-        from: txn.from?.toLowerCase(),
-        to: toAddress?.toLowerCase(),
-        blockHash: txn.blockHash,
-        txIndex: txn.transactionIndex,
-        txHash: txn.hash,
-        blockNumber: Number(txn.blockNumber),
-        blockTimestamp: createdAt,
-        value: minValue.toString(),
-      };
     }
   }
-
-  // /**
-  //  * Adds an ethscription to the database.
-  //  * @param body - The body of the ethscription.
-  //  * @returns A promise that resolves to an array of events.
-  //  */
-  // async addEthscription(body: { hash: string, attributes: AttributeItem }): Promise<any> {
-
-  //   let { hash, attributes } = body;
-
-  //   const transaction = await this.web3SvcL1.getTransaction(hash as `0x${string}`)
-  //   const block = await this.web3SvcL1.getBlock({ blockNumber: Number(transaction.blockNumber) });
-  //   const timestamp = new Date(Number(block.timestamp) * 1000);
-
-  //   const { input } = transaction;
-
-  //   // Make sure its an ethscription
-  //   const stringData = hexToString(input.toString() as `0x${string}`);
-  //   const cleanedString = stringData.replace(/\x00/g, '');
-  //   if (!cleanedString.startsWith('data:')) return [];
-
-  //   // Create sha and check if it exists
-  //   const sha = createHash('sha256').update(cleanedString).digest('hex');
-  //   const [ existsLocal, existsGlobal ] = await Promise.all([
-  //     this.sbSvc.checkEthscriptionExistsBySha(sha),
-  //     this.dataSvc.getEthscriptionByHashId(hash)
-  //   ]);
-
-  //   // Only process ones that don't already exist locally
-  //   if (existsLocal) return;
-
-  //   // Only process ones that already exist globally (ethscriptions)
-  //   if (!existsGlobal) return;
-
-  //   // Set the sha
-  //   attributes.sha = sha;
-
-  //   // Mime type
-  //   const base64Header = cleanedString.split(',')[0];
-  //   const mimeType = base64Header.match(/data:([^;]*);?/)[1];
-
-  //   // Create image buffer from data uri
-  //   const imageBuffer = Buffer.from(cleanedString.split(',')[1], 'base64');
-
-  //   // Upload image to storage bucket
-  //   await this.sbSvc.uploadImage(sha, imageBuffer, mimeType);
-
-  //   const event = await this.processEthscriptionCreationEvent(transaction, timestamp, attributes);
-  //   if (event) await this.sbSvc.addEvents([event]);
-  // }
 }
