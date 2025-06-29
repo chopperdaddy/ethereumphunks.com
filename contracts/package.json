@@ -2,7 +2,7 @@
   "scripts": {
     "compile": "npx hardhat compile",
     "test": "hardhat test",
-    "deploy": "npx hardhat run --network sepolia scripts/deploy-all.ts",
+    "deploy": "npx hardhat run --network sepolia scripts/4-deploy-auction.ts",
     "verify": "npx hardhat verify --network sepolia",
     "clean": "npx hardhat clean"
   },

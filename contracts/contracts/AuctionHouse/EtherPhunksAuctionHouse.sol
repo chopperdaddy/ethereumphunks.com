@@ -204,6 +204,14 @@ contract EtherPhunksAuctionHouse is
     }
 
     /**
+     * @notice Get auction details
+     * @dev This function returns the auction details for a given owner and hashId
+     */
+    function getAuction(address owner, bytes32 hashId) external view returns (IAuctionHouse.Auction memory) {
+        return auctions[owner][hashId];
+    }
+
+    /**
      * @notice Set the points address.
      * @dev This function can only be called by the owner.
      */
