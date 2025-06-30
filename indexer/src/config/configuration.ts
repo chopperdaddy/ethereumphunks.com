@@ -52,6 +52,9 @@ export const validationSchema = Joi.object({
 
   POINTS_ADDRESS_L1: Joi.string().required(),
   POINTS_ADDRESS_L2: Joi.string().required(),
+
+  AUCTION_HOUSE_ADDRESS_L1: Joi.string().required(),
+
   // Relayer
   RELAY_SIGNER_ADDRESS_L1: Joi.string().required(),
   RELAY_SIGNER_PK_L1: Joi.string().required(),
@@ -113,6 +116,9 @@ export default registerAs('app', (): AppConfig => {
         bridge: {
           l1: process.env.BRIDGE_ADDRESS_L1.toLowerCase() as `0x${string}`,
           l2: process.env.BRIDGE_ADDRESS_L2.toLowerCase() as `0x${string}`,
+        },
+        auctionHouse: {
+          l1: process.env.AUCTION_HOUSE_ADDRESS_L1.toLowerCase() as `0x${string}`,
         },
       },
       rpc: {

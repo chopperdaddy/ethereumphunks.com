@@ -42,6 +42,9 @@ export type ChainConfig = {
       l1: `0x${string}`;
       l2: `0x${string}`;
     };
+    auctionHouse: {
+      l1: `0x${string}`;
+    };
   };
   rpc: {
     l1: {
