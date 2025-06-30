@@ -1,18 +1,22 @@
-import { Component, Input } from '@angular/core';
+import { Component, effect, input, Input, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 
-import { Store } from '@ngrx/store';
+import { toObservable } from '@angular/core/rxjs-interop';
+import { filter, map, switchMap, tap } from 'rxjs';
 
 import { Web3Service } from '@/services/web3.service';
+import { DataService } from '@/services/data.service';
 
 import { TimerComponent } from '@/components/auction/timer/timer.component';
 import { BidHistoryComponent } from '@/components/auction/bid-history/bid-history.component';
 
 import { WeiToEthPipe } from '@/pipes/wei-to-eth.pipe';
 
-import { Auction } from '@/models/db';
+import { Phunk } from '@/models/db';
+import { FormattedAuction, formatAuction, isValidAuction } from '@/models/auctions';
+
 
 @Component({
   standalone: true,
@@ -33,75 +37,84 @@ import { Auction } from '@/models/db';
 
 export class AuctionComponent {
 
-  @Input() auction!: Auction;
+  phunk = input<Phunk>();
+
+  auction$ = toObservable(this.phunk).pipe(
+    filter((phunk): phunk is Phunk => !!phunk),
+    switchMap((phunk) => this.web3Svc.watchAuctionByPrevOwnerAndHashId({
+      prevOwner: phunk!.prevOwner!,
+      hashId: phunk!.hashId
+    })),
+    map((auction): FormattedAuction | null => {
+      if (!isValidAuction(auction)) {
+        return null;
+      }
+      // Type-safe conversion using the utility function
+      return formatAuction(auction);
+    })
+  );
 
   bidValue = new FormControl<number | null>(null);
 
-  auctionComplete: boolean = false;
-  auctionClosed!: boolean;
+  bidsLength = signal(0);
+  auctionComplete = signal(false);
 
-  inputError!: boolean;
-  errorMessage!: string | null;
-  txHash!: `0x${string}` | string | null | undefined;
+  inputError = signal(false);
+  errorMessage = signal<string | null>(null);
 
   constructor(
     public web3Svc: Web3Service,
-  ) {
-    // console.log(this.auction)
-  }
+    public dataSvc: DataService,
+  ) {}
 
   async submitBid(): Promise<void> {
-    // this.closeTransaction();
-    // this.closeError();
+    this.closeError();
 
-    // try {
-    //   await this.web3Svc.checkNetwork();
-    //   // Bid value
-    //   const bidValue: number | null = this.bidValue.value;
-    //   if (!bidValue) throw new Error('You must enter a bid value');
+    try {
+      const phunk = this.phunk();
+      if (!phunk) throw new Error('Phunk not found');
 
-    //   // Get the current active auction
-    //   const currentAuction = await this.web3Svc.getCurrentAuction();
-    //   const tokenId = (currentAuction as any)[0] as bigint;
+      // Bid value
+      const bidValue: number | null = this.bidValue.value;
+      if (!bidValue) throw new Error('You must enter a bid value');
 
-    //   // Send the tx
-    //   this.txHash = await this.web3Svc.setBid(tokenId, bidValue);
-    //   this.resetBid();
+      // Get the current active auction
+      const currentAuction = await this.web3Svc.getAuctionByPrevOwnerAndHashId({
+        prevOwner: phunk.prevOwner!,
+        hashId: phunk.hashId
+      });
 
-    //   // Wait for the tx to be mined
-    //   if (!this.txHash) throw new Error('Transaction failed');
-    //   await this.web3Svc.waitForTransaction(this.txHash);
+      // Send the tx
+      const hash = await this.web3Svc.createBid(bidValue, phunk.hashId, phunk.prevOwner!);
+      this.resetBid();
 
-    //   this.closeTransaction();
-    //   this.closeError();
+      // Wait for the tx to be mined
+      if (!hash) throw new Error('Transaction failed');
+      await this.web3Svc.waitForTransaction(hash);
 
-    // } catch (err: any) {
-    //   // console.log(err);
-    //   this.errorMessage = err.error?.message || err.message;
-    // }
+      this.closeError();
+
+    } catch (err: any) {
+      // console.log(err);
+      this.errorMessage.set(err.error?.message || err.message);
+    }
   }
 
   setInputError(err: any) {
-    this.inputError = true;
-    this.errorMessage = err;
+    this.inputError.set(true);
+    this.errorMessage.set(err);
   }
 
   resetBid(): void {
     this.bidValue.reset();
   }
 
-  handleEvent($event: any): void {
-    // console.log($event)
-    // this.auctionComplete = $event.left > 0 ? false : true;
-    // this.auctionClosed = this.currentAuction?.end * 1000 < Date.now();
-  }
-
-  closeTransaction() {
-    this.txHash = null;
-  }
-
   closeError() {
-    this.errorMessage = null;
+    this.errorMessage.set(null);
+  }
+
+  handleTimeLeft(timeLeft: any): void {
+    this.auctionComplete.set(timeLeft.left <= 0);
   }
 
 }

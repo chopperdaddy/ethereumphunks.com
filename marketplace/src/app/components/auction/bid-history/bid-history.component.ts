@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, input, Input, OnInit, output, signal } from '@angular/core';
 
 import { DataService } from '@/services/data.service';
 
@@ -9,7 +9,9 @@ import { WeiToEthPipe } from '@/pipes/wei-to-eth.pipe';
 
 import { environment } from '@environments/environment';
 
-import { Auction } from '@/models/db';
+import { FormattedAuction } from '@/models/auctions';
+import { toObservable } from '@angular/core/rxjs-interop';
+import { distinctUntilChanged, of, switchMap, tap } from 'rxjs';
 
 @Component({
   standalone: true,
@@ -24,18 +26,30 @@ import { Auction } from '@/models/db';
   styleUrls: ['./bid-history.component.scss']
 })
 
-export class BidHistoryComponent implements OnInit {
+export class BidHistoryComponent {
 
-  @Input() auction!: Auction;
+  explorerUrl = environment.explorerUrl;
 
-  viewAllBids!: boolean;
+  auction = input<FormattedAuction | null>();
+  bidsLength = output<number>();
 
-  etherscanLink: string = `https://${environment.chainId === 11155111 ? 'sepolia' + '.' : ''}etherscan.io`;
+  auctionBids$ = toObservable(this.auction).pipe(
+    distinctUntilChanged((a, b) => a?.auctionId === b?.auctionId),
+    switchMap((auction) => {
+      console.log('BidHistoryComponent', {auction});
+      if (!auction) return of([]);
+      return this.dataSvc.watchAuctionBids(auction.auctionId);
+    }),
+    tap((bids) => {
+      console.log('BidHistoryComponent', {bids});
+      this.bidsLength.emit(bids?.length || 0);
+    })
+  );
+
+  viewAllBids = signal(false);
 
   constructor(
     public dataSvc: DataService
   ) {}
-
-  ngOnInit(): void {}
 
 }

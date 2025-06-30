@@ -1,53 +1,67 @@
 @use '@scss/abstracts/variables' as *;
 @use '@scss/abstracts/mixins' as *;
 
+:host {
+  display: block;
+  font-family: var(--secondary-font-stack);
+  font-weight: 400;
+}
+
 .bid-history-wrapper {
-  padding: 2.2rem 0 0;
-  border-top: .2rem solid rgba(var(--text-color), .05);
+  // border-top: .2rem solid rgba(var(--text-color), .05);
 
   p {
-    font-size: 1.4rem;
+    font-size: 1.2rem;
     text-align: center;
     font-weight: 500;
-    color: rgba(var(--text-color), .5);
+    color: rgba(var(--white), .5);
   }
 
   .bid-history-head {
+    padding: 1rem 0 0;
+
     display: flex;
     align-items: baseline;
     justify-content: space-between;
 
-    height: 3rem;
-
     span {
       font-size: 1.4rem;
-      color: rgba(var(--text-color), .5);
+      color: rgba(var(--white), 1);
     }
 
     button {
+      font-family: var(--secondary-font-stack);
       font-size: 1.2rem;
-      color: rgba(var(--text-color), .5);
+      font-weight: 400;
+      color: rgba(var(--white), .5);
+      background: none;
+      padding: 0;
 
       &:active {
-        color: rgba(var(--text-color), 1);
+        color: rgba(var(--white), 1);
       }
 
       &.disabled {
-        color: rgba(var(--text-color), .2);
+        color: rgba(var(--white), .2);
         pointer-events: none;
       }
     }
   }
+
   .bid-history {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    padding-top: 1rem;
+
     .bid-item {
       font-family: var(--secondary-font-stack);
       font-size: 1.4rem;
+      color: rgba(var(--white), 1);
 
       display: flex;
       align-items: center;
       justify-content: space-between;
-
-      padding: .5rem 0;
 
       eth-address {}
 
@@ -65,6 +79,10 @@
 
           svg {
             display: block;
+
+            path {
+              fill: rgba(var(--white), .5);
+            }
           }
         }
 

@@ -1,22 +1,44 @@
-<div
-  class="days"
-  *ngIf="days !== '00'">
+@if (days !== '00') {
+  <div class="section days">
 
-  <span class="label">day</span>
-  <span class="value">{{ days }}:</span>
+    <div class="label">day</div>
+    <div class="value">
+      @for (digit of days; track i; let i = $index) {
+        <div class="digit">{{ digit }}</div>
+      }
+    </div>
+  </div>
+
+  <div class="colon">:</div>
+}
+
+<div class="section hours">
+  <div class="label">hr</div>
+  <div class="value">
+    @for (digit of hours; track i; let i = $index) {
+      <div class="digit">{{ digit }}</div>
+    }
+  </div>
 </div>
 
-<div>
-  <span class="label">hr</span>
-  <span class="value">{{ hours }}:</span>
+<div class="colon">:</div>
+
+<div class="section minutes">
+  <div class="label">min</div>
+  <div class="value">
+    @for (digit of minutes; track i; let i = $index) {
+      <div class="digit">{{ digit }}</div>
+    }
+  </div>
 </div>
 
-<div>
-  <span class="label">min</span>
-  <span class="value">{{ minutes }}:</span>
-</div>
+<div class="colon">:</div>
 
-<div>
-  <span class="label">sec</span>
-  <span class="value">{{ seconds }}</span>
+<div class="section seconds">
+  <div class="label">sec</div>
+  <div class="value">
+    @for (digit of seconds; track i; let i = $index) {
+      <div class="digit">{{ digit }}</div>
+    }
+  </div>
 </div>

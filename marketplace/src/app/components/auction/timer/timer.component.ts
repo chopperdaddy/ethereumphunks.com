@@ -13,8 +13,8 @@ import { CommonModule } from '@angular/common';
 
 export class TimerComponent implements OnInit, OnChanges, OnDestroy {
 
-  @Input() endTime: number = 0;
-  @Output() event: EventEmitter<any> = new EventEmitter();
+  @Input() endTime!: number;
+  @Output() timeLeft: EventEmitter<any> = new EventEmitter();
 
   days = '00';
   hours = '00';
@@ -63,7 +63,7 @@ export class TimerComponent implements OnInit, OnChanges, OnDestroy {
     const padWithZero = (n: number, t: number) => String(n).padStart(t, '0');
 
     const now = Date.now();
-    let diff = this.endTime ? this.endTime - now : 0;
+    let diff = this.endTime ? new Date(this.endTime * 1000).getTime() - now : 0;
 
     // Time calculations for days, hours, minutes and seconds
     const d = Math.floor(diff / (1000 * 60 * 60 * 24));
@@ -76,7 +76,7 @@ export class TimerComponent implements OnInit, OnChanges, OnDestroy {
     this.minutes = padWithZero(m, 2);
     this.seconds = padWithZero(s, 2);
 
-    this.event.emit({ left: diff });
+    this.timeLeft.emit({ left: diff });
 
     return diff;
   }
