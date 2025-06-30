@@ -20,7 +20,7 @@ export class FooterComponent implements OnInit {
   marketAddress = environment.marketAddress;
   points = environment.pointsAddress;
   contributions = environment.donationsAddress;
-
+  auctionHouseAddress = environment.auctionHouseAddress;
   layer1Bridge = environment.bridgeAddress;
   layer2Bridge = environment.bridgeAddressL2;
   layer2Market = environment.marketAddressL2;
