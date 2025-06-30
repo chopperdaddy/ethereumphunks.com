@@ -13,6 +13,7 @@ import { distinctUntilChanged, filter, firstValueFrom, fromEvent, map, shareRepl
 import { PhunkBillboardComponent } from '@/components/phunk-billboard/phunk-billboard.component';
 import { TxHistoryComponent } from '@/components/tx-history/tx-history.component';
 import { BreadcrumbsComponent } from '@/components/breadcrumbs/breadcrumbs.component';
+import { AuctionComponent } from '@/components/auction/auction.component';
 import { CommentsComponent } from '@/components/comments/comments.component';
 
 import { WalletAddressDirective } from '@/directives/wallet-address.directive';
@@ -50,6 +51,7 @@ interface ActionsState {
   escrow: boolean;
   bridge: boolean;
   privateSale: boolean;
+  auction: boolean;
 };
 
 @Component({
@@ -67,6 +69,7 @@ interface ActionsState {
     WalletAddressDirective,
     BreadcrumbsComponent,
     CommentsComponent,
+    AuctionComponent,
 
     TraitCountPipe,
     WeiToEthPipe,
@@ -86,6 +89,11 @@ export class ItemViewComponent {
   // @ViewChild('revShareInput') revShareInput!: ElementRef<HTMLInputElement>;
   @ViewChild('transferAddressInput') transferAddressInput!: ElementRef<HTMLInputElement>;
 
+  // Auction Form
+  @ViewChild('auctionDurationInput') auctionDurationInput!: ElementRef<HTMLInputElement>;
+  @ViewChild('auctionMinBidIncrementPercentageInput') auctionMinBidIncrementPercentageInput!: ElementRef<HTMLInputElement>;
+  @ViewChild('auctionTimeBufferInput') auctionTimeBufferInput!: ElementRef<HTMLInputElement>;
+
   @ViewChildren('collapsable') collapsable!: QueryList<ElementRef<HTMLDivElement>>;
 
   explorerUrl = environment.explorerUrl;
@@ -100,10 +108,14 @@ export class ItemViewComponent {
     escrow: false,
     bridge: false,
     privateSale: false,
+    auction: false,
   });
 
   transferAddress = new FormControl<string | null>('');
   listPrice = new FormControl<number | undefined>(undefined);
+  auctionDuration = new FormControl<number | undefined>(undefined);
+  auctionMinBidIncrementPercentage = new FormControl<number | undefined>(undefined);
+  auctionTimeBuffer = new FormControl<number | undefined>(undefined);
   // revShare = new FormControl<number | undefined>(undefined);
   listToAddress = new FormControl<string | null>('');
 
@@ -111,7 +123,6 @@ export class ItemViewComponent {
     filter((params: any) => !!params.hashId),
     distinctUntilChanged((prev, curr) => prev.hashId === curr.hashId),
     switchMap((params: any) => this.dataSvc.fetchSinglePhunk(params.hashId)),
-    // tap((phunk: any) => console.log('singlePhunk$', phunk)),
     shareReplay(1),
   );
 
@@ -186,6 +197,11 @@ export class ItemViewComponent {
     this.actionsState.update((state) => ({ ...state, privateSale: true }));
   }
 
+  auctionPhunkAction(): void {
+    this.closeAll();
+    this.actionsState.update((state) => ({ ...state, auction: true }));
+  }
+
   closeListing(): void {
     this.actionsState.update((state) => ({ ...state, sell: false }));
     this.closePrivateSale();
@@ -209,6 +225,10 @@ export class ItemViewComponent {
     this.actionsState.update((state) => ({ ...state, privateSale: false }));
   }
 
+  closeAuction(): void {
+    this.actionsState.update((state) => ({ ...state, auction: false }));
+  }
+
   clearAll(): void {
     this.listPrice.setValue(undefined);
     this.listToAddress.setValue('');
@@ -220,6 +240,7 @@ export class ItemViewComponent {
     this.closeTransfer();
     this.closeEscrow();
     this.closeBridge();
+    this.closeAuction();
   }
 
   async submitListing(phunk: Phunk): Promise<void> {
@@ -685,6 +706,24 @@ export class ItemViewComponent {
     } finally {
       this.closeBridge();
     }
+  }
+
+  async sendToAuction(phunk: Phunk) {
+    const hashId = phunk.hashId;
+    if (!hashId) throw new Error('Invalid hashId');
+
+    // console.log('sendToAuction', {phunk: phunk.hashId, duration: this.auctionDuration.value, minBidIncrementPercentage: this.auctionMinBidIncrementPercentage.value, timeBuffer: this.auctionTimeBuffer.value});
+
+    if (!this.auctionDuration.value || !this.auctionMinBidIncrementPercentage.value || !this.auctionTimeBuffer.value) throw new Error('Invalid auction parameters');
+
+    const hash = await this.web3Svc.sendToAuction(
+      hashId,
+      Number(this.auctionDuration.value),
+      Number(this.auctionMinBidIncrementPercentage.value),
+      Number(this.auctionTimeBuffer.value)
+    );
+
+    console.log('sendToAuction', {hash});
   }
 
   async checkConsenus(phunk: Phunk): Promise<void> {

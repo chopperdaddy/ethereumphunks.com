@@ -20,6 +20,10 @@
 
     <div class="inner">
 
+      @if (phunk.isAuctioned) {
+        <app-auction [phunk]="phunk" />
+      }
+
       <div class="details-wrapper">
         @if (phunk.owner) {
           <div class="title-wrapper">
@@ -66,6 +70,10 @@
                   <!-- NFT info -->
                   @if (phunk.nft; as nft) {
                     <p i18n>This {{ phunk.collection?.singleName }} is owned by <a [routerLink]="['/', 'curated', phunk.slug, 'market', 'owned']" [queryParams]="{ address: nft.owner}"><app-address [address]="nft.owner" /></a>.</p>
+                  }
+                } @else if (phunk.isAuctioned) {
+                  @if (phunk.prevOwner; as prevOwner) {
+                    <p i18n>This {{ phunk.collection?.singleName }} is being auctioned by <a [routerLink]="['/', 'curated', phunk.slug, 'market', 'owned']" [queryParams]="{ address: prevOwner }"><app-address [address]="prevOwner" /></a>.</p>
                   }
                 } @else {
                   <!-- Owner -->
@@ -150,6 +158,20 @@
 
                             @if (actionsState().escrow) {
                               <ng-container *ngTemplateOutlet="escrowForm; context:{ $implicit: phunk }" />
+                            }
+                          }
+
+                          <!-- Escrow actions (Send) -->
+                          @if (!phunk.isAuctioned) {
+                            @if ((owner | lowercase) === (address | lowercase)) {
+                              <button class="send-to-auction" (click)="auctionPhunkAction()" [class.active]="actionsState().auction">
+                                <span>Send to auction</span>
+                                <ng-container *ngTemplateOutlet="pending; context:{ $implicit: 'sendToAuction' }" />
+                              </button>
+
+                              @if (actionsState().auction) {
+                                <ng-container *ngTemplateOutlet="auctionForm; context:{ $implicit: phunk }" />
+                              }
                             }
                           }
 
@@ -412,6 +434,43 @@
       <button i18n type="reset" class="cancel" (click)="closeEscrow()">Cancel</button>
       <button i18n class="sell" (click)="sendToEscrow(phunk)">
         Send to Escrow
+      </button>
+    </div>
+  </div>
+</ng-template>
+
+<!-- Auction Form -->
+<ng-template #auctionForm let-phunk>
+  <div class="form-wrapper">
+    <ng-container *ngTemplateOutlet="cooldown; context:{ $implicit: phunk }" />
+
+    <div class="form-group">
+      <div class="row row-2">
+        <div class="auction-duration">
+          <label i18n for="auction-duration">Auction Duration</label>
+          <input #auctionDurationInput type="number" id="auction-duration" [formControl]="auctionDuration" />
+        </div>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <div class="row row-2">
+        <div class="auction-min-bid-increment-percentage">
+          <label i18n for="auction-min-bid-increment-percentage">Min Bid Increment %</label>
+          <input #auctionMinBidIncrementPercentageInput type="number" id="auction-min-bid-increment-percentage" [formControl]="auctionMinBidIncrementPercentage" />
+        </div>
+
+        <div class="auction-time-buffer">
+          <label i18n for="auction-time-buffer">Time Buffer</label>
+          <input #auctionTimeBufferInput type="number" id="auction-time-buffer" [formControl]="auctionTimeBuffer" />
+        </div>
+      </div>
+    </div>
+
+    <div class="form-actions">
+      <button i18n type="reset" class="cancel" (click)="closeAuction()">Cancel</button>
+      <button i18n class="sell" (click)="sendToAuction(phunk)">
+        Send to Auction
       </button>
     </div>
   </div>

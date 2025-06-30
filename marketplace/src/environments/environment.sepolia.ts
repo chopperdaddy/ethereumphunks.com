@@ -19,7 +19,7 @@ export const environment = {
   marketAddressL2: '0x005918E10Ed039807a62c564C72D527BaB15c987'.toLowerCase(),
   bridgeAddress: '0x1565f60D2469F18bBCc96B2C29220412F2Fe98Bd'.toLowerCase(),
   bridgeAddressL2: '0x2A953aA14e986b0595A0c5201dD267391BF7d39d'.toLowerCase(),
-  auctionHouseAddress: '0x7Fa70718A141e10F73C7decC45Ddad773B4217FC'.toLowerCase(),
+  auctionHouseAddress: '0x3A50E6D0F8d1c68cD2DD1510a982323805272d48'.toLowerCase(),
 
   relayUrl: 'https://relay-sepolia.ethereumphunks.com',
   staticUrl: 'https://kcbuycbhynlmsrvoegzp.supabase.co/storage/v1/object/public',

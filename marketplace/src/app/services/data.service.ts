@@ -7,7 +7,7 @@ import { Web3Service } from '@/services/web3.service';
 import { StorageService } from '@/services/storage.service';
 
 import { EventType, GlobalConfig, GlobalState } from '@/models/global-state';
-import { Event, Listing, Phunk } from '@/models/db';
+import { Auction, Event, Listing, Phunk } from '@/models/db';
 import { Attribute } from '@/models/attributes';
 import { MarketState } from '@/models/market.state';
 import { CommentWithReplies } from '@/models/comment';
@@ -669,6 +669,7 @@ export class DataService {
       const newPhunk = { ...data, collection, collectionName, nft } as Phunk;
       newPhunk.isEscrowed = data?.owner === environment.marketAddress;
       newPhunk.isBridged = data?.owner === environment.bridgeAddress;
+      newPhunk.isAuctioned = data?.owner === environment.auctionHouseAddress;
       newPhunk.isSupported = !!collection;
       newPhunk.attributes = [];
       return newPhunk;
@@ -1077,18 +1078,66 @@ export class DataService {
   // AUCTIONS ////////////////////////////////////////////
   ////////////////////////////////////////////////////////
 
-  // async fetchAuctions(hashId: string): Promise<any> {
-  //   let query = supabase
-  //     .from('auctions' + this.suffix)
-  //     .select('*')
-  //     .eq('hashId', hashId)
+  async fetchAuctionByHashId(hashId: string): Promise<Auction | null> {
+    const query = supabase
+      .from('auctions' + this.suffix)
+      .select('*')
+      .eq('hashId', hashId)
+      .eq('settled', false)
+      .limit(1);
 
+    const { data, error } = await query;
+    if (error || !data?.length) return null;
+    return data[0];
+  }
 
-  //   return from(query).pipe(map((res: any) => {
-  //     console.log('fetchSinglePhunk', res);
-  //     return res.data[0] || { phunkId };
-  //   }));
-  // }
+  auctionChannels = new Map<number, Observable<any>>();
+  watchAuctionBids(auctionId: number): Observable<any[]> {
+    if (!auctionId) return of([]);
+
+    if (this.auctionChannels.has(auctionId)) {
+      return this.auctionChannels.get(auctionId)!;
+    }
+
+    const channel$ = new Observable<void>((subscriber) => {
+      const channel = supabase
+        .channel(`auctionBids_changes__${auctionId}`)
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'auctionBids' + this.suffix, filter: `auctionId=eq.${auctionId}` }, (payload) => {
+          subscriber.next();
+        })
+        .subscribe();
+
+      return () => {
+        channel.unsubscribe();
+        this.auctionChannels.delete(auctionId);
+      };
+    }).pipe(
+      share()
+    );
+
+    const watchStream$ = merge(
+      this.fetchAuctionBids(auctionId),
+      channel$.pipe(
+        switchMap(() => this.fetchAuctionBids(auctionId))
+      )
+    );
+
+    this.auctionChannels.set(auctionId, watchStream$);
+    return watchStream$;
+  }
+
+  private fetchAuctionBids(auctionId: number): Observable<any[]> {
+    if (!auctionId) return of([]);
+
+    const query = supabase
+      .from('auctionBids' + this.suffix)
+      .select('*')
+      .eq('auctionId', auctionId);
+
+    return from(query).pipe(
+      map((res: any) => res.data.sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()))
+    );
+  }
 
   ////////////////////////////////////////////////////////
   // USD /////////////////////////////////////////////////

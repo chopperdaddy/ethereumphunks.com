@@ -5,11 +5,12 @@ import { Store } from '@ngrx/store';
 import { GlobalState } from '@/models/global-state';
 import { Phunk } from '@/models/db';
 
-import { Observable, catchError, firstValueFrom, map, of, tap } from 'rxjs';
+import { Observable, catchError, firstValueFrom, interval, from, of, tap, map, switchMap, merge } from 'rxjs';
 
 // L1
 import { EtherPhunksMarketABI } from '@/abi/EtherPhunksMarket';
 import { PointsABI } from '@/abi/Points';
+import { auctionHouseL1 } from '@/abi/AuctionHouseL1';
 
 // L2
 import { EtherPhunksNftMarketABI } from '@/abi/EtherPhunksNftMarket';
@@ -25,16 +26,18 @@ import { magma } from '@/constants/magmaChain';
 
 import { createWeb3Modal } from '@web3modal/wagmi';
 
-import { PublicClient, TransactionReceipt, WatchBlockNumberReturnType, WatchContractEventReturnType, createPublicClient, custom, decodeFunctionData, fallback, formatEther, isAddress, keccak256, parseEther, stringToBytes, toHex, zeroAddress } from 'viem';
+import { PublicClient, TransactionReceipt, WatchBlockNumberReturnType, WatchContractEventReturnType, bytesToHex, createPublicClient, custom, decodeFunctionData, fallback, formatEther, isAddress, keccak256, numberToBytes, parseEther, stringToBytes, toHex, zeroAddress } from 'viem';
 
 import { selectIsBanned } from '@/state/app/app-state.selectors';
 
 import { environment } from '@environments/environment';
+import { AuctionRequest, AuctionResult } from '@/models/auctions';
 
 const marketAddress = environment.marketAddress;
 const marketAddressL2 = environment.marketAddressL2;
 const pointsAddress = environment.pointsAddress;
 const bridgeAddressL2 = environment.bridgeAddressL2;
+const auctionHouseAddress = environment.auctionHouseAddress;
 
 const projectId = 'd183619f342281fd3f3ff85716b6016a';
 
@@ -293,6 +296,51 @@ export class Web3Service {
     return await this.transferPhunk(tokenId, marketAddress as `0x${string}`);
   }
 
+  async sendToAuction(
+    hashId: string,
+    duration: number,
+    minBidIncrementPercentage: number,
+    timeBuffer: number
+  ): Promise<string | undefined> {
+    const sig = keccak256(stringToBytes('DEPOSIT_AND_AUCTION_SIGNATURE'));
+
+    const durationHex = bytesToHex(numberToBytes(duration, { size: 32 }));
+    const minBidIncrementPercentageHex = bytesToHex(numberToBytes(minBidIncrementPercentage, { size: 32 }));
+    const timeBufferHex = bytesToHex(numberToBytes(timeBuffer, { size: 32 }));
+
+    return await this.batchTransferPhunks([hashId, sig, durationHex, minBidIncrementPercentageHex, timeBufferHex], auctionHouseAddress);
+  }
+
+  async createBid(
+    bidValue: number,
+    hashId: string,
+    prevOwner: string
+  ): Promise<string | undefined> {
+    const weiValue = this.ethToWei(bidValue);
+    return await this.writeAuctionContract('createBid', [hashId, prevOwner], weiValue.toString());
+  }
+
+  watchAuctionByPrevOwnerAndHashId({
+    prevOwner,
+    hashId
+  }: AuctionRequest): Observable<AuctionResult | null> {
+    const fetchAuction = () => from(this.getAuctionByPrevOwnerAndHashId({ prevOwner, hashId }));
+
+    return merge(
+      fetchAuction(), // Initial value
+      interval(5000).pipe(
+        switchMap(() => fetchAuction()) // Periodic updates
+      )
+    );
+  }
+
+  async getAuctionByPrevOwnerAndHashId({
+    prevOwner,
+    hashId
+  }: AuctionRequest): Promise<AuctionResult | null> {
+    return await this.readAuctionContract('getAuction', [prevOwner, hashId]);
+  }
+
   /**
    * Withdraws a phunk from escrow
    * @param hashId The hash ID of the phunk to withdraw
@@ -378,6 +426,51 @@ export class Web3Service {
       const call: any = await this.l1Client.readContract({
         address: marketAddress as `0x${string}`,
         abi: EtherPhunksMarketABI,
+        functionName,
+        args: args as any,
+      });
+      return call;
+    } catch (error) {
+      console.log({functionName, args, error});
+      return null;
+    }
+  }
+
+  async writeAuctionContract(
+    functionName: any,
+    args: (string | undefined)[],
+    value?: string
+  ): Promise<any | null> {
+    if (!functionName) return;
+    await this.switchNetwork();
+
+    const chainId = getChainId(this.config);
+    const walletClient = await getWalletClient(this.config, { chainId });
+    const publicClient = getPublicClient(this.config, { chainId });
+
+    if (!publicClient) throw new Error('No public client');
+
+    const { maintenance } = await firstValueFrom(this.globalConfig$);
+    if (maintenance && environment.production) throw new Error('In maintenance mode');
+
+    const tx: any = {
+      address: auctionHouseAddress as `0x${string}`,
+      abi: auctionHouseL1,
+      functionName,
+      args,
+      account: walletClient?.account?.address as `0x${string}`,
+      value: value || '0',
+    };
+
+    const { request, result } = await publicClient.simulateContract(tx);
+    return await walletClient?.writeContract(request);
+  }
+
+  async readAuctionContract(functionName: any, args: (string | undefined)[]): Promise<any | null> {
+    try {
+      const call = await this.l1Client.readContract({
+        address: auctionHouseAddress as `0x${string}`,
+        abi: auctionHouseL1,
         functionName,
         args: args as any,
       });
