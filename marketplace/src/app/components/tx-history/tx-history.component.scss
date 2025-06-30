@@ -113,7 +113,11 @@
         }
 
         &.phunkbidwithdrawn,
-        &.phunkbidentered {
+        &.phunkbidentered,
+        &.auctionbid,
+        &.auctionextended,
+        &.auctioncreated,
+        &.auctionsettled {
           td {
             background-color: rgba(var(--bid-color), .5);
 

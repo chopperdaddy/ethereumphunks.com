@@ -12,11 +12,11 @@ export interface Auction {
   auctionId: number
   bidder: string | null
   createdAt: Date
-  endTime: number
+  endTime: string
   hashId: string
   prevOwner: string | null
   settled: boolean
-  startTime: number
+  startTime: string
   bids: Bid[] | null
 }
 
@@ -34,6 +34,7 @@ export interface Phunk {
 
   isEscrowed?: boolean;
   isBridged?: boolean;
+  isAuctioned?: boolean;
 
   attributes?: Attribute[]
   listing?: Listing | null

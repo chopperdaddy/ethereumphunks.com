@@ -20,7 +20,7 @@ import { Phunk } from '@/models/db';
 import { environment } from '@environments/environment';
 import { ZERO_ADDRESS } from '@/constants/utils';
 
-import { BehaviorSubject, catchError, filter, map, of, switchMap } from 'rxjs';
+import { BehaviorSubject, catchError, filter, map, of, switchMap, tap } from 'rxjs';
 
 type EventLabels = {
   [type in EventType]: string;
@@ -73,6 +73,10 @@ export class TxHistoryComponent implements OnChanges {
     PhunkNoLongerForSale: 'Offer Withdrawn',
     bridgeOut: 'Lock',
     bridgeIn: 'Unlock',
+    AuctionCreated: 'Auction Created',
+    AuctionBid: 'Auction Bid',
+    AuctionExtended: 'Auction Extended',
+    AuctionSettled: 'Auction Settled',
   };
 
   constructor(
