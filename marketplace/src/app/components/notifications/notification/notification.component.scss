@@ -131,7 +131,8 @@
     }
   }
 
-  &.bid {
+  &.bid,
+  &.auction {
     box-shadow: -.3rem .3rem 0 0 rgba(var(--bid-color), 1);
 
     app-notification-image {

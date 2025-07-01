@@ -296,6 +296,14 @@ export class Web3Service {
     return await this.transferPhunk(tokenId, marketAddress as `0x${string}`);
   }
 
+  /**
+   * Sends a phunk to the auction contract
+   * @param hashId The hash ID of the phunk to send
+   * @param duration The duration of the auction
+   * @param minBidIncrementPercentage The minimum bid increment percentage
+   * @param timeBuffer The time buffer
+   * @returns Promise resolving to the transaction hash if successful
+   */
   async sendToAuction(
     hashId: string,
     duration: number,
@@ -311,6 +319,13 @@ export class Web3Service {
     return await this.batchTransferPhunks([hashId, sig, durationHex, minBidIncrementPercentageHex, timeBufferHex], auctionHouseAddress);
   }
 
+  /**
+   * Creates a bid on an auction
+   * @param bidValue The bid value in ETH
+   * @param hashId The hash ID of the phunk to bid on
+   * @param prevOwner The previous owner of the phunk
+   * @returns Promise resolving to the transaction hash if successful
+   */
   async createBid(
     bidValue: number,
     hashId: string,
@@ -320,6 +335,25 @@ export class Web3Service {
     return await this.writeAuctionContract('createBid', [hashId, prevOwner], weiValue.toString());
   }
 
+  /**
+   * Settles an auction
+   * @param hashId The hash ID of the phunk to settle
+   * @param prevOwner The previous owner of the phunk
+   * @returns Promise resolving to the transaction hash if successful
+   */
+  async settleAuction(
+    hashId: string,
+    prevOwner: string
+  ): Promise<string | undefined> {
+    return await this.writeAuctionContract('settleAuction', [hashId, prevOwner]);
+  }
+
+  /**
+   * Watches an auction by previous owner and hash ID
+   * @param prevOwner The previous owner of the phunk
+   * @param hashId The hash ID of the phunk to watch
+   * @returns Observable resolving to the auction result
+   */
   watchAuctionByPrevOwnerAndHashId({
     prevOwner,
     hashId
@@ -334,6 +368,12 @@ export class Web3Service {
     );
   }
 
+  /**
+   * Gets an auction by previous owner and hash ID
+   * @param prevOwner The previous owner of the phunk
+   * @param hashId The hash ID of the phunk to get
+   * @returns Promise resolving to the auction result or null if not found
+   */
   async getAuctionByPrevOwnerAndHashId({
     prevOwner,
     hashId

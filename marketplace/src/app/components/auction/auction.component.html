@@ -1,5 +1,19 @@
+<div class="auction-header">
+  <h2>
+    @if (phunk()?.collection?.singleName) {
+      {{ phunk()?.collection?.singleName }} {{ phunk()?.tokenId }}
+    } @else {
+      Loading...
+    }
+  </h2>
+
+  <h3>
+    <span class="indicator" [class.active]="!auctionComplete()"></span>
+    {{ auctionComplete() ? 'Auction Complete' : 'Live Auction' }}
+  </h3>
+</div>
+
 @if (auction$ | async; as auction) {
-  <!-- {{ auction | json }} -->
   <div class="bid-info">
     <div class="bid-info-item">
       <div class="label">Bids</div>
@@ -26,22 +40,8 @@
     </div>
   </div>
 
-  <div
-    class="form-wrapper"
-    [class.is-complete]="auctionComplete()">
-
-    <!-- <div class="connect">
-      <button
-        (click)="web3Svc.connect()">
-        Connect your wallet to interact with this auction
-      </button>
-    </div> -->
-
-    @if (auctionComplete()) {
-      <div class="auction-complete">
-        <p>This auction is complete</p>
-      </div>
-    } @else {
+  @if (!auctionComplete()) {
+    <div class="form-wrapper">
       <div class="form">
         <div class="input-wrapper">
           <input
@@ -62,21 +62,35 @@
           Place Bid
         </button>
       </div>
-    }
-  </div>
+    </div>
+  }
 
-  <div
-    class="error"
-    [class.active]="errorMessage()?.length">
+  @if (auctionComplete()) {
+    <div
+      class="messages-wrapper"
+      [class.message]="auctionComplete()">
 
-    <button (click)="closeError()">x</button>
-    {{ errorMessage() }}
-  </div>
+      @if (auction.bidder === zeroAddr) {
+        <p>This auction ended with no bids</p>
+      } @else {
+        <p>This auction was won by <app-address [address]="auction.bidder" /></p>
+      }
 
-  <app-bid-history
-    [auction]="auction"
-    (bidsLength)="bidsLength.set($event)"
-  />
+      <button
+        class="settle-auction"
+        (click)="settleAuction()">
+
+        Anyone can settle this auction
+      </button>
+    </div>
+  }
+
+  @if (auction.bidder !== zeroAddr) {
+    <app-bid-history
+      [auction]="auction"
+      (bidsLength)="bidsLength.set($event)"
+    />
+  }
 }
 
 <ng-template #questionMarkIcon>

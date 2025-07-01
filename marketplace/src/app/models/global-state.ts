@@ -148,7 +148,9 @@ export type TxFunction =
   | 'bridgeIn'
   | 'mint'
   | 'tic'
-  | 'ticDelete';
+  | 'ticDelete'
+  | 'createBid'
+  | 'settleAuction';
 
 export interface TraitFilter {
   [key: string]: string | null;
