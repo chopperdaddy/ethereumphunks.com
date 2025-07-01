@@ -1,23 +1,22 @@
 <app-phunk-billboard
   [phunk]="(singlePhunk$ | async)"
-  [class.expanded]="expanded"
+  [class.expanded]="billboardExpanded()"
   [style]="{
     'transform': 'translateY(' + ((scrollY$ | async) || 0) + 'px)',
   }">
 
-  <button (click)="expand()">
-    <ng-container *ngTemplateOutlet="expandIcon; context:{ $implicit: expanded }" />
+  <button (click)="expandBillboard()">
+    <ng-container *ngTemplateOutlet="expandIcon; context:{ $implicit: billboardExpanded() }" />
   </button>
 </app-phunk-billboard>
 
 <div
   class="view-item-wrapper"
-  [class.expanded]="expanded">
+  [class.expanded]="billboardExpanded()">
 
   <app-breadcrumbs [phunk]="singlePhunk$ | async" />
 
   @if ((singlePhunk$ | async); as phunk) {
-
     <div class="inner">
 
       @if (phunk.isAuctioned) {
@@ -56,191 +55,11 @@
               <div class="market-status">
                 <h2 i18n>Market Status</h2>
 
-                @if (phunk.isEscrowed) {
-                  <!-- Owner -->
-                  @if (phunk.prevOwner; as owner) {
-                    <p i18n>This {{ phunk.collection?.singleName }} is held in <a [routerLink]="['/', 'curated', phunk.slug, 'market', 'owned']" [queryParams]="{ address: escrowAddress }">escrow</a> for <a [routerLink]="['/', 'curated', phunk.slug, 'market', 'owned']" [queryParams]="{ address: owner }"><app-address [address]="owner" /></a>.</p>
-                  }
-                } @else if (phunk.isBridged) {
-                  <!-- Owner -->
-                  @if (phunk.prevOwner; as owner) {
-                    <p i18n>This {{ phunk.collection?.singleName }} has been <a [routerLink]="['/', 'curated', phunk.slug, 'market', 'owned']" [queryParams]="{ address: bridgeAddress }">bridged</a> to L2.</p>
-                  }
-
-                  <!-- NFT info -->
-                  @if (phunk.nft; as nft) {
-                    <p i18n>This {{ phunk.collection?.singleName }} is owned by <a [routerLink]="['/', 'curated', phunk.slug, 'market', 'owned']" [queryParams]="{ address: nft.owner}"><app-address [address]="nft.owner" /></a>.</p>
-                  }
-                } @else if (phunk.isAuctioned) {
-                  @if (phunk.prevOwner; as prevOwner) {
-                    <p i18n>This {{ phunk.collection?.singleName }} is being auctioned by <a [routerLink]="['/', 'curated', phunk.slug, 'market', 'owned']" [queryParams]="{ address: prevOwner }"><app-address [address]="prevOwner" /></a>.</p>
-                  }
-                } @else {
-                  <!-- Owner -->
-                  @if (phunk.owner; as owner) {
-                    <p i18n>This {{ phunk.collection?.singleName }} is owned by <a [routerLink]="['/', 'curated', phunk.slug, 'market', 'owned']" [queryParams]="{ address: owner }"><app-address [address]="owner" /></a>.</p>
-                  }
-                }
-
-                <!-- Value (Listing) -->
-                @if (phunk.listing?.minValue; as value) {
-                  <p i18n>This {{ phunk.collection?.singleName }} is for sale for <span class="highlight">{{ (value | weiToEth) }} ETH</span><span class="bold"> (${{ ((value | weiToEth) * ((usd$ | async) || 0)) | formatCash }})</span>.</p>
-                } @else if (!phunk.isSupported) {
-                  <p i18n>This {{ phunk.collection?.singleName }} is not supported by the marketplace.</p>
-                } @else {
-                  <p i18n>This {{ phunk.collection?.singleName }} is not for sale.</p>
-                }
+                <app-item-status [phunk]="phunk" />
               </div>
 
               <!-- Actions -->
-              <div
-                class="actions-wrapper"
-                [class.disabled]="(blocksBehind$ | async)">
-
-                  @if ((walletAddress$ | async); as address) {
-                    @if (phunk.owner; as owner) {
-                      @if (phunk.isSupported) {
-                        @if (phunk.consensus) {
-
-                          <!-- Bridge button -->
-                          <!-- @if ((owner | lowercase) === (address | lowercase)) {
-                            <button class="bridge" [class.active]="bridgeActive" (click)="bridgePhunkAction()">
-                              <span>Bridge</span>
-                              <ng-container *ngTemplateOutlet="pending; context:{ $implicit: 'bridgePhunk' }" />
-                            </button>
-
-                            @if (bridgeActive) {
-                              <ng-container *ngTemplateOutlet="bridgeForm; context:{ $implicit: phunk }" />
-                            }
-                          } -->
-
-                          <!-- Buy button -->
-                          @if (
-                            phunk.listing &&
-                            ((
-                              phunk.isEscrowed &&
-                              (phunk.prevOwner | lowercase) !== (address | lowercase)
-                            ) || (
-                              phunk.nft &&
-                              phunk.nft.owner !== address
-                            ))
-                          ) {
-                            <button class="buy" (click)="buyPhunk(phunk)">
-                              <span>Buy</span>
-                              <ng-container *ngTemplateOutlet="pending; context:{ $implicit: 'buyPhunk' }" />
-                            </button>
-                          }
-
-                          <!-- Sell (Ownership actions) -->
-                          @if (
-                            ((owner | lowercase) === (escrowAddress | lowercase) &&
-                            (phunk.prevOwner | lowercase) === (address | lowercase)) ||
-                            (owner | lowercase) === (address | lowercase) ||
-                            (phunk.nft && phunk.nft.owner === address)
-                          ) {
-                            <button class="sell" (click)="sellPhunk()" [class.active]="actionsState().sell">
-                              <span>Sell</span>
-                              <ng-container *ngTemplateOutlet="pending; context:{ $implicit: 'offerPhunkForSale' }" />
-                            </button>
-
-                            <!-- Sell Actions -->
-                            @if (actionsState().sell) {
-                              <ng-container *ngTemplateOutlet="sellForm; context:{ $implicit: phunk }" />
-                            }
-                          }
-
-                          <!-- Escrow actions (Send) -->
-                          @if (!phunk.isEscrowed && (owner | lowercase) === (address | lowercase)) {
-                            <button class="send-to-escrow" (click)="escrowPhunk()" [class.active]="actionsState().escrow">
-                              <span>Send to escrow</span>
-                              <ng-container *ngTemplateOutlet="pending; context:{ $implicit: 'sendToEscrow' }" />
-                            </button>
-
-                            @if (actionsState().escrow) {
-                              <ng-container *ngTemplateOutlet="escrowForm; context:{ $implicit: phunk }" />
-                            }
-                          }
-
-                          <!-- Escrow actions (Send) -->
-                          @if (!phunk.isAuctioned) {
-                            @if ((owner | lowercase) === (address | lowercase)) {
-                              <button class="send-to-auction" (click)="auctionPhunkAction()" [class.active]="actionsState().auction">
-                                <span>Send to auction</span>
-                                <ng-container *ngTemplateOutlet="pending; context:{ $implicit: 'sendToAuction' }" />
-                              </button>
-
-                              @if (actionsState().auction) {
-                                <ng-container *ngTemplateOutlet="auctionForm; context:{ $implicit: phunk }" />
-                              }
-                            }
-                          }
-
-                          <!-- Escrow actions (Withdraw) -->
-                          @if (phunk.isEscrowed && (phunk.prevOwner | lowercase) === (address | lowercase)) {
-                            <button class="withdraw" (click)="withdrawPhunk(phunk)">
-                              <span>Withdraw from escrow</span>
-                              <ng-container *ngTemplateOutlet="pending; context:{ $implicit: 'withdrawPhunk' }" />
-                            </button>
-                          }
-
-                          <!-- Delist button -->
-                          @if (
-                            phunk.listing &&
-                            ((
-                              ((owner | lowercase) === (escrowAddress | lowercase) &&
-                              (phunk.prevOwner | lowercase) === (address | lowercase)) ||
-                              (phunk.nft?.owner === address)
-                            ) || (
-                              phunk.nft &&
-                              phunk.nft.owner === address
-                            ))
-                          ) {
-                            <button class="sell" (click)="phunkNoLongerForSale(phunk)">
-                              <span>Delist</span>
-                              <ng-container *ngTemplateOutlet="pending; context:{ $implicit: 'phunkNoLongerForSale' }" />
-                            </button>
-                          }
-                        } @else {
-                          @if (!(isCooling$ | async)) {
-                            <div class="notice">
-                              <div class="consensus">This {{ phunk.collection?.singleName }} does not have consensus with one or more indexers. <a (click)="setChat()">Contact support</a> to resolve this issue.</div>
-                            </div>
-                          }
-                        }
-                      }
-
-                      <!-- Transfer -->
-                      @if ((owner | lowercase) === (address | lowercase)) {
-
-                        <button class="transfer" [class.active]="actionsState().transfer" (click)="transferPhunkAction()">
-                          <span>Transfer</span>
-                          <ng-container *ngTemplateOutlet="pending; context:{ $implicit: 'transferPhunk' }" />
-                        </button>
-
-                        <!-- Transfer actions -->
-                        @if (actionsState().transfer) {
-                          <ng-container *ngTemplateOutlet="transferForm; context:{ $implicit: phunk }" />
-                        }
-                      }
-                    }
-                  } @else {
-                    <!-- Connect wallet -->
-                    <button i18n (click)="web3Svc.connect()">
-                      Connect an Ethereum wallet to interact with this item
-                    </button>
-                  }
-
-                  <!-- Out links -->
-                  @if (!phunk.isSupported) {
-                    <a
-                      class="button external"
-                      [href]="externalMarketUrl + '/ethscriptions/' + phunk.hashId"
-                      target="_blank">
-
-                      View on ethscriptions.com
-                    </a>
-                  }
-              </div>
+              <app-item-actions [phunk]="phunk" />
 
               @if (!(isMobile$ | async) && (globalConfig$ | async)?.comments) {
                 @defer {
@@ -252,40 +71,7 @@
             <div class="right">
               <div class="accessories-wrapper">
                 @if (phunk.attributes?.length) {
-                  <h2 i18n>Attributes</h2>
-                  <div class="accessories">
-                    @for (item of phunk.attributes; track item; let i = $index) {
-                      @if (i > 0) {
-                        <!-- {{ item | json }} -->
-                        <div class="accessory">
-                          @if (item.v | isNumber) {
-                            <span class="value">{{ item.k }}</span>
-
-                            <span class="trait-count">
-                              <span>{{ (item.v) }}</span>
-                            </span>
-                          } @else {
-                            <a
-                              class="value"
-                              [routerLink]="['/', 'curated', phunk.slug, 'market', 'all']"
-                              [queryParams]="item | queryParams">
-
-                              <span>{{ item.v }}</span>
-                              @if (item.v | traitCount : phunk.slug) {
-                                <span class="percent">
-                                  ({{ (+(item.v | traitCount : phunk.slug) / (phunk.collection?.supply || 0)) | percent : '1.1-1' }})
-                                </span>
-                              }
-                            </a>
-
-                            <span class="trait-count">
-                              <span>{{ (item.v | traitCount : phunk.slug) && (item.v | traitCount : phunk.slug) + ' ' + phunk.collection?.name + ' have this.' }}</span>
-                            </span>
-                          }
-                        </div>
-                      }
-                    }
-                  </div>
+                  <app-item-attributes [phunk]="phunk" />
                 }
               </div>
             </div>
@@ -344,179 +130,10 @@
   }
 </div>
 
-<!-- Transfer Form -->
-<ng-template #transferForm let-phunk>
-  <form class="form-wrapper">
-    <ng-container *ngTemplateOutlet="cooldown; context:{ $implicit: phunk }" />
-
-    <div class="form-group">
-      <label i18n for="transfer-address">Transfer to address</label>
-      <input #transferAddressInput type="text" id="transfer-address" [formControl]="transferAddress"
-        placeholder="0x or .ens" role="presentation" autocomplete="off" />
-    </div>
-
-    <div class="form-actions">
-      <button i18n type="reset" class="cancel" (click)="closeTransfer()">Cancel</button>
-      <button i18n type="submit" class="submit" (click)="transferPhunk(phunk)">Submit</button>
-    </div>
-  </form>
-</ng-template>
-
-<!-- Sell Form -->
-<ng-template #sellForm let-phunk>
-  <form class="form-wrapper">
-    @if (!phunk.isEscrowed) {
-      <ng-container *ngTemplateOutlet="cooldown; context:{ $implicit: phunk }" />
-    }
-
-    <div class="form-group">
-      <!-- <div class="row row-2"> -->
-        <!-- <div class="list-price"> -->
-          <label i18n for="list-price">Asking Price</label>
-          <input #sellPriceInput type="number" id="list-price" [formControl]="listPrice" />
-
-          <!-- @if (listPrice.value && revShare.value) {
-            <div class="sale-total">Upon sale you receive: Ξ{{ ((listPrice.value || 0) - ((listPrice.value || 0) * ((revShare.value || 0) / 100))) | number : '1.0-6' }}</div>
-          } -->
-        <!-- </div> -->
-        <!-- <div class="rev-share">
-          <label for="rev-share">
-            <span>Rev Share</span>
-
-            <div class="info-ind">?</div>
-          </label>
-          <div class="percent-input">
-            <span>%</span>
-            <input #revShareInput type="number" id="rev-share" [max]="100" [min]="0" step="0.1" [formControl]="revShare" />
-          </div>
-
-          @if (listPrice.value && revShare.value) {
-            <div class="rev-total">
-              Total: Ξ{{ ((listPrice.value || 0) * ((revShare.value || 0) / 100)) | number : '1.0-6' }}
-            </div>
-          }
-        </div> -->
-      <!-- </div> -->
-    </div>
-
-    <button
-      class="private-sale"
-      (click)="privateSalePhunkAction()"
-      [class.active]="actionsState().privateSale">
-
-      List Privately
-    </button>
-
-    <div class="form-group private-sale" *ngIf="actionsState().privateSale">
-      <label i18n for="list-to-address">Offer to Address</label>
-      <input type="text" id="list-to-address" [placeholder]="'0x or ens'" [formControl]="listToAddress" role="presentation" autocomplete="off" />
-    </div>
-
-    <div class="form-actions">
-      <button i18n type="reset" class="cancel" (click)="closeListing()">Cancel</button>
-      <button i18n type="submit" class="submit" (click)="submitListing(phunk)">Offer {{ phunk.singleName }}</button>
-    </div>
-
-    @if (!phunk.isEscrowed && !phunk.nft) {
-      <p class="small">Offering your item for sale will send it to our contract to be held in escrow. You can withdraw it at any time.</p>
-    }
-  </form>
-</ng-template>
-
-<!-- Escrow Form -->
-<ng-template #escrowForm let-phunk>
-  <div class="form-wrapper">
-    <ng-container *ngTemplateOutlet="cooldown; context:{ $implicit: phunk }" />
-
-    <p i18n>Your {{ phunk.singleName }} must be held in escrow in order to be listed. <span class="small">While held in escrow, your Phunk will not show in your wallet on other apps/marketplaces.</span></p>
-
-    <div class="form-actions">
-      <button i18n type="reset" class="cancel" (click)="closeEscrow()">Cancel</button>
-      <button i18n class="sell" (click)="sendToEscrow(phunk)">
-        Send to Escrow
-      </button>
-    </div>
-  </div>
-</ng-template>
-
-<!-- Auction Form -->
-<ng-template #auctionForm let-phunk>
-  <div class="form-wrapper">
-    <ng-container *ngTemplateOutlet="cooldown; context:{ $implicit: phunk }" />
-
-    <div class="form-group">
-      <div class="row row-2">
-        <div class="auction-duration">
-          <label i18n for="auction-duration">Auction Duration</label>
-          <input #auctionDurationInput type="number" id="auction-duration" [formControl]="auctionDuration" />
-        </div>
-      </div>
-    </div>
-
-    <div class="form-group">
-      <div class="row row-2">
-        <div class="auction-min-bid-increment-percentage">
-          <label i18n for="auction-min-bid-increment-percentage">Min Bid Increment %</label>
-          <input #auctionMinBidIncrementPercentageInput type="number" id="auction-min-bid-increment-percentage" [formControl]="auctionMinBidIncrementPercentage" />
-        </div>
-
-        <div class="auction-time-buffer">
-          <label i18n for="auction-time-buffer">Time Buffer</label>
-          <input #auctionTimeBufferInput type="number" id="auction-time-buffer" [formControl]="auctionTimeBuffer" />
-        </div>
-      </div>
-    </div>
-
-    <div class="form-actions">
-      <button i18n type="reset" class="cancel" (click)="closeAuction()">Cancel</button>
-      <button i18n class="sell" (click)="sendToAuction(phunk)">
-        Send to Auction
-      </button>
-    </div>
-  </div>
-</ng-template>
-
-<!-- Bridge Form -->
-<ng-template #bridgeForm let-phunk>
-  <div class="form-wrapper">
-    <ng-container *ngTemplateOutlet="cooldown; context:{ $implicit: phunk }" />
-
-    <p i18n>Bridge your {{ phunk.singleName }} to Magma L2 for faster and cheaper transacting. You can unlock and bridge your {{ phunk.singleName }} back at any time.</p>
-
-    <!-- <p><span class="small">You must own magma's native token in order to transact on the L2.</span> <a href="#">Click here to swap</a></p> -->
-
-    <div class="form-actions">
-      <button i18n type="reset" class="cancel" (click)="closeBridge()">Cancel</button>
-      <button i18n class="sell" (click)="bridge(phunk)">
-        Bridge
-      </button>
-    </div>
-  </div>
-</ng-template>
-
 <ng-template #expandIcon let-expanded>
-  @if (expanded) {
+  @if (billboardExpanded()) {
     <svg height="21" viewBox="0 0 21 21" width="21" xmlns="http://www.w3.org/2000/svg"><path d="m0 0h9v3h-6v15h15v-6h3v9h-21zm9 12v3h-3v-3zm3-3v3h-3v-3zm3-3v3h-3v-3zm6-6v6h-3v-3h-3v-3z" fill="rgba(var(--background), 1)" fill-rule="evenodd"/></svg>
   } @else {
     <svg height="21" viewBox="0 0 21 21" width="21" xmlns="http://www.w3.org/2000/svg"><path d="m0 0h9v3h-6v15h15v-6h3v9h-21zm9 9v3h3v3h-6v-6zm6-3v3h-3v-3zm3-3v3h-3v-3zm3-3v3h-3v-3z" fill="rgba(var(--background), 1)" fill-rule="evenodd"/></svg>
-  }
-</ng-template>
-
-<!-- Pending 'spinner' -->
-<ng-template #pending let-txFunction>
-  @if (pendingTx$ | async; as tx) {
-    @if (tx.function === txFunction) {
-      <img src="/loader-dark.gif" width="15" height="15" alt="" />
-    }
-  }
-</ng-template>
-
-<!-- Cooldown overlay -->
-<ng-template #cooldown let-phunk>
-  @if ((isCooling$ | async) && !phunk.nft) {
-    <div class="cooldown-wrapper">
-      <p>{{ web3Svc.maxCooldown }} Block cooldown</p>
-      <img src="/loader-phunk.gif" width="40" height="40" alt="">
-    </div>
   }
 </ng-template>

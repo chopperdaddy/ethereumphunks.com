@@ -1,0 +1,34 @@
+@if (phunk().isEscrowed) {
+  <!-- Owner -->
+  @if (phunk().prevOwner; as owner) {
+    <p i18n>This {{ phunk().collection?.singleName }} is held in <a [routerLink]="['/', 'curated', phunk().slug, 'market', 'owned']" [queryParams]="{ address: escrowAddress }">escrow</a> for <a [routerLink]="['/', 'curated', phunk().slug, 'market', 'owned']" [queryParams]="{ address: owner }"><app-address [address]="owner" /></a>.</p>
+  }
+} @else if (phunk().isBridged) {
+  <!-- Owner -->
+  @if (phunk().prevOwner; as owner) {
+    <p i18n>This {{ phunk().collection?.singleName }} has been <a [routerLink]="['/', 'curated', phunk().slug, 'market', 'owned']" [queryParams]="{ address: bridgeAddress }">bridged</a> to L2.</p>
+  }
+
+  <!-- NFT info -->
+  @if (phunk().nft; as nft) {
+    <p i18n>This {{ phunk().collection?.singleName }} is owned by <a [routerLink]="['/', 'curated', phunk().slug, 'market', 'owned']" [queryParams]="{ address: nft.owner}"><app-address [address]="nft.owner" /></a>.</p>
+  }
+} @else if (phunk().isAuctioned) {
+  @if (phunk().prevOwner; as prevOwner) {
+    <p i18n>This {{ phunk().collection?.singleName }} is being auctioned by <a [routerLink]="['/', 'curated', phunk().slug, 'market', 'owned']" [queryParams]="{ address: prevOwner }"><app-address [address]="prevOwner" /></a>.</p>
+  }
+} @else {
+  <!-- Owner -->
+  @if (phunk().owner; as owner) {
+    <p i18n>This {{ phunk().collection?.singleName }} is owned by <a [routerLink]="['/', 'curated', phunk().slug, 'market', 'owned']" [queryParams]="{ address: owner }"><app-address [address]="owner" /></a>.</p>
+  }
+}
+
+<!-- Value (Listing) -->
+@if (phunk().listing?.minValue; as value) {
+  <p i18n>This {{ phunk().collection?.singleName }} is for sale for <span class="highlight">{{ (value | weiToEth) }} ETH</span><span class="bold"> (${{ ((value | weiToEth) * ((usd$ | async) || 0)) | formatCash }})</span>.</p>
+} @else if (!phunk().isSupported) {
+  <p i18n>This {{ phunk().collection?.singleName }} is not supported by the marketplace.</p>
+} @else {
+  <p i18n>This {{ phunk().collection?.singleName }} is not for sale.</p>
+}

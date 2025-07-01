@@ -1,0 +1,36 @@
+<h2 i18n>Attributes</h2>
+<div class="accessories">
+  @if (phunk(); as phunk) {
+    @for (item of phunk.attributes; track item; let i = $index) {
+      @if (i > 0) {
+        <!-- {{ item | json }} -->
+        <div class="accessory">
+          @if (item.v | isNumber) {
+            <span class="value">{{ item.k }}</span>
+
+            <span class="trait-count">
+              <span>{{ (item.v) }}</span>
+            </span>
+          } @else {
+            <a
+              class="value"
+              [routerLink]="['/', 'curated', phunk.slug, 'market', 'all']"
+              [queryParams]="item | queryParams">
+
+              <span>{{ item.v }}</span>
+              @if (item.v | traitCount : phunk.slug) {
+                <span class="percent">
+                  ({{ (+(item.v | traitCount : phunk.slug) / (phunk.collection?.supply || 0)) | percent : '1.1-1' }})
+                </span>
+              }
+            </a>
+
+            <span class="trait-count">
+              <span>{{ (item.v | traitCount : phunk.slug) && (item.v | traitCount : phunk.slug) + ' ' + phunk.collection?.name + ' have this.' }}</span>
+            </span>
+          }
+        </div>
+      }
+    }
+  }
+</div>

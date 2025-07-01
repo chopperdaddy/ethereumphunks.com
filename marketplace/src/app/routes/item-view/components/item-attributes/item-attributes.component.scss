@@ -1,0 +1,49 @@
+@use '@scss/abstracts/variables' as *;
+@use '@scss/abstracts/mixins' as *;
+
+:host {
+  display: block;
+}
+
+h2 {
+  font-size: 2.4rem;
+  padding-bottom: 2rem;
+}
+
+.accessories {
+  display: grid;
+  grid-template-columns: 100%;
+  row-gap: 2rem;
+
+  .accessory {
+    display: flex;
+    flex-direction: column;
+    font-size: 1.8rem;
+
+    .value {
+      font-weight: 700;
+      color: rgba(var(--highlight), 1);
+      text-decoration: none;
+
+      .percent {
+        font-size: 1.4rem;
+        opacity: .5;
+      }
+    }
+
+    .trait-count {
+      padding-top: 1rem;
+      span {
+        font-weight: 700;
+      }
+    }
+  }
+
+  @media (max-width: $mobile) {
+    grid-template-columns: 100%;
+
+    .accessory {
+      font-size: 1.6rem;
+    }
+  }
+}

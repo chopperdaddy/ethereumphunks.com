@@ -1,0 +1,23 @@
+@use '@scss/abstracts/variables' as *;
+@use '@scss/abstracts/mixins' as *;
+
+:host {
+  display: block;
+}
+
+p {
+  padding: 0;
+  margin: 0;
+  padding-bottom: 1rem;
+
+  a {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: rgba(var(--highlight), 1);
+    text-decoration: none;
+  }
+
+  .bold {
+    font-weight: 700;
+  }
+}
