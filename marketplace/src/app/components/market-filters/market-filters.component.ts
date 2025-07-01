@@ -7,7 +7,7 @@ import { Store } from '@ngrx/store';
 import { NgSelectModule } from '@ng-select/ng-select';
 
 import { DataService } from '@/services/data.service';
-import { IsNumberPipe } from '@/pipes/is-number';
+import { IsNumberPipe } from '@/pipes/is-number.pipe';
 import { GlobalState } from '@/models/global-state';
 
 import { setActiveTraitFilters } from '@/state/market/market-state.actions';
