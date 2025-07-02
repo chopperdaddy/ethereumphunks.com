@@ -50,12 +50,13 @@
 
           <div class="label">
             @if (event.type) {
-              <div [innerHTML]="labels[event.type]"></div>
+              <span [innerHTML]="labels[event.type] + ' '"></span>
             }
 
             @if (
               event.to && (
                 event.type === 'transfer' ||
+                event.type === 'AuctionCreated' ||
                 event.type === 'created' ||
                 event.type === 'bridgeIn'
               )
@@ -73,7 +74,7 @@
               event.type !== 'bridgeOut'
             ) {
               <span class="value">
-                Ξ{{ event.value | weiToEth }}<br />
+                for Ξ{{ event.value | weiToEth }}
               </span>
             }
 

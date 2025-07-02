@@ -53,6 +53,9 @@ export class RecentActivityComponent {
     { label: 'Sold', value: 'PhunkBought' },
     { label: 'Transferred', value: 'transfer' },
     { label: 'Created', value: 'created' },
+    { label: 'Auction Created', value: 'AuctionCreated' },
+    { label: 'Auction Bid', value: 'AuctionBid' },
+    { label: 'Auction Settled', value: 'AuctionSettled' },
     // { label: 'Bid Entered', value: 'PhunkBidEntered' },
     // { label: 'Bid Withdrawn', value: 'PhunkBidWithdrawn' },
     // { label: 'Bridged', value: 'bridgeOut' },
@@ -65,14 +68,15 @@ export class RecentActivityComponent {
   _activeTxFilter: EventType = this.txFilters[0].value;
 
   labels: any = {
-    PhunkBidEntered: 'New bid of',
-    PhunkBidWithdrawn: 'Bid withdrawn',
-    PhunkOffered: 'Offered for',
-    PhunkBought: 'Bought for',
+    PhunkOffered: 'Offered',
+    PhunkBought: 'Bought',
     transfer: 'Transferred to',
     created: 'Created by',
     bridgeOut: 'Bridged (Locked) by',
     bridgeIn: 'Bridged (Unlocked) by',
+    AuctionCreated: 'Auction Created by',
+    AuctionBid: 'Auction Bid',
+    AuctionSettled: 'Auction Settled',
     // escrow: 'Escrowed by',
     // PhunkNoLongerForSale: 'Offer withdrawn',
   };

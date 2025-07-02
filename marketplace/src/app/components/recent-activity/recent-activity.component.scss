@@ -116,9 +116,10 @@ section {
         font-weight: 500;
         max-width: 12rem;
 
-        // app-address {
-        //   width: 100%;
-        // }
+
+        app-address {
+          display: inline;
+        }
       }
 
       .date {
@@ -134,8 +135,9 @@ section {
       (created sale phunkbought): var(--base-color),
       (transfer): var(--transferred-color),
       (offered phunkoffered phunkofferwithdrawn phunknolongerforsale): var(--listed-color),
-      (phunkbidentered phunkbidwithdrawn): var(--bid-color),
-      (bridgein bridgeout): var(--magma)
+      (phunkbidentered phunkbidwithdrawn ): var(--bid-color),
+      (bridgein bridgeout): var(--magma),
+      (auctioncreated auctionbid auctionextended auctionsettled): var(--bid-color)
     );
 
     @each $events, $color in $event-color-groups {
