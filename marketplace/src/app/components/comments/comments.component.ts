@@ -28,7 +28,6 @@ import { selectWalletAddress } from '@/state/app/app-state.selectors';
 import { ZERO_ADDRESS } from '@/constants/utils';
 
 @Component({
-  selector: 'app-comments',
   standalone: true,
   imports: [
     CommonModule,
@@ -38,6 +37,7 @@ import { ZERO_ADDRESS } from '@/constants/utils';
     TippyDirective,
     AvatarComponent,
   ],
+  selector: 'app-comments',
   templateUrl: './comments.component.html',
   styleUrls: ['./comments.component.scss']
 })

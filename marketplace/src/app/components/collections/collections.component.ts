@@ -12,7 +12,6 @@ import { selectCollections } from '@/state/data/data-state.selectors';
 import { filter, map } from 'rxjs';
 
 @Component({
-  selector: 'app-collections',
   standalone: true,
   imports: [
     AsyncPipe,
@@ -21,6 +20,7 @@ import { filter, map } from 'rxjs';
 
     PhunkGridComponent
   ],
+  selector: 'app-collections',
   templateUrl: './collections.component.html',
   styleUrl: './collections.component.scss'
 })

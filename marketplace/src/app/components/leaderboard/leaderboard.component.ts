@@ -13,7 +13,6 @@ import * as dataStateSelectors from '@/state/data/data-state.selectors';
 import { RouterModule } from '@angular/router';
 
 @Component({
-  selector: 'app-leaderboard',
   standalone: true,
   imports: [
     CommonModule,
@@ -21,6 +20,7 @@ import { RouterModule } from '@angular/router';
 
     WalletAddressDirective
   ],
+  selector: 'app-leaderboard',
   templateUrl: './leaderboard.component.html',
   styleUrl: './leaderboard.component.scss'
 })

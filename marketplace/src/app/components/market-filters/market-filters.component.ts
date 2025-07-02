@@ -15,7 +15,6 @@ import { selectActiveTraitFilters } from '@/state/market/market-state.selectors'
 
 import { tap } from 'rxjs';
 @Component({
-  selector: 'app-market-filters',
   standalone: true,
   imports: [
     CommonModule,
@@ -24,6 +23,7 @@ import { tap } from 'rxjs';
     IsNumberPipe,
     TitleCasePipe,
   ],
+  selector: 'app-market-filters',
   templateUrl: './market-filters.component.html',
   styleUrls: ['./market-filters.component.scss']
 })

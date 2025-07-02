@@ -13,13 +13,13 @@ import { selectWalletAddress } from '@/state/app/app-state.selectors';
 import { map, tap } from 'rxjs/operators';
 
 @Component({
-  selector: 'app-login',
   standalone: true,
   imports: [
     AsyncPipe,
     ReactiveFormsModule,
     NgTemplateOutlet
   ],
+  selector: 'app-login',
   templateUrl: './login.component.html',
   styleUrl: './login.component.scss'
 })

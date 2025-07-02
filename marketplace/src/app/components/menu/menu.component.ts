@@ -34,7 +34,6 @@ import anime from 'animejs';
 import { environment } from '@environments/environment';
 
 @Component({
-  selector: 'app-menu',
   standalone: true,
   imports: [
     CommonModule,
@@ -52,6 +51,7 @@ import { environment } from '@environments/environment';
   host: {
     style: 'transform: translateX(100%);',
   },
+  selector: 'app-menu',
   templateUrl: './menu.component.html',
   styleUrls: ['./menu.component.scss']
 })

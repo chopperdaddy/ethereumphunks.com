@@ -17,6 +17,7 @@ import { setChat, setCreateConversationWithAddress } from '@/state/chat/chat.act
 import { ChatService } from '@/services/chat.service';
 import { Web3Service } from '@/services/web3.service';
 @Component({
+  standalone: true,
   imports: [
     AsyncPipe,
     TimeagoModule,
@@ -28,7 +29,6 @@ import { Web3Service } from '@/services/web3.service';
     AvatarComponent
 ],
   selector: 'app-conversations',
-  standalone: true,
   templateUrl: './conversations.component.html',
   styleUrl: './conversations.component.scss'
 })
