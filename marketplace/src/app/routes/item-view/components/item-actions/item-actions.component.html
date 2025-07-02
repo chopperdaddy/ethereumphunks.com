@@ -1,167 +1,203 @@
-<div
-  class="actions-wrapper"
-  [class.disabled]="(blocksBehind$ | async)">
+@if ((walletAddress$ | async); as address) {
+  @if (phunk(); as phunk) {
+    @if (phunk.isSupported) {
+      @if (phunk.consensus) {
 
-  @if ((walletAddress$ | async); as address) {
-    @if (phunk(); as phunk) {
-      @if (phunk.isSupported) {
-        @if (phunk.consensus) {
+        <!-- Escrow actions (Send) -->
+        @if (!phunk.isAuctioned) {
+          @if ((phunk.owner | lowercase) === (address | lowercase)) {
+            <button class="send-to-auction-button" (click)="auctionAction()" [class.active]="actionsState().auction">
+              <span>Send to auction</span>
+              <ng-container *ngTemplateOutlet="pending; context:{ $implicit: 'sendToAuction' }" />
+            </button>
 
-          <!-- Escrow actions (Send) -->
-          @if (!phunk.isAuctioned) {
-            @if ((phunk.owner | lowercase) === (address | lowercase)) {
-              <button class="send-to-auction" (click)="auctionPhunkAction()" [class.active]="actionsState().auction">
-                <span>Send to auction</span>
-                <ng-container *ngTemplateOutlet="pending; context:{ $implicit: 'sendToAuction' }" />
-              </button>
-
-              @if (actionsState().auction) {
-                <ng-container *ngTemplateOutlet="auctionForm; context:{ $implicit: phunk }" />
-              }
+            @if (actionsState().auction) {
+              <ng-container *ngTemplateOutlet="auctionForm; context:{ $implicit: phunk }" />
             }
-          }
-
-          <!-- Bridge button -->
-          <!-- @if ((owner | lowercase) === (address | lowercase)) {
-            <button class="bridge" [class.active]="bridgeActive" (click)="bridgePhunkAction()">
-              <span>Bridge</span>
-              <ng-container *ngTemplateOutlet="pending; context:{ $implicit: 'bridgePhunk' }" />
-            </button>
-
-            @if (bridgeActive) {
-              <ng-container *ngTemplateOutlet="bridgeForm; context:{ $implicit: phunk }" />
-            }
-          } -->
-
-          <!-- Buy button -->
-          @if (
-            phunk.listing &&
-            ((
-              phunk.isEscrowed &&
-              (phunk.prevOwner | lowercase) !== (address | lowercase)
-            ) || (
-              phunk.nft &&
-              phunk.nft.owner !== address
-            ))
-          ) {
-            <button class="buy" (click)="buyPhunk()">
-              <span>Buy</span>
-              <ng-container *ngTemplateOutlet="pending; context:{ $implicit: 'buyPhunk' }" />
-            </button>
-          }
-
-          <!-- Sell (Ownership actions) -->
-          @if (
-            ((phunk.owner | lowercase) === (escrowAddress | lowercase) &&
-            (phunk.prevOwner | lowercase) === (address | lowercase)) ||
-            (phunk.owner | lowercase) === (address | lowercase) ||
-            (phunk.nft && phunk.nft.owner === address)
-          ) {
-            <button class="sell" (click)="sellPhunk()" [class.active]="actionsState().sell">
-              <span>Sell</span>
-              <ng-container *ngTemplateOutlet="pending; context:{ $implicit: 'offerPhunkForSale' }" />
-            </button>
-
-            <!-- Sell Actions -->
-            @if (actionsState().sell) {
-              <ng-container *ngTemplateOutlet="sellForm; context:{ $implicit: phunk }" />
-            }
-          }
-
-          <!-- Escrow actions (Send) -->
-          @if (!phunk.isEscrowed && (phunk.owner | lowercase) === (address | lowercase)) {
-            <button class="send-to-escrow" (click)="escrowPhunk()" [class.active]="actionsState().escrow">
-              <span>Send to escrow</span>
-              <ng-container *ngTemplateOutlet="pending; context:{ $implicit: 'sendToEscrow' }" />
-            </button>
-
-            @if (actionsState().escrow) {
-              <ng-container *ngTemplateOutlet="escrowForm; context:{ $implicit: phunk }" />
-            }
-          }
-
-          <!-- Escrow actions (Withdraw) -->
-          @if (phunk.isEscrowed && (phunk.prevOwner | lowercase) === (address | lowercase)) {
-            <button class="withdraw" (click)="withdrawPhunk()">
-              <span>Withdraw from escrow</span>
-              <ng-container *ngTemplateOutlet="pending; context:{ $implicit: 'withdrawPhunk' }" />
-            </button>
-          }
-
-          <!-- Delist button -->
-          @if (
-            phunk.listing &&
-            ((
-              ((phunk.owner | lowercase) === (escrowAddress | lowercase) &&
-              (phunk.prevOwner | lowercase) === (address | lowercase)) ||
-              (phunk.nft?.owner === address)
-            ) || (
-              phunk.nft &&
-              phunk.nft.owner === address
-            ))
-          ) {
-            <button class="sell" (click)="phunkNoLongerForSale()">
-              <span>Delist</span>
-              <ng-container *ngTemplateOutlet="pending; context:{ $implicit: 'phunkNoLongerForSale' }" />
-            </button>
-          }
-        } @else {
-          @if (!(isCooling$ | async)) {
-            <div class="notice">
-              <div class="consensus">This {{ phunk.collection?.singleName }} does not have consensus with one or more indexers. <a (click)="setChat()">Contact support</a> to resolve this issue.</div>
-            </div>
           }
         }
-      }
 
-      <!-- Transfer -->
-      @if ((phunk.owner | lowercase) === (address | lowercase)) {
-        <button class="transfer" [class.active]="actionsState().transfer" (click)="transferPhunkAction()">
-          <span>Transfer</span>
-          <ng-container *ngTemplateOutlet="pending; context:{ $implicit: 'transferPhunk' }" />
-        </button>
+        <!-- Buy button -->
+        @if (
+          phunk.listing &&
+          ((
+            phunk.isEscrowed &&
+            (phunk.prevOwner | lowercase) !== (address | lowercase)
+          ) || (
+            phunk.nft &&
+            phunk.nft.owner !== address
+          ))
+        ) {
+          <button class="buy" (click)="buyPhunk()">
+            <span>Buy</span>
+            <ng-container *ngTemplateOutlet="pending; context:{ $implicit: 'buyPhunk' }" />
+          </button>
+        }
 
-        <!-- Transfer actions -->
-        @if (actionsState().transfer) {
-          <ng-container *ngTemplateOutlet="transferForm; context:{ $implicit: phunk }" />
+        <!-- Sell (Ownership actions) -->
+        @if (
+          ((phunk.owner | lowercase) === (escrowAddress | lowercase) &&
+          (phunk.prevOwner | lowercase) === (address | lowercase)) ||
+          (phunk.owner | lowercase) === (address | lowercase) ||
+          (phunk.nft && phunk.nft.owner === address)
+        ) {
+          <button class="sell" (click)="sellAction()" [class.active]="actionsState().sell">
+            <span>Sell</span>
+            <ng-container *ngTemplateOutlet="pending; context:{ $implicit: 'offerPhunkForSale' }" />
+          </button>
+
+          <!-- Sell Actions -->
+          @if (actionsState().sell) {
+            <ng-container *ngTemplateOutlet="sellForm; context:{ $implicit: phunk }" />
+          }
+        }
+
+        <!-- Escrow actions (Send) -->
+        @if (!phunk.isEscrowed && (phunk.owner | lowercase) === (address | lowercase)) {
+          <button class="send-to-escrow" (click)="escrowAction()" [class.active]="actionsState().escrow">
+            <span>Send to escrow</span>
+            <ng-container *ngTemplateOutlet="pending; context:{ $implicit: 'sendToEscrow' }" />
+          </button>
+
+          @if (actionsState().escrow) {
+            <ng-container *ngTemplateOutlet="escrowForm; context:{ $implicit: phunk }" />
+          }
+        }
+
+        <!-- Escrow actions (Withdraw) -->
+        @if (phunk.isEscrowed && (phunk.prevOwner | lowercase) === (address | lowercase)) {
+          <button class="withdraw" (click)="withdrawPhunk()">
+            <span>Withdraw from escrow</span>
+            <ng-container *ngTemplateOutlet="pending; context:{ $implicit: 'withdrawPhunk' }" />
+          </button>
+        }
+
+        <!-- Delist button -->
+        @if (
+          phunk.listing &&
+          ((
+            ((phunk.owner | lowercase) === (escrowAddress | lowercase) &&
+            (phunk.prevOwner | lowercase) === (address | lowercase)) ||
+            (phunk.nft?.owner === address)
+          ) || (
+            phunk.nft &&
+            phunk.nft.owner === address
+          ))
+        ) {
+          <button class="sell" (click)="phunkNoLongerForSale()">
+            <span>Delist</span>
+            <ng-container *ngTemplateOutlet="pending; context:{ $implicit: 'phunkNoLongerForSale' }" />
+          </button>
+        }
+
+        <!-- Bridge button -->
+        <!-- @if ((owner | lowercase) === (address | lowercase)) {
+          <button class="bridge" [class.active]="bridgeActive" (click)="bridgePhunkAction()">
+            <span>Bridge</span>
+            <ng-container *ngTemplateOutlet="pending; context:{ $implicit: 'bridgePhunk' }" />
+          </button>
+
+          @if (bridgeActive) {
+            <ng-container *ngTemplateOutlet="bridgeForm; context:{ $implicit: phunk }" />
+          }
+        } -->
+      } @else {
+        @if (!(isCooling$ | async)) {
+          <div class="notice">
+            <div class="consensus">This {{ phunk.collection?.singleName }} does not have consensus with one or more indexers. <a (click)="setChat()">Contact support</a> to resolve this issue.</div>
+          </div>
         }
       }
     }
-  } @else {
-    <!-- Connect wallet -->
-    <button i18n (click)="web3Svc.connect()">
-      Connect an Ethereum wallet to interact with this item
-    </button>
+
+    <!-- Transfer -->
+    @if ((phunk.owner | lowercase) === (address | lowercase)) {
+      <button class="transfer" [class.active]="actionsState().transfer" (click)="transferAction()">
+        <span>Transfer</span>
+        <ng-container *ngTemplateOutlet="pending; context:{ $implicit: 'transferPhunk' }" />
+      </button>
+
+      <!-- Transfer actions -->
+      @if (actionsState().transfer) {
+        <ng-container *ngTemplateOutlet="transferForm; context:{ $implicit: phunk }" />
+      }
+    }
   }
+} @else {
+  <!-- Connect wallet -->
+  <button i18n (click)="web3Svc.connect()">
+    Connect an Ethereum wallet to interact with this item
+  </button>
+}
 
-  <!-- Out links -->
-  @if (!phunk().isSupported) {
-    <a
-      class="button external"
-      [href]="externalMarketUrl + '/ethscriptions/' + phunk().hashId"
-      target="_blank">
+<!-- Out links -->
+@if (!phunk().isSupported) {
+  <a
+    class="button external-button"
+    [href]="externalMarketUrl + '/ethscriptions/' + phunk().hashId"
+    target="_blank">
 
-      View on ethscriptions.com
-    </a>
-  }
-</div>
+    View on ethscriptions.com
+  </a>
+}
 
-<!-- Transfer Form -->
-<ng-template #transferForm let-phunk>
-  <form class="form-wrapper">
+<!-- Auction Form -->
+<ng-template #auctionForm let-phunk>
+  <div class="form-wrapper auction">
     <ng-container *ngTemplateOutlet="cooldown; context:{ $implicit: phunk }" />
 
     <div class="form-group">
-      <label i18n for="transfer-address">Transfer to address</label>
-      <input #transferAddressInput type="text" id="transfer-address" [formControl]="transferAddress"
-        placeholder="0x or .ens" role="presentation" autocomplete="off" />
+      <div class="row">
+        <div class="auction-duration">
+          <label i18n for="auction-duration">Auction Duration</label>
+          <div class="input-group">
+            <div class="input-item">
+              <label for="auction-duration-days">Days</label>
+              <input #auctionDurationDaysInput type="number" id="auction-duration" [formControl]="auctionDurationDays"  min="0" max="30" />
+            </div>
+            <div class="input-item">
+              <label for="auction-duration-hours">Hours</label>
+              <input #auctionDurationHoursInput type="number" id="auction-duration" [formControl]="auctionDurationHours" min="0" max="23" />
+            </div>
+            <div class="input-item">
+              <label for="auction-duration-minutes">Minutes</label>
+              <input #auctionDurationMinutesInput type="number" id="auction-duration" [formControl]="auctionDurationMinutes" min="0" max="59" />
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <button
+      class="advanced-options-button"
+      (click)="auctionAdvancedOptionsAction()"
+      [class.active]="actionsState().auctionAdvancedOptions">
+
+      Advanced Options
+    </button>
+
+    <div class="form-group advanced-options-group" *ngIf="actionsState().auctionAdvancedOptions">
+      <div class="row row-2">
+        <div class="auction-min-bid-increment-percentage">
+          <label i18n for="auction-min-bid-increment-percentage">Bid Increment %</label>
+          <input #auctionMinBidIncrementPercentageInput type="number" id="auction-min-bid-increment-percentage" [formControl]="auctionMinBidIncrementPercentage" />
+        </div>
+
+        <div class="auction-time-buffer">
+          <label i18n for="auction-time-buffer">Time Buffer</label>
+          <input #auctionTimeBufferMinutesInput type="number" id="auction-time-buffer" [formControl]="auctionTimeBufferMinutes" />
+        </div>
+      </div>
     </div>
 
     <div class="form-actions">
-      <button i18n type="reset" class="cancel" (click)="closeTransfer()">Cancel</button>
-      <button i18n type="submit" class="submit" (click)="transferPhunk(phunk)">Submit</button>
+      <button i18n type="reset" class="cancel" (click)="closeAuction()">Cancel</button>
+      <button i18n class="sell" (click)="sendToAuction()">
+        Send to Auction
+      </button>
     </div>
-  </form>
+  </div>
 </ng-template>
 
 <!-- Sell Form -->
@@ -202,14 +238,14 @@
     </div>
 
     <button
-      class="private-sale"
-      (click)="privateSalePhunkAction()"
+      class="advanced-options-button"
+      (click)="privateSaleAction()"
       [class.active]="actionsState().privateSale">
 
       List Privately
     </button>
 
-    <div class="form-group private-sale" *ngIf="actionsState().privateSale">
+    <div class="form-group advanced-options-group" *ngIf="actionsState().privateSale">
       <label i18n for="list-to-address">Offer to Address</label>
       <input type="text" id="list-to-address" [placeholder]="'0x or ens'" [formControl]="listToAddress" role="presentation" autocomplete="off" />
     </div>
@@ -225,6 +261,24 @@
   </form>
 </ng-template>
 
+<!-- Transfer Form -->
+<ng-template #transferForm let-phunk>
+  <form class="form-wrapper">
+    <ng-container *ngTemplateOutlet="cooldown; context:{ $implicit: phunk }" />
+
+    <div class="form-group">
+      <label i18n for="transfer-address">Transfer to address</label>
+      <input #transferAddressInput type="text" id="transfer-address" [formControl]="transferAddress"
+        placeholder="0x or .ens" role="presentation" autocomplete="off" />
+    </div>
+
+    <div class="form-actions">
+      <button i18n type="reset" class="cancel" (click)="closeTransfer()">Cancel</button>
+      <button i18n type="submit" class="submit" (click)="transferPhunk(phunk)">Submit</button>
+    </div>
+  </form>
+</ng-template>
+
 <!-- Escrow Form -->
 <ng-template #escrowForm let-phunk>
   <div class="form-wrapper">
@@ -236,43 +290,6 @@
       <button i18n type="reset" class="cancel" (click)="closeEscrow()">Cancel</button>
       <button i18n class="sell" (click)="sendToEscrow()">
         Send to Escrow
-      </button>
-    </div>
-  </div>
-</ng-template>
-
-<!-- Auction Form -->
-<ng-template #auctionForm let-phunk>
-  <div class="form-wrapper">
-    <ng-container *ngTemplateOutlet="cooldown; context:{ $implicit: phunk }" />
-
-    <div class="form-group">
-      <div class="row row-2">
-        <div class="auction-duration">
-          <label i18n for="auction-duration">Auction Duration</label>
-          <input #auctionDurationInput type="number" id="auction-duration" [formControl]="auctionDuration" />
-        </div>
-      </div>
-    </div>
-
-    <div class="form-group">
-      <div class="row row-2">
-        <div class="auction-min-bid-increment-percentage">
-          <label i18n for="auction-min-bid-increment-percentage">Min Bid Increment %</label>
-          <input #auctionMinBidIncrementPercentageInput type="number" id="auction-min-bid-increment-percentage" [formControl]="auctionMinBidIncrementPercentage" />
-        </div>
-
-        <div class="auction-time-buffer">
-          <label i18n for="auction-time-buffer">Time Buffer</label>
-          <input #auctionTimeBufferInput type="number" id="auction-time-buffer" [formControl]="auctionTimeBuffer" />
-        </div>
-      </div>
-    </div>
-
-    <div class="form-actions">
-      <button i18n type="reset" class="cancel" (click)="closeAuction()">Cancel</button>
-      <button i18n class="sell" (click)="sendToAuction()">
-        Send to Auction
       </button>
     </div>
   </div>

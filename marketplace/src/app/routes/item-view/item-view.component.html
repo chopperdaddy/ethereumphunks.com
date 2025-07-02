@@ -59,7 +59,7 @@
               </div>
 
               <!-- Actions -->
-              <app-item-actions [phunk]="phunk" />
+              <app-item-actions [phunk]="phunk" [class.disabled]="indexerIsBehind$ | async" />
 
               @if (!(isMobile$ | async) && (globalConfig$ | async)?.comments) {
                 @defer {

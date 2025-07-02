@@ -16,7 +16,7 @@ import { Web3Service } from '@/services/web3.service';
 import { UtilService } from '@/services/util.service';
 import { DataService } from '@/services/data.service';
 
-import { selectBlocksBehind, selectCooldowns, selectWalletAddress } from '@/state/app/app-state.selectors';
+import { selectCooldowns, selectWalletAddress } from '@/state/app/app-state.selectors';
 import { upsertNotification } from '@/state/notification/notification.actions';
 import { addCooldown } from '@/state/app/app-state.actions';
 
@@ -31,6 +31,7 @@ interface ActionsState {
   bridge: boolean;
   privateSale: boolean;
   auction: boolean;
+  auctionAdvancedOptions: boolean;
 };
 
 @Component({
@@ -56,9 +57,12 @@ export class ItemActionsComponent {
   // @ViewChild('revShareInput') revShareInput!: ElementRef<HTMLInputElement>;
 
   // Auction Forms
-  @ViewChild('auctionDurationInput') auctionDurationInput!: ElementRef<HTMLInputElement>;
+  @ViewChild('auctionDurationDaysInput') auctionDurationDaysInput!: ElementRef<HTMLInputElement>;
+  @ViewChild('auctionDurationHoursInput') auctionDurationHoursInput!: ElementRef<HTMLInputElement>;
+  @ViewChild('auctionDurationMinutesInput') auctionDurationMinutesInput!: ElementRef<HTMLInputElement>;
+
   @ViewChild('auctionMinBidIncrementPercentageInput') auctionMinBidIncrementPercentageInput!: ElementRef<HTMLInputElement>;
-  @ViewChild('auctionTimeBufferInput') auctionTimeBufferInput!: ElementRef<HTMLInputElement>;
+  @ViewChild('auctionTimeBufferMinutesInput') auctionTimeBufferMinutesInput!: ElementRef<HTMLInputElement>;
 
   // Collapsable
   @ViewChildren('collapsable') collapsable!: QueryList<ElementRef<HTMLDivElement>>;
@@ -71,13 +75,10 @@ export class ItemActionsComponent {
     bridge: false,
     privateSale: false,
     auction: false,
+    auctionAdvancedOptions: false,
   });
 
   walletAddress$ = this.store.select(selectWalletAddress);
-  blocksBehind$ = this.store.select(selectBlocksBehind).pipe(
-    filter((blocksBehind) => !!blocksBehind),
-    map((blocksBehind) => blocksBehind > 6),
-  );
 
   pendingTx$ = this.store.select(selectNotifications).pipe(
     filter((transactions) => !!transactions),
@@ -97,9 +98,13 @@ export class ItemActionsComponent {
 
   transferAddress = new FormControl<string | null>('');
   listPrice = new FormControl<number | undefined>(undefined);
-  auctionDuration = new FormControl<number | undefined>(undefined);
+
+  auctionDurationDays = new FormControl<number | undefined>(undefined);
+  auctionDurationHours = new FormControl<number | undefined>(undefined);
+  auctionDurationMinutes = new FormControl<number | undefined>(undefined);
+
   auctionMinBidIncrementPercentage = new FormControl<number | undefined>(undefined);
-  auctionTimeBuffer = new FormControl<number | undefined>(undefined);
+  auctionTimeBufferMinutes = new FormControl<number | undefined>(undefined);
   listToAddress = new FormControl<string | null>('');
   // revShare = new FormControl<number | undefined>(undefined);
 
@@ -115,35 +120,39 @@ export class ItemActionsComponent {
     public dataSvc: DataService,
   ) {}
 
-  sellPhunk(): void {
+  sellAction(): void {
     this.closeAll();
     this.actionsState.update((state) => ({ ...state, sell: true }));
     setTimeout(() => this.sellPriceInput?.nativeElement.focus(), 0);
   }
 
-  escrowPhunk(): void {
+  escrowAction(): void {
     this.closeAll();
     this.actionsState.update((state) => ({ ...state, escrow: true }));
   }
 
-  transferPhunkAction(): void {
+  transferAction(): void {
     this.closeAll();
     this.actionsState.update((state) => ({ ...state, transfer: true }));
     setTimeout(() => this.transferAddressInput?.nativeElement.focus(), 0);
   }
 
-  bridgePhunkAction(): void {
+  bridgeAction(): void {
     this.closeAll();
     this.actionsState.update((state) => ({ ...state, bridge: true }));
   }
 
-  privateSalePhunkAction(): void {
+  privateSaleAction(): void {
     this.actionsState.update((state) => ({ ...state, privateSale: true }));
   }
 
-  auctionPhunkAction(): void {
+  auctionAction(): void {
     this.closeAll();
     this.actionsState.update((state) => ({ ...state, auction: true }));
+  }
+
+  auctionAdvancedOptionsAction(): void {
+    this.actionsState.update((state) => ({ ...state, auctionAdvancedOptions: true }));
   }
 
   closeListing(): void {
@@ -171,6 +180,12 @@ export class ItemActionsComponent {
 
   closeAuction(): void {
     this.actionsState.update((state) => ({ ...state, auction: false }));
+    this.closeAuctionAdvancedOptions();
+    this.clearAll();
+  }
+
+  closeAuctionAdvancedOptions(): void {
+    this.actionsState.update((state) => ({ ...state, auctionAdvancedOptions: false }));
   }
 
   clearAll(): void {
@@ -659,15 +674,24 @@ export class ItemActionsComponent {
     const hashId = phunk.hashId;
     if (!hashId) throw new Error('Invalid hashId');
 
-    // console.log('sendToAuction', {phunk: phunk.hashId, duration: this.auctionDuration.value, minBidIncrementPercentage: this.auctionMinBidIncrementPercentage.value, timeBuffer: this.auctionTimeBuffer.value});
+    const daysToSeconds = (this.auctionDurationDays.value || 0) * 24 * 60 * 60;
+    const hoursToSeconds = (this.auctionDurationHours.value || 0) * 60 * 60;
+    const minutesToSeconds = (this.auctionDurationMinutes.value || 0) * 60;
 
-    if (!this.auctionDuration.value || !this.auctionMinBidIncrementPercentage.value || !this.auctionTimeBuffer.value) throw new Error('Invalid auction parameters');
+    const duration = daysToSeconds + hoursToSeconds + minutesToSeconds;
+
+    const timeBufferSeconds = (this.auctionTimeBufferMinutes.value || 5) * 60;
+    const minBidIncrementPercentage = (this.auctionMinBidIncrementPercentage.value || 5);
+
+    console.log('sendToAuction', {phunk: phunk.hashId, duration, minBidIncrementPercentage, timeBufferSeconds});
+
+    if (!duration || !minBidIncrementPercentage) throw new Error('Invalid auction parameters');
 
     const hash = await this.web3Svc.sendToAuction(
       hashId,
-      Number(this.auctionDuration.value),
-      Number(this.auctionMinBidIncrementPercentage.value),
-      Number(this.auctionTimeBuffer.value)
+      duration,
+      minBidIncrementPercentage,
+      timeBufferSeconds,
     );
 
     console.log('sendToAuction', {hash});

@@ -74,6 +74,10 @@ export class ItemViewComponent {
 
   globalConfig$ = this.store.select(appStateSelectors.selectConfig);
   isMobile$ = this.store.select(appStateSelectors.selectIsMobile);
+  indexerIsBehind$ = this.store.select(appStateSelectors.selectBlocksBehind).pipe(
+    filter((blocksBehind) => !!blocksBehind),
+    map((blocksBehind) => blocksBehind > 4),
+  );
 
   billboardExpanded = signal(false);
 
