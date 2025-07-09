@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 
 import { INode, stringify } from 'svgson';
 import tinycolor from 'tinycolor2';
+import * as UPNG from 'upng-js';
 
 import { ColorService } from './color.service';
 
@@ -18,47 +19,41 @@ export class PixelArtService {
    * @returns Promise resolving to a 2D array of colors
    */
   public async processPixelArtImage(buffer: ArrayBuffer): Promise<string[][]> {
-    return new Promise((resolve, reject) => {
-      const blob = new Blob([buffer], { type: 'image/png' });
-      const img = new Image();
-      img.onload = () => {
-        const canvas = document.createElement('canvas');
-        canvas.width = img.width;
-        canvas.height = img.height;
-        const ctx = canvas.getContext('2d');
-        if (!ctx) {
-          reject(new Error('Unable to get 2D context'));
-          return;
-        }
-        ctx.drawImage(img, 0, 0);
-        const imageData = ctx.getImageData(0, 0, img.width, img.height);
-        const pixelArtData = this.convertToPixelArtFormat(imageData);
-        resolve(pixelArtData);
-      };
-      img.onerror = () => {
-        reject(new Error('Failed to load image'));
-      };
-      img.src = URL.createObjectURL(blob);
-    });
+    try {
+      // Decode PNG using UPNG (browser-compatible)
+      const png = UPNG.decode(buffer);
+
+      // Convert UPNG data to our format
+      const pixelArtData = this.convertUpngToPixelArtFormat(png);
+      return pixelArtData;
+    } catch (error) {
+      throw new Error(`PNG processing failed: ${error}`);
+    }
   }
 
   /**
-   * Converts an ImageData object to a 2D array of colors
-   * @param imageData ImageData object
+   * Converts UPNG data directly to a 2D array of colors (no canvas involved)
+   * @param png PNG data from UPNG
    * @returns 2D array of colors
    */
-  public convertToPixelArtFormat(imageData: ImageData): string[][] {
-    const { width, height, data } = imageData;
+  private convertUpngToPixelArtFormat(png: any): string[][] {
+    const { width, height, data, ctype } = png;
     const pixelArtData: string[][] = [];
+
+    // UPNG.decode returns compressed data, we need to convert to RGBA first
+    // Convert to RGBA format using UPNG.toRGBA8
+    const rgbaBuffer = UPNG.toRGBA8(png);
+    const rgbaData = new Uint8Array(rgbaBuffer[0]); // First frame for static images
 
     for (let y = 0; y < height; y++) {
       const row: string[] = [];
       for (let x = 0; x < width; x++) {
         const index = (y * width + x) * 4;
-        const r = data[index];
-        const g = data[index + 1];
-        const b = data[index + 2];
-        const a = data[index + 3];
+        const r = rgbaData[index];
+        const g = rgbaData[index + 1];
+        const b = rgbaData[index + 2];
+        const a = rgbaData[index + 3];
+
         const colorCode = this.colorSvc.rgbaToHex(r, g, b, a);
         row.push(colorCode);
       }

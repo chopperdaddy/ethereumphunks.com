@@ -15,9 +15,12 @@ export class ColorService {
    */
   public rgbaToHex(r: number, g: number, b: number, a: number): string {
     const toHex = (value: number) => {
-      const hex = value.toString(16);
+      // Round to handle potential floating point values from different browsers
+      const rounded = Math.round(value);
+      const hex = rounded.toString(16);
       return hex.length === 1 ? '0' + hex : hex;
     };
-    return `${toHex(r)}${toHex(g)}${toHex(b)}${toHex(a)}`;
+
+    return toHex(r) + toHex(g) + toHex(b) + toHex(a);
   }
 }
