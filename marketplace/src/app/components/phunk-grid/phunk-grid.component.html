@@ -59,11 +59,11 @@
           ((marketType === 'owned' || marketType === 'all') && viewType === 'market')
         ) && phunk.listing
       "
-      [class.bid]="
+      [class.auction]="
         (
-          marketType === 'bids' ||
+          marketType === 'auctions' ||
           ((marketType === 'owned' || marketType === 'all') && viewType === 'market')
-        ) && phunk.bid
+        ) && phunk.auction
       ">
 
       @if (selectable) {
@@ -112,13 +112,13 @@
             }
 
             @if (
-              marketType === 'bids' ||
+              marketType === 'auctions' ||
               marketType === 'all'
             ) {
-              @if (phunk.bid; as bid) {
+              @if (phunk.auction; as auction) {
                 <p i18n>
-                  {{ (bid.value | weiToEth) }}Ξ<br />
-                  ${{ ((bid.value | weiToEth) * ((usd$ | async) || 0)) | formatCash }}
+                  {{ (auction.value | weiToEth) }}Ξ<br />
+                  ${{ ((auction.value | weiToEth) * ((usd$ | async) || 0)) | formatCash }}
                 </p>
               }
             }

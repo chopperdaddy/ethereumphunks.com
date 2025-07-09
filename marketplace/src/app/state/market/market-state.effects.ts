@@ -86,7 +86,7 @@ export class MarketStateEffects {
       }
 
       if (marketType === 'listings') return this.store.select(marketStateSelectors.selectListings);
-      if (marketType === 'bids') return this.store.select(marketStateSelectors.selectBids);
+      if (marketType === 'auctions') return this.store.select(marketStateSelectors.selectAuctions);
       if (marketType === 'activity') return this.store.select(dataStateSelectors.selectEvents).pipe(
         map((events) => {
           return events?.map((event) => {

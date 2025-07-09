@@ -23,7 +23,7 @@ export interface MarketState {
   activeTraitFilters: TraitFilter | null;
 }
 
-export type MarketType = 'listings' | 'bids' | 'owned' | 'all' | 'activity';
+export type MarketType = 'listings' | 'bids' | 'owned' | 'all' | 'activity' | 'auctions';
 
 export interface PaginationState {
   fromIndex: number;

@@ -56,13 +56,12 @@
             @if (
               event.to && (
                 event.type === 'transfer' ||
-                event.type === 'AuctionCreated' ||
                 event.type === 'created' ||
                 event.type === 'bridgeIn'
               )
             ) {
               <app-address [address]="event.to" />
-            } @else if (event.type === 'bridgeOut') {
+            } @else if (event.type === 'bridgeOut' || event.type === 'AuctionCreated') {
               <app-address [address]="event.from" />
             }
 

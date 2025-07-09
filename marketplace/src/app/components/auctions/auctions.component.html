@@ -1,2 +1,5 @@
-<app-auction [phunk]="activeAuction()!" [collection]="collection()"></app-auction>
-<button (click)="nextAuction()">Next Auction</button>
+<app-auction [phunk]="activeAuction()!" [collection]="collection()!"></app-auction>
+
+@if ((auctions()?.length ?? 0) > 1) {
+  <button (click)="nextAuction()">Next Auction</button>
+}

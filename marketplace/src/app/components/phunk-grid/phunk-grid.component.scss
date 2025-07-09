@@ -109,6 +109,14 @@
       }
     }
 
+    &.auction {
+      .image-wrapper {
+        img {
+          background-color: rgba(var(--auction-color), 1);
+        }
+      }
+    }
+
     &.bridged {
       .image-wrapper {
         img {
