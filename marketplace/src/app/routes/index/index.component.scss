@@ -13,6 +13,20 @@ app-splash {
   left: 0;
 }
 
+app-mint,
+app-auctions {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  max-width: calc(var(--max-width) / 2);
+  overflow: visible;
+  margin: 0 auto;
+
+  @media (max-width: $mobile) {
+    max-width: calc(100% - 4rem);
+  }
+}
+
 main {
   position: relative;
   z-index: 1;
@@ -25,19 +39,6 @@ main {
 
   &.mint-active {
     transform: translateY(0);
-  }
-}
-
-app-mint {
-  position: relative;
-  z-index: 2;
-  width: 100%;
-  max-width: calc(var(--max-width) / 2);
-  overflow: visible;
-  margin: 0 auto;
-
-  @media (max-width: $mobile) {
-    max-width: calc(100% - 4rem);
   }
 }
 

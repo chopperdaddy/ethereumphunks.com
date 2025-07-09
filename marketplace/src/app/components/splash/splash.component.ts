@@ -1,29 +1,23 @@
-import { Component, effect, ElementRef, input, viewChild } from '@angular/core';
-import { AsyncPipe, CommonModule } from '@angular/common';
+import { Component, ElementRef, input, signal, viewChild } from '@angular/core';
+import { CommonModule } from '@angular/common';
 
 import { LazyLoadImageModule } from 'ng-lazyload-image';
-
 import { toObservable } from '@angular/core/rxjs-interop';
-import { distinctUntilChanged, from, map, Observable, of, startWith, switchMap } from 'rxjs';
+import { combineLatest, from, of, shareReplay, startWith, switchMap, tap } from 'rxjs';
 
 import { Collection } from '@/models/data.state';
 
 import { PixelArtService } from '@/services/pixel-art.service';
 import { ImageService } from '@/services/image.service';
 
-import { gsap } from 'gsap';
-interface Image {
-  src: string;
-  type: 'loading' | 'mint' | 'gray';
-}
+import { SplashImage } from '@/models/image.model';
 
 @Component({
   selector: 'app-splash',
   standalone: true,
   imports: [
     CommonModule,
-    LazyLoadImageModule,
-    AsyncPipe
+    LazyLoadImageModule
   ],
   templateUrl: './splash.component.html',
   styleUrls: ['./splash.component.scss'],
@@ -37,7 +31,7 @@ export class SplashComponent {
   readonly IMAGE_LIMIT = 9;
   readonly MAX_IMAGE_SIZE = 2000;
   readonly defaultImage = { src: '/loadingphunk.png', type: 'loading' };
-  readonly defaultImages: Image[] = Array(this.IMAGE_LIMIT).fill(this.defaultImage);
+  readonly defaultImages: SplashImage[] = Array(this.IMAGE_LIMIT).fill(this.defaultImage);
 
   collection = input<Collection | null>();
   collection$ = toObservable(this.collection);
@@ -45,32 +39,44 @@ export class SplashComponent {
   mintImage = input<string | null>();
   mintImage$ = toObservable(this.mintImage);
 
-  images$: Observable<Image[]> = this.collection$.pipe(
-    distinctUntilChanged((prev, curr) => prev?.slug === curr?.slug),
+  auctionImage = input<string | null>();
+  auctionImage$ = toObservable(this.auctionImage);
+
+  // Separate observable for base images that only updates when collection changes
+  private baseImages$ = this.collection$.pipe(
     switchMap((collection) => {
       if (!collection) return of(this.defaultImages);
-      const shas = collection.previews?.map(({ sha }) => sha);
 
+      const shas = collection.previews?.map(({ sha }) => sha);
       if (!shas?.length) return of(this.defaultImages);
 
-      return from(this.createImageArray(shas)).pipe(
-        switchMap((images) => {
-          return this.mintImage$.pipe(
-            map((mintImage) => {
-              if (!mintImage || !collection.isMinting) return images;
-              const newImages: Image[] = [...images];
-              const centerIndex = Math.floor(this.IMAGE_LIMIT / 2);
-              newImages[centerIndex] = {
-                src: mintImage,
-                type: 'mint'
-              };
-              return newImages;
-            }),
-          );
-        }),
-        startWith(this.defaultImages)
-      );
+      return from(this.createDefaultImageArray(shas));
     }),
+    tap((images) => this.currentImages.set(images)),
+    shareReplay(1) // Cache the result so it doesn't recompute unnecessarily
+  );
+
+  private currentImages = signal<SplashImage[]>([...this.defaultImages]);
+  imageArray$ = combineLatest([
+    this.collection$,
+    this.baseImages$,
+    this.mintImage$,
+    this.auctionImage$,
+  ]).pipe(
+    switchMap(([collection, baseImages, mintImage, auctionImage]) => {
+      // Apply center image to current images
+      const centerImage = (mintImage && collection?.isMinting) ? mintImage : auctionImage;
+      if (centerImage) {
+        return from(this.handleCenterImage(centerImage, this.currentImages())).pipe(
+          tap((updatedImages) => {
+            this.currentImages.set(updatedImages);
+          })
+        );
+      }
+
+      return of(this.currentImages());
+    }),
+    startWith(this.defaultImages)
   );
 
   constructor(
@@ -78,42 +84,13 @@ export class SplashComponent {
     private imageSvc: ImageService
   ) {}
 
-  // async formatImages(images: Image[]): Promise<Image[]> {
-  //   const centerImageIndex = Math.floor(this.IMAGE_LIMIT / 2);
-
-  //   if (images[centerImageIndex]?.type === 'mint') {
-  //     const buffer = await fetch(images[centerImageIndex].src).then((res) => res.arrayBuffer());
-  //     const pixelArtImage = await this.pixelArtSvc.processPixelArtImage(buffer);
-  //     const svg = this.pixelArtSvc.convertToSvg(pixelArtImage);
-  //     const newImage = this.pixelArtSvc.stripColors(svg);
-  //     images[centerImageIndex] = {
-  //       src: this.pixelArtSvc.convertToBase64(newImage),
-  //       type: 'gray'
-  //     };
-  //   }
-
-  //   return images;
-  // }
-
-  async animateMint() {
-    const children = this.imagesWrapper()?.nativeElement.children;
-    // console.log({children});
-    if (!children) return;
-
-    await gsap.to(children, {
-      opacity: .1,
-      duration: 0.5,
-      ease: 'power2.inOut'
-    });
-  }
-
-  /**
-   * Creates an array of processed images from a list of SHA hashes
-   *
-   * @param shas - Array of SHA hashes identifying the images to fetch and process
-   * @returns Promise that resolves when image processing is complete
-   */
-  async createImageArray(shas: string[]): Promise<Image[]> {
+  // /**
+  //  * Creates an array of processed images from a list of SHA hashes
+  //  *
+  //  * @param shas - Array of SHA hashes identifying the images to fetch and process
+  //  * @returns Promise that resolves when image processing is complete
+  //  */
+  async createDefaultImageArray(shas: string[]): Promise<SplashImage[]> {
     if (!shas?.length) return [];
 
     const imageArray = [...this.defaultImages];
@@ -160,32 +137,44 @@ export class SplashComponent {
     return imageArray;
   }
 
-  formatNumber(num: string): string | null {
-    if (!num) return null;
-    return String(num).padStart(4, '0');
-  }
-
-  async handleMintImage(mintImage: string, images: string[]) {
+  async handleCenterImage(image: string, images: SplashImage[]): Promise<SplashImage[]> {
     const imagesWrapper = this.imagesWrapper()?.nativeElement;
-    if (!imagesWrapper) return;
+    if (!imagesWrapper) return [...images]; // Return copy of original images if wrapper not available
 
+    const centerIndex = Math.floor(this.IMAGE_LIMIT / 2);
     let newImages = [...images];
-    const centerImageIndex = Math.floor(this.IMAGE_LIMIT / 2); // 4th image
-    const lastImage = newImages[newImages.length - 1];
-    newImages.pop();
 
-    newImages = [ lastImage, ...newImages ];
-    newImages[centerImageIndex] = mintImage;
+    // Place new image at center
+    newImages[centerIndex] = {
+      src: image,
+      type: 'mint' as const
+    };
 
-    // Process the mint image if it's a blob URL
-    if (newImages[centerImageIndex + 1].startsWith('blob:')) {
-      const buffer = await fetch(newImages[centerImageIndex + 1]).then((res) => res.arrayBuffer());
-      const pixelArtImage = await this.pixelArtSvc.processPixelArtImage(buffer);
-      const svg = this.pixelArtSvc.convertToSvg(pixelArtImage);
-      const newImage = this.pixelArtSvc.stripColors(svg);
-      newImages[centerImageIndex + 1] = this.pixelArtSvc.convertToBase64(newImage);
-    }
+    // Process any blob images that might need conversion
+    await this.processArrayBlobImages(newImages);
 
     return newImages;
+  }
+
+  private async processArrayBlobImages(images: SplashImage[]): Promise<void> {
+    const centerIndex = Math.floor(this.IMAGE_LIMIT / 2);
+
+    // Process any blob images in the array
+    for (let i = 0; i < images.length; i++) {
+      if (images[i].src.startsWith('blob:') && i !== centerIndex) {
+        try {
+          const buffer = await fetch(images[i].src).then((res) => res.arrayBuffer());
+          const pixelArtImage = await this.pixelArtSvc.processPixelArtImage(buffer);
+          const svg = this.pixelArtSvc.convertToSvg(pixelArtImage);
+          const newImage = this.pixelArtSvc.stripColors(svg);
+          images[i] = {
+            src: this.pixelArtSvc.convertToBase64(newImage),
+            type: 'gray' as const
+          };
+        } catch (error) {
+          console.error(`Error processing blob image at index ${i}:`, error);
+        }
+      }
+    }
   }
 }

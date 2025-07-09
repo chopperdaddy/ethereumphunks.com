@@ -405,6 +405,7 @@ export class DataService {
           ...item.ethscription.ethscription,
           listing: item.ethscription.listing ? item.ethscription.listing[0] : null,
           bid: item.ethscription.bid ? item.ethscription.bid[0] : null,
+          auction: item.ethscription.auction ? item.ethscription.auction[0] : null,
         }
       })),
       switchMap((res: any) => this.addAttributes(slug, res)),
@@ -564,7 +565,7 @@ export class DataService {
           const e: Event = {
             blockHash: tx.block_hash,
             blockNumber: tx.block_number,
-            blockTimestamp: new Date(tx.timestamp),
+            blockTimestamp: new Date(tx.timestamp).toISOString(),
             from: tx.from,
             to: tx.to,
             hashId,
@@ -762,7 +763,7 @@ export class DataService {
           slug: '',
           hashId: result.transaction_hash,
           tokenId: result.ethscription_number,
-          createdAt: new Date(+result.block_timestamp * 1000),
+          createdAt: new Date(+result.block_timestamp * 1000).toISOString(),
           owner: result.current_owner,
           prevOwner: result.previous_owner,
           sha: result.content_sha?.replace('0x', ''),
@@ -784,7 +785,7 @@ export class DataService {
           slug: '',
           hashId,
           tokenId: -1,
-          createdAt: new Date(),
+          createdAt: new Date().toISOString(),
           owner: '',
           prevOwner: '',
           sha: '',
@@ -815,7 +816,7 @@ export class DataService {
       if (!offer?.[0]) return null;
 
       const listing = {
-        createdAt: new Date(),
+        createdAt: new Date().toISOString(),
         hashId: offer[1],
         minValue: offer[3].toString(),
         listedBy: offer[2],
@@ -1077,6 +1078,62 @@ export class DataService {
   ////////////////////////////////////////////////////////
   // AUCTIONS ////////////////////////////////////////////
   ////////////////////////////////////////////////////////
+
+  fetchAuctions(slug: string): Observable<Auction[]> {
+    const query = supabase.rpc(
+      'fetch_auctions' + this.suffix,
+      { p_collection_slug: slug }
+    );
+
+    // Initial fetch
+    const fetch$ = from(query).pipe(
+      map((res: any) => res.data),
+    );
+
+    // Realtime changes - watch both auctions and ethscriptions tables
+    const changes$ = new Observable<void>(subscriber => {
+      const channel = supabase
+        .channel(`auctions_changes__${slug}`)
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'auctions' + this.suffix
+          },
+          (payload) => {
+            subscriber.next();
+          }
+        )
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'ethscriptions' + this.suffix,
+            filter: `slug=eq.${slug}`
+          },
+          (payload) => {
+            subscriber.next();
+          }
+        )
+        .subscribe();
+
+      return () => {
+        channel.unsubscribe();
+      };
+    }).pipe(
+      debounceTime(3000),
+      share()
+    );
+
+    return merge(
+      fetch$,
+      changes$.pipe(
+        switchMap(() => fetch$)
+      )
+    );
+  }
 
   async fetchAuctionByHashId(hashId: string): Promise<Auction | null> {
     const query = supabase

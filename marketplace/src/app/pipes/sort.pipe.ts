@@ -17,7 +17,7 @@ export class SortPipe implements PipeTransform {
 
     let sorted = [...value];
 
-    const dateToNumber = (date: Date | undefined): number => {
+    const dateToNumber = (date: string | undefined): number => {
       if (!date) return 0;
       return new Date(date).getTime();
     };

@@ -3,7 +3,8 @@ import { Injectable, NgZone } from '@angular/core';
 import { Store } from '@ngrx/store';
 
 import { GlobalState } from '@/models/global-state';
-import { Phunk } from '@/models/db';
+import { Auction, Phunk } from '@/models/db';
+import { AuctionRequest, AuctionResult, formatAuction, isValidAuction } from '@/models/auctions';
 
 import { Observable, catchError, firstValueFrom, interval, from, of, tap, map, switchMap, merge } from 'rxjs';
 
@@ -31,7 +32,6 @@ import { PublicClient, TransactionReceipt, WatchBlockNumberReturnType, WatchCont
 import { selectIsBanned } from '@/state/app/app-state.selectors';
 
 import { environment } from '@environments/environment';
-import { AuctionRequest, AuctionResult } from '@/models/auctions';
 
 const marketAddress = environment.marketAddress;
 const marketAddressL2 = environment.marketAddressL2;
@@ -357,7 +357,7 @@ export class Web3Service {
   watchAuctionByPrevOwnerAndHashId({
     prevOwner,
     hashId
-  }: AuctionRequest): Observable<AuctionResult | null> {
+  }: AuctionRequest): Observable<Auction | null> {
     const fetchAuction = () => from(this.getAuctionByPrevOwnerAndHashId({ prevOwner, hashId }));
 
     return merge(
@@ -377,8 +377,15 @@ export class Web3Service {
   async getAuctionByPrevOwnerAndHashId({
     prevOwner,
     hashId
-  }: AuctionRequest): Promise<AuctionResult | null> {
-    return await this.readAuctionContract('getAuction', [prevOwner, hashId]);
+  }: AuctionRequest): Promise<Auction | null> {
+    const result = await this.readAuctionContract('getAuction', [prevOwner, hashId]);
+    if (!result) return null;
+
+    const formatted = formatAuction(result);
+    const isValid = isValidAuction(formatted);
+    if (!isValid) return null;
+
+    return formatted;
   }
 
   /**

@@ -1,11 +1,22 @@
 @if ((activeCollection$ | async); as activeCollection) {
-  <app-splash
-    [collection]="activeCollection"
-    [mintImage]="activeCollection.mintEnabled ? mintImage() : null"
-  />
 
   @if ((config$ | async)?.maintenance) {
     <app-brb />
+  } @else {
+
+    <app-splash
+      [collection]="activeCollection"
+      [mintImage]="activeCollection.mintEnabled ? mintImage() : null"
+      [auctionImage]="(auctions$ | async)?.length ? auctionImage() : null"
+    />
+
+    @if (auctions$ | async; as auctions) {
+      <app-auctions
+        [auctions]="auctions"
+        [collection]="activeCollection"
+        (auctionImage)="auctionImage.set($event)"
+      />
+    }
   }
 
   <main
