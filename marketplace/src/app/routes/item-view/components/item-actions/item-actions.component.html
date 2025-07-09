@@ -90,6 +90,19 @@
           </button>
         }
 
+        <!-- Transfer -->
+        @if ((phunk.owner | lowercase) === (address | lowercase)) {
+          <button class="transfer" [class.active]="actionsState().transfer" (click)="transferAction()">
+            <span>Transfer</span>
+            <ng-container *ngTemplateOutlet="pending; context:{ $implicit: 'transferPhunk' }" />
+          </button>
+
+          <!-- Transfer actions -->
+          @if (actionsState().transfer) {
+            <ng-container *ngTemplateOutlet="transferForm; context:{ $implicit: phunk }" />
+          }
+        }
+
         <!-- Bridge button -->
         <!-- @if ((owner | lowercase) === (address | lowercase)) {
           <button class="bridge" [class.active]="bridgeActive" (click)="bridgePhunkAction()">
@@ -104,22 +117,9 @@
       } @else {
         @if (!(isCooling$ | async)) {
           <div class="notice">
-            <div class="consensus">This {{ phunk.collection?.singleName }} does not have consensus with one or more indexers. <a (click)="setChat()">Contact support</a> to resolve this issue.</div>
+            <p>This {{ phunk.collection?.singleName }} does not have consensus with one or more indexers. <a href="https://x.com/etherphunks" target="_blank">Contact support</a> to resolve this issue.</p>
           </div>
         }
-      }
-    }
-
-    <!-- Transfer -->
-    @if ((phunk.owner | lowercase) === (address | lowercase)) {
-      <button class="transfer" [class.active]="actionsState().transfer" (click)="transferAction()">
-        <span>Transfer</span>
-        <ng-container *ngTemplateOutlet="pending; context:{ $implicit: 'transferPhunk' }" />
-      </button>
-
-      <!-- Transfer actions -->
-      @if (actionsState().transfer) {
-        <ng-container *ngTemplateOutlet="transferForm; context:{ $implicit: phunk }" />
       }
     }
   }
@@ -150,18 +150,18 @@
       <div class="row">
         <div class="auction-duration">
           <label i18n for="auction-duration">Auction Duration</label>
-          <div class="input-group">
+          <div class="input-group" [formGroup]="auctionDuration">
             <div class="input-item">
               <label for="auction-duration-days">Days</label>
-              <input #auctionDurationDaysInput type="number" id="auction-duration" [formControl]="auctionDurationDays"  min="0" max="30" />
+              <input #auctionDurationDaysInput type="number" id="auction-duration" formControlName="days"  min="0" max="30" />
             </div>
             <div class="input-item">
               <label for="auction-duration-hours">Hours</label>
-              <input #auctionDurationHoursInput type="number" id="auction-duration" [formControl]="auctionDurationHours" min="0" max="23" />
+              <input #auctionDurationHoursInput type="number" id="auction-duration" formControlName="hours" min="0" max="23" />
             </div>
             <div class="input-item">
               <label for="auction-duration-minutes">Minutes</label>
-              <input #auctionDurationMinutesInput type="number" id="auction-duration" [formControl]="auctionDurationMinutes" min="0" max="59" />
+              <input #auctionDurationMinutesInput type="number" id="auction-duration" formControlName="minutes" min="0" max="59" />
             </div>
           </div>
 
@@ -177,19 +177,21 @@
       Advanced Options
     </button>
 
-    <div class="form-group advanced-options-group" *ngIf="actionsState().auctionAdvancedOptions">
-      <div class="row row-2">
-        <div class="auction-min-bid-increment-percentage">
-          <label i18n for="auction-min-bid-increment-percentage">Bid Increment %</label>
-          <input #auctionMinBidIncrementPercentageInput type="number" id="auction-min-bid-increment-percentage" [formControl]="auctionMinBidIncrementPercentage" />
-        </div>
+    @if (actionsState().auctionAdvancedOptions) {
+      <div class="form-group advanced-options-group">
+        <div class="row row-2">
+          <div class="auction-min-bid-increment-percentage">
+            <label i18n for="auction-min-bid-increment-percentage">Bid Increment %</label>
+            <input #auctionMinBidIncrementPercentageInput type="number" id="auction-min-bid-increment-percentage" [formControl]="auctionMinBidIncrementPercentage" />
+          </div>
 
-        <div class="auction-time-buffer">
-          <label i18n for="auction-time-buffer">Time Buffer</label>
-          <input #auctionTimeBufferMinutesInput type="number" id="auction-time-buffer" [formControl]="auctionTimeBufferMinutes" />
+          <div class="auction-time-buffer">
+            <label i18n for="auction-time-buffer">Time Buffer</label>
+            <input #auctionTimeBufferMinutesInput type="number" id="auction-time-buffer" [formControl]="auctionTimeBufferMinutes" />
+          </div>
         </div>
       </div>
-    </div>
+    }
 
     <div class="form-actions">
       <button i18n type="reset" class="cancel" (click)="closeAuction()">Cancel</button>
@@ -245,10 +247,12 @@
       List Privately
     </button>
 
-    <div class="form-group advanced-options-group" *ngIf="actionsState().privateSale">
-      <label i18n for="list-to-address">Offer to Address</label>
-      <input type="text" id="list-to-address" [placeholder]="'0x or ens'" [formControl]="listToAddress" role="presentation" autocomplete="off" />
-    </div>
+    @if (actionsState().privateSale) {
+      <div class="form-group advanced-options-group">
+        <label i18n for="list-to-address">Offer to Address</label>
+        <input type="text" id="list-to-address" [placeholder]="'0x or ens'" [formControl]="listToAddress" role="presentation" autocomplete="off" />
+      </div>
+    }
 
     <div class="form-actions">
       <button i18n type="reset" class="cancel" (click)="closeListing()">Cancel</button>

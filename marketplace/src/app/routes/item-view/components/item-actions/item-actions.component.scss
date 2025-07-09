@@ -218,19 +218,19 @@ button,
 }
 
 .notice {
-  padding: 1rem;
+  padding: 1.5rem 2rem;
   background-color: rgba(var(--bid-color), 1);
   color: rgba(var(--white), 1);
   max-width: 46rem;
   box-shadow: .3rem .3rem 0 0 rgba(var(--highlight), 1);
 
-  margin-bottom: 2rem;
-
-  .consensus {
+  p {
     padding: 0;
+    margin: 0;
 
     font-size: 1.4rem;
     font-weight: 600;
+    line-height: 1.4;
 
     a {
       color: rgba(var(--highlight), 1);

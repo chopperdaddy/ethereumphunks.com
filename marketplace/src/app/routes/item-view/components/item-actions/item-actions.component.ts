@@ -1,7 +1,7 @@
 import { Component, ElementRef, input, QueryList, signal, ViewChild, ViewChildren } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
-import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormControl, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 
 import { Store } from '@ngrx/store';
@@ -99,9 +99,11 @@ export class ItemActionsComponent {
   transferAddress = new FormControl<string | null>('');
   listPrice = new FormControl<number | undefined>(undefined);
 
-  auctionDurationDays = new FormControl<number | undefined>(undefined);
-  auctionDurationHours = new FormControl<number | undefined>(undefined);
-  auctionDurationMinutes = new FormControl<number | undefined>(undefined);
+  auctionDuration = new FormGroup({
+    days: new FormControl<number>(0, {nonNullable: true}),
+    hours: new FormControl<number>(0, {nonNullable: true}),
+    minutes: new FormControl<number>(0, {nonNullable: true}),
+  });
 
   auctionMinBidIncrementPercentage = new FormControl<number | undefined>(undefined);
   auctionTimeBufferMinutes = new FormControl<number | undefined>(undefined);
@@ -189,9 +191,13 @@ export class ItemActionsComponent {
   }
 
   clearAll(): void {
-    this.listPrice.setValue(undefined);
-    this.listToAddress.setValue('');
-    this.transferAddress.setValue('');
+    this.listPrice.reset();
+    this.listToAddress.reset();
+    this.transferAddress.reset();
+    this.auctionMinBidIncrementPercentage.reset();
+    this.auctionTimeBufferMinutes.reset();
+
+    this.auctionDuration.reset();
   }
 
   closeAll(): void {
@@ -674,9 +680,9 @@ export class ItemActionsComponent {
     const hashId = phunk.hashId;
     if (!hashId) throw new Error('Invalid hashId');
 
-    const daysToSeconds = (this.auctionDurationDays.value || 0) * 24 * 60 * 60;
-    const hoursToSeconds = (this.auctionDurationHours.value || 0) * 60 * 60;
-    const minutesToSeconds = (this.auctionDurationMinutes.value || 0) * 60;
+    const daysToSeconds = (this.auctionDuration.get('days')?.value || 0) * 24 * 60 * 60;
+    const hoursToSeconds = (this.auctionDuration.get('hours')?.value || 0) * 60 * 60;
+    const minutesToSeconds = (this.auctionDuration.get('minutes')?.value || 0) * 60;
 
     const duration = daysToSeconds + hoursToSeconds + minutesToSeconds;
 
