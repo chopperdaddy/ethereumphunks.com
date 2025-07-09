@@ -1,4 +1,4 @@
-import { Phunk } from './db';
+import { Auction, Phunk } from './db';
 import { TraitFilter } from './global-state';
 
 export interface MarketState {
@@ -10,7 +10,7 @@ export interface MarketState {
   listings: Phunk[];
   bids: Phunk[];
   all: Phunk[];
-
+  auctions: Phunk[];
   activeMarketRouteData: {
     data: Phunk[];
     total: number;

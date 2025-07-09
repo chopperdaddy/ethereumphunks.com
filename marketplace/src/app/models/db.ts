@@ -7,24 +7,11 @@ export interface Account {
   phunks?: Phunk[];
 }
 
-export interface Auction {
-  amount: string
-  auctionId: number
-  bidder: string | null
-  createdAt: Date
-  endTime: string
-  hashId: string
-  prevOwner: string | null
-  settled: boolean
-  startTime: string
-  bids: Bid[] | null
-}
-
 export interface Phunk {
   slug: string
   hashId: string
   tokenId: number
-  createdAt: Date
+  createdAt: string
   owner: string
   prevOwner: string | null
   sha: string
@@ -57,7 +44,7 @@ export interface Phunk {
 }
 
 export interface Bid {
-  createdAt: Date
+  createdAt: string
   fromAddress: string
   hashId: string
   value: string
@@ -66,7 +53,7 @@ export interface Bid {
 export interface Event {
   blockHash: string
   blockNumber: number | null
-  blockTimestamp: Date | null
+  blockTimestamp: string | null
   from: string
   hashId: string
   sha: string
@@ -82,7 +69,7 @@ export interface Event {
   tokenId?: number | null
 }
 export interface Listing {
-  createdAt: Date
+  createdAt: string
   hashId: string
   listed: boolean
   listedBy: string
@@ -99,5 +86,31 @@ export interface Sha {
 
 export interface User {
   address: string
-  createdAt: Date
+  createdAt: string
+}
+
+export interface Auction {
+  auctionId: number
+  hashId: string
+  prevOwner: string | null
+  amount: string
+  startTime: string | null
+  endTime: string | null
+  bidder: string | null
+  settled: boolean,
+  duration: number,
+  minBidIncrementPercentage: number,
+  timeBuffer: number,
+
+  createdAt?: string
+}
+
+export interface AuctionBid {
+  id: number
+  createdAt: string
+  auctionId: number
+  fromAddress: string
+  amount: string
+  extended: boolean
+  txHash: string
 }
