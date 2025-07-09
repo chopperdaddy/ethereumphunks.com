@@ -14,6 +14,7 @@ export const initialState: MarketState = {
   listings: [],
   bids: [],
   all: [],
+  auctions: [],
   activeMarketRouteData: {
     data: [],
     total: 0
@@ -113,5 +114,12 @@ export const marketStateReducer: ActionReducer<MarketState, Action> = createRedu
       pagination,
     };
     return setPagination
+  }),
+  on(actions.setAuctionData, (state, { auctionData }) => {
+    const setAuctionData = {
+      ...state,
+      auctions: auctionData,
+    };
+    return setAuctionData
   }),
 );

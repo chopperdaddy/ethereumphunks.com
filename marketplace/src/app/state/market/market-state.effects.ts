@@ -113,7 +113,6 @@ export class MarketStateEffects {
     ofType(marketStateActions.setMarketSlug),
     distinctUntilChanged((a, b) => a.marketSlug === b.marketSlug),
     switchMap(({ marketSlug }) => this.dataSvc.fetchMarketData(marketSlug)),
-    // tap((marketData) => console.log('fetchMarketData$', marketData)),
     map((marketData) => marketStateActions.setMarketData({ marketData }))
   ));
 
@@ -139,6 +138,21 @@ export class MarketStateEffects {
     }),
     // tap((events) => console.log('fetchEvents$', events)),
     map((events) => dataStateActions.setEvents({ events })),
+  ));
+
+  setActionData$ = createEffect(() => this.actions$.pipe(
+    ofType(marketStateActions.setMarketData),
+    map(({ marketData }) => marketData.filter((item) => !!item.auction)),
+    map((auctionData) => auctionData.sort((a, b) => {
+      if (a.auction?.endTime && b.auction?.endTime) {
+        return new Date(a.auction.endTime).getTime() - new Date(b.auction.endTime).getTime();
+      }
+      // Handle cases where one or both endTimes are null
+      if (a.auction?.endTime && !b.auction?.endTime) return -1;
+      if (!a.auction?.endTime && b.auction?.endTime) return 1;
+      return 0;
+    })),
+    map((auctionData) => marketStateActions.setAuctionData({ auctionData })),
   ));
 
   // Handle pager reset

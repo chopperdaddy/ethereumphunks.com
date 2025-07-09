@@ -1,5 +1,4 @@
-
-@if (auctionBids$ | async; as bids) {
+@if (auctionBids(); as bids) {
   <div class="bid-history-wrapper">
     @if (bids.length) {
       <div class="bid-history-head">

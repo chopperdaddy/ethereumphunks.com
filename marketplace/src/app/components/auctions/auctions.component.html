@@ -1,19 +1,2 @@
-<div class="wrapper" #wrapper>
-  @if (auctions(); as auctions) {
-    @for (auction of auctions; track auction.auctionId; let i = $index) {
-      <div class="box">
-        <div class="box__inner">
-          <!-- <div class="auction-id">
-            {{ i + 1 }}
-          </div> -->
-          <img
-            [lazyLoad]="dataSvc.staticUrl + '/static/images/' + auction.sha"
-            [defaultImage]="'/loadingphunk.png'"
-            width="200"
-            height="200"
-          />
-        </div>
-      </div>
-    }
-  }
-</div>
+<app-auction [phunk]="activeAuction()!" [collection]="collection()"></app-auction>
+<button (click)="nextAuction()">Next Auction</button>

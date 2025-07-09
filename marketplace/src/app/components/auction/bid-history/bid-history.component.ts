@@ -1,5 +1,10 @@
 import { CommonModule } from '@angular/common';
-import { Component, input, Input, OnInit, output, signal } from '@angular/core';
+import { Component, input, output, signal } from '@angular/core';
+
+import { toObservable } from '@angular/core/rxjs-interop';
+import { distinctUntilChanged, of, switchMap, tap } from 'rxjs';
+
+import { Auction, AuctionBid } from '@/models/db';
 
 import { DataService } from '@/services/data.service';
 
@@ -8,10 +13,6 @@ import { WalletAddressDirective } from '@/directives/wallet-address.directive';
 import { WeiToEthPipe } from '@/pipes/wei-to-eth.pipe';
 
 import { environment } from '@environments/environment';
-
-import { FormattedAuction } from '@/models/auctions';
-import { toObservable } from '@angular/core/rxjs-interop';
-import { distinctUntilChanged, of, switchMap, tap } from 'rxjs';
 
 @Component({
   standalone: true,
@@ -30,21 +31,10 @@ export class BidHistoryComponent {
 
   explorerUrl = environment.explorerUrl;
 
-  auction = input<FormattedAuction | null>();
-  bidsLength = output<number>();
+  auction = input<Auction | null>();
+  auctionBids = input<AuctionBid[] | null>();
 
-  auctionBids$ = toObservable(this.auction).pipe(
-    distinctUntilChanged((a, b) => a?.auctionId === b?.auctionId),
-    switchMap((auction) => {
-      console.log('BidHistoryComponent', {auction});
-      if (!auction) return of([]);
-      return this.dataSvc.watchAuctionBids(auction.auctionId);
-    }),
-    tap((bids) => {
-      console.log('BidHistoryComponent', {bids});
-      this.bidsLength.emit(bids?.length || 0);
-    })
-  );
+  bidsLength = output<number>();
 
   viewAllBids = signal(false);
 

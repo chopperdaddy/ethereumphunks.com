@@ -63,3 +63,8 @@ export const selectPagination = createSelector(
   selectMarketState,
   (appState: MarketState) => appState.pagination
 );
+
+export const selectAuctions = createSelector(
+  selectMarketState,
+  (appState: MarketState) => appState.auctions
+);

@@ -1,7 +1,7 @@
 import { createAction, props } from '@ngrx/store';
 
 import { MarketState, MarketType } from '@/models/market.state';
-import { Phunk } from '@/models/db';
+import { Auction, Phunk } from '@/models/db';
 import { TraitFilter } from '@/models/global-state';
 
 export const setMarketSlug = createAction(
@@ -40,6 +40,11 @@ export const fetchMarketData = createAction(
 export const setMarketData = createAction(
   '[Market State] Set Market Data',
   props<{ marketData: Phunk[] }>()
+);
+
+export const setAuctionData = createAction(
+  '[Market State] Set Auction Data',
+  props<{ auctionData: Phunk[] }>()
 );
 
 export const fetchOwned = createAction(

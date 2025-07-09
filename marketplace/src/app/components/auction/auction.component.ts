@@ -1,17 +1,15 @@
-import { Component, effect, input, Input, signal } from '@angular/core';
+import { Component, input, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 
-
 import { Store } from '@ngrx/store';
-
 import { toObservable } from '@angular/core/rxjs-interop';
-import { filter, map, switchMap, tap } from 'rxjs';
+import { combineLatest, distinctUntilChanged, filter, map, of, switchMap } from 'rxjs';
 import { zeroAddress } from 'viem';
 
+import { Collection } from '@/models/data.state';
 import { Phunk } from '@/models/db';
-import { FormattedAuction, formatAuction, isValidAuction } from '@/models/auctions';
 import { GlobalState, Notification } from '@/models/global-state';
 
 import { Web3Service } from '@/services/web3.service';
@@ -50,23 +48,37 @@ export class AuctionComponent {
 
   zeroAddr = zeroAddress;
 
-  phunk = input<Phunk>();
+  phunk = input.required<Phunk>();
+  phunk$ = toObservable(this.phunk);
 
-  auction$ = toObservable(this.phunk).pipe(
-    filter((phunk): phunk is Phunk => !!phunk),
+  collection = input<Collection | undefined>();
+  collection$ = toObservable(this.collection);
+
+  phunkWithAuction$ = combineLatest([this.phunk$, this.collection$]).pipe(
+    filter(([phunk, collection]) => !!phunk?.auction || !!phunk?.isAuctioned),
+    map(([phunk, collection]) => {
+      const hasCollection = !!phunk.collection;
+      if (hasCollection) return phunk;
+      return { ...phunk, collection };
+    }),
     switchMap((phunk) => this.web3Svc.watchAuctionByPrevOwnerAndHashId({
       prevOwner: phunk!.prevOwner!,
       hashId: phunk!.hashId
-    })),
-    map((auction): FormattedAuction | null => {
-      if (!isValidAuction(auction)) return null;
-      return formatAuction(auction);
-    })
+    }).pipe(
+      map((auction): Phunk | null => ({ ...phunk, auction })),
+    )),
+  );
+
+  auctionBids$ = this.phunkWithAuction$.pipe(
+    distinctUntilChanged((a, b) => a?.auction?.auctionId === b?.auction?.auctionId),
+    switchMap((phunkWithAuction) => {
+      if (!phunkWithAuction?.auction) return of([]);
+      return this.dataSvc.watchAuctionBids(phunkWithAuction.auction.auctionId);
+    }),
   );
 
   bidValue = new FormControl<number | null>(null);
 
-  bidsLength = signal(0);
   auctionComplete = signal(false);
   inputError = signal(false);
 
