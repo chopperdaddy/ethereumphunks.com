@@ -72,7 +72,7 @@ export class ItemViewComponent {
     map(() => (window.scrollY / 2) * -1),
   );
 
-  globalConfig$ = this.store.select(appStateSelectors.selectConfig);
+  config$ = this.store.select(appStateSelectors.selectConfig);
   isMobile$ = this.store.select(appStateSelectors.selectIsMobile);
   indexerIsBehind$ = this.store.select(appStateSelectors.selectBlocksBehind).pipe(
     filter((blocksBehind) => !!blocksBehind),

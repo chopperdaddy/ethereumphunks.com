@@ -42,7 +42,8 @@ export const initialState: AppState = {
     chat: false,
     comments: false,
     network: null,
-    defaultCollection: null
+    defaultCollection: null,
+    auctions: false
   },
 
   linkedAccounts: [],

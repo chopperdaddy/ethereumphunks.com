@@ -16,7 +16,7 @@ import { Web3Service } from '@/services/web3.service';
 import { UtilService } from '@/services/util.service';
 import { DataService } from '@/services/data.service';
 
-import { selectCooldowns, selectWalletAddress } from '@/state/app/app-state.selectors';
+import { selectConfig, selectCooldowns, selectWalletAddress } from '@/state/app/app-state.selectors';
 import { upsertNotification } from '@/state/notification/notification.actions';
 import { addCooldown } from '@/state/app/app-state.actions';
 
@@ -88,6 +88,7 @@ export class ItemActionsComponent {
     )),
   );
 
+  config$ = this.store.select(selectConfig);
   isCooling$ = this.store.select(selectCooldowns).pipe(
     filter((cooldowns) => !!cooldowns),
     switchMap((cooldowns) => this.phunk$.pipe(

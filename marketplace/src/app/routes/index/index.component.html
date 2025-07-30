@@ -1,151 +1,152 @@
-@if ((activeCollection$ | async); as activeCollection) {
+@if (config$ | async; as config) {
+  @if ((activeCollection$ | async); as activeCollection) {
 
-  @if ((config$ | async)?.maintenance) {
-    <app-brb />
-  } @else {
-
-    <app-splash
-      [collection]="activeCollection"
-      [mintImage]="activeCollection.mintEnabled ? mintImage() : null"
-      [auctionImage]="(auctions$ | async)?.length ? auctionImage() : null"
-    />
-
-    @if (auctions$ | async; as auctions) {
-      <app-auctions
-        [auctions]="auctions"
+    @if (config.maintenance) {
+      <app-brb />
+    } @else {
+      <app-splash
         [collection]="activeCollection"
-        (auctionImage)="auctionImage.set($event)"
+        [mintImage]="activeCollection.mintEnabled ? mintImage() : null"
+        [auctionImage]="(auctions$ | async)?.length ? auctionImage() : null"
       />
-    }
-  }
 
-  <main
-    [class.minting]="activeCollection.isMinting"
-    [class.mint-active]="activeCollection.mintEnabled && !!mintImage()">
-
-    @if (activeCollection.isMinting) {
-      <app-mint
-        [collection]="activeCollection"
-        (mintImage)="mintImage.set($event)"
-      />
-    }
-
-    <div class="sections-wrapper">
-
-      <section class="overview">
-        <app-recent-activity
+      @if (config.auctions && (auctions$ | async); as auctions) {
+        <app-auctions
+          [auctions]="auctions"
           [collection]="activeCollection"
+          (auctionImage)="auctionImage.set($event)"
         />
-      </section>
+      }
+    }
 
-      @defer {
-        @if ((owned$ | async); as ownedData) {
-          @if (ownedData.length) {
-            @if ((walletAddress$ | async); as address) {
-              <section>
-                <div class="inner">
-                  <h3 i18n>Owned</h3>
+    <main
+      [class.minting]="activeCollection.isMinting"
+      [class.mint-active]="activeCollection.mintEnabled && !!mintImage()">
+
+      @if (activeCollection.isMinting) {
+        <app-mint
+          [collection]="activeCollection"
+          (mintImage)="mintImage.set($event)"
+        />
+      }
+
+      <div class="sections-wrapper">
+
+        <section class="overview">
+          <app-recent-activity
+            [collection]="activeCollection"
+          />
+        </section>
+
+        @defer {
+          @if ((owned$ | async); as ownedData) {
+            @if (ownedData.length) {
+              @if ((walletAddress$ | async); as address) {
+                <section>
+                  <div class="inner">
+                    <h3 i18n>Owned</h3>
+
+                    <div class="section-stats-wrapper">
+                      <p i18n>Showing owned {{ activeCollection.singleName }}s,
+                        <a
+                          class="highlight"
+                          [routerLink]="['market', 'owned']"
+                          [queryParams]="{ address }"
+                          [relativeTo]="route">
+
+                          ({{ ownedData.length | number }}) view all.
+                        </a>
+                      </p>
+                    </div>
+
+                    <app-phunk-grid
+                      [phunkData]="ownedData || []"
+                      [viewType]="'compact'"
+                      [limit]="(isMobile$ | async) ? 100 : 110"
+                      [marketType]="'owned'"
+                      [activeSort]="'price-low'"
+                    />
+                  </div>
+                </section>
+              }
+            }
+          }
+
+          <section>
+            <div class="inner">
+              <h3 i18n>For Sale</h3>
+
+              @if (listings$ | async; as listings) {
+                <div class="section-stats-wrapper">
+                  @if ((listings | calc : 'lowestListingPrice'); as ethPrice) {
+                    <p i18n>The lowest price {{ activeCollection.singleName }} currently for sale is <span class="bold">Ξ{{ ethPrice | number }} ({{ (ethPrice * ((usd$ | async) || 0)) | currency }} USD)</span>.</p>
+                  }
+
+                  <p i18n>Showing lowest price offers, <a class="highlight" [routerLink]="['market', 'listings']" [relativeTo]="route">({{ listings.length | number }}) view all.</a></p>
+                </div>
+
+                <app-phunk-grid
+                  [phunkData]="listings"
+                  [viewType]="'compact'"
+                  [limit]="(isMobile$ | async) ? 100 : 110"
+                  [marketType]="'listings'"
+                  [activeSort]="'price-low'"
+                />
+              }
+            </div>
+          </section>
+
+          @if (config.auctions && (auctions$ | async); as auctions) {
+            <section>
+              <div class="inner">
+                <h3 i18n>Auctions</h3>
 
                   <div class="section-stats-wrapper">
-                    <p i18n>Showing owned {{ activeCollection.singleName }}s,
+                    <p i18n>Showing auctions ending soon, <a class="highlight" [routerLink]="['market', 'auctions']">({{ auctions.length | number }}) view all.</a></p>
+                  </div>
+
+                  <app-phunk-grid
+                    [phunkData]="auctions"
+                    [viewType]="'compact'"
+                    [limit]="(isMobile$ | async) ? 100 : 110"
+                    [marketType]="'auctions'"
+                    [activeSort]="'price-high'"
+                  />
+              </div>
+            </section>
+          }
+
+          <section>
+            <div class="inner">
+              <h3 i18n>All</h3>
+
+              @if ((all$ | async); as allPhunks) {
+                @if (activeCollection) {
+                  <div class="section-stats-wrapper">
+                    <p i18n>
                       <a
                         class="highlight"
-                        [routerLink]="['market', 'owned']"
-                        [queryParams]="{ address }"
+                        [routerLink]="['market', 'all']"
                         [relativeTo]="route">
 
-                        ({{ ownedData.length | number }}) view all.
+                        View all {{ activeCollection.supply | number }} {{ activeCollection.singleName }}s.
                       </a>
                     </p>
                   </div>
 
                   <app-phunk-grid
-                    [phunkData]="ownedData || []"
+                    [phunkData]="allPhunks"
                     [viewType]="'compact'"
                     [limit]="(isMobile$ | async) ? 100 : 110"
-                    [marketType]="'owned'"
-                    [activeSort]="'price-low'"
+                    [marketType]="'all'"
+                    [activeSort]="'id'"
                   />
-                </div>
-              </section>
-            }
-          }
-        }
-
-        <section>
-          <div class="inner">
-            <h3 i18n>For Sale</h3>
-
-            @if (listings$ | async; as listings) {
-              <div class="section-stats-wrapper">
-                @if ((listings | calc : 'lowestListingPrice'); as ethPrice) {
-                  <p i18n>The lowest price {{ activeCollection.singleName }} currently for sale is <span class="bold">Ξ{{ ethPrice | number }} ({{ (ethPrice * ((usd$ | async) || 0)) | currency }} USD)</span>.</p>
                 }
-
-                <p i18n>Showing lowest price offers, <a class="highlight" [routerLink]="['market', 'listings']" [relativeTo]="route">({{ listings.length | number }}) view all.</a></p>
-              </div>
-
-              <app-phunk-grid
-                [phunkData]="listings"
-                [viewType]="'compact'"
-                [limit]="(isMobile$ | async) ? 100 : 110"
-                [marketType]="'listings'"
-                [activeSort]="'price-low'"
-              />
-            }
-          </div>
-        </section>
-
-        <section>
-          <div class="inner">
-            <h3 i18n>Auctions</h3>
-
-            @if ((auctions$ | async); as auctions) {
-              <div class="section-stats-wrapper">
-                <p i18n>Showing auctions ending soon, <a class="highlight" [routerLink]="['market', 'auctions']">({{ auctions.length | number }}) view all.</a></p>
-              </div>
-
-              <app-phunk-grid
-                [phunkData]="auctions"
-                [viewType]="'compact'"
-                [limit]="(isMobile$ | async) ? 100 : 110"
-                [marketType]="'auctions'"
-                [activeSort]="'price-high'"
-              />
-            }
-          </div>
-        </section>
-
-        <section>
-          <div class="inner">
-            <h3 i18n>All</h3>
-
-            @if ((all$ | async); as allPhunks) {
-              @if (activeCollection) {
-                <div class="section-stats-wrapper">
-                  <p i18n>
-                    <a
-                      class="highlight"
-                      [routerLink]="['market', 'all']"
-                      [relativeTo]="route">
-
-                      View all {{ activeCollection.supply | number }} {{ activeCollection.singleName }}s.
-                    </a>
-                  </p>
-                </div>
-
-                <app-phunk-grid
-                  [phunkData]="allPhunks"
-                  [viewType]="'compact'"
-                  [limit]="(isMobile$ | async) ? 100 : 110"
-                  [marketType]="'all'"
-                  [activeSort]="'id'"
-                />
               }
-            }
-          </div>
-        </section>
-      }
-    </div>
-  </main>
+            </div>
+          </section>
+        }
+      </div>
+    </main>
+  }
 }

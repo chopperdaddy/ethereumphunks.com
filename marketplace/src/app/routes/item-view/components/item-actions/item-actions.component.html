@@ -4,7 +4,7 @@
       @if (phunk.consensus) {
 
         <!-- Escrow actions (Send) -->
-        @if (!phunk.isAuctioned) {
+        @if ((config$ | async)?.auctions && !phunk.isAuctioned) {
           @if ((phunk.owner | lowercase) === (address | lowercase)) {
             <button class="send-to-auction-button" (click)="auctionAction()" [class.active]="actionsState().auction">
               <span>Send to auction</span>

@@ -79,6 +79,7 @@ export interface LinkedAccount {
 export interface GlobalConfig {
   network: number | null;
   maintenance: boolean;
+  auctions: boolean;
   chat: boolean;
   comments: boolean;
   defaultCollection: string | null;

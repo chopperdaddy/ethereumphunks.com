@@ -59,9 +59,12 @@
               </div>
 
               <!-- Actions -->
-              <app-item-actions [phunk]="phunk" [class.disabled]="indexerIsBehind$ | async" />
+              <app-item-actions
+                [phunk]="phunk"
+                [class.disabled]="indexerIsBehind$ | async"
+              />
 
-              @if (!(isMobile$ | async) && (globalConfig$ | async)?.comments) {
+              @if (!(isMobile$ | async) && (config$ | async)?.comments) {
                 @defer {
                   <app-comments [mainTopic]="phunk.hashId" />
                 }
@@ -88,7 +91,7 @@
           </div>
         }
 
-        @if ((isMobile$ | async) && (globalConfig$ | async)?.comments) {
+        @if ((isMobile$ | async) && (config$ | async)?.comments) {
           @defer {
             <app-comments [mainTopic]="phunk.hashId" />
           }
