@@ -4,14 +4,16 @@ import { visualizer } from "rollup-plugin-visualizer";
 import checker from "vite-plugin-checker";
 
 import fs from "fs";
-import moment from "moment";
 
 import angular from "@analogjs/vite-plugin-angular";
 
 // https://vitejs.dev/config/
 export default defineConfig(({ command, mode }) => {
   const chainName = mode.split("-")[1] || mode;
-  const timestamp = moment().format("MMMD").toLowerCase();
+  const timestamp = new Date().toLocaleDateString("en", {
+    month: "2-digit",
+    day: "2-digit",
+  }).replace("/", "").toLowerCase();
 
   const serverPort = 4200;
 
@@ -53,22 +55,16 @@ export default defineConfig(({ command, mode }) => {
 
   const currentEnv = envConfig[mode] || envConfig["dev-sepolia"];
 
-  // Handle environment file replacement
-  if (currentEnv.envFile) {
-    const envFilePath = resolve(
-      __dirname,
-      "src/environments",
-      currentEnv.envFile
-    );
-    const defaultEnvPath = resolve(
-      __dirname,
-      "src/environments/environment.ts"
-    );
+  // Instead of copying files, use Vite's alias resolution to point to the correct environment file
+  const environmentAlias = currentEnv.envFile
+    ? resolve(__dirname, `src/environments/${currentEnv.envFile}`)
+    : resolve(__dirname, "src/environments/environment.ts");
 
-    if (fs.existsSync(envFilePath)) {
-      fs.copyFileSync(envFilePath, defaultEnvPath);
-    }
-  }
+  console.log(`🔧 Build Mode: ${mode}`);
+  console.log(`🌍 Environment Alias: @environments/environment → ${environmentAlias}`);
+
+  // Check if we're in dev mode for performance optimizations
+  const isDevMode = mode.startsWith("dev");
 
   return {
     root: "src",
@@ -81,6 +77,8 @@ export default defineConfig(({ command, mode }) => {
         "@": resolve(__dirname, "src/app"),
         "@scss": resolve(__dirname, "src/scss"),
         "@environments": resolve(__dirname, "src/environments"),
+        // This is the key fix - point environment imports to the correct file
+        "@environments/environment": environmentAlias,
         "@ng-select/ng-select": resolve(
           __dirname,
           "node_modules/@ng-select/ng-select"
@@ -103,12 +101,7 @@ export default defineConfig(({ command, mode }) => {
         output: {
           manualChunks: {
             vendor: ["@web3modal/wagmi", "@xmtp/proto", "@ng-select/ng-select"],
-            "angular-core": [
-              "@angular/core",
-              "@angular/common",
-              "@angular/platform-browser",
-            ],
-            "angular-features": ["@angular/router", "@angular/forms"],
+            // Removed Angular chunk splitting - let @analogjs/vite-plugin-angular handle this
           },
         },
       },
@@ -151,7 +144,12 @@ export default defineConfig(({ command, mode }) => {
           const htmlName = `index.${chainName}.html`;
           const src = join(outDir, htmlName);
           const dest = join(outDir, "index.html");
-          if (fs.existsSync(src)) fs.copyFileSync(src, dest);
+
+          if (fs.existsSync(src)) {
+            fs.copyFileSync(src, dest);
+            // Clean up the original chain-specific HTML file
+            fs.unlinkSync(src);
+          }
         },
       },
     ],
@@ -165,8 +163,7 @@ export default defineConfig(({ command, mode }) => {
         clientPort: serverPort,
       },
       watch: {
-        usePolling: true,
-        interval: 1000,
+        usePolling: false, // Use native file watching for better performance
         ignored: ["**/node_modules/**", "**/dist/**", "**/.git/**"],
       },
     },
@@ -191,8 +188,9 @@ export default defineConfig(({ command, mode }) => {
         define: {
           global: "globalThis",
         },
-        minify: true,
-        treeShaking: true,
+        // Skip minification and tree shaking in dev mode for faster builds
+        minify: !isDevMode,
+        treeShaking: !isDevMode,
       },
     },
   };

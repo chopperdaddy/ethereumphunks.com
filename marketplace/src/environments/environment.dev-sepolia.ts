@@ -8,7 +8,8 @@ export const environment = {
   chainId: 11155111,
 
   // rpcHttpProvider: 'http://geth.sepolia-geth.dappnode:8545',
-  rpcHttpProvider: 'https://eth-sepolia.g.alchemy.com/v2/0FN3yRRyJYmfFlfvjco_d9Y8HaVBIH45',
+  // rpcHttpProvider: 'https://eth-sepolia.g.alchemy.com/v2/0FN3yRRyJYmfFlfvjco_d9Y8HaVBIH45',
+  rpcHttpProvider: 'https://ethereum-sepolia-rpc.publicnode.com',
   explorerUrl: 'https://sepolia.etherscan.io',
   externalMarketUrl: 'https://sepolia.ethscriptions.com',
 
@@ -23,7 +24,7 @@ export const environment = {
   auctionHouseAddress: '0x3A50E6D0F8d1c68cD2DD1510a982323805272d48'.toLowerCase(),
 
   // relayUrl: 'https://relay-sepolia.ethereumphunks.com',
-  relayUrl: 'http://10.0.0.73:3003',
+  relayUrl: 'http://0.0.0.0:3003',
   staticUrl: 'https://kcbuycbhynlmsrvoegzp.supabase.co/storage/v1/object/public',
 
 

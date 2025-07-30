@@ -7,7 +7,7 @@ export const environment = {
   production: true,
   chainId: 11155111,
 
-  rpcHttpProvider: 'https://eth-sepolia.g.alchemy.com/v2/19IQKn99eagaaRKD-uSOCE1aYEHLSnmL',
+  rpcHttpProvider: 'https://ethereum-sepolia-rpc.publicnode.com',
   explorerUrl: 'https://sepolia.etherscan.io',
   externalMarketUrl: 'https://sepolia.ethscriptions.com',
 
