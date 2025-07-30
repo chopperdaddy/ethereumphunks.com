@@ -143,7 +143,7 @@ export default defineConfig(({ command, mode }) => {
         },
       },
       modulePreload: true, // Enable module preloading
-      cssCodeSplit: true, // Split CSS into chunks
+      cssCodeSplit: !isDevMode, // Disable CSS code splitting in dev mode to prevent missing styles on navigation
       chunkSizeWarningLimit: 500, // Warning threshold for chunk size
       reportCompressedSize: true, // Report gzipped sizes
       assetsInlineLimit: 4096, // Max size for inlined assets
