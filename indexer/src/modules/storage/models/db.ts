@@ -40,6 +40,16 @@ export interface BidResponse {
   error: PostgrestError | null;
 }
 
+export interface AuctionResponse {
+  data: Auction[];
+  error: PostgrestError | null;
+}
+
+export interface AuctionBidResponse {
+  data: AuctionBid[];
+  error: PostgrestError | null;
+}
+
 export interface Listing {
   hashId: string
   createdAt: Date
@@ -56,6 +66,27 @@ export interface Bid {
   createdAt: Date;
   value: string;
   fromAddress: string;
+}
+
+export interface Auction {
+  auctionId: bigint;
+  createdAt: Date;
+  hashId: string;
+  prevOwner: string | null;
+  amount: string;
+  startTime: Date | null;
+  endTime: Date | null;
+  bidder: string | null;
+  settled: boolean;
+}
+
+export interface AuctionBid {
+  id: bigint;
+  createdAt: Date;
+  auctionId: bigint;
+  fromAddress: string;
+  amount: string;
+  extended: boolean;
 }
 
 export interface Ethscription {
@@ -138,4 +169,4 @@ export interface EthscriptionWithCollectionAndAttributes {
   attributes: AttributeItem;
 }
 
-export type EventType = 'transfer' | 'sale' | 'created' | 'burned' | 'PhunkOffered' | 'PhunkBidEntered' | 'PhunkBought' | 'PhunkBidWithdrawn' | 'PhunkDeposited' | 'PhunkWithdrawn' | 'PhunkNoLongerForSale';
+export type EventType = 'transfer' | 'sale' | 'created' | 'burned' | 'PhunkOffered' | 'PhunkBidEntered' | 'PhunkBought' | 'PhunkBidWithdrawn' | 'PhunkDeposited' | 'PhunkWithdrawn' | 'PhunkNoLongerForSale' | 'AuctionCreated' | 'AuctionBid' | 'AuctionExtended' | 'AuctionSettled';

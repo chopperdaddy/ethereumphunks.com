@@ -10,6 +10,7 @@ import { EthscriptionsService } from '@/modules/ethscriptions/ethscriptions.serv
 import { CommentsService } from '@/modules/comments/comments.service';
 import { MarketplaceService } from '@/modules/marketplace/marketplace.service';
 import { PointsService } from '@/modules/points/points.service';
+import { AuctionsService } from '@/modules/auctions/auctions.service';
 
 import { Event } from '@/modules/storage/models/db';
 
@@ -38,6 +39,7 @@ export class ProcessingService {
     private readonly ethsSvc: EthscriptionsService,
     private readonly commentsSvc: CommentsService,
     private readonly marketplaceSvc: MarketplaceService,
+    private readonly auctionsSvc: AuctionsService,
     private readonly pointsSvc: PointsService,
     private readonly telegramSvc: TelegramService
   ) {}
@@ -175,12 +177,6 @@ export class ProcessingService {
     );
     if (ethscriptionsEvents?.length) events.push(...ethscriptionsEvents);
 
-    // Process comments
-    await this.commentsSvc.processComments(
-      transaction,
-      createdAt
-    );
-
     // Process marketplace events
     const marketplaceEvents = await this.marketplaceSvc.processEtherPhunkMarketplaceEvents(
       transaction,
@@ -189,8 +185,22 @@ export class ProcessingService {
     );
     if (marketplaceEvents?.length) events.push(...marketplaceEvents);
 
+    // Process auction events
+    const auctionEvents = await this.auctionsSvc.processEtherPhunkAuctionEvents(
+      transaction,
+      receipt,
+      createdAt
+    );
+    if (auctionEvents?.length) events.push(...auctionEvents);
+
     // Process points events
     await this.pointsSvc.processPointsEvents(receipt);
+
+    // Process comments
+    await this.commentsSvc.processComments(
+      transaction,
+      createdAt
+    );
 
     // const bridgeMainnetLogs = receipt.logs.filter(
     //   (log: any) => log.address.toLowerCase() === bridgeAddressL1.toLowerCase()

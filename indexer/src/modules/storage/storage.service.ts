@@ -797,15 +797,15 @@ export class StorageService implements OnModuleInit {
    */
   async createAuction(
     args: {
-      hashId: string,
-      owner: string,
-      auctionId: bigint,
-      startTime: bigint,
-      endTime: bigint
+      hashId: string;
+      owner: string;
+      auctionId: bigint;
+      startTime: bigint;
+      endTime: bigint;
     },
     createdAt: Date
   ): Promise<void> {
-    const { data, error } = await this.supabase
+    const response: db.AuctionResponse = await this.supabase
       .from('auctions' + this.suffix)
       .upsert({
         auctionId: Number(args.auctionId),
@@ -815,14 +815,14 @@ export class StorageService implements OnModuleInit {
         amount: '0',
         startTime: new Date(Number(args.startTime) * 1000),
         endTime: new Date(Number(args.endTime) * 1000),
-        bidder: zeroAddress.toLowerCase(),
+        bidder: zeroAddress,
         settled: false,
       });
 
+    const { error } = response;
     if (error) throw error;
-    Logger.log('Auction created', args.hashId);
 
-    return data;
+    Logger.log('Auction created', args.hashId);
   }
 
   /**
@@ -850,7 +850,7 @@ export class StorageService implements OnModuleInit {
       })
       .eq('auctionId', Number(args.auctionId));
 
-    if (auctionsData) throw auctionsError;
+    if (auctionsError) throw auctionsError;
 
     const { data: bidsData, error: bidsError } = await this.supabase
       .from('auctionBids' + this.suffix)
@@ -862,7 +862,7 @@ export class StorageService implements OnModuleInit {
         txHash: txn.hash.toLowerCase(),
       });
 
-    if (bidsData) throw bidsError;
+    if (bidsError) throw bidsError;
     Logger.log(`Bid created`, args.hashId);
   }
 
@@ -909,6 +909,23 @@ export class StorageService implements OnModuleInit {
 
     if (error) throw error;
     Logger.log(`Auction extended`, args.hashId);
+  }
+
+  /**
+   * Gets an auction by its hash ID
+   * @param hashId - The hash ID to look up
+   * @returns The auction if found, null otherwise
+   */
+  async getAuctionById(auctionId: number): Promise<db.Auction> {
+    const response: db.AuctionResponse = await this.supabase
+      .from('auctions' + this.suffix)
+      .select('*')
+      .eq('auctionId', auctionId);
+
+    const { data, error } = response;
+    if (error) throw error;
+    if (data?.length) return data[0];
+    return null;
   }
 
   ////////////////////////////////////////////////////////////////////////////////
