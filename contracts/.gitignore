@@ -4,6 +4,8 @@
 node_modules/
 soljson-v0.8.20+commit.8df45f5f.js
 
+contracts/V2_1/
+
 # Truffle build directory
 build/
 
