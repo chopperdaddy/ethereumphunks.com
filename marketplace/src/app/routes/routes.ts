@@ -9,6 +9,10 @@ export const routes: Routes = [
     component: InitialCollectionGuard
   },
   {
+    path: 'admin',
+    loadComponent: () => import('@/routes/admin-dashboard/admin-dashboard.component').then(mod => mod.AdminDashboardComponent)
+  },
+  {
     path: 'market/:marketType',
     redirectTo: 'ethereum-phunks/market/:marketType',
     pathMatch: 'full'
@@ -28,7 +32,12 @@ export const routes: Routes = [
     loadComponent: () => import('@/routes/item-view/item-view.component').then(mod => mod.ItemViewComponent)
   },
   {
-    path: ':slug',
+    matcher: (segments) => {
+      if (segments.length === 1 && segments[0].path !== 'admin') {
+        return { consumed: segments, posParams: { slug: segments[0] } };
+      }
+      return null;
+    },
     loadComponent: () => import('@/routes/index/index.component').then(mod => mod.IndexComponent)
   },
   {
