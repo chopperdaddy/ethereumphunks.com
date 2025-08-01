@@ -1,0 +1,188 @@
+<div class="admin-dashboard">
+  @let currentState = state();
+
+  <div class="admin-header">
+    <h1>Collection Admin Dashboard</h1>
+    @if (currentState.collectionSlug) {
+      <p>Managing collection: <strong>{{ currentState.collectionSlug }}</strong></p>
+    } @else {
+      <p>Secure administrative access for collection management</p>
+    }
+  </div>
+
+  <!-- Step 1: Wallet Connection -->
+  @if (!isWalletConnected() && !currentState.sessionActive) {
+    <div class="auth-section">
+      <div class="status-card connecting">
+        <div class="status-indicator">
+          <div class="status-icon loading"></div>
+          <div class="status-text">Wallet Required</div>
+        </div>
+        <h2>Connect Your Wallet</h2>
+        <p>To access the admin dashboard, you need to connect your Ethereum wallet first.</p>
+        <div class="action-buttons">
+          <button
+            class="btn-primary"
+            (click)="connectWallet()"
+            [disabled]="currentState.walletConnecting">
+            @if (currentState.walletConnecting) {
+              Connecting...
+            } @else {
+              Connect Wallet
+            }
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Step 2: Access Check -->
+  @if (isWalletConnected() && !currentState.accessChecked && !currentState.sessionActive) {
+    <div class="auth-section">
+      <div class="status-card checking">
+        <div class="status-indicator">
+          <div class="status-icon loading"></div>
+          <div class="status-text">Checking Access</div>
+        </div>
+        <h2>Verifying Admin Access</h2>
+        <p>Checking if your wallet has admin privileges for any collections...</p>
+      </div>
+    </div>
+  }
+
+  <!-- Step 3: No Access Message -->
+  @if (isWalletConnected() && currentState.accessChecked && !currentState.hasAdminAccess && !currentState.sessionActive) {
+    <div class="auth-section">
+      <div class="status-card no-access">
+        <div class="status-indicator">
+          <div class="status-icon error"></div>
+          <div class="status-text">Access Denied</div>
+        </div>
+        <h2>Insufficient Privileges</h2>
+        <p>Your wallet address is not authorized to access any collection admin features.</p>
+        <p>Contact the collection owner if you believe this is an error.</p>
+        <div class="action-buttons">
+          <button class="btn-secondary" (click)="checkAdminAccess()">
+            Recheck Access
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Step 4: Collection Selection & Authentication -->
+  @if (canProceedToAuth() && !currentState.sessionActive) {
+    <div class="auth-section">
+      <!-- Collection Selection Card -->
+      <div class="status-card auth-ready">
+        <div class="status-indicator">
+          <div class="status-icon success"></div>
+          <div class="status-text">Admin Access Found</div>
+        </div>
+        <h2>Select Collection</h2>
+        <p>Choose which collection you want to manage:</p>
+        <div class="collection-selection">
+          <div class="collection-buttons">
+            @for (collection of currentState.adminCollections; track collection) {
+              <button
+                class="collection-btn"
+                [class.selected]="currentState.collectionSlug === collection"
+                (click)="setState({ collectionSlug: collection })">
+                {{ collection }}
+              </button>
+            }
+          </div>
+        </div>
+      </div>
+
+      <!-- Authentication Card -->
+      @if (currentState.collectionSlug) {
+        <div class="status-card auth-ready">
+          <div class="status-indicator">
+            @if (currentState.messageSigning || currentState.messageSigned) {
+              <div class="status-icon loading"></div>
+              <div class="status-text">Authenticating</div>
+            } @else {
+              <div class="status-icon"></div>
+              <div class="status-text">Ready to Authenticate</div>
+            }
+          </div>
+          <h2>Sign Authentication Message</h2>
+          <p>Sign a message to prove you own this wallet and gain admin access to <strong>{{ currentState.collectionSlug }}</strong>.</p>
+
+          @if (currentState.messageSigning) {
+            <p>Please check your wallet and sign the message...</p>
+          }
+
+          @if (currentState.messageSigned && !currentState.messageVerified) {
+            <p>Verifying signature with backend...</p>
+          }
+
+          <div class="action-buttons">
+            <button
+              class="btn-primary"
+              (click)="signLoginMessage()"
+              [disabled]="isProcessing()">
+              @if (currentState.messageSigning) {
+                Signing Message...
+              } @else if (currentState.messageSigned) {
+                Verifying...
+              } @else {
+                Sign & Authenticate
+              }
+            </button>
+          </div>
+        </div>
+      }
+    </div>
+  }
+
+  <!-- Step 5: Authenticated - Show Admin Tools -->
+  @if (isAuthenticated()) {
+    <div class="auth-section">
+      <div class="status-card authenticated">
+        <div class="status-indicator">
+          <div class="status-icon success"></div>
+          <div class="status-text">Authenticated</div>
+        </div>
+        <h2>Session Active</h2>
+        <p>You are successfully authenticated as an admin for <strong>{{ currentState.collectionSlug }}</strong>.</p>
+
+        <div class="session-info">
+          <div class="info-row">
+            <span class="label">Collection:</span>
+            <span class="value">{{ currentState.collectionSlug }}</span>
+          </div>
+          <div class="info-row">
+            <span class="label">Status:</span>
+            <span class="value">{{ sessionStatus() }}</span>
+          </div>
+          @if (timeUntilExpiry(); as timeLeft) {
+            <div class="info-row">
+              <span class="label">Session Expires:</span>
+              <span class="value">{{ formattedExpiry() }}</span>
+            </div>
+          }
+        </div>
+
+        <div class="action-buttons">
+          <button class="btn-secondary" (click)="logout()">
+            Logout
+          </button>
+          <button class="btn-primary" (click)="testAdminAccess()">
+            Test Admin Access
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Error Display -->
+  @if (hasError()) {
+    <div class="error-display">
+      <h3>Error</h3>
+      <p>{{ currentState.errorMessage }}</p>
+    </div>
+  }
+</div>
+
