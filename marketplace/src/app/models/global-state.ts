@@ -43,6 +43,7 @@ export interface AppState {
   theme: Theme;
 
   isMobile: boolean;
+  isBrowserActive: boolean;
   menuActive: boolean;
   activeMenuNav: 'main' | 'leaderboard' | 'curated';
   slideoutActive: boolean;

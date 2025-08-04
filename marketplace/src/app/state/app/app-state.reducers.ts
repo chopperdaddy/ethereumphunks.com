@@ -16,6 +16,7 @@ export const initialState: AppState = {
   theme: localStorage.getItem('EtherPhunks_theme') as Theme || 'initial',
 
   isMobile: false,
+  isBrowserActive: true,
   menuActive: false,
   activeMenuNav: 'main',
   slideoutActive: false,
@@ -251,5 +252,12 @@ export const appStateReducer: ActionReducer<AppState, Action> = createReducer(
       linkedAccounts
     };
     return setLinkedAccounts
+  }),
+  on(actions.setBrowserActive, (state, { isBrowserActive }) => {
+    const setBrowserActive = {
+      ...state,
+      isBrowserActive
+    };
+    return setBrowserActive
   })
 );

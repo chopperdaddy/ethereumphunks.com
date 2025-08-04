@@ -65,6 +65,11 @@ export const setIsMobile = createAction(
   props<{ isMobile: boolean }>()
 );
 
+export const setBrowserActive = createAction(
+  '[App State] Set Browser Active',
+  props<{ isBrowserActive: boolean }>()
+);
+
 export const keyDownEscape = createAction(
   '[App State] Keydown Escape'
 );

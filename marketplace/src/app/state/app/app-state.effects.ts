@@ -253,5 +253,29 @@ export class AppStateEffects {
     private dataSvc: DataService,
     private socketSvc: SocketService,
     private storageSvc: StorageService,
-  ) {}
+  ) {
+    // Initialize browser activity tracking
+    this.initBrowserActivityTracking();
+  }
+
+  private initBrowserActivityTracking(): void {
+    // Listen for Page Visibility API changes
+    document.addEventListener('visibilitychange', () => {
+      const isVisible = !document.hidden;
+      this.store.dispatch(appStateActions.setBrowserActive({ isBrowserActive: isVisible }));
+    });
+
+    // Listen for window focus/blur events (backup for older browsers)
+    window.addEventListener('focus', () => {
+      this.store.dispatch(appStateActions.setBrowserActive({ isBrowserActive: true }));
+    });
+
+    window.addEventListener('blur', () => {
+      this.store.dispatch(appStateActions.setBrowserActive({ isBrowserActive: false }));
+    });
+
+    // Set initial state based on current visibility
+    const initiallyActive = !document.hidden && document.hasFocus();
+    this.store.dispatch(appStateActions.setBrowserActive({ isBrowserActive: initiallyActive }));
+  }
 }
