@@ -1,188 +1,105 @@
 <div class="admin-dashboard">
-  @let currentState = state();
+  <h1>Admin Dashboard</h1>
 
-  <div class="admin-header">
-    <h1>Collection Admin Dashboard</h1>
-    @if (currentState.collectionSlug) {
-      <p>Managing collection: <strong>{{ currentState.collectionSlug }}</strong></p>
-    } @else {
-      <p>Secure administrative access for collection management</p>
-    }
+  Browser Active: {{ isBrowserActive() }}
+
+  <!-- Status Section -->
+  <div class="status-section">
+    <h2>Status</h2>
+    <div class="status-item">
+      <strong>Admin Status:</strong> {{ adminStatus() }}
+    </div>
+    <div class="status-item">
+      <strong>Session Status:</strong> {{ sessionStatus() }}
+    </div>
+    <div class="status-item">
+      <strong>Has Admin Access:</strong> {{ hasAdminAccess() ? 'Yes' : 'No' }}
+    </div>
+    <div class="status-item">
+      <strong>Is Authenticated:</strong> {{ isAuthenticated() ? 'Yes' : 'No' }}
+    </div>
+    <div class="status-item">
+      <strong>Selected Collection:</strong> {{ selectedCollectionSlug() || 'None' }}
+    </div>
+    <div class="status-item">
+      <strong>Available Collections:</strong> {{ adminCollections()?.length || 0 }}
+    </div>
   </div>
 
-  <!-- Step 1: Wallet Connection -->
-  @if (!isWalletConnected() && !currentState.sessionActive) {
-    <div class="auth-section">
-      <div class="status-card connecting">
-        <div class="status-indicator">
-          <div class="status-icon loading"></div>
-          <div class="status-text">Wallet Required</div>
-        </div>
-        <h2>Connect Your Wallet</h2>
-        <p>To access the admin dashboard, you need to connect your Ethereum wallet first.</p>
-        <div class="action-buttons">
+  <!-- Collection Selection (if has admin access but not authenticated) -->
+  @if (hasAdminAccess() && !isAuthenticated() && adminCollections() && adminCollections()!.length > 0) {
+    <div class="collection-selection">
+      <h2>Select Collection</h2>
+      <div class="collection-list">
+        @for (collection of adminCollections(); track collection) {
           <button
-            class="btn-primary"
-            (click)="connectWallet()"
-            [disabled]="currentState.walletConnecting">
-            @if (currentState.walletConnecting) {
-              Connecting...
-            } @else {
-              Connect Wallet
-            }
+            (click)="selectCollection(collection)"
+            [class.selected]="selectedCollectionSlug() === collection">
+            {{ collection }}
           </button>
-        </div>
-      </div>
-    </div>
-  }
-
-  <!-- Step 2: Access Check -->
-  @if (isWalletConnected() && !currentState.accessChecked && !currentState.sessionActive) {
-    <div class="auth-section">
-      <div class="status-card checking">
-        <div class="status-indicator">
-          <div class="status-icon loading"></div>
-          <div class="status-text">Checking Access</div>
-        </div>
-        <h2>Verifying Admin Access</h2>
-        <p>Checking if your wallet has admin privileges for any collections...</p>
-      </div>
-    </div>
-  }
-
-  <!-- Step 3: No Access Message -->
-  @if (isWalletConnected() && currentState.accessChecked && !currentState.hasAdminAccess && !currentState.sessionActive) {
-    <div class="auth-section">
-      <div class="status-card no-access">
-        <div class="status-indicator">
-          <div class="status-icon error"></div>
-          <div class="status-text">Access Denied</div>
-        </div>
-        <h2>Insufficient Privileges</h2>
-        <p>Your wallet address is not authorized to access any collection admin features.</p>
-        <p>Contact the collection owner if you believe this is an error.</p>
-        <div class="action-buttons">
-          <button class="btn-secondary" (click)="checkAdminAccess()">
-            Recheck Access
-          </button>
-        </div>
-      </div>
-    </div>
-  }
-
-  <!-- Step 4: Collection Selection & Authentication -->
-  @if (canProceedToAuth() && !currentState.sessionActive) {
-    <div class="auth-section">
-      <!-- Collection Selection Card -->
-      <div class="status-card auth-ready">
-        <div class="status-indicator">
-          <div class="status-icon success"></div>
-          <div class="status-text">Admin Access Found</div>
-        </div>
-        <h2>Select Collection</h2>
-        <p>Choose which collection you want to manage:</p>
-        <div class="collection-selection">
-          <div class="collection-buttons">
-            @for (collection of currentState.adminCollections; track collection) {
-              <button
-                class="collection-btn"
-                [class.selected]="currentState.collectionSlug === collection"
-                (click)="setState({ collectionSlug: collection })">
-                {{ collection }}
-              </button>
-            }
-          </div>
-        </div>
+        }
       </div>
 
-      <!-- Authentication Card -->
-      @if (currentState.collectionSlug) {
-        <div class="status-card auth-ready">
-          <div class="status-indicator">
-            @if (currentState.messageSigning || currentState.messageSigned) {
-              <div class="status-icon loading"></div>
-              <div class="status-text">Authenticating</div>
-            } @else {
-              <div class="status-icon"></div>
-              <div class="status-text">Ready to Authenticate</div>
-            }
-          </div>
-          <h2>Sign Authentication Message</h2>
-          <p>Sign a message to prove you own this wallet and gain admin access to <strong>{{ currentState.collectionSlug }}</strong>.</p>
-
-          @if (currentState.messageSigning) {
-            <p>Please check your wallet and sign the message...</p>
-          }
-
-          @if (currentState.messageSigned && !currentState.messageVerified) {
-            <p>Verifying signature with backend...</p>
-          }
-
-          <div class="action-buttons">
-            <button
-              class="btn-primary"
-              (click)="signLoginMessage()"
-              [disabled]="isProcessing()">
-              @if (currentState.messageSigning) {
-                Signing Message...
-              } @else if (currentState.messageSigned) {
-                Verifying...
-              } @else {
-                Sign & Authenticate
-              }
-            </button>
-          </div>
-        </div>
+      @if (selectedCollectionSlug()) {
+        <button (click)="signIn()" class="sign-in-btn">
+          Sign In to {{ selectedCollectionSlug() }}
+        </button>
       }
     </div>
   }
 
-  <!-- Step 5: Authenticated - Show Admin Tools -->
-  @if (isAuthenticated()) {
-    <div class="auth-section">
-      <div class="status-card authenticated">
-        <div class="status-indicator">
-          <div class="status-icon success"></div>
-          <div class="status-text">Authenticated</div>
-        </div>
-        <h2>Session Active</h2>
-        <p>You are successfully authenticated as an admin for <strong>{{ currentState.collectionSlug }}</strong>.</p>
+  <!-- Admin Menu (shown when authenticated) -->
+  @if (canShowMenu()) {
+    <div class="admin-menu">
+      <h2>Admin Menu - {{ selectedCollectionSlug() }}</h2>
 
-        <div class="session-info">
-          <div class="info-row">
-            <span class="label">Collection:</span>
-            <span class="value">{{ currentState.collectionSlug }}</span>
-          </div>
-          <div class="info-row">
-            <span class="label">Status:</span>
-            <span class="value">{{ sessionStatus() }}</span>
-          </div>
-          @if (timeUntilExpiry(); as timeLeft) {
-            <div class="info-row">
-              <span class="label">Session Expires:</span>
-              <span class="value">{{ formattedExpiry() }}</span>
-            </div>
-          }
-        </div>
+      <div class="menu-items">
+        <button class="menu-item" (click)="generateCollectionMetadata()">Generate Collection Metadata</button>
+        <button class="menu-item" (click)="addAttributesToDb()">Add Attributes to DB</button>
+        <button class="menu-item" (click)="addFiltersFile()">Add Filters File</button>
+      </div>
 
-        <div class="action-buttons">
-          <button class="btn-secondary" (click)="logout()">
-            Logout
-          </button>
-          <button class="btn-primary" (click)="testAdminAccess()">
-            Test Admin Access
-          </button>
-        </div>
+      <div class="admin-actions">
+        <button (click)="logout()" class="logout-btn">Logout</button>
+        <button (click)="clearAllTokens()" class="clear-tokens-btn">Clear All Tokens</button>
       </div>
     </div>
   }
 
-  <!-- Error Display -->
-  @if (hasError()) {
-    <div class="error-display">
-      <h3>Error</h3>
-      <p>{{ currentState.errorMessage }}</p>
+  <!-- No Access Message -->
+  @if (!hasAdminAccess()) {
+    <div class="no-access">
+      <h2>No Admin Access</h2>
+      <p>Your wallet does not have admin access to any collections.</p>
     </div>
   }
-</div>
 
+  <!-- Session Expired -->
+  @if (sessionExpired()) {
+    <div class="session-expired">
+      <h2>Session Expired</h2>
+      <p>Your admin session has expired. Please sign in again.</p>
+      @if (selectedCollectionSlug()) {
+        <button (click)="signIn()" class="sign-in-btn">
+          Sign In Again
+        </button>
+      }
+    </div>
+  }
+
+  <!-- Debug Info -->
+  <details class="debug-info">
+    <summary>Debug Info</summary>
+    <div class="debug-content">
+      <div><strong>hasAdminAccess():</strong> {{ hasAdminAccess() }}</div>
+      <div><strong>adminCollections():</strong> {{ adminCollections() | json }}</div>
+      <div><strong>selectedCollectionSlug():</strong> {{ selectedCollectionSlug() }}</div>
+      <div><strong>adminSessionActive():</strong> {{ adminSessionActive() }}</div>
+      <div><strong>adminSessionExpiry():</strong> {{ adminSessionExpiry() }}</div>
+      <div><strong>isAuthenticated():</strong> {{ isAuthenticated() }}</div>
+      <div><strong>sessionTimeRemaining():</strong> {{ sessionTimeRemaining() }}</div>
+      <div><strong>sessionExpired():</strong> {{ sessionExpired() }}</div>
+      <div><strong>canShowMenu():</strong> {{ canShowMenu() }}</div>
+    </div>
+  </details>
+</div>

@@ -17,7 +17,7 @@ import { auctionHouseL1 } from '@/abi/AuctionHouseL1';
 import { EtherPhunksNftMarketABI } from '@/abi/EtherPhunksNftMarket';
 import { EtherPhunksBridgeL2ABI } from '@/abi/EtherPhunksBridgeL2';
 
-import { reconnect, http, createConfig, Config, watchAccount, getPublicClient, getAccount, disconnect, getChainId, getWalletClient, GetWalletClientReturnType, GetAccountReturnType } from '@wagmi/core';
+import { reconnect, http, createConfig, Config, watchAccount, getPublicClient, getAccount, disconnect, getChainId, getWalletClient, GetWalletClientReturnType, GetAccountReturnType, signTypedData } from '@wagmi/core';
 import { coinbaseWallet, walletConnect, injected } from '@wagmi/connectors';
 
 import * as appStateActions from '@/state/app/app-state.actions';
@@ -1226,5 +1226,25 @@ export class Web3Service {
   async getEnsAvatar(name: string): Promise<string | null> {
     if (!name) return null;
     return await this.l1Client.getEnsAvatar({ name });
+  }
+
+  /**
+   * Signs a typed data message
+   * @param typedData The typed data to sign
+   * @returns Promise resolving to the signature and address
+   */
+  async signTypedMessage(typedData: any): Promise<{
+    signature: `0x${string}`;
+    address: `0x${string}`;
+  }> {
+    const account = getAccount(this.config);
+    if (!account.isConnected) throw new Error('Wallet not connected');
+
+    const signature = await signTypedData(this.config, typedData);
+
+    return {
+      signature,
+      address: account.address as `0x${string}`,
+    };
   }
 }
