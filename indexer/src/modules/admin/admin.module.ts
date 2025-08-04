@@ -11,6 +11,8 @@ import { StorageModule } from '@/modules/storage/storage.module';
 import { CommentsModule } from '@/modules/comments/comments.module';
 import { EthscriptionsModule } from '@/modules/ethscriptions/ethscriptions.module';
 import { ProcessingModule } from '@/modules/processing/processing.module';
+import { AuthModule } from '@/modules/auth/auth.module';
+import { CollectionAdminModule } from '@/modules/collection-admin/collection-admin.module';
 
 import { AdminController } from './admin.controller';
 @Module({
@@ -25,7 +27,9 @@ import { AdminController } from './admin.controller';
     EthscriptionsModule,
     CommentsModule,
     NotifsModule,
-    ProcessingModule
+    ProcessingModule,
+    AuthModule,
+    CollectionAdminModule
   ],
   providers: [
     AdminService

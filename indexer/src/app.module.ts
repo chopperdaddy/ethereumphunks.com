@@ -13,8 +13,10 @@ import { EthscriptionsModule } from '@/modules/ethscriptions/ethscriptions.modul
 import { TxPoolModule } from '@/modules/tx-pool/tx-pool.module';
 import { EthscriptionsMintModule } from '@/modules/ethscriptions-mint/ethscriptions-mint.module';
 import { AdminModule } from '@/modules/admin/admin.module';
+import { AuthModule } from '@/modules/auth/auth.module';
 import { ProcessingModule } from '@/modules/processing/processing.module';
 import { EvmModule } from '@/modules/evm/evm.module';
+import { CollectionAdminModule } from '@/modules/collection-admin/collection-admin.module';
 
 import { AuctionsModule } from '@/modules/auctions/auctions.module';
 import { MarketplaceModule } from '@/modules/marketplace/marketplace.module';
@@ -45,6 +47,8 @@ import { AppConfigModule } from '@/config/config.module';
     CommentsModule,
     StorageModule,
     AdminModule,
+    CollectionAdminModule,
+    AuthModule,
     ProcessingModule,
 
     MarketplaceModule,
