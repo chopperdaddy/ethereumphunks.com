@@ -20,6 +20,7 @@ import { notificationReducer } from '@/state/notification/notification.reducers'
 import { chatReducer } from '@/state/chat/chat.reducers';
 import { modalReducer } from '@/state/modal/modal.reducers';
 import { indexerLogsReducer } from '@/state/indexer-logs/indexer-logs.reducers';
+import { adminAuthStateReducer } from '@/state/admin-auth/admin-auth-state.reducers';
 
 import { AppStateEffects } from '@/state/app/app-state.effects';
 import { DataStateEffects } from '@/state/data/data-state.effects';
@@ -27,6 +28,7 @@ import { MarketStateEffects } from '@/state/market/market-state.effects';
 import { NotificationEffects } from '@/state/notification/notification.effects';
 import { ChatEffects } from '@/state/chat/chat.effects';
 import { IndexerLogsEffects } from '@/state/indexer-logs/indexer-logs.effects';
+import { AdminAuthStateEffects } from '@/state/admin-auth/admin-auth-state.effects';
 
 import { TokenIdParsePipe } from '@/pipes/token-id-parse.pipe';
 import { WeiToEthPipe } from '@/pipes/wei-to-eth.pipe';
@@ -42,6 +44,7 @@ export const config = {
     { provide: RouteReuseStrategy, useClass: CustomReuseStrategy },
     provideStore({
       appState: appStateReducer,
+      adminAuthState: adminAuthStateReducer,
       dataState: dataStateReducer,
       marketState: marketStateReducer,
       notificationState: notificationReducer,
@@ -56,7 +59,8 @@ export const config = {
       MarketStateEffects,
       NotificationEffects,
       ChatEffects,
-      IndexerLogsEffects
+      IndexerLogsEffects,
+      AdminAuthStateEffects
     ]),
     provideStoreDevtools({
       maxAge: 25,
