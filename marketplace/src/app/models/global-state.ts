@@ -1,6 +1,7 @@
 import { LogItem } from '@/services/socket.service';
 import { DataState } from './data.state';
 import { MarketState } from './market.state';
+import { AdminAuthState } from './admin-auth.state';
 
 import { Theme } from './theme';
 import { NormalizedConversation, NormalizedConversationWithMessages } from './chat';
@@ -13,6 +14,7 @@ export interface GlobalState {
   chatState: ChatState;
   modalState: ModalState;
   indexerLogsState: IndexerLogsState;
+  adminAuthState: AdminAuthState;
 }
 
 export interface IndexerLogsState {
