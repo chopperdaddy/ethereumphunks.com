@@ -42,8 +42,6 @@ export class AdminAuthStateEffects {
         }));
       }
 
-      console.log('🔧 Checking admin access for address:', walletAddress);
-
       // Check admin access from backend
       const adminAccessCheck$ = this.http.post<{
         success: boolean;
@@ -51,7 +49,6 @@ export class AdminAuthStateEffects {
         hasAdminAccess?: boolean;
       }>(`${environment.relayUrl}/auth/check-admin-collections`, { address: walletAddress }).pipe(
         map((response) => {
-          console.log('🔧 Admin access check response:', response);
 
           if (response.success) {
             return adminAuthActions.setAdminAccess({
@@ -78,7 +75,6 @@ export class AdminAuthStateEffects {
       const tokenCheck$ = from(this.checkStoredAdminTokens()).pipe(
         filter(result => result !== null),
         map((result) => {
-          console.log('🔄 Found valid stored session for collection:', result!.collectionSlug);
           return adminAuthActions.setAdminAuthFromStorage({
             collectionSlug: result!.collectionSlug,
             sessionExpiry: result!.sessionExpiry
@@ -123,7 +119,6 @@ export class AdminAuthStateEffects {
                 });
                 return;
               } else {
-                console.log('⚠️ Expired tokens found for collection:', collectionSlug);
                 // Clean up expired tokens
                 localStorage.removeItem(`${keyPrefix}_access_token`);
                 localStorage.removeItem(`${keyPrefix}_refresh_token`);
@@ -132,7 +127,6 @@ export class AdminAuthStateEffects {
             }
           }
         }
-        console.log('ℹ️ No valid stored admin sessions found');
         resolve(null);
       } catch (error) {
         console.error('Error checking stored admin tokens:', error);
