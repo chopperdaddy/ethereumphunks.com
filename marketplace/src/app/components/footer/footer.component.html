@@ -11,7 +11,11 @@
   <p class="links">
     Version: {{ version }}<br />
     Marketplace: <a [href]="explorerUrl + '/address/' + marketAddress" target="_blank"><app-address [address]="marketAddress" /></a><br />
-    Auction House: <a [href]="explorerUrl + '/address/' + auctionHouseAddress" target="_blank"><app-address [address]="auctionHouseAddress" /></a><br />
+
+    @if (auctionHouseAddress) {
+      Auction House: <a [href]="explorerUrl + '/address/' + auctionHouseAddress" target="_blank"><app-address [address]="auctionHouseAddress" /></a><br />
+    }
+
     Points: <a [href]="explorerUrl + '/address/' + points" target="_blank"><app-address [address]="points" /></a><br />
     <!-- Contributions: <a [href]="explorerUrl + '/address/' + contributions" target="_blank"><app-address [address]="contributions" /></a> -->
 
