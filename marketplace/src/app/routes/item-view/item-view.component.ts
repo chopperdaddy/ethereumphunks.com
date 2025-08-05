@@ -19,7 +19,7 @@ import { ItemAttributesComponent } from './components/item-attributes/item-attri
 
 import { WalletAddressDirective } from '@/directives/wallet-address.directive';
 
-import { TraitCountPipe } from '@/pipes/trait-count.pipe';
+import { TraitRarityPipe } from '@/pipes/trait-rarity.pipe';
 import { QueryParamsPipe } from '@/pipes/query-params.pipe';
 
 import { DataService } from '@/services/data.service';
@@ -50,7 +50,7 @@ import { environment } from '@environments/environment';
     ItemActionsComponent,
     ItemAttributesComponent,
 
-    TraitCountPipe,
+    TraitRarityPipe,
     QueryParamsPipe,
   ],
   selector: 'app-phunk-item-view',

@@ -36,7 +36,7 @@
             </div>
 
             @if (phunk.attributes && phunk.attributes.length) {
-              <h2 i18n>One of {{ phunk.attributes[0].v | traitCount : phunk.slug }}
+              <h2 i18n>One of {{ phunk.attributes[0].v | traitRarity : phunk.slug }}
                 <a
                   class="highlight"
                   [routerLink]="['/', 'curated', phunk.slug, 'market', 'all']"

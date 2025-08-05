@@ -18,15 +18,15 @@
               [queryParams]="item | queryParams">
 
               <span>{{ item.v }}</span>
-              @if (item.v | traitCount : phunk.slug) {
+              @if (item.v | traitRarity : phunk.slug) {
                 <span class="percent">
-                  ({{ (+(item.v | traitCount : phunk.slug) / (phunk.collection?.supply || 0)) | percent : '1.1-1' }})
+                  ({{ (+(item.v | traitRarity : phunk.slug) / (phunk.collection?.supply || 0)) | percent : '1.1-1' }})
                 </span>
               }
             </a>
 
             <span class="trait-count">
-              <span>{{ (item.v | traitCount : phunk.slug) && (item.v | traitCount : phunk.slug) + ' ' + phunk.collection?.name + ' have this.' }}</span>
+              <span>{{ (item.v | traitRarity : phunk.slug) && (item.v | traitRarity : phunk.slug) + ' ' + phunk.collection?.name + ' have this.' }}</span>
             </span>
           }
         </div>

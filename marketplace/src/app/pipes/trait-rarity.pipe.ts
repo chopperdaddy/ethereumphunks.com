@@ -4,13 +4,11 @@ import { rarityData } from '@/constants/collections';
 
 @Pipe({
   standalone: true,
-  name: 'traitCount'
+  name: 'traitRarity'
 })
-
-export class TraitCountPipe implements PipeTransform {
+export class TraitRarityPipe implements PipeTransform {
 
   transform(value: string, slug: string): string {
-    // console.log({value, slug});
     return rarityData[slug][value];
   }
 }

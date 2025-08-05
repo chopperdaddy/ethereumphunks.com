@@ -4,7 +4,7 @@ import { RouterModule } from '@angular/router';
 
 import { Phunk } from '@/models/db';
 
-import { TraitCountPipe } from '@/pipes/trait-count.pipe';
+import { TraitRarityPipe } from '@/pipes/trait-rarity.pipe';
 import { IsNumberPipe } from '@/pipes/is-number.pipe';
 import { QueryParamsPipe } from '@/pipes/query-params.pipe';
 
@@ -14,7 +14,7 @@ import { QueryParamsPipe } from '@/pipes/query-params.pipe';
     CommonModule,
     RouterModule,
 
-    TraitCountPipe,
+    TraitRarityPipe,
     IsNumberPipe,
     QueryParamsPipe
   ],
