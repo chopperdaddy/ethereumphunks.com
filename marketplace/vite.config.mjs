@@ -151,6 +151,16 @@ export default defineConfig(({ command, mode }) => {
 
     // Vite plugins configuration
     plugins: [
+
+      // Angular integration plugin
+      angular({
+        inlineStylesExtension: "scss",
+        entryFile: resolve(__dirname, "src/main.ts"),
+        tsconfig: resolve(__dirname, "tsconfig.app.json"),
+        workspaceRoot: __dirname,
+        liveReload: true,
+      }),
+
       // Environment setup plugin
       {
         name: "environment-setup",
@@ -197,15 +207,6 @@ export default defineConfig(({ command, mode }) => {
           }
         },
       },
-
-      // Angular integration plugin
-      angular({
-        inlineStylesExtension: "scss",
-        entryFile: resolve(__dirname, "src/main.ts"),
-        tsconfig: resolve(__dirname, "tsconfig.app.json"),
-        workspaceRoot: __dirname,
-        liveReload: true,
-      }),
 
       // TypeScript type checking plugin
       checker({
