@@ -60,6 +60,7 @@ export class PhunkGridComponent implements OnChanges {
   @Input() activeSort!: Sort['value'];
 
   @Input() viewType: ViewType = 'market';
+  @Input() slug!: string;
   @Input() phunkData!: Phunk[];
   @Input() total: number = 0;
   @Input() limit: number = 0;

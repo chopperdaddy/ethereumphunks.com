@@ -1,33 +1,28 @@
 @if (activeTraitFilters$ | async; as filters) {
-  @for (key of objectKeys(filterData); track key; let i = $index) {
+  @for (key of objectKeys(filterData()); track key; let i = $index) {
 
-    @if (!(filterData[key][0] | isNumber)) {
+    @if (!(filterData()[key][0] | isNumber)) {
       <div
         [id]="key"
         class="filter-group-wrapper">
 
         <ng-select
           [(ngModel)]="activeTraitFilters[key]"
-          [placeholder]="key"
+          [placeholder]="key === 'trait_count' ? 'Trait Count' : key"
           [searchable]="true"
           [class.active]="filters[key]"
           (change)="selectFilter($event)">
 
-          @for (item of filterData[key]; track item) {
+          @for (item of filterData()[key]; track item) {
             @if (!(item | isNumber)) {
               <ng-option [value]="item">
                 {{ item.toString() | titlecase }}
               </ng-option>
             }
           }
-
-          <!-- <ng-option [value]="'none'">
-            None
-          </ng-option> -->
         </ng-select>
       </div>
     }
-
   }
 
   @if (objectKeys(activeTraitFilters).length) {

@@ -9,6 +9,7 @@ import { Phunk } from '@/models/db';
 
 import { filter, tap } from 'rxjs';
 import { EthscriptionService } from '@/services/ethscription.service';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 @Component({
   standalone: true,
@@ -51,7 +52,8 @@ export class BreadcrumbsComponent {
 
     this.transparentCheck.valueChanges.pipe(
       filter(() => !!this.phunk()),
-      tap(() => this.paintCanvas(this.phunk()!))
+      tap(() => this.paintCanvas(this.phunk()!)),
+      takeUntilDestroyed()
     ).subscribe();
   }
 

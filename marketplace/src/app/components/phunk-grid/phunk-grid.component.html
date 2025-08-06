@@ -2,7 +2,7 @@
 
   @for (
     phunk of phunkData |
-    attributeFilter : traitFilters |
+    attributeFilter : traitFilters : slug |
     sort: activeSort : marketType;
     track phunk.sha;
     let i = $index;

@@ -50,7 +50,7 @@ export class ConversationComponent {
       }
     }),
     tap(() => setTimeout(() => this.scrollToBottom(), 100)),
-    shareReplay(1),
+    shareReplay({ bufferSize: 1, refCount: true }),
   );
 
   toUser$ = this.conversation$.pipe(

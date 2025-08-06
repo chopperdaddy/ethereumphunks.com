@@ -1,4 +1,4 @@
-import { Component, effect, input } from '@angular/core';
+import { Component, effect, input, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { HttpParams } from '@angular/common/http';
 import { CommonModule, Location, TitleCasePipe } from '@angular/common';
@@ -13,7 +13,7 @@ import { GlobalState } from '@/models/global-state';
 import { setActiveTraitFilters } from '@/state/market/market-state.actions';
 import { selectActiveTraitFilters } from '@/state/market/market-state.selectors';
 
-import { tap } from 'rxjs';
+import { filter, tap } from 'rxjs';
 @Component({
   standalone: true,
   imports: [
@@ -32,13 +32,15 @@ export class MarketFiltersComponent {
 
   slug = input.required<string | undefined>();
 
-  filterData: { [key: string]: string[] | number[] } = {};
+  filterData = signal<{ [key: string]: string[] | number[] }>({});
   traitCount!: number;
   objectKeys = Object.keys;
 
   activeTraitFilters: any = {};
   activeTraitFilters$ = this.store.select(selectActiveTraitFilters).pipe(
+    filter((filters) => !!filters),
     tap((filters) => {
+      console.log('filters', filters);
       const newFilters = { ...filters };
       delete newFilters.address;
       this.activeTraitFilters = { ...newFilters };
@@ -54,9 +56,18 @@ export class MarketFiltersComponent {
   ) {
     effect(async () => {
       const slug = this.slug();
-      if (!slug) return;
-      const filters = await this.dataSvc.getFilters(slug);
-      this.filterData = filters || {};
+      if (!slug) {
+        this.filterData.set({});
+        return;
+      }
+
+      try {
+        const filters = await this.dataSvc.getFilters(slug);
+        this.filterData.set(filters || {});
+      } catch (error) {
+        console.error('Failed to load filters:', error);
+        this.filterData.set({});
+      }
     });
   }
 

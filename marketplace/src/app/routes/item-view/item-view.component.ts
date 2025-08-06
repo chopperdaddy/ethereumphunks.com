@@ -65,7 +65,7 @@ export class ItemViewComponent {
     filter((params: any) => !!params.hashId),
     distinctUntilChanged((prev, curr) => prev.hashId === curr.hashId),
     switchMap((params: any) => this.dataSvc.fetchSinglePhunk(params.hashId)),
-    shareReplay(1),
+    shareReplay({ bufferSize: 1, refCount: true }),
   );
 
   scrollY$ = fromEvent(document, 'scroll').pipe(

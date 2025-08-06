@@ -18,7 +18,15 @@ h2 {
   .accessory {
     display: flex;
     flex-direction: column;
+    gap: 1rem;
     font-size: 1.8rem;
+
+    .trait-name {
+      font-size: 1.6rem;
+      font-weight: 700;
+      text-decoration: underline;
+      opacity: 1;
+    }
 
     .value {
       font-weight: 700;
@@ -32,7 +40,6 @@ h2 {
     }
 
     .trait-count {
-      padding-top: 1rem;
       span {
         font-weight: 700;
       }

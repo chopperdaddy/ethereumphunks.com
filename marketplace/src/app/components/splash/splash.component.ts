@@ -53,7 +53,7 @@ export class SplashComponent {
       return from(this.createDefaultImageArray(shas));
     }),
     tap((images) => this.currentImages.set(images)),
-    shareReplay(1) // Cache the result so it doesn't recompute unnecessarily
+    shareReplay({ bufferSize: 1, refCount: true }) // Cache the result so it doesn't recompute unnecessarily
   );
 
   private currentImages = signal<SplashImage[]>([...this.defaultImages]);

@@ -45,7 +45,7 @@ export class AvatarComponent {
         untracked(() => this.src.set(`${environment.staticUrl}/static/images/${avatar}`));
         return;
       }
-    })
+    });
   }
 
 }

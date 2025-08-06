@@ -1,6 +1,7 @@
 import { Pipe, PipeTransform } from '@angular/core';
 import { Phunk } from '@/models/db';
 import { TraitFilter } from '@/models/global-state';
+import { ignoredTraitFilters, ignoredTraitFiltersForCounts } from '@/constants/collections';
 
 /**
  * Pipe that filters an array of Phunks based on their attributes
@@ -10,7 +11,7 @@ import { TraitFilter } from '@/models/global-state';
  *
  * @example
  * // Input phunks: Array of Phunk objects
- * // Input filters: { "Type": "Alien", "trait-count": "7" }
+ * // Input filters: { "Type": "Alien", "trait_count": "5" }
  * // Usage in template: *ngFor="let phunk of phunks | attributeFilter:activeFilters"
  */
 @Pipe({
@@ -25,7 +26,7 @@ export class AttributeFilterPipe implements PipeTransform {
    * @param activeTraitFilters - Object containing active trait filters
    * @returns Filtered array of Phunks that match all trait criteria
    */
-  transform(value: Phunk[], activeTraitFilters: TraitFilter | null): Phunk[] {
+  transform(value: Phunk[], activeTraitFilters: TraitFilter | null, slug: string): Phunk[] {
     if (!value) return [];
     if (!activeTraitFilters) return value;
 
@@ -35,14 +36,18 @@ export class AttributeFilterPipe implements PipeTransform {
 
     let filtered = value;
     const filtersLength = Object.keys(traitFilters).length;
-    const traitCountFilter = traitFilters['trait-count'];
+    const traitCountFilter = traitFilters['trait_count'];
 
     // Handle trait count filter if present
     if (traitCountFilter !== undefined) {
       const traitCount = Number(traitCountFilter);
       filtered = filtered.filter((res) => {
-        // Add 2 to account for Name and Description attributes
-        return res.attributes && (res.attributes.length === traitCount + 2);
+        if (!res.attributes) return false;
+        // Count only traits (exclude Name, Description, and Sex)
+        const actualTraitCount = res.attributes.filter(attr =>
+          !ignoredTraitFiltersForCounts[slug]?.includes(attr.k)
+        ).length;
+        return actualTraitCount === traitCount;
       });
     }
 
@@ -53,8 +58,8 @@ export class AttributeFilterPipe implements PipeTransform {
 
         // Check each filter
         return Object.entries(traitFilters).every(([key, value]) => {
-          // Skip trait-count as it's handled separately
-          if (key === 'trait-count') return true;
+          // Skip trait_count as it's handled separately
+          if (key === 'trait_count') return true;
 
           // Find the attribute with matching key
           const attribute = res.attributes?.find(attr => attr?.k === key);

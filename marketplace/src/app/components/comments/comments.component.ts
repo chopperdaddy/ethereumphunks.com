@@ -8,6 +8,7 @@ import { Store } from '@ngrx/store';
 
 import { from } from 'rxjs';
 import { switchMap, startWith } from 'rxjs/operators';
+import { zeroAddress } from 'viem';
 
 import { DataService } from '@/services/data.service';
 import { Web3Service } from '@/services/web3.service';
@@ -24,8 +25,6 @@ import { AvatarComponent } from '@/components/avatar/avatar.component';
 import { upsertNotification } from '@/state/notification/notification.actions';
 import { selectActiveCollection } from '@/state/data/data-state.selectors';
 import { selectWalletAddress } from '@/state/app/app-state.selectors';
-
-import { ZERO_ADDRESS } from '@/constants/utils';
 
 @Component({
   standalone: true,
@@ -204,7 +203,7 @@ export class CommentsComponent {
     this.store.dispatch(upsertNotification({ notification }));
 
     try {
-      const hash = await this.web3Svc.transferPhunk(commentId, ZERO_ADDRESS);
+      const hash = await this.web3Svc.transferPhunk(commentId, zeroAddress);
       if (!hash) return;
 
       notification = {

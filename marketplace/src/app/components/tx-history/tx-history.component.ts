@@ -3,10 +3,11 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 
 import { TimeagoModule } from 'ngx-timeago';
+import { LazyLoadImageModule } from 'ng-lazyload-image';
 
 import { Store } from '@ngrx/store';
-
-import { LazyLoadImageModule } from 'ng-lazyload-image';
+import { BehaviorSubject, catchError, filter, of, switchMap } from 'rxjs';
+import { zeroAddress } from 'viem';
 
 import { WalletAddressDirective } from '@/directives/wallet-address.directive';
 
@@ -18,9 +19,6 @@ import { EventType, GlobalState } from '@/models/global-state';
 import { Phunk } from '@/models/db';
 
 import { environment } from '@environments/environment';
-import { ZERO_ADDRESS } from '@/constants/utils';
-
-import { BehaviorSubject, catchError, filter, map, of, switchMap, tap } from 'rxjs';
 
 type EventLabels = {
   [type in EventType]: string;
@@ -45,7 +43,7 @@ type EventLabels = {
 
 export class TxHistoryComponent implements OnChanges {
 
-  ZERO_ADDRESS = ZERO_ADDRESS;
+  ZERO_ADDRESS = zeroAddress;
   explorerUrl = environment.explorerUrl;
 
   @Input() phunk!: Phunk;

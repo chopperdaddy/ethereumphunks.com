@@ -20,6 +20,8 @@ import { Observable, of, from, forkJoin, firstValueFrom, EMPTY, timer, merge, fi
 
 import { environment } from '@environments/environment';
 
+import { ignoredTraitFilters, ignoredTraitFiltersForCounts } from '@/constants/collections';
+
 import * as dataStateActions from '@/state/data/data-state.actions';
 import * as appStateActions from '@/state/app/app-state.actions';
 
@@ -159,6 +161,8 @@ export class DataService {
           if (res) return of(res);
           return this.fetchAttributes(slug);
         }),
+        filter((res: AttributeItem | null) => !!res),
+        tap((res: AttributeItem) => this.createFilters(slug, res)),
         shareReplay({ bufferSize: 1, refCount: true })
       );
       this.attributeCache.set(slug, attributes$);
@@ -173,7 +177,6 @@ export class DataService {
   fetchAttributes(slug: string): Observable<AttributeItem> {
     return this.http.get<AttributeItem>(`${environment.staticUrl}/data/${slug}_attributes.json`).pipe(
       switchMap((res: AttributeItem) => from(this.cacheAttributes(slug, res))),
-      tap((res: AttributeItem) => this.createFilters(slug, res)),
     );
   }
 
@@ -196,9 +199,11 @@ export class DataService {
     // Create a map to store unique attribute keys and their possible values
     const attributeMap = new Map<string, Set<string>>();
     // Track which attributes are present in all items
-    const attributeCount = new Map<string, number>();
+    const totalAttributeCount = new Map<string, number>();
     // Track frequency of each value for each attribute
     const valueFrequency = new Map<string, Map<string, number>>();
+    // Track trait counts for each item
+    const traitCounts = new Set<number>();
     const totalItems = Object.keys(attributes).length;
 
     // Iterate through all attributes for each item
@@ -206,9 +211,17 @@ export class DataService {
       // Track which attributes are present in this item
       const presentAttributes = new Set<string>();
 
+      // Count traits for this item (excluding Description and Name)
+      let traitCount = 0;
+
       item.forEach((attribute: Attribute) => {
         // Skip Description and Name attributes since they aren't used for filtering
-        if (attribute.k === 'Description' || attribute.k === 'Name') return;
+        if (ignoredTraitFilters[slug]?.includes(attribute.k)) return;
+
+        // Count traits (exclude Sex from trait counting, but still include it as a filter)
+        if (!ignoredTraitFiltersForCounts[slug]?.includes(attribute.k)) {
+          traitCount++;
+        }
 
         // Initialize a new Set for this attribute key if it doesn't exist
         if (!attributeMap.has(attribute.k)) {
@@ -237,9 +250,12 @@ export class DataService {
         presentAttributes.add(attribute.k);
       });
 
+      // Add this item's trait count to the set
+      traitCounts.add(traitCount);
+
       // Update count for each attribute present in this item
       presentAttributes.forEach(attr => {
-        attributeCount.set(attr, (attributeCount.get(attr) || 0) + 1);
+        totalAttributeCount.set(attr, (totalAttributeCount.get(attr) || 0) + 1);
       });
     });
 
@@ -254,12 +270,18 @@ export class DataService {
       });
 
       // Add "none" option if the attribute isn't present in all items
-      if (attributeCount.get(key) !== totalItems) {
+      if (totalAttributeCount.get(key) !== totalItems) {
         sortedValues.unshift('none');
       }
 
       attributeObject[key] = sortedValues;
     });
+
+    // Add trait count filter options
+    const sortedTraitCounts = Array.from(traitCounts).sort((a, b) => a - b);
+    attributeObject['trait_count'] = sortedTraitCounts.map(count => count.toString());
+
+    console.log({ totalAttributeCount, traitCounts, totalItems, attributeObject })
 
     // Store the filters object in local storage and return it
     const stored = await this.storageSvc.setItem(`${slug}__filters`, attributeObject);
@@ -752,6 +774,7 @@ export class DataService {
    * @param hashId Token hash ID
    */
   fetchUnsupportedItem(hashId: string): Observable<Phunk> {
+    console.log('fetchUnsupportedItem', hashId);
     const prefix = this.suffix.replace('_', '');
 
     const baseUrl = `https://ethscriptions-api${prefix ? ('-' + prefix) : ''}.flooredape.io`;
