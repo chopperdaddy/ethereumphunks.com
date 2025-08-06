@@ -161,6 +161,7 @@ export class MarketComponent {
   );
 
   config$ = this.store.select(appStateSelectors.selectConfig);
+  advancedMode$ = this.store.select(appStateSelectors.selectAdvancedMode);
 
   ceil = Math.ceil;
   objectKeys = Object.keys;

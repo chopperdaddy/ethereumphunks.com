@@ -190,3 +190,8 @@ export const addLinkedAccount = createAction(
   '[App State] Add Linked Account',
   props<{ linkedAccount: LinkedAccount | undefined }>()
 );
+
+export const setAdvancedMode = createAction(
+  '[App State] Set Advanced Mode',
+  props<{ advancedMode: boolean }>()
+);

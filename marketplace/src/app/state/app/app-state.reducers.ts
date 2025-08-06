@@ -49,6 +49,8 @@ export const initialState: AppState = {
 
   linkedAccounts: [],
 
+  advancedMode: false,
+
   logsActive: false,
   logs: []
 };
@@ -259,5 +261,12 @@ export const appStateReducer: ActionReducer<AppState, Action> = createReducer(
       isBrowserActive
     };
     return setBrowserActive
+  }),
+  on(actions.setAdvancedMode, (state, { advancedMode }) => {
+    const setAdvancedMode = {
+      ...state,
+      advancedMode
+    };
+    return setAdvancedMode
   })
 );

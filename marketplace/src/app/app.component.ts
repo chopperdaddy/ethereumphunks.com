@@ -20,7 +20,7 @@ import { DataService } from '@/services/data.service';
 import { ThemeService } from '@/services/theme.service';
 import { PwaUpdateService } from '@/services/pwa-update.service';
 
-import { selectConfig, selectIsMobile } from '@/state/app/app-state.selectors';
+import { selectConfig, selectIsMobile, selectAdvancedMode } from '@/state/app/app-state.selectors';
 import { selectLogsActive } from '@/state/indexer-logs/indexer-logs.selectors';
 
 import * as appStateActions from '@/state/app/app-state.actions';
@@ -59,9 +59,13 @@ export class AppComponent implements OnInit {
 
   statusBarVisible = signal(true);
 
+  // Target sequence for advanced mode activation
+  private readonly targetSequence: string = '8008135';
+
   chatActive$ = this.store.select(selectChat).pipe(map(({ active }) => active));
   logsActive$ = this.store.select(selectLogsActive);
   config$ = this.store.select(selectConfig);
+  advancedMode$ = this.store.select(selectAdvancedMode);
 
   constructor(
     @Inject(DOCUMENT) private document: Document,
@@ -136,6 +140,55 @@ export class AppComponent implements OnInit {
       tap(([$event, isMobile]) => this.setStatusBarVisible())
     ).subscribe();
 
+        // keydown event for advanced mode activation
+    fromEvent(this.document, 'keydown').pipe(
+      withLatestFrom(this.advancedMode$),
+      filter(([_, advancedMode]) => !advancedMode),
+      map(([event, _]) => event as KeyboardEvent),
+      filter(event => /^\d$/.test(event.key)),
+      map(event => event.key),
+      scan((acc: { sequence: string, timestamp: number }, key: string) => {
+        const now = Date.now();
+        // Reset sequence if more than 2 seconds have passed
+        const sequence = now - acc.timestamp > 2000 ? key : acc.sequence + key;
+        const trimmedSequence = sequence.length > this.targetSequence.length
+          ? sequence.substring(1)
+          : sequence;
+        return { sequence: trimmedSequence, timestamp: now };
+      }, { sequence: '', timestamp: 0 }),
+      debounceTime(100),
+      tap(({ sequence }) => {
+        if (sequence === this.targetSequence) {
+          this.store.dispatch(appStateActions.setAdvancedMode({ advancedMode: true }));
+console.log(`
+░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
+░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
+░░░░░░░▓▓▓▓░░░░░░▓▓▓▓░░░░░░░░░░░░░░░░░░░░░
+░░░░░░░▒▒██░░░░░░▒▒██░░░░░░░░░░░░░░░░░░░░░
+░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
+░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
+░░░░░░░░░░░████░░░░░░░░░░░░░░░░░░░░░░░░░░░
+░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
+░░░░░░░░░░░░░░░░░██░░░░░░░░░░░░░░░░░░░░░░░
+░░░░░░░░░░░██████░░░░░░░░░░░░░░░░░░░░░░░░░
+░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
+░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
+░░░█▀█░█▀▄░█░█░█▀█░█▀█░█▀▀░█▀▀░█▀▄░░░░░░░░
+░░░█▀█░█░█░▀▄▀░█▀█░█░█░█░░░█▀▀░█░█░░░░░░░░
+░░░▀░▀░▀▀░░░▀░░▀░▀░▀░▀░▀▀▀░▀▀▀░▀▀░░░░░░░░░
+░░░█▄█░█▀█░█▀▄░█▀▀░░░░░░░░░░░░░░░░░░░░░░░░
+░░░█░█░█░█░█░█░█▀▀░░░░░░░░░░░░░░░░░░░░░░░░
+░░░▀░▀░▀▀▀░▀▀░░▀▀▀░░░░░░░░░░░░░░░░░░░░░░░░
+░░░█▀█░█▀▀░▀█▀░▀█▀░█░█░█▀█░▀█▀░█▀▀░█▀▄░░░░
+░░░█▀█░█░░░░█░░░█░░▀▄▀░█▀█░░█░░█▀▀░█░█░░░░
+░░░▀░▀░▀▀▀░░▀░░▀▀▀░░▀░░▀░▀░░▀░░▀▀▀░▀▀░░░░░
+░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
+░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
+`)
+        }
+      })
+    ).subscribe();
+
     this.setIsMobile();
     this.pwaUpdateSvc.checkForUpdate();
   }
@@ -156,5 +209,13 @@ export class AppComponent implements OnInit {
   async toggleChat() {
     const active = await firstValueFrom(this.chatActive$);
     this.store.dispatch(setChat({ active: !active }));
+  }
+
+  /**
+   * Resets advanced mode (for testing/debugging purposes)
+   */
+  resetAdvancedMode() {
+    this.store.dispatch(appStateActions.setAdvancedMode({ advancedMode: false }));
+    console.log('Advanced mode deactivated');
   }
 }

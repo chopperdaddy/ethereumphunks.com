@@ -82,13 +82,12 @@
             @if ((walletAddress$ | async); as walletAddress) {
               @if (
                 (
-                  (marketType === 'owned' && (route.snapshot.queryParams.address | lowercase) === walletAddress)
+                  (marketType === 'owned' && (route.snapshot.queryParams.address | lowercase) === walletAddress) ||
+                  (marketType === 'listings' && (advancedMode$ | async))
                 )
               ) {
-                <!-- || marketType === 'listings' -->
                 <div class="select-buttons">
-                  @if (selectMultipleActive) {
-                    <!--  && marketType !== 'listings' -->
+                  @if (selectMultipleActive && marketType === 'owned') {
                     <button
                       class="all-none"
                       [class.all]="selectAll"
@@ -136,7 +135,6 @@
                       <span class="value">
                         {{ (objectValues(selected) | calc : 'totalListingsValue') | number : '1.0-5' }}Ξ
                       </span>
-                      <!-- {{ (selectedValue | weiToEth) | number }}Ξ</span> -->
                     </div>
                     <button (click)="batchAction('sweep')">
                       Buy Selected
@@ -163,6 +161,7 @@
           [limit]="250"
           [traitFilters]="(activeTraitFilters$ | async)"
           [phunkData]="phunkData.data"
+          [slug]="(activeCollection$ | async)?.slug || ''"
           [total]="phunkData.total"
           [selectAll]="selectAll"
           [walletAddress]="(walletAddress$ | async)"

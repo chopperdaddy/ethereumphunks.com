@@ -133,3 +133,8 @@ export const selectLinkedAccounts = createSelector(
   selectAppState,
   (appState: AppState) => appState.linkedAccounts
 );
+
+export const selectAdvancedMode = createSelector(
+  selectAppState,
+  (appState: AppState) => appState.advancedMode
+);

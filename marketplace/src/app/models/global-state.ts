@@ -71,6 +71,8 @@ export interface AppState {
 
   linkedAccounts: LinkedAccount[];
 
+  advancedMode: boolean;
+
   logsActive: boolean;
   logs: LogItem[];
 }
