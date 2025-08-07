@@ -11,6 +11,34 @@
   font-weight: 400;
 }
 
+.no-conversations {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+
+  p {
+    font-size: 1.2rem;
+    font-weight: 400;
+    color: rgba(var(--white), 1);
+  }
+
+  button {
+    background-color: rgba(var(--base-color), 1);
+    color: rgba(var(--black), 1);
+
+    font-family: var(--secondary-font-stack);
+    font-weight: 400;
+    font-size: 1.2rem;
+  }
+
+  &.disabled {
+    opacity: .5;
+    pointer-events: none;
+  }
+}
+
 .create-conversation-button {
   position: absolute;
   z-index: 1;

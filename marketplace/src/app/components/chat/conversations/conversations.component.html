@@ -25,38 +25,50 @@
 }
 
 <div #conversations class="conversations-wrapper">
-  @for (conversation of (conversations$ | async); track conversation.id) {
-    <div
-      (click)="goToConversation(conversation.id)"
-      class="conversation">
+  @if (conversations$ | async; as conversations) {
+    @for (conversation of conversations; track conversation.id) {
+      <div
+        (click)="goToConversation(conversation.id)"
+        class="conversation">
 
-      <div class="profile-item">
-        <div class="image-wrapper">
-          <app-avatar [address]="conversation.members[0].identifier" />
+        <div class="profile-item">
+          <div class="image-wrapper">
+            <app-avatar [address]="conversation.members[0].identifier" />
+          </div>
+        </div>
+
+        <div class="item-inner">
+          <div class="left">
+            <div class="from-address">
+              <app-address [address]="conversation.members[0].identifier" />
+            </div>
+            <div class="message-preview">
+              {{ conversation.latestMessageContent }}
+            </div>
+          </div>
+          <div class="right">
+            <div class="timestamp">{{ conversation.timestamp | timeago : true }}</div>
+            <div class="unread-count">
+              @if (conversation.latestMessageContent) {
+                &nbsp;
+              }
+              <!-- {{ conversation.unreadCount }} -->
+            </div>
+          </div>
         </div>
       </div>
+    } @empty {
+      <div
+        class="no-conversations"
+        [class.disabled]="isCreatingNewConversation()">
 
-      <div class="item-inner">
-        <div class="left">
-          <div class="from-address">
-            <app-address [address]="conversation.members[0].identifier" />
-          </div>
-          <div class="message-preview">
-            {{ conversation.latestMessageContent }}
-          </div>
-        </div>
-        <div class="right">
-          <div class="timestamp">{{ conversation.timestamp | timeago : true }}</div>
-          <div class="unread-count">
-            @if (conversation.latestMessageContent) {
-              &nbsp;
-            }
-            <!-- {{ conversation.unreadCount }} -->
-          </div>
-        </div>
+        <p>You don't have any conversations yet.</p>
+        <button (click)="newConversation()">
+          Start a new conversation
+        </button>
       </div>
-    </div>
-  } @empty {
+    }
+  } @else {
     <div class="conversation loading">
 
       <div class="profile-item">

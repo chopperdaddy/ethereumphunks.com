@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 
 import { toBytes, WalletClient } from 'viem';
-import { AsyncStream, Client, ClientOptions, DecodedMessage, Dm, Group, Identifier, Signer, SortDirection } from '@xmtp/browser-sdk';
+import { Client, ClientOptions, DecodedMessage, Dm, Group, Identifier, Signer, SortDirection } from '@xmtp/browser-sdk';
 
 import { NormalizedConversation, NormalizedConversationWithMessages, NormalizedMessage } from '@/models/chat';
 
@@ -18,7 +18,7 @@ import { environment } from '@environments/environment';
 export class ChatService {
 
   /** XMTP client instance */
-  private client!: Client;
+  private client!: Client<unknown>;
 
   /** XMTP client configuration options */
   private clientOptions: ClientOptions = {
@@ -54,7 +54,7 @@ export class ChatService {
       console.log('===============================================');
       console.log(
         'CREATE ENCRYPTION KEY:',
-        Array.from(dbEncryptionKey).map(b => b.toString(16).padStart(2, '0')).join('')
+        dbEncryptionKey ? Array.from(dbEncryptionKey).map(b => b.toString(16).padStart(2, '0')).join('') : 'undefined (no encryption)'
       );
       console.log('===============================================');
 
@@ -98,7 +98,7 @@ export class ChatService {
       console.log('===============================================');
       console.log(
         'GET ENCRYPTION KEY:',
-        Array.from(dbEncryptionKey).map(b => b.toString(16).padStart(2, '0')).join('')
+        dbEncryptionKey ? Array.from(dbEncryptionKey).map(b => b.toString(16).padStart(2, '0')).join('') : 'undefined (no encryption)'
       );
       console.log('===============================================');
 
@@ -142,22 +142,23 @@ export class ChatService {
         observer.next([...conversations]);
         console.log('conversations', conversations);
         // Start streaming new conversations
-        this.client.conversations.stream().then(async (stream: AsyncStream<Dm | Group>) => {
-          try {
-            for await (const dm of stream) {
-              if (dm instanceof Dm) {
-                if (closed) break;
-                const normalized = await this.normalizeDmConversation(dm, address);
-                if (normalized && !conversations.some(c => c.id === normalized.id)) {
-                  conversations = [...conversations, normalized];
-                  observer.next([...conversations]);
-                }
+        const stream = await this.client.conversations.stream({
+          onValue: async (conversation) => {
+            if (conversation instanceof Dm && !closed) {
+              const normalized = await this.normalizeDmConversation(conversation, address);
+              if (normalized && !conversations.some(c => c.id === normalized.id)) {
+                conversations = [...conversations, normalized];
+                observer.next([...conversations]);
               }
             }
-          } catch (error) {
+          },
+          onError: (error) => {
             observer.error(error);
+          },
+          onFail: () => {
+            observer.error(new Error('Stream failed'));
           }
-        }).catch(err => observer.error(err));
+        });
       }).catch(err => observer.error(err));
       // Teardown logic
       return () => { closed = true; };
@@ -234,10 +235,9 @@ export class ChatService {
         messages.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
         observer.next({ ...conversationInfo, messages: [...messages] });
         // Start streaming new messages
-        conversation.stream().then(async (stream) => {
-          try {
-            for await (const message of stream) {
-              if (closed) break;
+        const messageStream = await conversation.stream({
+          onValue: async (message) => {
+            if (!closed) {
               const normalized = await this.normalizeMessage(message as DecodedMessage, activeInboxId);
               // Only add if not already present (by id)
               if (!messages.some(m => m.id === normalized.id)) {
@@ -247,10 +247,14 @@ export class ChatService {
                 observer.next({ ...conversationInfo!, messages: [...messages] });
               }
             }
-          } catch (error) {
+          },
+          onError: (error) => {
             observer.error(error);
+          },
+          onFail: () => {
+            observer.error(new Error('Message stream failed'));
           }
-        }).catch(err => observer.error(err));
+        });
       }).catch(err => observer.error(err));
       // Teardown logic
       return () => { closed = true; };
@@ -338,9 +342,16 @@ export class ChatService {
    * Creates an encryption key from a passcode and address
    * @param passcode User's passcode for encryption
    * @param address User's wallet address
-   * @returns Promise resolving to encryption key as Uint8Array
+   * @returns Promise resolving to encryption key as Uint8Array or undefined if no passcode
    */
-  private async createEncryptionKeyFromPasscode(passcode: string, address: `0x${string}`): Promise<Uint8Array> {
+  private async createEncryptionKeyFromPasscode(passcode: string, address: `0x${string}`): Promise<Uint8Array | undefined> {
+    // If no passcode provided, return undefined (no encryption)
+    if (!passcode) {
+      // Still create and store a salt for tracking user existence
+      await this.getOrCreateUserSalt(address);
+      return undefined;
+    }
+
     // Get user salt - used for PBKDF2 key derivation
     const salt = await this.createSalt();
 
@@ -373,10 +384,13 @@ export class ChatService {
    * Gets the encryption key for an existing user using their passcode
    * @param passcode Passcode for deriving the key
    * @param address User's wallet address
-   * @returns Promise resolving to encryption key as Uint8Array
-   * @throws Error if no XMTP identity exists for the address
+   * @returns Promise resolving to encryption key as Uint8Array or undefined if no passcode
+   * @throws Error if no XMTP identity exists for the address (when passcode is required)
    */
-  private async getEncryptionKeyWithPasscode(passcode: string, address: `0x${string}`): Promise<Uint8Array> {
+  private async getEncryptionKeyWithPasscode(passcode: string, address: `0x${string}`): Promise<Uint8Array | undefined> {
+    // If no passcode provided, return undefined (no encryption)
+    if (!passcode) return undefined;
+
     // Check if user salt exists
     const userSalt = await this.storageSvc.getItem<string>(`user-salt-${address}`, true);
     if (!userSalt) {
@@ -419,7 +433,7 @@ export class ChatService {
     const userSalt = await this.storageSvc.getItem<string>(`user-salt-${address}`, true);
     if (userSalt) return this.utilSvc.base64ToUint8Array(userSalt);
 
-    const salt = window.crypto.getRandomValues(new Uint8Array(16));
+    const salt = this.createSalt();
     await this.storageSvc.setItem(`user-salt-${address}`, this.utilSvc.uint8ArrayToBase64(salt), true);
     return salt;
   }
@@ -428,8 +442,19 @@ export class ChatService {
    * Creates a new salt for the user
    * @returns Promise resolving to salt as Uint8Array
    */
-  async createSalt(): Promise<Uint8Array> {
+  private createSalt(): Uint8Array {
     return window.crypto.getRandomValues(new Uint8Array(16));
+  }
+
+  /**
+   * Gets the salt for a user
+   * @param address User's wallet address
+   * @returns Promise resolving to salt as Uint8Array or undefined if no salt exists
+   */
+  private async getSalt(address: `0x${string}`): Promise<Uint8Array | undefined> {
+    const userSalt = await this.storageSvc.getItem<string>(`user-salt-${address}`, true);
+    if (userSalt) return this.utilSvc.base64ToUint8Array(userSalt);
+    return;
   }
 
   /**
@@ -438,7 +463,7 @@ export class ChatService {
    * @returns Promise resolving to boolean indicating if salt exists
    */
   async hasStoredUserSalt(address: `0x${string}`): Promise<boolean> {
-    const userSalt = await this.storageSvc.getItem<string>(`user-salt-${address}`, true);
+    const userSalt = await this.getSalt(address);
     return !!userSalt;
   }
 }

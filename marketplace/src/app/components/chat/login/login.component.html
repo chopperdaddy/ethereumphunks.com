@@ -13,114 +13,134 @@
       </div>
     }
 
-    <div class="form-title-wrapper">
-      @if (hasAccount$ | async; as hasAccount) {
-        <h2>Enter your passcode</h2>
-      } @else {
-        @if (confirmingPasscode()) {
-          <h2>Confirm passcode</h2>
-          <h3>Enter your passcode again.</h3>
-        } @else {
-          <h2>Create a passcode</h2>
-          <h3>Create a passcode to start chatting.</h3>
-        }
-      }
-    </div>
-
-    @if (confirmingPasscode()) {
-      <form
-        autocomplete="off"
-        class="passcode-form"
-        [formGroup]="passcodeConfirmForm"
-        (submit)="$event.preventDefault()">
-
-        <div class="passcode-section">
-          <div class="inputs-row">
-            @for (i of [0,1,2,3]; track i) {
-              <input
-                #confirmInput
-                type="number"
-                min="0"
-                max="9"
-                maxlength="1"
-                class="passcode-input"
-                [formControlName]="'c'+i"
-                required
-                (input)="onInput($event, i, 'confirm')"
-                (focus)="onFocus($event)"
-              >
-            }
-          </div>
-        </div>
-      </form>
-    } @else {
-      <form
-        autocomplete="off"
-        class="passcode-form"
-        [formGroup]="passcodeForm"
-        (submit)="$event.preventDefault()">
-
-        <div class="passcode-section">
-          <div class="inputs-row">
-            @for (i of [0,1,2,3]; track i) {
-              <input
-                #passcodeInput
-                type="number"
-                min="0"
-                max="9"
-                maxlength="1"
-                class="passcode-input"
-                [formControlName]="'d'+i"
-                required
-                (input)="onInput($event, i, 'passcode')"
-                (focus)="onFocus($event)"
-              >
-            }
-          </div>
-        </div>
-      </form>
-    }
-
-    @if (passcodeError(); as passcodeError) {
-      <div class="error-message">
-        {{ passcodeError }}
-      </div>
-    }
-
-    <div class="actions-wrapper">
-      @if (passcodeError()) {
-        <button
-          (click)="startOver()">
-
-          Start Over
-        </button>
-      } @else {
+    @if (usePasscode) {
+      <div class="form-title-wrapper">
         @if (hasAccount$ | async; as hasAccount) {
-          <button
-            #signInButton
-            (click)="signIn()">
-
-            Sign In
-          </button>
+          <h2>Enter your passcode</h2>
         } @else {
           @if (confirmingPasscode()) {
-            <button
-              #createAccountButton
-              (click)="createAccount()">
-
-              Create Account
-            </button>
+            <h2>Confirm passcode</h2>
+            <h3>Enter your passcode again.</h3>
           } @else {
-            <button
-              #verifyPasscodeButton
-              (click)="verifyPasscode()">
-
-              Confirm Passcode
-            </button>
+            <h2>Create a passcode</h2>
+            <h3>Create a passcode to start chatting.</h3>
           }
         }
+      </div>
+
+      @if (confirmingPasscode()) {
+        <form
+          autocomplete="off"
+          class="passcode-form"
+          [formGroup]="passcodeConfirmForm"
+          (submit)="$event.preventDefault()">
+
+          <div class="passcode-section">
+            <div class="inputs-row">
+              @for (i of [0,1,2,3]; track i) {
+                <input
+                  #confirmInput
+                  type="number"
+                  min="0"
+                  max="9"
+                  maxlength="1"
+                  class="passcode-input"
+                  [formControlName]="'c'+i"
+                  required
+                  (input)="onInput($event, i, 'confirm')"
+                  (focus)="onFocus($event)"
+                >
+              }
+            </div>
+          </div>
+        </form>
+      } @else {
+        <form
+          autocomplete="off"
+          class="passcode-form"
+          [formGroup]="passcodeForm"
+          (submit)="$event.preventDefault()">
+
+          <div class="passcode-section">
+            <div class="inputs-row">
+              @for (i of [0,1,2,3]; track i) {
+                <input
+                  #passcodeInput
+                  type="number"
+                  min="0"
+                  max="9"
+                  maxlength="1"
+                  class="passcode-input"
+                  [formControlName]="'d'+i"
+                  required
+                  (input)="onInput($event, i, 'passcode')"
+                  (focus)="onFocus($event)"
+                >
+              }
+            </div>
+          </div>
+        </form>
       }
-    </div>
+
+      @if (passcodeError(); as passcodeError) {
+        <div class="error-message">
+          {{ passcodeError }}
+        </div>
+      }
+
+      <div class="actions-wrapper">
+        @if (passcodeError()) {
+          <button
+            (click)="startOver()">
+
+            Start Over
+          </button>
+        } @else {
+          @if (hasAccount$ | async; as hasAccount) {
+            <button
+              #signInButton
+              (click)="signIn()">
+
+              Sign In
+            </button>
+          } @else {
+            @if (confirmingPasscode()) {
+              <button
+                #createAccountButton
+                (click)="createAccount()">
+
+                Create Account
+              </button>
+            } @else {
+              <button
+                #verifyPasscodeButton
+                (click)="verifyPasscode()">
+
+                Confirm Passcode
+              </button>
+            }
+          }
+        }
+      </div>
+    } @else {
+      <div class="form-title-wrapper">
+        <h2>Connect to Chat</h2>
+        <h3>Connect to start chatting with other users.</h3>
+      </div>
+
+      @if (passcodeError(); as passcodeError) {
+        <div class="error-message">
+          {{ passcodeError }}
+        </div>
+      }
+
+      <div class="actions-wrapper">
+        <button
+          (click)="connectToChatWithoutPasscode()">
+          Connect to Chat
+        </button>
+      </div>
+    }
   </div>
 } @else {
   <div class="connect-wallet-wrapper">

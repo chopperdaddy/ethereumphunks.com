@@ -38,12 +38,12 @@ export class ChatEffects {
     filter(([{ connected }, walletAddress]) => connected && !!walletAddress),
     switchMap(([_, walletAddress]) => this.chatSvc.listAndStreamAllDms(walletAddress?.toLowerCase() as `0x${string}`)),
     switchMap((convos) => {
-      const addresses = convos.map(convo => convo.members[0].identifier?.toLowerCase());
+      const addresses = convos.map(convo => convo.members[0]?.identifier?.toLowerCase());
       return this.dataSvc.addressesAreHolders(addresses).pipe(
         map((allowed) => {
-          const allowedAddresses = allowed.map((res: any) => res.address);
+          const allowedAddresses = allowed?.map((res: any) => res?.address) || [];
           return convos.filter((convo) => {
-            return allowedAddresses.includes(convo.members[0].identifier?.toLowerCase());
+            return allowedAddresses.includes(convo?.members[0]?.identifier?.toLowerCase());
           });
         })
       );

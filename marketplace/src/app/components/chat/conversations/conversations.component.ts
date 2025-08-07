@@ -16,6 +16,7 @@ import { selectConversations } from '@/state/chat/chat.selectors';
 import { setChat, setCreateConversationWithAddress } from '@/state/chat/chat.actions';
 import { ChatService } from '@/services/chat.service';
 import { Web3Service } from '@/services/web3.service';
+import { tap } from 'rxjs';
 @Component({
   standalone: true,
   imports: [
@@ -35,9 +36,9 @@ import { Web3Service } from '@/services/web3.service';
 export class ConversationsComponent {
 
   conversations$ = this.store.select(selectConversations).pipe(
-    // tap((conversations) => {
-    //   console.log('ConversationsComponent:conversations', conversations);
-    // })
+    tap((conversations) => {
+      console.log('ConversationsComponent:conversations', conversations);
+    })
   );
 
   isCreatingNewConversation = signal(false);
