@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { Observable, of } from 'rxjs';
+import { Observable, of, Subject, merge } from 'rxjs';
 
 import { toBytes, WalletClient } from 'viem';
 import { Client, ClientOptions, ConsentState, DecodedMessage, Dm, Group, Identifier, Signer, SortDirection } from '@xmtp/browser-sdk';
@@ -47,10 +47,10 @@ export class ChatService {
 
   /**
    * Creates a new XMTP user with the provided passcode
-   * @param passcode Passcode for encrypting keys
+   * @param passcode Passcode used to encrypt the user's XMTP keys
    * @param address Ethereum address of the user
    * @returns Promise resolving to connection status and active inbox ID
-   * @throws Error if XMTP client creation fails
+   * @throws Error if XMTP client creation fails or encryption key generation fails
    */
   async createXmtpUser(passcode: string, address: `0x${string}`): Promise<{ connected: boolean, activeInboxId: string | undefined }> {
     try {
@@ -86,10 +86,10 @@ export class ChatService {
 
   /**
    * Reconnects to XMTP using stored keys for an address
-   * @param passcode Passcode for decrypting stored keys
+   * @param passcode Passcode used to decrypt the stored XMTP keys
    * @param address Ethereum address of the user
    * @returns Promise resolving to connection status and active inbox ID
-   * @throws Error if no XMTP identity exists, incorrect passcode, or XMTP connection fails
+   * @throws Error if no XMTP identity exists, incorrect passcode, encryption key derivation fails, or XMTP connection fails
    */
   async connectExistingXmtpUser(passcode: string, address: `0x${string}`): Promise<{ connected: boolean, activeInboxId: string | undefined }> {
     try {
@@ -127,6 +127,7 @@ export class ChatService {
 
   /**
    * Disconnects from XMTP by closing the client connection
+   * Should be called when user logs out or switches accounts
    */
   disconnectXmtp(): void {
     if (this.client) this.client.close();
@@ -135,27 +136,35 @@ export class ChatService {
   /**
    * Lists and streams all direct message conversations from the XMTP client
    * @param address The Ethereum address of the current user
-   * @returns Observable emitting arrays of normalized conversations
+   * @returns Observable emitting arrays of normalized conversations, sorted by latest message timestamp
    * @throws Error if client connection fails, list/stream operation fails, or conversation normalization fails
    */
   listAndStreamAllDms(address: `0x${string}`): Observable<NormalizedConversation[]> {
     return new Observable<NormalizedConversation[]>(observer => {
       let conversations: NormalizedConversation[] = [];
       let closed = false;
+      let conversationStreamSubscription: any = null;
+      let allMessagesSubscription: any = null;
+
       // Initial fetch
       this.client.conversations.listDms({
         consentStates: [ConsentState.Allowed, ConsentState.Denied, ConsentState.Unknown],
       }).then(async (allDms: Dm[]) => {
         console.log({allDms})
         conversations = (await Promise.all(allDms.map(dm => this.normalizeDmConversation(dm, address)))).filter(Boolean) as NormalizedConversation[];
+        // Sort by latest message timestamp (newest first)
+        conversations.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
         observer.next([...conversations]);
+
         // Start streaming new conversations
-        await this.client.conversations.stream({
+        conversationStreamSubscription = this.client.conversations.stream({
           onValue: async (conversation) => {
             if (conversation instanceof Dm && !closed) {
               const normalized = await this.normalizeDmConversation(conversation, address);
               if (normalized && !conversations.some(c => c.id === normalized.id)) {
                 conversations = [...conversations, normalized];
+                // Sort by latest message timestamp (newest first)
+                conversations.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
                 observer.next([...conversations]);
               }
             }
@@ -164,10 +173,76 @@ export class ChatService {
             observer.error(error);
           },
           onFail: () => {
-            observer.error(new Error('Stream failed'));
+            observer.error(new Error('Conversation stream failed'));
           }
         });
+
+        // Subscribe to global message stream to update latest message content and timestamps
+        allMessagesSubscription = this.streamAllMessages().subscribe({
+          next: (newMessage) => {
+            if (!closed) {
+              this.updateConversationWithNewMessage(conversations, newMessage, address).then(updated => {
+                if (updated) {
+                  // Sort by latest message timestamp (newest first)
+                  conversations.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
+                  observer.next([...conversations]);
+                }
+              });
+            }
+          },
+          error: (error) => {
+            console.error('Error in message stream for conversation list:', error);
+            // Don't fail the entire observable for message stream errors
+          }
+        });
+
       }).catch(err => observer.error(err));
+
+      // Teardown logic
+      return () => {
+        closed = true;
+        if (conversationStreamSubscription) {
+          // Note: XMTP streams don't have unsubscribe, they use the closed flag
+        }
+        if (allMessagesSubscription) {
+          allMessagesSubscription.unsubscribe();
+        }
+      };
+    });
+  }
+
+  /**
+   * Streams all messages from all allowed conversations
+   * @returns Observable emitting normalized messages as they arrive in real-time
+   * @throws Error if client connection fails, no active inbox ID found, or message normalization fails
+   */
+  streamAllMessages(): Observable<NormalizedMessage> {
+    const activeInboxId = this.client.inboxId;
+    if (!activeInboxId) throw new Error('No active inbox ID found');
+
+    return new Observable<NormalizedMessage>(observer => {
+      let closed = false;
+
+      this.client.conversations.streamAllMessages({
+        consentStates: [ConsentState.Allowed],
+        onValue: async (message) => {
+          if (!closed) {
+            try {
+              const normalized = await this.normalizeMessage(message as DecodedMessage, activeInboxId);
+              observer.next(normalized);
+            } catch (error) {
+              console.error('Error normalizing streamed message:', error);
+            }
+          }
+        },
+        onError: (error) => {
+          observer.error(error);
+        },
+        onFail: () => {
+          observer.error(new Error('All messages stream failed'));
+        }
+      }).catch(err => observer.error(err));
+
       // Teardown logic
       return () => { closed = true; };
     });
@@ -175,11 +250,11 @@ export class ChatService {
 
   /**
    * Gets the most recent 100 messages from a conversation and streams new ones as they arrive
-   * @param conversationId The ID of the conversation
-   * @returns Observable emitting normalized conversation with messages (newest first)
+   * @param conversationId The ID of the conversation to fetch and stream
+   * @returns Observable emitting normalized conversation with messages, sorted by timestamp (newest first)
    * @throws Error if no active inbox ID or wallet address found, conversation not found, or normalization fails
    */
-  getAndStreamConversationMessages(conversationId: string): Observable<NormalizedConversationWithMessages> {
+    getAndStreamConversationMessages(conversationId: string): Observable<NormalizedConversationWithMessages> {
     const activeInboxId = this.client.inboxId;
     if (!activeInboxId) throw new Error('No active inbox ID found');
 
@@ -191,24 +266,28 @@ export class ChatService {
       let messages: NormalizedMessage[] = [];
       let conversationInfo: NormalizedConversation | null = null;
       let closed = false;
+
       this.client.conversations.getConversationById(conversationId).then(async (conversation) => {
         if (!conversation) {
           observer.error(new Error('Conversation not found'));
           return;
         }
+
         // Normalize the conversation info
         conversationInfo = await this.normalizeDmConversation(conversation as Dm, address);
         if (!conversationInfo) {
           observer.error(new Error('Failed to normalize conversation'));
           return;
         }
-        // Initial fetch
+
+        // Initial fetch of messages
         const initialMessages = await conversation.messages({ limit: BigInt(100), direction: SortDirection.Descending });
         messages = await Promise.all(initialMessages.map(message => this.normalizeMessage(message as DecodedMessage, activeInboxId)));
         // Sort newest first
         messages.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
         observer.next({ ...conversationInfo, messages: [...messages] });
-        // Start streaming new messages
+
+        // Start streaming new messages from this specific conversation
         await conversation.stream({
           onValue: async (message) => {
             if (!closed) {
@@ -229,14 +308,65 @@ export class ChatService {
             observer.error(new Error('Message stream failed'));
           }
         });
+
       }).catch(err => observer.error(err));
+
       // Teardown logic
       return () => { closed = true; };
     });
   }
 
+    /**
+   * Checks if a message belongs to a specific conversation
+   * @param message The normalized message to check
+   * @param conversation The conversation info to check against
+   * @param currentAddress The current user's Ethereum address
+   * @returns boolean indicating if the message belongs to the conversation
+   */
+  private isMessageFromConversation(message: NormalizedMessage, conversation: NormalizedConversation, currentAddress: string): boolean {
+    // For DMs, check if the message sender is one of the conversation participants
+    const conversationParticipants = [
+      currentAddress.toLowerCase(),
+      ...conversation.members.map(m => m.identifier.toLowerCase())
+    ];
+
+    // We need to get the sender's address from their inbox ID
+    // For now, we'll use a simple approach and check if the sender inbox ID matches
+    // the conversation's peer inbox ID or is the current user
+    return message.senderInboxId === conversation.peerInboxId || message.self;
+  }
+
   /**
-   * Normalizes a DM conversation
+   * Updates a conversation in the list with new message information
+   * @param conversations The array of conversations to update
+   * @param newMessage The new message that arrived
+   * @param currentAddress The current user's Ethereum address
+   * @returns Promise resolving to boolean indicating if any conversation was updated
+   */
+  private async updateConversationWithNewMessage(conversations: NormalizedConversation[], newMessage: NormalizedMessage, currentAddress: string): Promise<boolean> {
+    let updated = false;
+
+    for (let i = 0; i < conversations.length; i++) {
+      const conversation = conversations[i];
+
+      // Check if this message belongs to this conversation
+      if (this.isMessageFromConversation(newMessage, conversation, currentAddress)) {
+        // Update the conversation with the latest message info
+        conversations[i] = {
+          ...conversation,
+          timestamp: newMessage.timestamp,
+          latestMessageContent: newMessage.content
+        };
+        updated = true;
+        break; // A message can only belong to one conversation
+      }
+    }
+
+    return updated;
+  }
+
+  /**
+   * Normalizes a DM conversation into a standard format
    * @param dm The DM conversation to normalize
    * @param address The Ethereum address of the current user
    * @returns Promise resolving to normalized conversation or null if normalization fails
@@ -270,10 +400,10 @@ export class ChatService {
   }
 
   /**
-   * Normalizes a message
-   * @param message The message to normalize
+   * Normalizes a message into a standard format
+   * @param message The XMTP message to normalize
    * @param activeInboxId The current user's inbox ID to determine if message is from self
-   * @returns Promise resolving to normalized message
+   * @returns Promise resolving to normalized message with proper content handling
    */
   async normalizeMessage(message: DecodedMessage, activeInboxId: string): Promise<NormalizedMessage> {
     console.log('normalizeMessage', {message, activeInboxId});
@@ -301,8 +431,8 @@ export class ChatService {
   }
 
   /**
-   * Creates a new DM conversation with the provided address
-   * @param to The address of the user to create a conversation with
+   * Creates a new DM conversation with a specified Ethereum address
+   * @param to The Ethereum address to start a conversation with
    * @returns Promise resolving to the conversation ID
    * @throws Error if the conversation creation fails
    */
@@ -319,7 +449,9 @@ export class ChatService {
   }
 
   /**
-   * Check if a conversation is with the agent
+   * Checks if a conversation is with the agent wallet address
+   * @param conversationId The ID of the conversation to check
+   * @returns Promise resolving to boolean indicating if conversation is with agent
    */
   private async isAgentConversation(conversationId: string): Promise<boolean> {
     try {
@@ -375,12 +507,12 @@ export class ChatService {
   }
 
   /**
-   * Sends a message to a conversation
-   * @param conversationId The ID of the conversation
-   * @param message The message to send
-   * @param context Optional context to include with the message (invisible to user)
+   * Sends a message to a conversation with optional context for agent conversations
+   * @param conversationId The ID of the conversation to send to
+   * @param message The message content to send
+   * @param context Optional context to include with the message (only for agent conversations)
    * @returns Promise resolving to the message ID
-   * @throws Error if the message sending fails
+   * @throws Error if conversation not found or message sending fails
    */
   async sendMessageToConversation(conversationId: string, message: string, context?: string): Promise<string> {
     try {
@@ -419,11 +551,12 @@ export class ChatService {
   }
 
   /**
-   * Sends a message with automatic page context detection
+   * Sends a message with automatic page context detection for agent conversations
    * @param conversationId The ID of the conversation
-   * @param message The message to send
-   * @param pageContext The current page context
+   * @param message The message content to send
+   * @param pageContext The current page context object to encode
    * @returns Promise resolving to the message ID
+   * @throws Error if message sending fails
    */
   async sendMessageWithPageContext(conversationId: string, message: string, pageContext: any): Promise<string> {
     try {
@@ -446,7 +579,9 @@ export class ChatService {
   }
 
   /**
-   * Format page context for agent consumption
+   * Formats page context into a string format for agent consumption
+   * @param pageContext The page context object to format
+   * @returns Formatted context string with standardized markers
    */
   private formatPageContextForAgent(pageContext: any): string {
     if (!pageContext) {
@@ -498,7 +633,7 @@ export class ChatService {
   /**
    * Creates a signer for XMTP using the wallet client
    * @param walletClient The wallet client to create signer from
-   * @returns Signer object for XMTP
+   * @returns Signer object compatible with XMTP client
    * @throws Error if no wallet address is found
    */
   private createSCWSigner(walletClient: WalletClient): Signer {
@@ -522,9 +657,9 @@ export class ChatService {
   }
 
   /**
-   * Creates an encryption key from a passcode and address
+   * Creates an encryption key from a passcode and address using PBKDF2
    * @param passcode User's passcode for encryption
-   * @param address User's wallet address
+   * @param address User's Ethereum address
    * @returns Promise resolving to encryption key as Uint8Array or undefined if no passcode
    */
   private async createEncryptionKeyFromPasscode(passcode: string, address: `0x${string}`): Promise<Uint8Array | undefined> {
@@ -565,10 +700,10 @@ export class ChatService {
 
   /**
    * Gets the encryption key for an existing user using their passcode
-   * @param passcode Passcode for deriving the key
-   * @param address User's wallet address
+   * @param passcode Passcode for deriving the encryption key
+   * @param address User's Ethereum address
    * @returns Promise resolving to encryption key as Uint8Array or undefined if no passcode
-   * @throws Error if no XMTP identity exists for the address (when passcode is required)
+   * @throws Error if no XMTP identity exists for the address or key derivation fails
    */
   private async getEncryptionKeyWithPasscode(passcode: string, address: `0x${string}`): Promise<Uint8Array | undefined> {
     // If no passcode provided, return undefined (no encryption)
@@ -609,7 +744,7 @@ export class ChatService {
 
   /**
    * Gets or creates a salt for the user's encryption
-   * @param address User's wallet address
+   * @param address User's Ethereum address
    * @returns Promise resolving to salt as Uint8Array
    */
   private async getOrCreateUserSalt(address: `0x${string}`): Promise<Uint8Array> {
@@ -622,16 +757,16 @@ export class ChatService {
   }
 
   /**
-   * Creates a new salt for the user
-   * @returns Promise resolving to salt as Uint8Array
+   * Creates a cryptographically secure random salt
+   * @returns New random salt as Uint8Array
    */
   private createSalt(): Uint8Array {
     return window.crypto.getRandomValues(new Uint8Array(16));
   }
 
   /**
-   * Gets the salt for a user
-   * @param address User's wallet address
+   * Gets the stored salt for a user
+   * @param address User's Ethereum address
    * @returns Promise resolving to salt as Uint8Array or undefined if no salt exists
    */
   private async getSalt(address: `0x${string}`): Promise<Uint8Array | undefined> {
@@ -642,7 +777,7 @@ export class ChatService {
 
   /**
    * Checks if a user has required encryption parameters stored
-   * @param address User's wallet address
+   * @param address User's Ethereum address
    * @returns Promise resolving to boolean indicating if salt exists
    */
   async hasStoredUserSalt(address: `0x${string}`): Promise<boolean> {
