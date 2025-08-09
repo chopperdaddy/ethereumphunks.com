@@ -25,13 +25,12 @@ import { selectLogsActive } from '@/state/indexer-logs/indexer-logs.selectors';
 
 import * as appStateActions from '@/state/app/app-state.actions';
 import * as dataStateActions from '@/state/data/data-state.actions';
+import { setChatActive } from '@/state/chat/chat.actions';
+import { selectChat } from '@/state/chat/chat.selectors';
 
 import { asyncScheduler, fromEvent, debounceTime, filter, observeOn, scan, tap, withLatestFrom, map, firstValueFrom } from 'rxjs';
 
 import { environment } from '@environments/environment';
-
-import { setChat } from './state/chat/chat.actions';
-import { selectChat } from './state/chat/chat.selectors';
 
 @Component({
   standalone: true,
@@ -208,7 +207,7 @@ console.log(`
 
   async toggleChat() {
     const active = await firstValueFrom(this.chatActive$);
-    this.store.dispatch(setChat({ active: !active }));
+    this.store.dispatch(setChatActive({ active: !active }));
   }
 
   /**

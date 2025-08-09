@@ -13,7 +13,7 @@ import { selectConfig } from '@/state/app/app-state.selectors';
 
 import { ViewType } from '@/models/chat';
 import { GlobalState } from '@/models/global-state';
-import { setChat } from '@/state/chat/chat.actions';
+import { setChatActive } from '@/state/chat/chat.actions';
 
 @Component({
   standalone: true,
@@ -57,6 +57,6 @@ export class ChatComponent {
   }
 
   closeChat() {
-    this.store.dispatch(setChat({ active: false }));
+    this.store.dispatch(setChatActive({ active: false }));
   }
 }

@@ -6,7 +6,7 @@ export const setChatConnected = createAction(
   props<{ connected: boolean, activeInboxId: string | undefined }>()
 );
 
-export const setChat = createAction(
+export const setChatActive = createAction(
   '[Chat] Set Chat Active',
   props<{ active: boolean, activeConversationId?: string | null }>()
 );

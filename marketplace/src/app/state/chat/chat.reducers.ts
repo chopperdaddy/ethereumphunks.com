@@ -21,7 +21,7 @@ export const chatReducer: ActionReducer<ChatState, Action> = createReducer(
   on(actions.setChatConnected, (state, { connected, activeInboxId }) => {
     return { ...state, connected, activeInboxId };
   }),
-  on(actions.setChat, (state, { active, activeConversationId }) => {
+  on(actions.setChatActive, (state, { active, activeConversationId }) => {
     return { ...state, active, activeConversationId: activeConversationId };
   }),
   on(actions.setHasAccount, (state, { hasAccount }) => {

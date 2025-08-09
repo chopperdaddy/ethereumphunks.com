@@ -1,20 +1,20 @@
 import { Injectable } from '@angular/core';
 
 import { Store } from '@ngrx/store';
-
 import { Actions, createEffect, ofType } from '@ngrx/effects';
 
 import { GlobalState } from '@/models/global-state';
 
-import { from, map, switchMap, tap, distinctUntilChanged, filter, withLatestFrom, of, catchError } from 'rxjs';
+import { from, map, switchMap, distinctUntilChanged, filter, withLatestFrom, of, catchError } from 'rxjs';
 
 import { ChatService } from '@/services/chat.service';
 import { DataService } from '@/services/data.service';
 import { Web3Service } from '@/services/web3.service';
 
 import { setWalletAddress } from '@/state/app/app-state.actions';
-import { setChatConnected, setHasAccount, setConversations, setChat, setActiveConversation, setCreateConversationWithAddress } from './chat.actions';
-import { selectWalletAddress } from '../app/app-state.selectors';
+import { selectWalletAddress } from '@/state/app/app-state.selectors';
+
+import { setChatConnected, setHasAccount, setConversations, setChatActive, setActiveConversation, setCreateConversationWithAddress } from './chat.actions';
 
 @Injectable()
 export class ChatEffects {
@@ -25,16 +25,25 @@ export class ChatEffects {
     switchMap(({ walletAddress }) => {
       return from(this.chatSvc.hasStoredUserSalt(walletAddress as `0x${string}`));
     }),
-    // tap((hasAccount) => {
-    //   console.log('Has account', { hasAccount });
-    // }),
     map((hasAccount) => setHasAccount({ hasAccount })),
+  ));
+
+  loginAccount$ = createEffect(() => this.actions$.pipe(
+    ofType(setHasAccount),
+    filter(({ hasAccount }) => !!hasAccount),
+    switchMap(({ hasAccount }) => {
+      return this.store.select(selectWalletAddress).pipe(
+        switchMap((walletAddress) => {
+          return from(this.chatSvc.connectExistingXmtpUser('', walletAddress as `0x${string}`));
+        }),
+        map(({ connected, activeInboxId }) => setChatConnected({ connected, activeInboxId }))
+      )
+    }),
   ));
 
   conversations$ = createEffect(() => this.actions$.pipe(
     ofType(setChatConnected),
     withLatestFrom(this.store.select(selectWalletAddress)),
-    tap(([{ connected }, walletAddress]) => console.log('conversations$', { connected, walletAddress })),
     filter(([{ connected }, walletAddress]) => connected && !!walletAddress),
     switchMap(([_, walletAddress]) => this.chatSvc.listAndStreamAllDms(walletAddress?.toLowerCase() as `0x${string}`)),
     switchMap((convos) => {
@@ -52,14 +61,12 @@ export class ChatEffects {
   ));
 
   activeConversation$ = createEffect(() => this.actions$.pipe(
-    ofType(setChat),
+    ofType(setChatActive),
     filter(({ activeConversationId }) => !!activeConversationId),
     switchMap(({ activeConversationId }) => {
       return this.chatSvc.getAndStreamConversationMessages(activeConversationId!);
     }),
-    // tap((conversation) => {
-    //   console.log('activeConversation$', conversation);
-    // }),
+    filter((conversation) => !!conversation),
     map((conversation) => setActiveConversation({ conversation })),
   ));
 
@@ -72,7 +79,7 @@ export class ChatEffects {
         return of(null);
       })
     )),
-    map((conversationId) => setChat({ active: true, activeConversationId: conversationId })),
+    map((conversationId) => setChatActive({ active: true, activeConversationId: conversationId })),
   ));
 
   constructor(

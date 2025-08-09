@@ -7,6 +7,10 @@
         <ng-template [ngTemplateOutlet]="backIcon" />
       </button>
 
+      <div class="image-wrapper">
+        <app-avatar [address]="conversation.members[0].identifier" />
+      </div>
+
       <div class="with">
         Chatting with <app-address [address]="(toUser$ | async) ?? null" />
       </div>
@@ -25,7 +29,7 @@
 
               {{ message.timestamp | timeago : true }}
             </div>
-            <div class="content" [innerHTML]="message.content | markdown"></div>
+            <div class="content" [innerHTML]="message.content"></div>
           </div>
         </div>
       } @empty {

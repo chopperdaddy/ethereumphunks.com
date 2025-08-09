@@ -1,10 +1,13 @@
 import { Injectable } from '@angular/core';
-import { Observable } from 'rxjs';
+import { Observable, of } from 'rxjs';
 
 import { toBytes, WalletClient } from 'viem';
-import { Client, ClientOptions, DecodedMessage, Dm, Group, Identifier, Signer, SortDirection } from '@xmtp/browser-sdk';
+import { Client, ClientOptions, ConsentState, DecodedMessage, Dm, Group, Identifier, Signer, SortDirection } from '@xmtp/browser-sdk';
 
 import { NormalizedConversation, NormalizedConversationWithMessages, NormalizedMessage } from '@/models/chat';
+
+// Agent message metadata marker
+const AGENT_MESSAGE_PREFIX = '⚡AGENT_CTX⚡';
 
 import { Web3Service } from './web3.service';
 import { UtilService } from './util.service';
@@ -20,10 +23,13 @@ export class ChatService {
   /** XMTP client instance */
   private client!: Client<unknown>;
 
+  /** Agent wallet address for custom content type detection */
+  private readonly AGENT_ADDRESS = environment.agent.address;
+
   /** XMTP client configuration options */
   private clientOptions: ClientOptions = {
     env: environment.agent.env,
-    // loggingLevel: 'off',
+    loggingLevel: 'off',
     // structuredLogging: true,
   };
 
@@ -137,12 +143,14 @@ export class ChatService {
       let conversations: NormalizedConversation[] = [];
       let closed = false;
       // Initial fetch
-      this.client.conversations.listDms().then(async (allDms: Dm[]) => {
+      this.client.conversations.listDms({
+        consentStates: [ConsentState.Allowed, ConsentState.Denied, ConsentState.Unknown],
+      }).then(async (allDms: Dm[]) => {
+        console.log({allDms})
         conversations = (await Promise.all(allDms.map(dm => this.normalizeDmConversation(dm, address)))).filter(Boolean) as NormalizedConversation[];
         observer.next([...conversations]);
-        console.log('conversations', conversations);
         // Start streaming new conversations
-        const stream = await this.client.conversations.stream({
+        await this.client.conversations.stream({
           onValue: async (conversation) => {
             if (conversation instanceof Dm && !closed) {
               const normalized = await this.normalizeDmConversation(conversation, address);
@@ -163,40 +171,6 @@ export class ChatService {
       // Teardown logic
       return () => { closed = true; };
     });
-  }
-
-  /**
-   * Normalizes a DM conversation
-   * @param dm The DM conversation to normalize
-   * @param address The Ethereum address of the current user
-   * @returns Promise resolving to normalized conversation or null if normalization fails
-   */
-  async normalizeDmConversation(dm: Dm, address: `0x${string}`): Promise<NormalizedConversation | null> {
-    if (!dm) return null;
-    try {
-      const members = await dm.members();
-      const consentState = await dm.consentState();
-      const peerInboxId = await dm.peerInboxId();
-
-      // Get latest message for proper timestamp
-      const latestMessage = (await dm.messages({ limit: BigInt(1), direction: SortDirection.Descending }))[0];
-      const latestMessageContent = latestMessage?.content as string;
-
-      return {
-        id: dm.id,
-        timestamp: new Date(Number(latestMessage?.sentAtNs || dm.createdAtNs) / 1000000),
-        peerInboxId,
-        consentState,
-        latestMessageContent,
-        members: members.map((m: any) => {
-          return m.accountIdentifiers
-            .filter((res: any) => res.identifierKind === 'Ethereum' && res.identifier !== address)[0];
-        }).filter((m: any) => !!m),
-      };
-    } catch (err) {
-      console.error('Failed to normalize DM:', err, dm);
-      return null;
-    }
   }
 
   /**
@@ -235,7 +209,7 @@ export class ChatService {
         messages.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
         observer.next({ ...conversationInfo, messages: [...messages] });
         // Start streaming new messages
-        const messageStream = await conversation.stream({
+        await conversation.stream({
           onValue: async (message) => {
             if (!closed) {
               const normalized = await this.normalizeMessage(message as DecodedMessage, activeInboxId);
@@ -262,18 +236,67 @@ export class ChatService {
   }
 
   /**
+   * Normalizes a DM conversation
+   * @param dm The DM conversation to normalize
+   * @param address The Ethereum address of the current user
+   * @returns Promise resolving to normalized conversation or null if normalization fails
+   */
+  async normalizeDmConversation(dm: Dm, address: `0x${string}`): Promise<NormalizedConversation | null> {
+    if (!dm) return null;
+    try {
+      const members = await dm.members();
+      const consentState = await dm.consentState();
+      const peerInboxId = await dm.peerInboxId();
+
+      // Get latest message for proper timestamp
+      const latestMessage = (await dm.messages({ limit: BigInt(1), direction: SortDirection.Descending }))[0];
+      const latestMessageContent = latestMessage?.content as string;
+
+      return {
+        id: dm.id,
+        timestamp: new Date(Number(latestMessage?.sentAtNs || dm.createdAtNs) / 1000000),
+        peerInboxId,
+        consentState,
+        latestMessageContent,
+        members: members.map(member => ({
+          identifier: member.accountIdentifiers[0].identifier,
+          identifierKind: member.accountIdentifiers[0].identifierKind,
+        })).filter(member => member.identifier.toLowerCase() !== address.toLowerCase()),
+      };
+    } catch (err) {
+      console.error('Failed to normalize DM:', err, dm);
+      return null;
+    }
+  }
+
+  /**
    * Normalizes a message
    * @param message The message to normalize
    * @param activeInboxId The current user's inbox ID to determine if message is from self
    * @returns Promise resolving to normalized message
    */
   async normalizeMessage(message: DecodedMessage, activeInboxId: string): Promise<NormalizedMessage> {
+    console.log('normalizeMessage', {message, activeInboxId});
+
+    let content = message.content as string;
+
+    // If this is the user's own message and it contains encoded context, extract the clean message
+    const isSelf = message.senderInboxId === activeInboxId;
+    if (isSelf && content && typeof content === 'string' && content.startsWith(AGENT_MESSAGE_PREFIX)) {
+      // Extract clean message from encoded format: ⚡AGENT_CTX⚡{context}⚡END_CTX⚡{message}
+      const parts = content.split('⚡END_CTX⚡');
+      if (parts.length === 2) {
+        content = parts[1]; // The actual user message
+        console.log('📝 Extracted clean message from encoded format:', content);
+      }
+    }
+
     return {
       id: message.id,
-      content: message.content as string,
+      content: content,
       timestamp: new Date(Number(message.sentAtNs) / 1000000),
       senderInboxId: message.senderInboxId,
-      self: message.senderInboxId === activeInboxId,
+      self: isSelf,
     };
   }
 
@@ -296,20 +319,180 @@ export class ChatService {
   }
 
   /**
+   * Check if a conversation is with the agent
+   */
+  private async isAgentConversation(conversationId: string): Promise<boolean> {
+    try {
+      const conversation = await this.client.conversations.getConversationById(conversationId);
+      if (!conversation) {
+        console.log('❌ No conversation found for ID:', conversationId);
+        return false;
+      }
+
+      console.log('🔍 Checking conversation for agent:', {
+        conversationId,
+        conversationType: conversation.constructor.name,
+        agentAddress: this.AGENT_ADDRESS
+      });
+
+      // For DM conversations, check members to find the peer
+      if (conversation instanceof Object && 'members' in conversation) {
+        const dm = conversation as Dm;
+        try {
+          const members = await dm.members();
+          console.log('👥 DM members:', members);
+
+          // Get current user address to filter out self
+          const currentAddress = this.web3Svc.getCurrentAddress()?.toLowerCase();
+
+          // Find the peer (not the current user)
+          const peer = members.find(member =>
+            member.accountIdentifiers[0]?.identifier.toLowerCase() !== currentAddress
+          );
+
+          if (peer) {
+            const peerAddress = peer.accountIdentifiers[0].identifier.toLowerCase();
+            const isAgent = peerAddress === this.AGENT_ADDRESS;
+            console.log('🤖 Agent conversation check:', {
+              peerAddress,
+              agentAddress: this.AGENT_ADDRESS,
+              currentAddress,
+              isAgent
+            });
+            return isAgent;
+          }
+        } catch (membersError) {
+          console.error('Error getting DM members:', membersError);
+        }
+      }
+
+      console.log('👥 Non-DM conversation or couldn\'t get members');
+      return false;
+    } catch (error) {
+      console.error('Error checking if conversation is with agent:', error);
+      return false;
+    }
+  }
+
+  /**
    * Sends a message to a conversation
    * @param conversationId The ID of the conversation
    * @param message The message to send
+   * @param context Optional context to include with the message (invisible to user)
    * @returns Promise resolving to the message ID
    * @throws Error if the message sending fails
    */
-  async sendMessageToConversation(conversationId: string, message: string): Promise<string> {
+  async sendMessageToConversation(conversationId: string, message: string, context?: string): Promise<string> {
     try {
       const conversation = await this.client.conversations.getConversationById(conversationId);
       if (!conversation) throw new Error('Conversation not found');
-      return await conversation.send(message);
+
+      // Check if this is a conversation with the agent
+      const isAgent = await this.isAgentConversation(conversationId);
+
+      console.log('📤 Sending message:', {
+        conversationId,
+        messageLength: message.length,
+        hasContext: !!context,
+        contextLength: context?.length || 0,
+        isAgent
+      });
+
+      if (isAgent && context) {
+        // Use special encoding for agent communication
+        // Format: ⚡AGENT_CTX⚡{context}⚡END_CTX⚡{message}
+        const agentMessage = `${AGENT_MESSAGE_PREFIX}${context}⚡END_CTX⚡${message}`;
+        console.log('🤖 Sending encoded agent message:', {
+          agentMessageLength: agentMessage.length,
+          prefix: AGENT_MESSAGE_PREFIX,
+          contextPreview: context.substring(0, 100) + '...'
+        });
+        return await conversation.send(agentMessage);
+      } else {
+        // Standard text message for non-agent conversations
+        console.log('💬 Sending standard message (not agent or no context)');
+        return await conversation.send(message);
+      }
     } catch (error) {
       throw error;
     }
+  }
+
+  /**
+   * Sends a message with automatic page context detection
+   * @param conversationId The ID of the conversation
+   * @param message The message to send
+   * @param pageContext The current page context
+   * @returns Promise resolving to the message ID
+   */
+  async sendMessageWithPageContext(conversationId: string, message: string, pageContext: any): Promise<string> {
+    try {
+      console.log('🎯 sendMessageWithPageContext called with:', {
+        conversationId,
+        message,
+        pageContext
+      });
+
+      // Format context for the agent
+      const contextString = this.formatPageContextForAgent(pageContext);
+
+      console.log('📝 Context formatted, calling sendMessageToConversation...');
+
+      return await this.sendMessageToConversation(conversationId, message, contextString);
+    } catch (error) {
+      console.error('❌ Error in sendMessageWithPageContext:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Format page context for agent consumption
+   */
+  private formatPageContextForAgent(pageContext: any): string {
+    if (!pageContext) {
+      console.warn('No pageContext provided to formatPageContextForAgent');
+      return '';
+    }
+
+    console.log('📋 Formatting page context:', pageContext);
+
+    const contextParts: string[] = ['[FRONTEND_CONTEXT]'];
+
+    // Add page information
+    if (pageContext.type) {
+      contextParts.push(`PAGE_TYPE:${pageContext.type}`);
+    }
+
+    // Add network information
+    if (pageContext.network) {
+      contextParts.push(`NETWORK:${pageContext.network.name}`);
+      contextParts.push(`CHAINID:${pageContext.network.chainId}`);
+    } else {
+      console.warn('No network information in pageContext');
+    }
+
+    if (pageContext.data) {
+      Object.entries(pageContext.data).forEach(([key, value]) => {
+        if (value) {
+          contextParts.push(`${key.toUpperCase()}:${value}`);
+        }
+      });
+    }
+
+    // Add route info
+    if (pageContext.route) {
+      contextParts.push(`ROUTE:${pageContext.route}`);
+    }
+
+    // Add timestamp
+    contextParts.push(`TIMESTAMP:${pageContext.timestamp || new Date().toISOString()}`);
+
+    contextParts.push('[/FRONTEND_CONTEXT]');
+
+    const formattedContext = contextParts.join('|');
+    console.log('📤 Formatted context string:', formattedContext);
+
+    return formattedContext;
   }
 
   /**

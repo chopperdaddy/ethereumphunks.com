@@ -21,6 +21,14 @@
 
   background: none;
   border: none;
+
+  &[data-active-view='conversation'] {
+    svg {
+      path {
+        fill: rgba(var(--base-color), 1);
+      }
+    }
+  }
 }
 
 .chat-header {

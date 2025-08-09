@@ -4,16 +4,17 @@
 </div>
 
 @if (walletConnected$ | async) {
-  <div class="passcode-form-wrapper">
 
-    @if (loading()) {
-      <div class="loading-wrapper">
-        <p>Loading...</p>
-        <img src="/loader-dark.gif" width="15" height="15" alt="" />
-      </div>
-    }
+  <!-- Passcode login (Disabled) -->
+  @if (usePasscode) {
+    <div class="passcode-form-wrapper">
+      @if (loading()) {
+        <div class="loading-wrapper">
+          <p>Loading...</p>
+          <img src="/loader-dark.gif" width="15" height="15" alt="" />
+        </div>
+      }
 
-    @if (usePasscode) {
       <div class="form-title-wrapper">
         @if (hasAccount$ | async; as hasAccount) {
           <h2>Enter your passcode</h2>
@@ -122,26 +123,15 @@
           }
         }
       </div>
-    } @else {
-      <div class="form-title-wrapper">
-        <h2>Connect to Chat</h2>
-        <h3>Connect to start chatting with other users.</h3>
-      </div>
-
-      @if (passcodeError(); as passcodeError) {
-        <div class="error-message">
-          {{ passcodeError }}
-        </div>
-      }
-
-      <div class="actions-wrapper">
-        <button
-          (click)="connectToChatWithoutPasscode()">
-          Connect to Chat
-        </button>
+    </div>
+  } @else {
+    @if (!(hasAccount$ | async)) {
+      <div class="onboard-wrapper">
+        <p>Looks like you don't have an inbox set up yet. Create one to get started.</p>
+        <button (click)="createInbox()">Create Inbox</button>
       </div>
     }
-  </div>
+  }
 } @else {
   <div class="connect-wallet-wrapper">
     <p>Connect your wallet to get started.</p>

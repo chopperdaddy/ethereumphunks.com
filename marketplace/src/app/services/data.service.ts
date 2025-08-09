@@ -281,8 +281,6 @@ export class DataService {
     const sortedTraitCounts = Array.from(traitCounts).sort((a, b) => a - b);
     attributeObject['trait_count'] = sortedTraitCounts.map(count => count.toString());
 
-    console.log({ totalAttributeCount, traitCounts, totalItems, attributeObject })
-
     // Store the filters object in local storage and return it
     const stored = await this.storageSvc.setItem(`${slug}__filters`, attributeObject);
     return stored;

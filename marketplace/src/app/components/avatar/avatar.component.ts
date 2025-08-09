@@ -30,7 +30,7 @@ export class AvatarComponent {
       const address = this.address();
 
       if (address === environment.agent.address) {
-        untracked(() => this.src.set(`/bot-pfp.png`));
+        untracked(() => this.src.set(`/japhar.png`));
         return;
       }
 

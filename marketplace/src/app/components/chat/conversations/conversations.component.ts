@@ -5,6 +5,7 @@ import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { Store } from '@ngrx/store';
 import { TimeagoModule } from 'ngx-timeago';
 import { LazyLoadImageModule } from 'ng-lazyload-image';
+import { filter, map, tap } from 'rxjs';
 
 import { GlobalState } from '@/models/global-state';
 
@@ -13,10 +14,12 @@ import { WalletAddressDirective } from '@/directives/wallet-address.directive';
 
 import { selectConversations } from '@/state/chat/chat.selectors';
 
-import { setChat, setCreateConversationWithAddress } from '@/state/chat/chat.actions';
+import { setChatActive, setCreateConversationWithAddress } from '@/state/chat/chat.actions';
 import { ChatService } from '@/services/chat.service';
 import { Web3Service } from '@/services/web3.service';
-import { tap } from 'rxjs';
+
+import { environment } from '@environments/environment';
+
 @Component({
   standalone: true,
   imports: [
@@ -36,6 +39,22 @@ import { tap } from 'rxjs';
 export class ConversationsComponent {
 
   conversations$ = this.store.select(selectConversations).pipe(
+    filter((conversations) => !!conversations),
+    map((conversations) => [...conversations].sort((a, b) => {
+      const agentAddress = environment.agent.address.toLowerCase();
+      const aAddress = a.members[0]?.identifier?.toLowerCase();
+      const bAddress = b.members[0]?.identifier?.toLowerCase();
+
+      // Agent conversations always come first
+      const aIsAgent = aAddress === agentAddress;
+      const bIsAgent = bAddress === agentAddress;
+
+      if (aIsAgent && !bIsAgent) return -1;
+      if (!aIsAgent && bIsAgent) return 1;
+
+      // If neither or both are agent, sort by timestamp (most recent first)
+      return b.timestamp.getTime() - a.timestamp.getTime();
+    })),
     tap((conversations) => {
       console.log('ConversationsComponent:conversations', conversations);
     })
@@ -72,7 +91,7 @@ export class ConversationsComponent {
   }
 
   goToConversation(conversationId: string) {
-    this.store.dispatch(setChat({
+    this.store.dispatch(setChatActive({
       active: true,
       activeConversationId: conversationId
     }));

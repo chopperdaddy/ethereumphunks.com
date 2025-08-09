@@ -1,4 +1,4 @@
-<button class="close-wrapper" (click)="closeChat()">
+<button class="close-wrapper" (click)="closeChat()" [attr.data-active-view]="activeView$ | async">
   <ng-template [ngTemplateOutlet]="closeIcon" />
 </button>
 

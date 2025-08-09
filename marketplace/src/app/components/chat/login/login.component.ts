@@ -25,6 +25,8 @@ import { map, tap } from 'rxjs/operators';
 })
 export class LoginComponent {
 
+  usePasscode = false;
+
   @ViewChild('signInButton') signInButton!: ElementRef<HTMLButtonElement>;
   @ViewChild('createAccountButton') createAccountButton!: ElementRef<HTMLButtonElement>;
 
@@ -36,21 +38,20 @@ export class LoginComponent {
 
   confirmingPasscode = signal(false);
   loading = signal(false);
-  usePasscode = false; // Temporarily disabled while XMTP doesn't support browser encryption
 
   passcodeError = signal<string | null>(null);
 
+  hasAccount$ = this.store.select(selectHasAccount);
   walletConnected$ = this.store.select(selectWalletAddress).pipe(
     map((address) => !!address),
     tap((connected) => {
-      if (connected) {
+      if (connected && this.usePasscode) {
         setTimeout(() => {
           this.passcodeInputs.first?.nativeElement?.focus();
         }, 100);
       }
     })
   );
-  hasAccount$ = this.store.select(selectHasAccount);
 
   constructor(
     private store: Store<GlobalState>,
@@ -216,9 +217,7 @@ export class LoginComponent {
     this.passcodeConfirmForm.reset();
   }
 
-  async connectToChatWithoutPasscode() {
-    console.log('connectToChatWithoutPasscode');
-
+  async createInbox() {
     try {
       const walletClient = await this.web3Svc.getActiveWalletClient();
       const address = walletClient.account.address?.toLowerCase() as `0x${string}`;
@@ -228,17 +227,9 @@ export class LoginComponent {
         return;
       }
 
-      const hasExistingUser = await this.chatSvc.hasStoredUserSalt(address);
-
-      if (hasExistingUser) {
-        const { connected, activeInboxId } = await this.chatSvc.connectExistingXmtpUser('', address);
-        console.log('Successfully connected to existing XMTP user', { connected, activeInboxId });
-        this.store.dispatch(setChatConnected({ connected, activeInboxId }));
-      } else {
-        const { connected, activeInboxId } = await this.chatSvc.createXmtpUser('', address);
-        console.log('Successfully created XMTP user', { connected, activeInboxId });
-        this.store.dispatch(setChatConnected({ connected, activeInboxId }));
-      }
+      const { connected, activeInboxId } = await this.chatSvc.createXmtpUser('', address);
+      console.log('Successfully created XMTP user', { connected, activeInboxId });
+      this.store.dispatch(setChatConnected({ connected, activeInboxId }));
     } catch (error) {
       console.error('Error signing in to XMTP', error);
       this.passcodeError.set('Error signing in to XMTP');
