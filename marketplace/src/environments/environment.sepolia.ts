@@ -1,6 +1,7 @@
 import { appConfig } from './app';
+import { Environment } from './environment.interface';
 
-export const environment = {
+export const environment: Environment = {
   ...appConfig,
 
   env: 'sepolia',
