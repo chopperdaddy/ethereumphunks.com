@@ -45,7 +45,7 @@
 
         <div class="footer">
           @if (txn.type === 'chat' && txn.chatAddress) {
-            <button (click)="setChat(txn.chatAddress)">View message</button>
+            <button (click)="setChat(txn.conversationId!)">View message</button>
           }
 
           @if (txn.hash) {

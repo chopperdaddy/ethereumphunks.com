@@ -6,6 +6,8 @@ export interface NormalizedMessage {
   timestamp: Date;
   senderInboxId: string;
   self: boolean;
+  conversationId: string;
+  senderAddress?: string;
 }
 
 export type ViewType = 'conversations' | 'conversation' | 'login' | 'disabled';
@@ -17,6 +19,7 @@ export interface NormalizedConversation {
   consentState: ConsentState;
   members: Identifier[];
   latestMessageContent: string;
+  unreadCount?: number;
 }
 
 export interface NormalizedConversationWithMessages extends NormalizedConversation {

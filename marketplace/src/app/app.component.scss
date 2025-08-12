@@ -41,6 +41,8 @@ main {
   justify-content: flex-end;
 
   .chat-button {
+    position: relative;
+
     font-family: var(--secondary-font-stack);
     font-weight: 400;
     font-size: 1.6rem;
@@ -50,6 +52,23 @@ main {
     margin-left: .5rem;
     background: transparent;
     border: none;
+
+    .unread-count {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 1.6rem;
+      height: 1.6rem;
+
+      position: absolute;
+      top: -1.5rem;
+      right: -1rem;
+      background-color: rgba(var(--magma), 1);
+      color: rgba(var(--black), 1);
+      padding: 0 .5rem;
+
+      font-size: 1.2rem;
+    }
 
     svg {
       width: 2rem;

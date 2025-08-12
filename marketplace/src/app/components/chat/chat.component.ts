@@ -13,7 +13,7 @@ import { selectConfig } from '@/state/app/app-state.selectors';
 
 import { ViewType } from '@/models/chat';
 import { GlobalState } from '@/models/global-state';
-import { setChatActive } from '@/state/chat/chat.actions';
+import { setChat } from '@/state/chat/chat.actions';
 
 @Component({
   standalone: true,
@@ -35,16 +35,12 @@ export class ChatComponent {
 
   activeView$: Observable<ViewType> = this.store.select(selectChat).pipe(
     switchMap(({ active, activeConversationId }) => {
-      return this.store.select(selectConfig).pipe(
-        switchMap((config) => {
-          return this.store.select(selectChatConnected).pipe(
-            map(({ connected, activeInboxId }) => {
-              if (connected) return activeConversationId ? 'conversation' : 'conversations';
-              return 'login';
-            })
-          )
+      return this.store.select(selectChatConnected).pipe(
+        map(({ connected, activeInboxId }) => {
+          if (connected) return activeConversationId ? 'conversation' : 'conversations';
+          return 'login';
         })
-      );
+      )
     }),
   );
 
@@ -57,6 +53,6 @@ export class ChatComponent {
   }
 
   closeChat() {
-    this.store.dispatch(setChatActive({ active: false }));
+    this.store.dispatch(setChat({ active: false }));
   }
 }

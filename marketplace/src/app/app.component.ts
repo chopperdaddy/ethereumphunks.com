@@ -25,10 +25,10 @@ import { selectLogsActive } from '@/state/indexer-logs/indexer-logs.selectors';
 
 import * as appStateActions from '@/state/app/app-state.actions';
 import * as dataStateActions from '@/state/data/data-state.actions';
-import { setChatActive } from '@/state/chat/chat.actions';
-import { selectChat } from '@/state/chat/chat.selectors';
+import { setChat } from '@/state/chat/chat.actions';
+import { selectChat, selectUnreadCount } from '@/state/chat/chat.selectors';
 
-import { asyncScheduler, fromEvent, debounceTime, filter, observeOn, scan, tap, withLatestFrom, map, firstValueFrom } from 'rxjs';
+import { asyncScheduler, fromEvent, debounceTime, filter, observeOn, scan, tap, withLatestFrom, map, firstValueFrom, of } from 'rxjs';
 
 import { environment } from '@environments/environment';
 
@@ -65,6 +65,7 @@ export class AppComponent implements OnInit {
   logsActive$ = this.store.select(selectLogsActive);
   config$ = this.store.select(selectConfig);
   advancedMode$ = this.store.select(selectAdvancedMode);
+  unreadCount$ = this.store.select(selectUnreadCount);
 
   constructor(
     @Inject(DOCUMENT) private document: Document,
@@ -207,7 +208,7 @@ console.log(`
 
   async toggleChat() {
     const active = await firstValueFrom(this.chatActive$);
-    this.store.dispatch(setChatActive({ active: !active }));
+    this.store.dispatch(setChat({ active: !active }));
   }
 
   /**

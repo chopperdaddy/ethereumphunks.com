@@ -92,7 +92,7 @@ export interface GlobalConfig {
 
 export interface ChatState {
   active: boolean;
-  activeConversationId: string | null | undefined;
+  activeConversationId: string | null;
 
   connected: boolean;
   activeInboxId: string | undefined;
@@ -101,6 +101,20 @@ export interface ChatState {
 
   conversations: NormalizedConversation[] | null;
   activeConversation: NormalizedConversationWithMessages | null;
+
+  unreadConversations: UnreadConversations | null;
+  unreadCount: number;
+}
+
+// Object-based structure for easier updates by conversation ID
+export interface UnreadConversations {
+  [conversationId: string]: number; // conversationId -> unread message count
+}
+
+// Legacy interface - keeping for reference if needed during migration
+export interface UnreadConversation {
+  id: string;
+  unreadMessages: number;
 }
 
 export interface NotificationState {
@@ -124,6 +138,7 @@ export interface Notification {
   sha?: string;
   hashId?: string;
   chatAddress?: string;
+  conversationId?: string;
   slug?: string;
   tokenId?: number | null;
 

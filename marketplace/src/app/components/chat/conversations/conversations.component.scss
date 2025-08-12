@@ -127,20 +127,16 @@
   flex: 1 1 auto;
   overflow: auto;
   overflow-x: hidden;
-  gap: .5rem;
 
   min-height: 0;
   height: calc(100% - 4rem);
 
-  padding: .5rem;
-
   .conversation {
     display: flex;
-    height: 4rem;
-    padding: 0;
+    padding: .5rem;
 
     color: rgba(var(--white), 1);
-    border-bottom: 1px solid rgba(var(--white), .1);
+    box-shadow: inset 0 -1px 0 rgba(var(--white), .1);
 
     cursor: pointer;
     user-select: none;
@@ -181,6 +177,7 @@
         flex-direction: column;
         justify-content: center;
         align-items: flex-end;
+        gap: .25rem;
       }
 
       .from-address {
@@ -202,9 +199,25 @@
       .timestamp {
         font-size: .8rem;
       }
+
+      .unread-count {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        font-size: 1rem;
+        font-weight: 400;
+        background: none;
+        padding: .25rem .75rem;
+
+        &.unread {
+          background-color: rgba(var(--magma), 1);
+          color: rgba(var(--black), 1);
+        }
+      }
     }
 
-    &.bot {
+    &.agent {
       background-color: rgba(var(--bid-color), 1);
     }
   }

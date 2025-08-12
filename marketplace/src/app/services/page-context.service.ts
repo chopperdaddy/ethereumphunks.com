@@ -69,14 +69,14 @@ export class PageContextService {
   async getCurrentPageContextAsync(): Promise<PageContext> {
     // Get current route info immediately (no need to wait for navigation events)
     const routeInfo = this.extractRouteInfo();
-    console.log('🛤️ Extracted route info:', routeInfo);
+    // console.log('🛤️ Extracted route info:', routeInfo);
 
     // Get user address from store
     const userAddress = await firstValueFrom(this.store.select(selectWalletAddress));
-    console.log('👛 User address from store:', userAddress);
+    // console.log('👛 User address from store:', userAddress);
 
     const networkInfo = this.getNetworkInfo();
-    console.log('🌐 Network info:', networkInfo);
+    // console.log('🌐 Network info:', networkInfo);
 
     const pageContext = {
       ...routeInfo,
@@ -88,7 +88,7 @@ export class PageContextService {
       timestamp: new Date().toISOString()
     };
 
-    console.log('📄 Final page context:', pageContext);
+    // console.log('📄 Final page context:', pageContext);
 
     return pageContext;
   }
@@ -98,16 +98,16 @@ export class PageContextService {
    */
   private extractRouteInfo(): Omit<PageContext, 'timestamp'> {
     const url = this.router.url;
-    console.log('🌐 Current URL:', url);
+    // console.log('🌐 Current URL:', url);
 
     const urlTree = this.router.parseUrl(url);
-    console.log('🌳 URL tree:', urlTree);
+    // console.log('🌳 URL tree:', urlTree);
 
     const primary = urlTree.root.children.primary;
-    console.log('🎯 Primary route:', primary);
+    // console.log('🎯 Primary route:', primary);
 
     if (!primary) {
-      console.log('⚠️ No primary route found');
+      // console.log('⚠️ No primary route found');
       return {
         type: 'unknown',
         route: url,
@@ -121,8 +121,8 @@ export class PageContextService {
     const segments = primary.segments.map(s => s.path);
     const params = this.extractParams(primary.segments);
 
-    console.log('📍 Route segments:', segments);
-    console.log('📄 Extracted params:', params);
+    // console.log('📍 Route segments:', segments);
+    // console.log('📄 Extracted params:', params);
 
     // Determine page type and extract relevant data
     if (segments[0] === 'details' && params.hashId) {

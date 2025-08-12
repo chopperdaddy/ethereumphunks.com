@@ -28,3 +28,13 @@ export const selectActiveConversation = createSelector(
   selectChatState,
   (state: ChatState) => state.activeConversation
 );
+
+export const selectUnreadConversations = createSelector(
+  selectChatState,
+  (state: ChatState) => state.unreadConversations
+);
+
+export const selectUnreadCount = createSelector(
+  selectChatState,
+  (state: ChatState) => state.unreadCount
+);

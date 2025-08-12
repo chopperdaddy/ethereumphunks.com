@@ -5,16 +5,16 @@ import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { Store } from '@ngrx/store';
 import { TimeagoModule } from 'ngx-timeago';
 import { LazyLoadImageModule } from 'ng-lazyload-image';
-import { filter, map, tap } from 'rxjs';
+import { combineLatest, filter, map, tap, withLatestFrom } from 'rxjs';
 
 import { GlobalState } from '@/models/global-state';
 
 import { AvatarComponent } from "@/components/avatar/avatar.component";
 import { WalletAddressDirective } from '@/directives/wallet-address.directive';
 
-import { selectConversations } from '@/state/chat/chat.selectors';
+import { selectConversations, selectUnreadConversations } from '@/state/chat/chat.selectors';
 
-import { setChatActive, setCreateConversationWithAddress } from '@/state/chat/chat.actions';
+import { setChat, setCreateConversationWithAddress } from '@/state/chat/chat.actions';
 import { ChatService } from '@/services/chat.service';
 import { Web3Service } from '@/services/web3.service';
 
@@ -38,25 +38,40 @@ import { environment } from '@environments/environment';
 })
 export class ConversationsComponent {
 
-  conversations$ = this.store.select(selectConversations).pipe(
-    filter((conversations) => !!conversations),
-    map((conversations) => [...conversations].sort((a, b) => {
-      const agentAddress = environment.agent.address.toLowerCase();
-      const aAddress = a.members[0]?.identifier?.toLowerCase();
-      const bAddress = b.members[0]?.identifier?.toLowerCase();
+  agentAddress = environment.agent.address.toLowerCase();
 
-      // Agent conversations always come first
-      const aIsAgent = aAddress === agentAddress;
-      const bIsAgent = bAddress === agentAddress;
+  conversations$ = combineLatest([
+    this.store.select(selectConversations),
+    this.store.select(selectUnreadConversations)
+  ]).pipe(
+    map(([conversations, unreadConversations]) => {
+      if (!conversations) return [];
+      return [...conversations].map((conversation) => {
+        return { ...conversation, unreadCount: unreadConversations?.[conversation.id] ?? 0 };
+      }).sort((a, b) => {
+        const agentAddress = environment.agent.address.toLowerCase();
+        const aAddress = a.members[0]?.identifier?.toLowerCase();
+        const bAddress = b.members[0]?.identifier?.toLowerCase();
 
-      if (aIsAgent && !bIsAgent) return -1;
-      if (!aIsAgent && bIsAgent) return 1;
+        // Agent conversations always come first
+        const aIsAgent = aAddress === agentAddress;
+        const bIsAgent = bAddress === agentAddress;
 
-      // If neither or both are agent, sort by timestamp (most recent first)
-      return b.timestamp.getTime() - a.timestamp.getTime();
-    })),
-    tap((conversations) => {
-      console.log('ConversationsComponent:conversations', conversations);
+        if (aIsAgent && !bIsAgent) return -1;
+        if (!aIsAgent && bIsAgent) return 1;
+
+        // If neither or both are agent, sort by timestamp (most recent first)
+        return b.timestamp.getTime() - a.timestamp.getTime();
+      })
+    })
+  );
+
+  unreadConversations$ = this.store.select(selectUnreadConversations).pipe(
+    withLatestFrom(this.conversations$),
+    map(([unreadConversations, conversations]) => {
+      return conversations.map((conversation) => {
+        return { ...conversation, unreadCount: unreadConversations?.[conversation.id] ?? 0 };
+      });
     })
   );
 
@@ -91,7 +106,7 @@ export class ConversationsComponent {
   }
 
   goToConversation(conversationId: string) {
-    this.store.dispatch(setChatActive({
+    this.store.dispatch(setChat({
       active: true,
       activeConversationId: conversationId
     }));

@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
 import { Observable, of, Subject, merge } from 'rxjs';
+import { share, shareReplay } from 'rxjs/operators';
 
 import { toBytes, WalletClient } from 'viem';
 import { Client, ClientOptions, ConsentState, DecodedMessage, Dm, Group, Identifier, Signer, SortDirection } from '@xmtp/browser-sdk';
@@ -54,16 +55,7 @@ export class ChatService {
    */
   async createXmtpUser(passcode: string, address: `0x${string}`): Promise<{ connected: boolean, activeInboxId: string | undefined }> {
     try {
-      console.log('Creating XMTP user with passcode:', passcode);
       const dbEncryptionKey = await this.createEncryptionKeyFromPasscode(passcode, address);
-
-      console.log('===============================================');
-      console.log(
-        'CREATE ENCRYPTION KEY:',
-        dbEncryptionKey ? Array.from(dbEncryptionKey).map(b => b.toString(16).padStart(2, '0')).join('') : 'undefined (no encryption)'
-      );
-      console.log('===============================================');
-
       const walletClient = await this.web3Svc.getActiveWalletClient();
       const signer = this.createSCWSigner(walletClient);
 
@@ -74,7 +66,7 @@ export class ChatService {
 
       if (this.client) {
         await this.client.conversations.syncAll();
-        console.log('Signed in to XMTP', this.client.inboxId);
+        console.log('Signed in to XMTP', this.client.inboxId, address);
         return { connected: true, activeInboxId: this.client.inboxId };
       }
     } catch (error) {
@@ -93,20 +85,12 @@ export class ChatService {
    */
   async connectExistingXmtpUser(passcode: string, address: `0x${string}`): Promise<{ connected: boolean, activeInboxId: string | undefined }> {
     try {
-      console.log('Connecting to XMTP with address:', address);
       const identifier: Identifier = {
         identifier: address,
         identifierKind: 'Ethereum',
       };
 
       const dbEncryptionKey = await this.getEncryptionKeyWithPasscode(passcode, address);
-
-      console.log('===============================================');
-      console.log(
-        'GET ENCRYPTION KEY:',
-        dbEncryptionKey ? Array.from(dbEncryptionKey).map(b => b.toString(16).padStart(2, '0')).join('') : 'undefined (no encryption)'
-      );
-      console.log('===============================================');
 
       this.client = await Client.build(identifier, {
         ...this.clientOptions,
@@ -115,7 +99,7 @@ export class ChatService {
 
       if (this.client) {
         await this.client.conversations.syncAll();
-        console.log('Reconnected to XMTP', this.client.inboxId);
+        console.log('Reconnected to XMTP', this.client.inboxId, address);
         return { connected: true, activeInboxId: this.client.inboxId };
       }
     } catch (error) {
@@ -150,7 +134,6 @@ export class ChatService {
       this.client.conversations.listDms({
         consentStates: [ConsentState.Allowed, ConsentState.Denied, ConsentState.Unknown],
       }).then(async (allDms: Dm[]) => {
-        console.log({allDms})
         conversations = (await Promise.all(allDms.map(dm => this.normalizeDmConversation(dm, address)))).filter(Boolean) as NormalizedConversation[];
         // Sort by latest message timestamp (newest first)
         conversations.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
@@ -178,7 +161,7 @@ export class ChatService {
         });
 
         // Subscribe to global message stream to update latest message content and timestamps
-        allMessagesSubscription = this.streamAllMessages().subscribe({
+        allMessagesSubscription = this.streamAllMessages(address).subscribe({
           next: (newMessage) => {
             if (!closed) {
               this.updateConversationWithNewMessage(conversations, newMessage, address).then(updated => {
@@ -216,7 +199,7 @@ export class ChatService {
    * @returns Observable emitting normalized messages as they arrive in real-time
    * @throws Error if client connection fails, no active inbox ID found, or message normalization fails
    */
-  streamAllMessages(): Observable<NormalizedMessage> {
+  streamAllMessages(walletAddress: `0x${string}`): Observable<NormalizedMessage> {
     const activeInboxId = this.client.inboxId;
     if (!activeInboxId) throw new Error('No active inbox ID found');
 
@@ -224,12 +207,15 @@ export class ChatService {
       let closed = false;
 
       this.client.conversations.streamAllMessages({
-        consentStates: [ConsentState.Allowed],
+        consentStates: [ConsentState.Allowed, ConsentState.Unknown],
         onValue: async (message) => {
           if (!closed) {
             try {
               const normalized = await this.normalizeMessage(message as DecodedMessage, activeInboxId);
-              observer.next(normalized);
+              const conversation = await this.client.conversations.getConversationById(message.conversationId);
+              const members = await conversation?.members();
+              const senderAddress = members?.find(member => member.accountIdentifiers[0]?.identifier.toLowerCase() !== walletAddress.toLowerCase())?.accountIdentifiers[0]?.identifier.toLowerCase();
+              observer.next({ ...normalized, senderAddress } as NormalizedMessage);
             } catch (error) {
               console.error('Error normalizing streamed message:', error);
             }
@@ -245,7 +231,7 @@ export class ChatService {
 
       // Teardown logic
       return () => { closed = true; };
-    });
+    }).pipe(share());
   }
 
   /**
@@ -254,7 +240,7 @@ export class ChatService {
    * @returns Observable emitting normalized conversation with messages, sorted by timestamp (newest first)
    * @throws Error if no active inbox ID or wallet address found, conversation not found, or normalization fails
    */
-    getAndStreamConversationMessages(conversationId: string): Observable<NormalizedConversationWithMessages> {
+  getAndStreamConversationMessages(conversationId: string): Observable<NormalizedConversationWithMessages> {
     const activeInboxId = this.client.inboxId;
     if (!activeInboxId) throw new Error('No active inbox ID found');
 
@@ -406,8 +392,6 @@ export class ChatService {
    * @returns Promise resolving to normalized message with proper content handling
    */
   async normalizeMessage(message: DecodedMessage, activeInboxId: string): Promise<NormalizedMessage> {
-    console.log('normalizeMessage', {message, activeInboxId});
-
     let content = message.content as string;
 
     // If this is the user's own message and it contains encoded context, extract the clean message
@@ -415,10 +399,7 @@ export class ChatService {
     if (isSelf && content && typeof content === 'string' && content.startsWith(AGENT_MESSAGE_PREFIX)) {
       // Extract clean message from encoded format: ⚡AGENT_CTX⚡{context}⚡END_CTX⚡{message}
       const parts = content.split('⚡END_CTX⚡');
-      if (parts.length === 2) {
-        content = parts[1]; // The actual user message
-        console.log('📝 Extracted clean message from encoded format:', content);
-      }
+      if (parts.length === 2) content = parts[1];
     }
 
     return {
@@ -427,6 +408,7 @@ export class ChatService {
       timestamp: new Date(Number(message.sentAtNs) / 1000000),
       senderInboxId: message.senderInboxId,
       self: isSelf,
+      conversationId: message.conversationId,
     };
   }
 
@@ -456,23 +438,13 @@ export class ChatService {
   private async isAgentConversation(conversationId: string): Promise<boolean> {
     try {
       const conversation = await this.client.conversations.getConversationById(conversationId);
-      if (!conversation) {
-        console.log('❌ No conversation found for ID:', conversationId);
-        return false;
-      }
-
-      console.log('🔍 Checking conversation for agent:', {
-        conversationId,
-        conversationType: conversation.constructor.name,
-        agentAddress: this.AGENT_ADDRESS
-      });
+      if (!conversation) return false;
 
       // For DM conversations, check members to find the peer
       if (conversation instanceof Object && 'members' in conversation) {
         const dm = conversation as Dm;
         try {
           const members = await dm.members();
-          console.log('👥 DM members:', members);
 
           // Get current user address to filter out self
           const currentAddress = this.web3Svc.getCurrentAddress()?.toLowerCase();
@@ -485,12 +457,6 @@ export class ChatService {
           if (peer) {
             const peerAddress = peer.accountIdentifiers[0].identifier.toLowerCase();
             const isAgent = peerAddress === this.AGENT_ADDRESS;
-            console.log('🤖 Agent conversation check:', {
-              peerAddress,
-              agentAddress: this.AGENT_ADDRESS,
-              currentAddress,
-              isAgent
-            });
             return isAgent;
           }
         } catch (membersError) {
@@ -498,7 +464,6 @@ export class ChatService {
         }
       }
 
-      console.log('👥 Non-DM conversation or couldn\'t get members');
       return false;
     } catch (error) {
       console.error('Error checking if conversation is with agent:', error);
@@ -522,27 +487,10 @@ export class ChatService {
       // Check if this is a conversation with the agent
       const isAgent = await this.isAgentConversation(conversationId);
 
-      console.log('📤 Sending message:', {
-        conversationId,
-        messageLength: message.length,
-        hasContext: !!context,
-        contextLength: context?.length || 0,
-        isAgent
-      });
-
       if (isAgent && context) {
-        // Use special encoding for agent communication
-        // Format: ⚡AGENT_CTX⚡{context}⚡END_CTX⚡{message}
         const agentMessage = `${AGENT_MESSAGE_PREFIX}${context}⚡END_CTX⚡${message}`;
-        console.log('🤖 Sending encoded agent message:', {
-          agentMessageLength: agentMessage.length,
-          prefix: AGENT_MESSAGE_PREFIX,
-          contextPreview: context.substring(0, 100) + '...'
-        });
         return await conversation.send(agentMessage);
       } else {
-        // Standard text message for non-agent conversations
-        console.log('💬 Sending standard message (not agent or no context)');
         return await conversation.send(message);
       }
     } catch (error) {
@@ -560,17 +508,8 @@ export class ChatService {
    */
   async sendMessageWithPageContext(conversationId: string, message: string, pageContext: any): Promise<string> {
     try {
-      console.log('🎯 sendMessageWithPageContext called with:', {
-        conversationId,
-        message,
-        pageContext
-      });
-
       // Format context for the agent
       const contextString = this.formatPageContextForAgent(pageContext);
-
-      console.log('📝 Context formatted, calling sendMessageToConversation...');
-
       return await this.sendMessageToConversation(conversationId, message, contextString);
     } catch (error) {
       console.error('❌ Error in sendMessageWithPageContext:', error);
@@ -588,8 +527,6 @@ export class ChatService {
       console.warn('No pageContext provided to formatPageContextForAgent');
       return '';
     }
-
-    console.log('📋 Formatting page context:', pageContext);
 
     const contextParts: string[] = ['[FRONTEND_CONTEXT]'];
 
@@ -621,12 +558,9 @@ export class ChatService {
 
     // Add timestamp
     contextParts.push(`TIMESTAMP:${pageContext.timestamp || new Date().toISOString()}`);
-
     contextParts.push('[/FRONTEND_CONTEXT]');
 
     const formattedContext = contextParts.join('|');
-    console.log('📤 Formatted context string:', formattedContext);
-
     return formattedContext;
   }
 

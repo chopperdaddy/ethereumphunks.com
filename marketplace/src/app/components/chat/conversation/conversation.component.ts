@@ -16,7 +16,7 @@ import { AvatarComponent } from '@/components/avatar/avatar.component';
 import { WalletAddressDirective } from '@/directives/wallet-address.directive';
 
 import { selectActiveConversation } from '@/state/chat/chat.selectors';
-import { setActiveConversation, setChatActive } from '@/state/chat/chat.actions';
+import { setActiveConversation, setChat } from '@/state/chat/chat.actions';
 import { selectWalletAddress } from '@/state/app/app-state.selectors';
 import { NormalizedConversationWithMessages } from '@/models/chat';
 
@@ -83,7 +83,7 @@ export class ConversationComponent {
 
       try {
         await this.chatSvc.sendMessageWithPageContext(conversation.id, message, pageContext);
-        console.log('Message sent with context:', pageContext);
+        // console.log('Message sent with context:', pageContext);
       } catch (error) {
         console.log('Error sending message with context, trying without:', error);
         // Fallback to sending without context
@@ -104,8 +104,8 @@ export class ConversationComponent {
   }
 
   goBack() {
-    this.store.dispatch(setChatActive({ active: true }));
-    this.store.dispatch(setActiveConversation({ conversation: undefined }));
+    this.store.dispatch(setChat({ active: true }));
+    this.store.dispatch(setActiveConversation({ conversation: null }));
   }
 
   scrollToBottom() {

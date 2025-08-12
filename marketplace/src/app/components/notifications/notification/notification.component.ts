@@ -19,7 +19,7 @@ import { map } from 'rxjs';
 import * as dataStateSelectors from '@/state/data/data-state.selectors';
 
 import { removeNotification, setNotifHoverState } from '@/state/notification/notification.actions';
-import { setChatActive } from '@/state/chat/chat.actions';
+import { setChat } from '@/state/chat/chat.actions';
 
 @Component({
   selector: 'app-notification',
@@ -86,8 +86,7 @@ export class NotificationComponent {
   }
 
   setChat(activeConversationId: string) {
-    this.store.dispatch(setChatActive({ active: true, activeConversationId }));
+    this.store.dispatch(setChat({ active: true, activeConversationId }));
     this.store.dispatch(removeNotification({ txId: this.txn()?.id || '' }));
   }
-
 }

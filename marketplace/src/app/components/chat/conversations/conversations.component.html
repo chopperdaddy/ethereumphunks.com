@@ -29,7 +29,9 @@
     @for (conversation of conversations; track conversation.id) {
       <div
         (click)="goToConversation(conversation.id)"
-        class="conversation">
+        class="conversation"
+        [class.unread]="conversation.unreadCount"
+        [class.agent]="conversation.members[0].identifier === agentAddress">
 
         <div class="profile-item">
           <div class="image-wrapper">
@@ -48,11 +50,9 @@
           </div>
           <div class="right">
             <div class="timestamp">{{ conversation.timestamp | timeago : true }}</div>
-            <div class="unread-count">
-              @if (conversation.latestMessageContent) {
-                &nbsp;
-              }
-              <!-- {{ conversation.unreadCount }} -->
+
+            <div class="unread-count" [class.unread]="conversation.unreadCount">
+              {{ conversation.unreadCount || '&nbsp;' }}
             </div>
           </div>
         </div>

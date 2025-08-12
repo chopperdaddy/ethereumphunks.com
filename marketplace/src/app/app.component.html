@@ -32,6 +32,12 @@
       [class.active]="chatActive$ | async"
       (click)="toggleChat()">
 
+      @if ((unreadCount$ | async); as unreadCount) {
+        @if (unreadCount > 0) {
+          <span class="unread-count">{{ unreadCount }}</span>
+        }
+      }
+
       <ng-template [ngTemplateOutlet]="chatIcon" />
     </button>
   }
