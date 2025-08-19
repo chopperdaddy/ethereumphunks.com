@@ -8,11 +8,10 @@ import { NgxPaginationModule } from 'ngx-pagination';
 import { LazyLoadImageModule } from 'ng-lazyload-image';
 import { NgSelectModule } from '@ng-select/ng-select';
 
+import { MarketHeaderComponent } from './components/market-header.component';
 import { PhunkGridComponent } from '@/components/phunk-grid/phunk-grid.component';
 import { MarketFiltersComponent } from '@/components/market-filters/market-filters.component';
 import { SlideoutComponent } from '@/components/slideout/slideout.component';
-
-import { WalletAddressDirective } from '@/directives/wallet-address.directive';
 
 import { Sorts } from '@/models/pipes';
 
@@ -38,7 +37,6 @@ import { upsertNotification } from '@/state/notification/notification.actions';
 import { environment } from '@environments/environment';
 
 import { filter, map, tap } from 'rxjs';
-import { setCreateConversationWithAddress } from '@/state/chat/chat.actions';
 
 const defaultActionState = {
   canList: false,
@@ -58,11 +56,11 @@ const defaultActionState = {
     FormsModule,
     ReactiveFormsModule,
 
+    MarketHeaderComponent,
     PhunkGridComponent,
     MarketFiltersComponent,
     SlideoutComponent,
 
-    WalletAddressDirective,
     WeiToEthPipe,
     CalcPipe,
     FormatCashPipe,
@@ -79,15 +77,6 @@ export class MarketComponent {
   env = environment;
 
   escrowAddress = environment.marketAddress;
-
-  marketTitles: any = {
-    all: 'All %collectionName%s',
-    listings: ' %collectionName%s for Sale',
-    bids: 'Current Bids',
-    owned: ' %collectionName%s Owned',
-    user: 'Owned Inscriptions',
-    activity: 'Activity',
-  };
 
   sorts: { label: string, value: Sorts }[] = [
     { label: 'Price Low', value: 'price-low' },
@@ -133,6 +122,10 @@ export class MarketComponent {
   activeCollection$ = this.store.select(dataStateSelectors.selectActiveCollection);
   walletAddress$ = this.store.select(appStateSelectors.selectWalletAddress);
 
+  routeParamAddress$ = this.route.queryParams.pipe(
+    map((params) => params['address'])
+  );
+
   slideoutActive$ = this.store.select(appStateSelectors.selectSlideoutActive).pipe(
     tap((slideoutActive: boolean) => {
       if (!slideoutActive) this.resetState();
@@ -156,28 +149,23 @@ export class MarketComponent {
 
   blocksBehind$ = this.store.select(appStateSelectors.selectBlocksBehind).pipe(
     filter((blocksBehind) => !!blocksBehind),
-    map((blocksBehind) => blocksBehind > 6),
     map((blocksBehind) => true)
   );
 
-  config$ = this.store.select(appStateSelectors.selectConfig);
   advancedMode$ = this.store.select(appStateSelectors.selectAdvancedMode);
+  usd$ = this.store.select(dataStateSelectors.selectUsd);
 
   ceil = Math.ceil;
   objectKeys = Object.keys;
   objectValues = Object.values;
 
-  usd$ = this.store.select(dataStateSelectors.selectUsd);
-
-  chatActive = false;
-
   constructor(
     private store: Store<GlobalState>,
-    public route: ActivatedRoute,
     public dataSvc: DataService,
     public web3Svc: Web3Service,
     private utilSvc: UtilService,
     private fb: FormBuilder,
+    private route: ActivatedRoute,
   ) {}
 
   /**
@@ -792,13 +780,5 @@ export class MarketComponent {
   toggleFilters() {
     this.filtersVisible = !this.filtersVisible;
     this.selectMultipleActive = false;
-  }
-
-  /**
-   * Initiates the creation of a chat conversation with a specific address
-   * @param address - The wallet address to start a conversation with
-   */
-  async createConversation(address: string) {
-    this.store.dispatch(setCreateConversationWithAddress({ address }));
   }
 }
