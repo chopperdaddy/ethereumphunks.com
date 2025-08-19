@@ -140,6 +140,24 @@
           }
         }
       }
+
+      &.group_updated {
+        justify-content: center;
+
+        .message-inner {
+          text-align: center;
+          align-items: center;
+
+          .content {
+            background: none;
+            border: .2rem solid rgba(var(--base-color), .25);
+            color: rgba(var(--base-color), 1);
+            font-size: 1.2rem;
+            font-weight: 400;
+            margin-bottom: 3rem;
+          }
+        }
+      }
     }
 
     .error {

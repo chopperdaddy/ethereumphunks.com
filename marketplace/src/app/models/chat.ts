@@ -1,13 +1,16 @@
-import { ConsentState, Identifier } from '@xmtp/browser-sdk';
+import { ConsentState, Identifier, MessageDeliveryStatus, SafeContentTypeId } from '@xmtp/browser-sdk';
 
 export interface NormalizedMessage {
   id: string;
   content: string;
+  contentType: SafeContentTypeId;
   timestamp: Date;
   senderInboxId: string;
   self: boolean;
   conversationId: string;
   senderAddress?: string;
+  fallback?: string;
+  deliveryStatus?: MessageDeliveryStatus;
 }
 
 export type ViewType = 'conversations' | 'conversation' | 'login' | 'disabled';

@@ -1,11 +1,11 @@
 import { AsyncPipe, NgTemplateOutlet } from '@angular/common';
-import { Component, signal } from '@angular/core';
+import { Component, ElementRef, signal, ViewChild } from '@angular/core';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 
 import { Store } from '@ngrx/store';
 import { TimeagoModule } from 'ngx-timeago';
 import { LazyLoadImageModule } from 'ng-lazyload-image';
-import { combineLatest, filter, map, tap, withLatestFrom } from 'rxjs';
+import { async, combineLatest, filter, map, tap, withLatestFrom } from 'rxjs';
 
 import { GlobalState } from '@/models/global-state';
 
@@ -19,6 +19,8 @@ import { ChatService } from '@/services/chat.service';
 import { Web3Service } from '@/services/web3.service';
 
 import { environment } from '@environments/environment';
+import { selectWalletAddress } from '@/state/app/app-state.selectors';
+import { NormalizedConversation } from '@/models/chat';
 
 @Component({
   standalone: true,
@@ -37,6 +39,8 @@ import { environment } from '@environments/environment';
   styleUrl: './conversations.component.scss'
 })
 export class ConversationsComponent {
+
+  @ViewChild('newConversationToInput') newConversationToInput!: ElementRef<HTMLInputElement>;
 
   agentAddress = environment.agent.address.toLowerCase();
 
@@ -75,18 +79,21 @@ export class ConversationsComponent {
     })
   );
 
+  walletAddress$ = this.store.select(selectWalletAddress);
+
   isCreatingNewConversation = signal(false);
   newConversationTo: FormControl<string | null> = new FormControl(null);
 
   constructor(
     private store: Store<GlobalState>,
-    private chatSvc: ChatService,
+    public chatSvc: ChatService,
     private web3Svc: Web3Service
   ) {}
 
   newConversation() {
     console.log('createConversation');
     this.isCreatingNewConversation.set(true);
+    setTimeout(() => this.newConversationToInput.nativeElement.focus(), 100);
   }
 
   closeNewConversation() {

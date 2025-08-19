@@ -13,7 +13,7 @@
 @if (isCreatingNewConversation()) {
   <div class="new-conversation-wrapper">
     <form (submit)="createConversation($event)">
-      <input type="text" placeholder="0x or ENS name" [formControl]="newConversationTo">
+      <input #newConversationToInput type="text" placeholder="0x or ENS name" [formControl]="newConversationTo">
       <button type="submit" [class.disabled]="newConversationTo.invalid || !newConversationTo.value">
         <ng-template [ngTemplateOutlet]="createIcon" />
       </button>
@@ -27,22 +27,26 @@
 <div #conversations class="conversations-wrapper">
   @if (conversations$ | async; as conversations) {
     @for (conversation of conversations; track conversation.id) {
+
+      @let walletAddress = (walletAddress$ | async);
+      @let recipient = chatSvc.getRecipientAddress(conversation, walletAddress);
+
       <div
         (click)="goToConversation(conversation.id)"
         class="conversation"
         [class.unread]="conversation.unreadCount"
-        [class.agent]="conversation.members[0].identifier === agentAddress">
+        [class.agent]="recipient === agentAddress">
 
         <div class="profile-item">
           <div class="image-wrapper">
-            <app-avatar [address]="conversation.members[0].identifier" />
+            <app-avatar [address]="recipient" />
           </div>
         </div>
 
         <div class="item-inner">
           <div class="left">
             <div class="from-address">
-              <app-address [address]="conversation.members[0].identifier" />
+              <app-address [address]="recipient" />
             </div>
             <div class="message-preview">
               {{ conversation.latestMessageContent }}

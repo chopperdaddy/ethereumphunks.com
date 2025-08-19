@@ -4493,16 +4493,15 @@
   dependencies:
     tslib "^2.3.0"
 
-"@xmtp/browser-sdk@^2.0.13":
-  version "2.0.13"
-  resolved "https://registry.yarnpkg.com/@xmtp/browser-sdk/-/browser-sdk-2.0.13.tgz#27f65b4436d75722072a8b7215c08599d727ae98"
-  integrity sha512-S81IGmOV8kXVJzSfgllgsGG+0mclm4MdhxZhPr/hd8grQhf5QBr9bnRZbbm69Bhi64Oget+o6DSIpSfSnvF14A==
+"@xmtp/browser-sdk@^4.0.2":
+  version "4.0.2"
+  resolved "https://registry.yarnpkg.com/@xmtp/browser-sdk/-/browser-sdk-4.0.2.tgz#0559422a917313c1324a263bd6e12c8fa428acd2"
+  integrity sha512-yIwDaP58KEOBflO2aUwJ3c0uExnkAUAoL+bFAU0y4m820eHhyDHWTn7TRbTpEaEvw764vP6d0kKb9sP+WnevNg==
   dependencies:
     "@xmtp/content-type-group-updated" "^2.0.2"
     "@xmtp/content-type-primitives" "^2.0.2"
     "@xmtp/content-type-text" "^2.0.2"
-    "@xmtp/proto" "^3.78.0"
-    "@xmtp/wasm-bindings" "1.1.7"
+    "@xmtp/wasm-bindings" "1.3.6"
     uuid "^11.1.0"
 
 "@xmtp/content-type-group-updated@^2.0.2":
@@ -4537,10 +4536,10 @@
     rxjs "^7.8.0"
     undici "^5.8.1"
 
-"@xmtp/wasm-bindings@1.1.7":
-  version "1.1.7"
-  resolved "https://registry.yarnpkg.com/@xmtp/wasm-bindings/-/wasm-bindings-1.1.7.tgz#3cc5244fa97d3abf4600caef0505b4660e9349a8"
-  integrity sha512-/HkRWHCEhHHuoWnoXFtTzYRSEIPkOvxGJlVvMVMgmdVgd4DTavf3llbVfyC2r1BC7xVfjXSpJzNLnKVExIGIKA==
+"@xmtp/wasm-bindings@1.3.6":
+  version "1.3.6"
+  resolved "https://registry.yarnpkg.com/@xmtp/wasm-bindings/-/wasm-bindings-1.3.6.tgz#94fa0e3ad3556a52ab96794e1bfa187bd317833e"
+  integrity sha512-jQpYfPxOm6Rgh+9GIGE78rMMDoSmgpZY6aVMnduuoZPKj0OAkD0FSreKEH3EhFhR65gi5KSVfPbDDQBg86FrvQ==
 
 "@xtuc/ieee754@^1.2.0":
   version "1.2.0"
@@ -6818,13 +6817,6 @@ http-proxy@^1.18.1:
     follow-redirects "^1.0.0"
     requires-port "^1.0.0"
 
-http-server-spa@^1.3.0:
-  version "1.3.0"
-  resolved "https://registry.yarnpkg.com/http-server-spa/-/http-server-spa-1.3.0.tgz#2892c0ade750e1c3826b3589744e1c17c46aa6a5"
-  integrity sha512-NfXBksDzoiBOo1IrMDtxpKJ8FOHLqy0YdijYjqMoRcS7AWPf6MzhRvKe2KiXxENlqTRqkOH418SvbxC6GzG2TA==
-  dependencies:
-    mime "^1.3.4"
-
 http-signature@~1.2.0:
   version "1.2.0"
   resolved "https://registry.yarnpkg.com/http-signature/-/http-signature-1.2.0.tgz#9aecd925114772f3d95b65a60abb8f7c18fbace1"
@@ -7870,7 +7862,7 @@ mime-types@^2.0.1, mime-types@^2.1.12, mime-types@^2.1.27, mime-types@^2.1.31, m
   dependencies:
     mime-db "1.52.0"
 
-mime@1.6.0, mime@^1.3.4, mime@^1.4.1:
+mime@1.6.0, mime@^1.4.1:
   version "1.6.0"
   resolved "https://registry.yarnpkg.com/mime/-/mime-1.6.0.tgz#32cd9e5c64553bd58d19a568af452acff04981b1"
   integrity sha512-x0Vn8spI+wuJ1O6S7gnbaQg8Pxh4NNHb7KSINmEWKiPE4RKOplvijn+NkmYmmRgP68mc70j2EbeTFRsrswaQeg==

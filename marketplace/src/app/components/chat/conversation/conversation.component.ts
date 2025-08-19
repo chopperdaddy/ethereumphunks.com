@@ -5,10 +5,10 @@ import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { TimeagoModule } from 'ngx-timeago';
 
 import { Store } from '@ngrx/store';
-import { map, tap, filter, switchMap, share, shareReplay } from 'rxjs';
+import { map, tap, filter, switchMap, shareReplay } from 'rxjs';
 
 import { ChatService } from '@/services/chat.service';
-import { PageContextService } from '@/services/page-context.service';
+// import { PageContextService } from '@/services/page-context.service';
 
 import { GlobalState } from '@/models/global-state';
 
@@ -42,61 +42,39 @@ export class ConversationComponent {
   @ViewChild('messages') messages!: ElementRef<HTMLDivElement>;
 
   conversation$ = this.store.select(selectActiveConversation).pipe(
-    filter((conversation) => !!conversation),
     map((conversation) => {
+      if (!conversation) return null;
       return {
         ...conversation,
-        messages: [...conversation.messages].sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime())
+        messages: conversation?.messages ? [...conversation.messages].sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime()) : []
       }
     }),
     tap(() => setTimeout(() => this.scrollToBottom(), 100)),
     shareReplay({ bufferSize: 1, refCount: true }),
   );
 
-  toUser$ = this.conversation$.pipe(
-    switchMap((conversation) => this.store.select(selectWalletAddress).pipe(
-      filter((walletAddress) => !!walletAddress),
-      map((walletAddress) =>
-        conversation.members.find((member) =>
-          member.identifier?.toLowerCase() !== walletAddress?.toLowerCase())?.identifier
-      )
-    ))
-  );
+  walletAddress$ = this.store.select(selectWalletAddress);
 
   error = signal<string | null>(null);
   messageInput: FormControl<string | null> = new FormControl(null);
 
   constructor(
     private store: Store<GlobalState>,
-    private chatSvc: ChatService,
-    private pageContextSvc: PageContextService,
+    public chatSvc: ChatService,
+    // private pageContextSvc: PageContextService,
   ) {}
 
-  async sendMessage($event: Event, conversation: NormalizedConversationWithMessages) {
+  async sendMessage($event: Event, conversation: NormalizedConversationWithMessages | null) {
+    if (!conversation) return;
+
     $event.preventDefault();
     const message = this.messageInput.value;
     if (!message) return;
 
     try {
-      // Get current page context using the async method
-      const pageContext = await this.pageContextSvc.getCurrentPageContextAsync();
-
-      try {
-        await this.chatSvc.sendMessageWithPageContext(conversation.id, message, pageContext);
-        // console.log('Message sent with context:', pageContext);
-      } catch (error) {
-        console.log('Error sending message with context, trying without:', error);
-        // Fallback to sending without context
-        await this.chatSvc.sendMessageToConversation(conversation.id, message);
-      }
+      await this.chatSvc.sendMessageToConversation(conversation.id, message);
     } catch (error) {
-      console.log('Error getting page context or sending message:', error);
-      // Fallback to sending without context
-      try {
-        await this.chatSvc.sendMessageToConversation(conversation.id, message);
-      } catch (fallbackError) {
-        console.error('Failed to send message even without context:', fallbackError);
-      }
+      console.error('Failed to send message:', error);
     }
 
     this.messageInput.setValue(null);

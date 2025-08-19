@@ -127,9 +127,13 @@ export class ChatEffects {
   createConversationWithAddress$ = createEffect(() => this.actions$.pipe(
     ofType(setCreateConversationWithAddress),
     filter(({ address }) => !!address),
-    switchMap(({ address }) => from(this.chatSvc.createConversation(address!)).pipe(
+    switchMap(({ address }) => from(this.chatSvc.checkIfUserIsOnNetwork(address!)).pipe(
+      switchMap((isOnNetwork) => {
+        console.log({isOnNetwork});
+        return from(this.chatSvc.createConversation(address!));
+      }),
       catchError((error) => {
-        console.error('Error creating conversation', error);
+        console.log('Error creating conversation', error);
         return of(null);
       })
     )),
@@ -139,9 +143,7 @@ export class ChatEffects {
   activeConversation$ = createEffect(() => this.actions$.pipe(
     ofType(setChat),
     switchMap(({ activeConversationId }) => {
-      if (!activeConversationId) {
-        return of(null);
-      }
+      if (!activeConversationId) return of(null);
       return this.chatSvc.getAndStreamConversationMessages(activeConversationId);
     }),
     map((conversation) => setActiveConversation({ conversation })),

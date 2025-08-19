@@ -1,5 +1,9 @@
 <div class="chat-wrapper">
   @if ((conversation$ | async); as conversation) {
+
+    @let walletAddress = (walletAddress$ | async);
+    @let recipient = chatSvc.getRecipientAddress(conversation, walletAddress);
+
     <div
       class="chat-header">
 
@@ -8,11 +12,11 @@
       </button>
 
       <div class="image-wrapper">
-        <app-avatar [address]="conversation.members[0].identifier" />
+        <app-avatar [address]="recipient" />
       </div>
 
       <div class="with">
-        Chatting with <app-address [address]="(toUser$ | async) ?? null" />
+        Chatting with <app-address [address]="recipient" />
       </div>
     </div>
 
@@ -20,6 +24,7 @@
       @for (message of conversation.messages; track message.id) {
         <div
           class="chat-message"
+          [class]="message.contentType.typeId"
           [class.self]="message.self">
 
           <div class="message-inner">
@@ -29,14 +34,10 @@
 
               {{ message.timestamp | timeago : true }}
             </div>
-            <div class="content" [innerHTML]="message.content"></div>
-          </div>
-        </div>
-      } @empty {
-        <div class="loader">
-          loading conversation
-          <div class="spinner">
-            <img src="/loader-dark.gif" width="15" height="15" alt="" />
+
+            <div class="content">
+              {{ message.content }}
+            </div>
           </div>
         </div>
       }
@@ -52,6 +53,15 @@
       <input type="text" [formControl]="messageInput" [placeholder]="'Your Message'" />
       <button type="submit">Send</button>
     </form>
+  } @else {
+    <div #messages class="messages-wrapper">
+      <div class="loader">
+        loading conversation
+        <div class="spinner">
+          <img src="/loader-dark.gif" width="15" height="15" alt="" />
+        </div>
+      </div>
+    </div>
   }
 </div>
 

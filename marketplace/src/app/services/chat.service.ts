@@ -3,12 +3,9 @@ import { Observable, of, Subject, merge } from 'rxjs';
 import { share, shareReplay } from 'rxjs/operators';
 
 import { toBytes, WalletClient } from 'viem';
-import { Client, ClientOptions, ConsentState, DecodedMessage, Dm, Group, Identifier, Signer, SortDirection } from '@xmtp/browser-sdk';
+import { Client, ClientOptions, ConsentState, DecodedMessage, Dm, Group, Identifier, SafeContentTypeId, Signer, SortDirection } from '@xmtp/browser-sdk';
 
 import { NormalizedConversation, NormalizedConversationWithMessages, NormalizedMessage } from '@/models/chat';
-
-// Agent message metadata marker
-const AGENT_MESSAGE_PREFIX = '⚡AGENT_CTX⚡';
 
 import { Web3Service } from './web3.service';
 import { UtilService } from './util.service';
@@ -368,6 +365,8 @@ export class ChatService {
       const latestMessage = (await dm.messages({ limit: BigInt(1), direction: SortDirection.Descending }))[0];
       const latestMessageContent = latestMessage?.content as string;
 
+      console.log({members, consentState, peerInboxId, latestMessageContent});
+
       return {
         id: dm.id,
         timestamp: new Date(Number(latestMessage?.sentAtNs || dm.createdAtNs) / 1000000),
@@ -375,9 +374,9 @@ export class ChatService {
         consentState,
         latestMessageContent,
         members: members.map(member => ({
-          identifier: member.accountIdentifiers[0].identifier,
+          identifier: member.accountIdentifiers[0].identifier.toLowerCase(),
           identifierKind: member.accountIdentifiers[0].identifierKind,
-        })).filter(member => member.identifier.toLowerCase() !== address.toLowerCase()),
+        }))
       };
     } catch (err) {
       console.error('Failed to normalize DM:', err, dm);
@@ -392,24 +391,80 @@ export class ChatService {
    * @returns Promise resolving to normalized message with proper content handling
    */
   async normalizeMessage(message: DecodedMessage, activeInboxId: string): Promise<NormalizedMessage> {
-    let content = message.content as string;
-
-    // If this is the user's own message and it contains encoded context, extract the clean message
+    let content: string;
     const isSelf = message.senderInboxId === activeInboxId;
-    if (isSelf && content && typeof content === 'string' && content.startsWith(AGENT_MESSAGE_PREFIX)) {
-      // Extract clean message from encoded format: ⚡AGENT_CTX⚡{context}⚡END_CTX⚡{message}
-      const parts = content.split('⚡END_CTX⚡');
-      if (parts.length === 2) content = parts[1];
+
+        // Handle different content types
+    if (typeof message.content === 'string') {
+      content = message.content;
+    } else if (typeof message.content === 'object' && message.content !== null) {
+      // Handle system messages based on content type
+      switch (message.contentType.typeId) {
+        case 'group_updated':
+          content = this.formatGroupUpdateMessage(message.content as any);
+          break;
+        default:
+          // For unknown object types, use fallback or stringify
+          content = message.fallback || JSON.stringify(message.content);
+      }
+    } else {
+      // Fallback for null/undefined content
+      content = message.fallback || '[Empty message]';
     }
 
     return {
       id: message.id,
       content: content,
+      contentType: message.contentType,
+      fallback: message.fallback,
+      deliveryStatus: message.deliveryStatus,
       timestamp: new Date(Number(message.sentAtNs) / 1000000),
       senderInboxId: message.senderInboxId,
       self: isSelf,
       conversationId: message.conversationId,
     };
+  }
+
+  getRecipientAddress(conversation: NormalizedConversation, walletAddress: string | null | undefined) {
+    return conversation.members?.filter(member => member?.identifier !== walletAddress)[0]?.identifier ?? '';
+  }
+
+  /**
+   * Formats a group update message for display
+   * @param content The group update content object
+   * @returns Formatted string describing the group update
+   */
+  private formatGroupUpdateMessage(content: any): string {
+    const parts: string[] = [];
+
+    if (content.addedInboxes && content.addedInboxes.length > 0) {
+      const count = content.addedInboxes.length;
+      parts.push(`${count} member${count > 1 ? 's' : ''} added to the group`);
+    }
+
+    if (content.removedInboxes && content.removedInboxes.length > 0) {
+      const count = content.removedInboxes.length;
+      parts.push(`${count} member${count > 1 ? 's' : ''} removed from the group`);
+    }
+
+    if (content.metadataFieldChanges && content.metadataFieldChanges.length > 0) {
+      parts.push('Group settings updated');
+    }
+
+    return parts.length > 0 ? parts.join(', ') : 'Group updated';
+  }
+
+  async checkIfUserIsOnNetwork(address: string): Promise<boolean> {
+    try {
+      const identifiers: Identifier[] = [{
+        identifier: address,
+        identifierKind: 'Ethereum',
+      }];
+      const response = await this.client.canMessage(identifiers);
+      return response.get(address) ?? false;
+    } catch (error) {
+      return false;
+    }
   }
 
   /**
@@ -475,93 +530,35 @@ export class ChatService {
    * Sends a message to a conversation with optional context for agent conversations
    * @param conversationId The ID of the conversation to send to
    * @param message The message content to send
-   * @param context Optional context to include with the message (only for agent conversations)
+
    * @returns Promise resolving to the message ID
    * @throws Error if conversation not found or message sending fails
    */
-  async sendMessageToConversation(conversationId: string, message: string, context?: string): Promise<string> {
+  async sendMessageToConversation(conversationId: string, message: string): Promise<string> {
     try {
       const conversation = await this.client.conversations.getConversationById(conversationId);
       if (!conversation) throw new Error('Conversation not found');
 
-      // Check if this is a conversation with the agent
-      const isAgent = await this.isAgentConversation(conversationId);
-
-      if (isAgent && context) {
-        const agentMessage = `${AGENT_MESSAGE_PREFIX}${context}⚡END_CTX⚡${message}`;
-        return await conversation.send(agentMessage);
-      } else {
-        return await conversation.send(message);
-      }
+      return await conversation.send(message);
     } catch (error) {
       throw error;
     }
   }
 
   /**
-   * Sends a message with automatic page context detection for agent conversations
+   * Sends a message to a conversation
    * @param conversationId The ID of the conversation
    * @param message The message content to send
-   * @param pageContext The current page context object to encode
    * @returns Promise resolving to the message ID
    * @throws Error if message sending fails
    */
-  async sendMessageWithPageContext(conversationId: string, message: string, pageContext: any): Promise<string> {
+  async sendMessageWithPageContext(conversationId: string, message: string): Promise<string> {
     try {
-      // Format context for the agent
-      const contextString = this.formatPageContextForAgent(pageContext);
-      return await this.sendMessageToConversation(conversationId, message, contextString);
+      return await this.sendMessageToConversation(conversationId, message);
     } catch (error) {
       console.error('❌ Error in sendMessageWithPageContext:', error);
       throw error;
     }
-  }
-
-  /**
-   * Formats page context into a string format for agent consumption
-   * @param pageContext The page context object to format
-   * @returns Formatted context string with standardized markers
-   */
-  private formatPageContextForAgent(pageContext: any): string {
-    if (!pageContext) {
-      console.warn('No pageContext provided to formatPageContextForAgent');
-      return '';
-    }
-
-    const contextParts: string[] = ['[FRONTEND_CONTEXT]'];
-
-    // Add page information
-    if (pageContext.type) {
-      contextParts.push(`PAGE_TYPE:${pageContext.type}`);
-    }
-
-    // Add network information
-    if (pageContext.network) {
-      contextParts.push(`NETWORK:${pageContext.network.name}`);
-      contextParts.push(`CHAINID:${pageContext.network.chainId}`);
-    } else {
-      console.warn('No network information in pageContext');
-    }
-
-    if (pageContext.data) {
-      Object.entries(pageContext.data).forEach(([key, value]) => {
-        if (value) {
-          contextParts.push(`${key.toUpperCase()}:${value}`);
-        }
-      });
-    }
-
-    // Add route info
-    if (pageContext.route) {
-      contextParts.push(`ROUTE:${pageContext.route}`);
-    }
-
-    // Add timestamp
-    contextParts.push(`TIMESTAMP:${pageContext.timestamp || new Date().toISOString()}`);
-    contextParts.push('[/FRONTEND_CONTEXT]');
-
-    const formattedContext = contextParts.join('|');
-    return formattedContext;
   }
 
   /**
