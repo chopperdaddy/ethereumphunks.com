@@ -52,12 +52,22 @@ export class ChatEffects {
     filter(([{ connected }, walletAddress]) => connected && !!walletAddress),
     switchMap(([_, walletAddress]) => this.chatSvc.listAndStreamAllDms(walletAddress?.toLowerCase() as `0x${string}`).pipe(
       switchMap((convos) => {
-        const addresses = convos.map(convo => convo.members[0]?.identifier?.toLowerCase());
-        return this.dataSvc.addressesAreHolders(addresses).pipe(
+        // Get the other person's address (not the logged-in user)
+        const otherAddresses = convos.map(convo => {
+          return convo.members?.find(member =>
+            member?.identifier?.toLowerCase() !== walletAddress?.toLowerCase()
+          )?.identifier?.toLowerCase();
+        }).filter((address): address is string => !!address);
+
+        return this.dataSvc.addressesAreHolders(otherAddresses).pipe(
           map((allowed) => {
+            // console.log({allowed, otherAddresses});
             const allowedAddresses = allowed?.map((res: any) => res?.address) || [];
             return convos.filter((convo) => {
-              return allowedAddresses.includes(convo?.members[0]?.identifier?.toLowerCase());
+              const otherPersonAddress = convo.members?.find(member =>
+                member?.identifier?.toLowerCase() !== walletAddress?.toLowerCase()
+              )?.identifier?.toLowerCase();
+              return allowedAddresses.includes(otherPersonAddress);
             });
           })
         );
@@ -77,49 +87,65 @@ export class ChatEffects {
           this.store.select(selectActiveConversation),
           this.store.select(selectUnreadConversations)
         ),
-        mergeMap(([message, conversations, activeConversation, unreadConversations]) => {
+        switchMap(([message, conversations, activeConversation, unreadConversations]) => {
           // If message is for active conversation, clear its unread count
           if (message.conversationId === activeConversation?.id) {
-            return [
+            return of([
               clearUnreadForConversation({ conversationId: message.conversationId })
-            ];
+            ]);
           }
 
-          if (walletAddress === message.senderAddress) return [];
+          if (walletAddress === message.senderAddress) return of([]);
 
-          const notification = {
-            id: this.utilSvc.createIdFromString(message.conversationId),
-            timestamp: Date.now(),
-            type: 'chat',
-            function: 'chatMessage',
-            chatAddress: message.senderAddress,
-            conversationId: message.conversationId,
-          } as Notification;
+          // Skip if no sender address
+          if (!message.senderAddress) return of([]);
 
-          // Message is for inactive conversation - increment unread count
-          const existingUnreadCount = unreadConversations?.[message.conversationId];
-          if (existingUnreadCount !== undefined) {
-            return [
-              upsertNotification({ notification }),
-              setUnreadConversations({
-                unreadConversations: {
-                  ...(unreadConversations || {}),
-                  [message.conversationId]: existingUnreadCount + 1
-                }
-              })
-            ];
-          }
+          // Check if sender is a holder before processing notification
+          return this.dataSvc.addressesAreHolders([message.senderAddress]).pipe(
+            map((allowed) => {
+              const allowedAddresses = allowed?.map((res: any) => res?.address) || [];
+              const isHolderAllowed = allowedAddresses.includes(message.senderAddress?.toLowerCase());
 
-          return [
-            upsertNotification({ notification }),
-            setUnreadConversations({
-              unreadConversations: {
-                ...(unreadConversations || {}),
-                [message.conversationId]: 1
+              if (!isHolderAllowed) {
+                return []; // Don't process messages from non-holders
               }
+
+              const notification = {
+                id: this.utilSvc.createIdFromString(message.conversationId),
+                timestamp: Date.now(),
+                type: 'chat',
+                function: 'chatMessage',
+                chatAddress: message.senderAddress,
+                conversationId: message.conversationId,
+              } as Notification;
+
+              // Message is for inactive conversation - increment unread count
+              const existingUnreadCount = unreadConversations?.[message.conversationId];
+              if (existingUnreadCount !== undefined) {
+                return [
+                  upsertNotification({ notification }),
+                  setUnreadConversations({
+                    unreadConversations: {
+                      ...(unreadConversations || {}),
+                      [message.conversationId]: existingUnreadCount + 1
+                    }
+                  })
+                ];
+              }
+
+              return [
+                upsertNotification({ notification }),
+                setUnreadConversations({
+                  unreadConversations: {
+                    ...(unreadConversations || {}),
+                    [message.conversationId]: 1
+                  }
+                })
+              ];
             })
-          ];
-        })
+          );
+        }),
+        mergeMap(actions => actions)
       )
     }),
   ));

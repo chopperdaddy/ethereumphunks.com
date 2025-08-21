@@ -62,6 +62,8 @@ export class ChatService {
       });
 
       if (this.client) {
+        await this.client.preferences.sync();
+        await this.client.conversations.sync();
         await this.client.conversations.syncAll();
         console.log('Signed in to XMTP', this.client.inboxId, address);
         return { connected: true, activeInboxId: this.client.inboxId };
@@ -95,6 +97,8 @@ export class ChatService {
       });
 
       if (this.client) {
+        await this.client.preferences.sync();
+        await this.client.conversations.sync();
         await this.client.conversations.syncAll();
         console.log('Reconnected to XMTP', this.client.inboxId, address);
         return { connected: true, activeInboxId: this.client.inboxId };
@@ -363,9 +367,9 @@ export class ChatService {
 
       // Get latest message for proper timestamp
       const latestMessage = (await dm.messages({ limit: BigInt(1), direction: SortDirection.Descending }))[0];
-      const latestMessageContent = latestMessage?.content as string;
+      const latestMessageContent = (latestMessage?.content || latestMessage?.fallback || '') as string;
 
-      console.log({members, consentState, peerInboxId, latestMessageContent});
+      // console.log({members, consentState, peerInboxId, latestMessageContent});
 
       return {
         id: dm.id,

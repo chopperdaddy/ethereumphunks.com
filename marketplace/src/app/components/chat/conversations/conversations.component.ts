@@ -67,7 +67,8 @@ export class ConversationsComponent {
         // If neither or both are agent, sort by timestamp (most recent first)
         return b.timestamp.getTime() - a.timestamp.getTime();
       })
-    })
+    }),
+    // tap((conversations) => console.log({conversations}))
   );
 
   unreadConversations$ = this.store.select(selectUnreadConversations).pipe(
