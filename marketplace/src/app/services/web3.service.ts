@@ -27,7 +27,7 @@ import { magma } from '@/constants/magmaChain';
 
 import { createWeb3Modal } from '@web3modal/wagmi';
 
-import { PublicClient, TransactionReceipt, WatchBlockNumberReturnType, WatchContractEventReturnType, bytesToHex, createPublicClient, custom, decodeFunctionData, fallback, formatEther, isAddress, keccak256, numberToBytes, parseEther, stringToBytes, toHex, zeroAddress } from 'viem';
+import { PublicClient, TransactionReceipt, WatchBlockNumberReturnType, WatchContractEventReturnType, bytesToHex, createPublicClient, custom, decodeFunctionData, formatEther, isAddress, keccak256, numberToBytes, parseEther, stringToBytes, toHex, zeroAddress } from 'viem';
 
 import { selectIsBanned } from '@/state/app/app-state.selectors';
 
@@ -61,7 +61,6 @@ const themeVariables = {
 export class Web3Service {
 
   maxCooldown = 4;
-  web3Connecting: boolean = false;
   connectedState!: Observable<any>;
 
   l1Client!: PublicClient;
@@ -85,10 +84,7 @@ export class Web3Service {
   ) {
     this.l1Client = createPublicClient({
       chain: this.chains[0],
-      transport: fallback([
-        ...(typeof window !== 'undefined' && window.ethereum ? [custom(window.ethereum)] : []),
-        http(environment.rpcHttpProvider)
-      ])
+      transport: http(environment.rpcHttpProvider)
     });
 
     this.l2Client = createPublicClient({
@@ -99,19 +95,16 @@ export class Web3Service {
     this.config = createConfig({
       chains: this.chains,
       transports: {
-        [environment.chainId]: fallback([
-          ...(typeof window !== 'undefined' && window.ethereum ? [custom(window.ethereum)] : []),
-          http(environment.rpcHttpProvider)
-        ]),
-        6969696969: http(environment.magmaRpcHttpProvider)
+        [environment.chainId]: http(environment.rpcHttpProvider),
+        // 6969696969: http(environment.magmaRpcHttpProvider)
       },
       connectors: [
         injected({ shimDisconnect: true }),
         walletConnect({ projectId, metadata, showQrModal: false }),
-        coinbaseWallet({
-          appName: metadata.name,
-          appLogoUrl: metadata.icons[0]
-        })
+        // coinbaseWallet({
+        //   appName: metadata.name,
+        //   appLogoUrl: metadata.icons[0]
+        // })
       ]
     });
 
@@ -201,7 +194,7 @@ export class Web3Service {
    */
   async connect(): Promise<void> {
     try {
-      await this.modal.open();
+      await this.modal.open({ view: 'Connect' });
     } catch (error) {
       console.log(error);
       this.disconnectWeb3();
@@ -229,8 +222,8 @@ export class Web3Service {
     const chainId = getChainId(this.config);
 
     if (l === 'l1') {
-      console.log('switching chain', chainId, environment.chainId);
       if (chainId === environment.chainId) return;
+      console.log('switching chain', chainId, environment.chainId);
       return await walletClient?.switchChain({ id: environment.chainId });
     } else if (l === 'l2') {
       if (chainId === magma.id) return;
