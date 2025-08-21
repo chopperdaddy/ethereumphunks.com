@@ -5,6 +5,9 @@ import { join } from 'node:path';
 
 import { Client, Signer, type XmtpEnv, IdentifierKind, LogLevel } from '@xmtp/node-sdk';
 
+// Agent message metadata marker (must match frontend)
+const AGENT_MESSAGE_PREFIX = '⚡AGENT_CTX⚡';
+
 import { createWalletClient, fromHex, http, toBytes, toHex } from 'viem';
 import { privateKeyToAccount } from 'viem/accounts';
 import { sepolia } from 'viem/chains';
@@ -30,24 +33,214 @@ export class AgentService implements OnModuleInit {
     process.env.AGENT_ENCRYPTION_KEY as string
   );
 
-  env: XmtpEnv = process.env.XMTP_ENV as XmtpEnv;
-
   constructor(
-    private readonly keyGenService: KeyGenService,
-    private readonly langchainSvc: LangchainService
+    private readonly keyGenSvc: KeyGenService,
+    private readonly langchainSvc: LangchainService,
   ) {}
+
+  /**
+   * Parse structured context from custom content type
+   */
+  private parseStructuredContext(contextString: string): any {
+    try {
+      // The context comes from the frontend's formatPageContextForAgent method
+      // Parse the [FRONTEND_CONTEXT] format
+      const match = contextString.match(/\[FRONTEND_CONTEXT\]([\s\S]*?)\[\/FRONTEND_CONTEXT\]/);
+      if (!match) return null;
+
+      const contextData = match[1];
+      const context: any = {};
+
+      // Parse the pipe-separated key:value pairs
+      const pairs = contextData.split('|');
+      for (const pair of pairs) {
+        const [key, value] = pair.split(':');
+        if (key && value) {
+          context[key.toLowerCase().trim()] = value.trim();
+        }
+      }
+
+      return context;
+    } catch (error) {
+      console.error('Error parsing structured context:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Process XMTP message and provide contextualized response
+   */
+  async processMessageWithContext(message: any, conversation: any): Promise<string> {
+    // Extract the sender's Ethereum address from the conversation
+    const senderAddress = await this.extractSenderAddress(message, conversation);
+
+    let cleanMessage: string;
+    let frontendContext: any = null;
+
+    // Check if this is a special agent message with encoded context
+    const messageText = message.content as string;
+    if (messageText && messageText.startsWith(AGENT_MESSAGE_PREFIX)) {
+
+      // Handle encoded agent message format: ⚡AGENT_CTX⚡{context}⚡END_CTX⚡{message}
+      const parts = messageText.split('⚡END_CTX⚡');
+      if (parts.length === 2) {
+        const contextPart = parts[0].replace(AGENT_MESSAGE_PREFIX, '');
+        cleanMessage = parts[1];
+
+        // Parse the structured context
+        frontendContext = this.parseStructuredContext(contextPart);
+
+        console.log('📨 Received encoded agent message:', {
+          message: cleanMessage,
+          hasContext: !!contextPart,
+          contextLength: contextPart.length
+        });
+      } else {
+        // Fallback if parsing fails
+        cleanMessage = messageText;
+        frontendContext = null;
+      }
+    } else {
+      // Handle legacy format - extract context from message text
+      const extracted = this.extractFrontendContext(messageText);
+      cleanMessage = extracted.cleanMessage;
+      frontendContext = extracted.frontendContext;
+
+      console.log('📨 Received legacy text message');
+    }
+
+    if (senderAddress) {
+      // Create contextualized message with network and page info
+      const contextualMessage = this.buildContextualMessage(cleanMessage, senderAddress, frontendContext);
+
+      console.log(`Processing message with context for ${senderAddress}:`, {
+        userAddress: senderAddress,
+        network: frontendContext?.network || 'unknown',
+        chainId: frontendContext?.chainid || 'unknown',
+        pageType: frontendContext?.page_type || 'unknown',
+        route: frontendContext?.route || 'unknown'
+      });
+
+      return await this.langchainSvc.ask(contextualMessage, message.conversationId);
+    }
+
+    // Fallback to original message if no context available
+    return await this.langchainSvc.ask(cleanMessage, message.conversationId);
+  }
+
+  /**
+   * Extract frontend context from message content and return clean message
+   */
+  extractFrontendContext(messageContent: string): { cleanMessage: string; frontendContext: any } {
+    try {
+      // Look for frontend context pattern: [FRONTEND_CONTEXT]...[/FRONTEND_CONTEXT]
+      const contextMatch = messageContent.match(/\[FRONTEND_CONTEXT\]([\s\S]*?)\[\/FRONTEND_CONTEXT\]/);
+
+      if (contextMatch) {
+        const contextString = contextMatch[1];
+        const cleanMessage = messageContent.replace(contextMatch[0], '').trim();
+
+        // Parse the context string
+        const contextParts = contextString.split('|').filter(part => part.trim());
+        const frontendContext: any = {};
+
+        for (const part of contextParts) {
+          if (part.includes(':')) {
+            const [key, value] = part.split(':');
+            frontendContext[key.toLowerCase()] = value;
+          }
+        }
+
+        // Determine if this is Sepolia or Mainnet based on network info
+        frontendContext.isSepoliaNetwork = frontendContext.network === 'sepolia' || frontendContext.chainid === '11155111';
+
+        return { cleanMessage, frontendContext };
+      }
+
+      return { cleanMessage: messageContent, frontendContext: null };
+    } catch (error) {
+      console.error('Error extracting frontend context:', error);
+      return { cleanMessage: messageContent, frontendContext: null };
+    }
+  }
+
+  /**
+   * Extract the sender's Ethereum address from XMTP message
+   */
+  async extractSenderAddress(message: any, conversation: any): Promise<string | null> {
+    try {
+      // Get conversation members to find the sender's address
+      const members = await conversation.members();
+      const sender = members.find((member: any) =>
+        member.inboxId === message.senderInboxId
+      );
+
+      if (sender && sender.accountIdentifiers && sender.accountIdentifiers.length > 0) {
+        // Return the Ethereum address (first account identifier)
+        return sender.accountIdentifiers[0].identifier.toLowerCase();
+      }
+    } catch (error) {
+      console.error('Error extracting sender address:', error);
+    }
+
+    return null;
+  }
+
+  /**
+   * Build a contextualized message with network and page info
+   */
+  buildContextualMessage(originalMessage: string, userAddress: string, frontendContext: any): string {
+    console.log('🔧 Building contextual message with:', {
+      userAddress,
+      frontendContext,
+      keys: frontendContext ? Object.keys(frontendContext) : 'no context'
+    });
+
+    // Build network information
+    const network = frontendContext?.network || 'unknown';
+    const chainId = frontendContext?.chainid || 'unknown';
+    const pageType = frontendContext?.page_type || 'unknown';
+    const route = frontendContext?.route || 'unknown';
+
+    console.log('📋 Context values extracted:', {
+      network,
+      chainId,
+      pageType,
+      route
+    });
+
+    // Create a context section with database guidance for the LLM
+    const tableSuffix = network === 'sepolia' || chainId === '11155111' ? '_sepolia' : '';
+    const contextSection = `
+[SYSTEM CONTEXT - User: ${userAddress}]
+- Network: ${network} (Chain ID: ${chainId})
+- Page: ${pageType} at ${route}
+- User Address: ${userAddress}
+- Database Tables: Use ethscriptions${tableSuffix}, listings${tableSuffix}, events${tableSuffix}, bids${tableSuffix}
+- REMINDER: For ownership questions, you MUST query the database using mcp__supabase__execute_sql
+- Timestamp: ${new Date().toISOString()}
+[END CONTEXT]
+
+User Message: ${originalMessage}`;
+
+    console.log('📤 Final contextual message:', contextSection);
+
+    return contextSection;
+  }
+
+  // ... rest of XMTP setup methods remain the same ...
 
   onModuleInit() {
     this.main().catch(console.error);
   }
 
   async main() {
-    console.log(`Creating client on the '${this.env}' network...`);
+    console.log(`Creating client on the '${process.env.XMTP_ENV || 'dev'}' network...`);
     const signerIdentifier = (await this.signer.getIdentifier()).identifier;
     const client = await Client.create(this.signer, {
       dbEncryptionKey: this.dbEncryptionKey,
-      env: this.env,
-      dbPath: this.getDbPath(this.env + '-' + signerIdentifier),
+      env: process.env.XMTP_ENV as XmtpEnv,
+      dbPath: this.getDbPath((process.env.XMTP_ENV || 'dev') + '-' + signerIdentifier),
       loggingLevel: process.env.LOGGING_LEVEL as LogLevel,
     });
     this.logAgentDetails(client);
@@ -81,15 +274,17 @@ export class AgentService implements OnModuleInit {
         continue;
       }
 
-      // Use the handleMessage method to process and respond
-      // const aiResponse = await this.openAISvc.generateResponse(message.content as string);
-
+      // Process message with context
       try {
-        const aiResponse = await this.langchainSvc.ask(
-          message.content as string,
-          message.conversationId
+        const aiResponse = await this.processMessageWithContext(
+          message,
+          conversation
         );
         await conversation.send(aiResponse);
+
+        // setInterval(async () => {
+        //   await conversation.send(`This is a test message ${new Date().toISOString()}`);
+        // }, 100000);
       } catch (error) {
         console.error(error);
         await conversation.send('There was an error processing your message. Please try again.');
@@ -131,21 +326,16 @@ export class AgentService implements OnModuleInit {
     };
   }
 
+  getEncryptionKeyFromHex(hex: string) {
+    /* Convert the hex string to an encryption key */
+    return fromHex(hex as `0x${string}`, 'bytes');
+  }
+
   generateEncryptionKeyHex() {
     /* Generate a random encryption key */
     const uint8Array = getRandomValues(new Uint8Array(32));
     /* Convert the encryption key to a hex string */
     return toHex(uint8Array);
-  }
-
-  /**
-   * Get the encryption key from a hex string
-   * @param hex - The hex string
-   * @returns The encryption key
-   */
-  getEncryptionKeyFromHex(hex: string) {
-    /* Convert the hex string to an encryption key */
-    return fromHex(hex as `0x${string}`, 'bytes');
   }
 
   getDbPath(description: string = 'xmtp') {
