@@ -16,7 +16,7 @@ import { AttributeItem } from '@/models/attributes';
 
 import { createClient, RealtimePostgresUpdatePayload, RealtimePostgresInsertPayload } from '@supabase/supabase-js'
 
-import { Observable, of, from, forkJoin, firstValueFrom, EMPTY, timer, merge, filter, share, catchError, debounceTime, expand, map, reduce, switchMap, takeWhile, tap, shareReplay } from 'rxjs';
+import { Observable, of, from, forkJoin, firstValueFrom, EMPTY, timer, merge, filter, share, catchError, debounceTime, expand, map, reduce, switchMap, takeWhile, tap, shareReplay, distinctUntilChanged, BehaviorSubject, combineLatest } from 'rxjs';
 
 import { environment } from '@environments/environment';
 
@@ -722,27 +722,73 @@ export class DataService {
         ...phunk,
         listing: listing?.listedBy.toLowerCase() === phunk.prevOwner?.toLowerCase() ? listing : null,
       })),
-      tap((phunk) => {
-        // console.log('fetchSinglePhunk', phunk);
-      }),
+      // tap((phunk) => console.log('fetchSinglePhunk', phunk)),
     );
 
-    return merge(
-      timer(0, 5000).pipe(
-        switchMap(() => fetch$),
-        takeWhile((phunk) => !phunk?.consensus, true)
-      ),
-      this.watchSinglePhunk(hashId).pipe(
-        switchMap(() => fetch$)
-      )
+        // Create a reactive polling system that starts/stops based on consensus
+    const initialFetch$ = fetch$;
+
+    // Create the polling observable that emits the latest phunk data
+    const pollingWithConsensusControl$ = initialFetch$.pipe(
+      switchMap((initialPhunk) => {
+        // console.log('Initial fetch - consensus:', initialPhunk?.consensus);
+
+        // Create a subject to track consensus state
+        const consensusSubject = new BehaviorSubject(initialPhunk?.consensus);
+
+        // Main data stream that includes both polling and real-time updates
+        const dataStream$ = merge(
+          // Periodic polling controlled by consensus state
+          consensusSubject.pipe(
+            distinctUntilChanged(),
+            switchMap((consensus) => {
+              if (consensus === true) {
+                // console.log('Consensus is true - stopping polling');
+                return EMPTY; // Stop polling when consensus is true
+              } else {
+                // console.log('Consensus is false/undefined - starting polling');
+                return timer(0, 1000).pipe(
+                  // tap(() => console.log('Polling tick at:', new Date().toISOString())),
+                  switchMap(() => fetch$)
+                );
+              }
+            })
+          ),
+          // Real-time updates for events
+          this.watchEventsByHashId(hashId).pipe(
+            debounceTime(300),
+            switchMap(() => fetch$)
+          )
+        ).pipe(
+          // Update consensus subject whenever we get new data
+          tap((phunk) => {
+            if (phunk?.consensus !== consensusSubject.value) {
+              // console.log('Consensus changed from', consensusSubject.value, 'to', phunk?.consensus);
+              consensusSubject.next(phunk?.consensus);
+            }
+          }),
+          distinctUntilChanged((prev: Phunk, curr: Phunk) =>
+            prev?.hashId === curr?.hashId &&
+            prev?.consensus === curr?.consensus &&
+            prev?.owner === curr?.owner &&
+            prev?.listing?.minValue === curr?.listing?.minValue
+          )
+        );
+
+        // Start with initial data, then continue with controlled stream
+        return merge(of(initialPhunk), dataStream$);
+      }),
+      share()
     );
+
+    return pollingWithConsensusControl$;
   }
 
   /**
    * Watches for changes to a single Phunk
    * @param hashId Token hash ID
    */
-  private watchSinglePhunk(hashId: string) {
+  private watchSinglePhunkByHashId(hashId: string) {
     return new Observable<void>((subscriber) => {
       const channel = supabase
         .channel(`ethscription_changes__${hashId}`)
@@ -768,11 +814,38 @@ export class DataService {
   }
 
   /**
+   * Watches for changes to events
+   * @param hashId Token hash ID
+   */
+  private watchEventsByHashId(hashId: string) {
+    return new Observable<void>((subscriber) => {
+      const channel = supabase
+        .channel(`events_changes__${hashId}`)
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'events' + this.suffix,
+            filter: `hashId=eq.${hashId}`
+          },
+          (payload: any) => {
+            subscriber.next();
+          }
+        )
+        .subscribe();
+
+      return () => {
+        channel.unsubscribe();
+      };
+    });
+  }
+
+  /**
    * Fetches data for an unsupported item
    * @param hashId Token hash ID
    */
   fetchUnsupportedItem(hashId: string): Observable<Phunk> {
-    console.log('fetchUnsupportedItem', hashId);
     const prefix = this.suffix.replace('_', '');
 
     const baseUrl = `https://ethscriptions-api${prefix ? ('-' + prefix) : ''}.flooredape.io`;

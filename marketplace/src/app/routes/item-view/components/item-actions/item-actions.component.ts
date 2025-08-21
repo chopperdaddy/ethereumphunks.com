@@ -6,7 +6,7 @@ import { HttpClient } from '@angular/common/http';
 
 import { Store } from '@ngrx/store';
 import { toObservable } from '@angular/core/rxjs-interop';
-import { filter, firstValueFrom, map, switchMap } from 'rxjs';
+import { filter, firstValueFrom, map, switchMap, tap } from 'rxjs';
 import { signTypedData } from '@wagmi/core';
 
 import { Phunk } from '@/models/db';
@@ -90,9 +90,9 @@ export class ItemActionsComponent {
 
   config$ = this.store.select(selectConfig);
   isCooling$ = this.store.select(selectCooldowns).pipe(
+    // tap((cooldowns) => console.log('isCooling$', cooldowns)),
     filter((cooldowns) => !!cooldowns),
     switchMap((cooldowns) => this.phunk$.pipe(
-      filter((phunk) => !!phunk),
       map((phunk) => cooldowns[phunk?.hashId || ''] > 0),
     )),
   );
@@ -457,7 +457,7 @@ export class ItemActionsComponent {
     }
   }
 
-  async transferPhunk(address?: string): Promise<void> {
+  async transferPhunk(): Promise<void> {
     const phunk = this.phunk();
     const hashId = phunk.hashId;
     if (!hashId) throw new Error('Invalid hashId');
@@ -473,8 +473,10 @@ export class ItemActionsComponent {
     };
 
     try {
-      let toAddress: string | null = address || this.transferAddress.value;
+      let toAddress: string | null = this.transferAddress.value;
+      console.log({toAddress});
       toAddress = await this.web3Svc.verifyAddressOrEns(toAddress);
+      console.log({toAddress});
       if (!toAddress) throw new Error('Invalid address');
 
       this.closeTransfer();

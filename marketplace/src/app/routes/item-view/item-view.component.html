@@ -61,7 +61,7 @@
               <!-- Actions -->
               <app-item-actions
                 [phunk]="phunk"
-                [class.disabled]="indexerIsBehind$ | async"
+                [class.disabled]="(indexerIsBehind$ | async) || !phunk.consensus"
               />
 
               @if (!(isMobile$ | async) && (config$ | async)?.comments) {

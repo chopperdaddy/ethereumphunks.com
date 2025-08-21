@@ -1,125 +1,122 @@
 @if ((walletAddress$ | async); as address) {
   @if (phunk(); as phunk) {
     @if (phunk.isSupported) {
-      @if (phunk.consensus) {
 
-        <!-- Escrow actions (Send) -->
-        @if ((config$ | async)?.auctions && !phunk.isAuctioned) {
-          @if ((phunk.owner | lowercase) === (address | lowercase)) {
-            <button class="send-to-auction-button" (click)="auctionAction()" [class.active]="actionsState().auction">
-              <span>Send to auction</span>
-              <ng-container *ngTemplateOutlet="pending; context:{ $implicit: 'sendToAuction' }" />
-            </button>
+      <!-- Escrow actions (Send) -->
+      @if ((config$ | async)?.auctions && !phunk.isAuctioned) {
+        @if ((phunk.owner | lowercase) === (address | lowercase)) {
+          <button class="send-to-auction-button" (click)="auctionAction()" [class.active]="actionsState().auction">
+            <span>Send to auction</span>
+            <ng-container *ngTemplateOutlet="pending; context:{ $implicit: 'sendToAuction' }" />
+          </button>
 
-            @if (actionsState().auction) {
-              <ng-container *ngTemplateOutlet="auctionForm; context:{ $implicit: phunk }" />
-            }
+          @if (actionsState().auction) {
+            <ng-container *ngTemplateOutlet="auctionForm; context:{ $implicit: phunk }" />
           }
         }
+      }
 
-        <!-- Buy button -->
-        @if (
-          phunk.listing &&
-          ((
-            phunk.isEscrowed &&
-            (phunk.prevOwner | lowercase) !== (address | lowercase)
-          ) || (
-            phunk.nft &&
-            phunk.nft.owner !== address
-          ))
-        ) {
-          <button class="buy" (click)="buyPhunk()">
-            <span>Buy</span>
-            <ng-container *ngTemplateOutlet="pending; context:{ $implicit: 'buyPhunk' }" />
-          </button>
+      <!-- Buy button -->
+      @if (
+        phunk.listing &&
+        ((
+          phunk.isEscrowed &&
+          (phunk.prevOwner | lowercase) !== (address | lowercase)
+        ) || (
+          phunk.nft &&
+          phunk.nft.owner !== address
+        ))
+      ) {
+        <button class="buy" (click)="buyPhunk()">
+          <span>Buy</span>
+          <ng-container *ngTemplateOutlet="pending; context:{ $implicit: 'buyPhunk' }" />
+        </button>
+      }
+
+      <!-- Sell (Ownership actions) -->
+      @if (
+        ((phunk.owner | lowercase) === (escrowAddress | lowercase) &&
+        (phunk.prevOwner | lowercase) === (address | lowercase)) ||
+        (phunk.owner | lowercase) === (address | lowercase) ||
+        (phunk.nft && phunk.nft.owner === address)
+      ) {
+        <button class="sell" (click)="sellAction()" [class.active]="actionsState().sell">
+          <span>Sell</span>
+          <ng-container *ngTemplateOutlet="pending; context:{ $implicit: 'offerPhunkForSale' }" />
+        </button>
+
+        <!-- Sell Actions -->
+        @if (actionsState().sell) {
+          <ng-container *ngTemplateOutlet="sellForm; context:{ $implicit: phunk }" />
         }
+      }
 
-        <!-- Sell (Ownership actions) -->
-        @if (
+      <!-- Escrow actions (Send) -->
+      @if (!phunk.isEscrowed && (phunk.owner | lowercase) === (address | lowercase)) {
+        <button class="send-to-escrow" (click)="escrowAction()" [class.active]="actionsState().escrow">
+          <span>Send to escrow</span>
+          <ng-container *ngTemplateOutlet="pending; context:{ $implicit: 'sendToEscrow' }" />
+        </button>
+
+        @if (actionsState().escrow) {
+          <ng-container *ngTemplateOutlet="escrowForm; context:{ $implicit: phunk }" />
+        }
+      }
+
+      <!-- Escrow actions (Withdraw) -->
+      @if (phunk.isEscrowed && (phunk.prevOwner | lowercase) === (address | lowercase)) {
+        <button class="withdraw" (click)="withdrawPhunk()">
+          <span>Withdraw from escrow</span>
+          <ng-container *ngTemplateOutlet="pending; context:{ $implicit: 'withdrawPhunk' }" />
+        </button>
+      }
+
+      <!-- Delist button -->
+      @if (
+        phunk.listing &&
+        ((
           ((phunk.owner | lowercase) === (escrowAddress | lowercase) &&
           (phunk.prevOwner | lowercase) === (address | lowercase)) ||
-          (phunk.owner | lowercase) === (address | lowercase) ||
-          (phunk.nft && phunk.nft.owner === address)
-        ) {
-          <button class="sell" (click)="sellAction()" [class.active]="actionsState().sell">
-            <span>Sell</span>
-            <ng-container *ngTemplateOutlet="pending; context:{ $implicit: 'offerPhunkForSale' }" />
-          </button>
+          (phunk.nft?.owner === address)
+        ) || (
+          phunk.nft &&
+          phunk.nft.owner === address
+        ))
+      ) {
+        <button class="sell" (click)="phunkNoLongerForSale()">
+          <span>Delist</span>
+          <ng-container *ngTemplateOutlet="pending; context:{ $implicit: 'phunkNoLongerForSale' }" />
+        </button>
+      }
 
-          <!-- Sell Actions -->
-          @if (actionsState().sell) {
-            <ng-container *ngTemplateOutlet="sellForm; context:{ $implicit: phunk }" />
-          }
+      <!-- Transfer -->
+      @if ((phunk.owner | lowercase) === (address | lowercase)) {
+        <button class="transfer" [class.active]="actionsState().transfer" (click)="transferAction()">
+          <span>Transfer</span>
+          <ng-container *ngTemplateOutlet="pending; context:{ $implicit: 'transferPhunk' }" />
+        </button>
+
+        <!-- Transfer actions -->
+        @if (actionsState().transfer) {
+          <ng-container *ngTemplateOutlet="transferForm; context:{ $implicit: phunk }" />
         }
+      }
 
-        <!-- Escrow actions (Send) -->
-        @if (!phunk.isEscrowed && (phunk.owner | lowercase) === (address | lowercase)) {
-          <button class="send-to-escrow" (click)="escrowAction()" [class.active]="actionsState().escrow">
-            <span>Send to escrow</span>
-            <ng-container *ngTemplateOutlet="pending; context:{ $implicit: 'sendToEscrow' }" />
-          </button>
+      <!-- Bridge button -->
+      <!-- @if ((owner | lowercase) === (address | lowercase)) {
+        <button class="bridge" [class.active]="bridgeActive" (click)="bridgePhunkAction()">
+          <span>Bridge</span>
+          <ng-container *ngTemplateOutlet="pending; context:{ $implicit: 'bridgePhunk' }" />
+        </button>
 
-          @if (actionsState().escrow) {
-            <ng-container *ngTemplateOutlet="escrowForm; context:{ $implicit: phunk }" />
-          }
+        @if (bridgeActive) {
+          <ng-container *ngTemplateOutlet="bridgeForm; context:{ $implicit: phunk }" />
         }
-
-        <!-- Escrow actions (Withdraw) -->
-        @if (phunk.isEscrowed && (phunk.prevOwner | lowercase) === (address | lowercase)) {
-          <button class="withdraw" (click)="withdrawPhunk()">
-            <span>Withdraw from escrow</span>
-            <ng-container *ngTemplateOutlet="pending; context:{ $implicit: 'withdrawPhunk' }" />
-          </button>
-        }
-
-        <!-- Delist button -->
-        @if (
-          phunk.listing &&
-          ((
-            ((phunk.owner | lowercase) === (escrowAddress | lowercase) &&
-            (phunk.prevOwner | lowercase) === (address | lowercase)) ||
-            (phunk.nft?.owner === address)
-          ) || (
-            phunk.nft &&
-            phunk.nft.owner === address
-          ))
-        ) {
-          <button class="sell" (click)="phunkNoLongerForSale()">
-            <span>Delist</span>
-            <ng-container *ngTemplateOutlet="pending; context:{ $implicit: 'phunkNoLongerForSale' }" />
-          </button>
-        }
-
-        <!-- Transfer -->
-        @if ((phunk.owner | lowercase) === (address | lowercase)) {
-          <button class="transfer" [class.active]="actionsState().transfer" (click)="transferAction()">
-            <span>Transfer</span>
-            <ng-container *ngTemplateOutlet="pending; context:{ $implicit: 'transferPhunk' }" />
-          </button>
-
-          <!-- Transfer actions -->
-          @if (actionsState().transfer) {
-            <ng-container *ngTemplateOutlet="transferForm; context:{ $implicit: phunk }" />
-          }
-        }
-
-        <!-- Bridge button -->
-        <!-- @if ((owner | lowercase) === (address | lowercase)) {
-          <button class="bridge" [class.active]="bridgeActive" (click)="bridgePhunkAction()">
-            <span>Bridge</span>
-            <ng-container *ngTemplateOutlet="pending; context:{ $implicit: 'bridgePhunk' }" />
-          </button>
-
-          @if (bridgeActive) {
-            <ng-container *ngTemplateOutlet="bridgeForm; context:{ $implicit: phunk }" />
-          }
-        } -->
-      } @else {
-        @if (!(isCooling$ | async)) {
-          <div class="notice">
-            <p>This {{ phunk.collection?.singleName }} does not have consensus with one or more indexers. <a href="https://x.com/etherphunks" target="_blank">Contact support</a> to resolve this issue.</p>
-          </div>
-        }
+      } -->
+      @if (!phunk.consensus && !(isCooling$ | async)) {
+        <div class="notice">
+          <p>This {{ phunk.collection?.singleName }} does not have consensus with one or more indexers. <a href="https://x.com/etherphunks" target="_blank">Contact support</a> to resolve this issue.</p>
+        </div>
       }
     }
   }
@@ -278,7 +275,7 @@
 
     <div class="form-actions">
       <button i18n type="reset" class="cancel" (click)="closeTransfer()">Cancel</button>
-      <button i18n type="submit" class="submit" (click)="transferPhunk(phunk)">Submit</button>
+      <button i18n type="submit" class="submit" (click)="transferPhunk()">Submit</button>
     </div>
   </form>
 </ng-template>

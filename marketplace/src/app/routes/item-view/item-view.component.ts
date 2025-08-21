@@ -1,11 +1,11 @@
 import { CommonModule } from '@angular/common';
 import { Router, ActivatedRoute, RouterModule } from '@angular/router';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { Component, signal } from '@angular/core';
+import { Component, signal, OnDestroy } from '@angular/core';
 
 import { Store } from '@ngrx/store';
 import { LazyLoadImageModule } from 'ng-lazyload-image';
-import { distinctUntilChanged, filter, fromEvent, map, shareReplay, switchMap } from 'rxjs';
+import { distinctUntilChanged, filter, fromEvent, map, shareReplay, switchMap, Subject, takeUntil, tap } from 'rxjs';
 
 import { PhunkBillboardComponent } from '@/components/phunk-billboard/phunk-billboard.component';
 import { TxHistoryComponent } from '@/components/tx-history/tx-history.component';
@@ -62,6 +62,7 @@ export class ItemViewComponent {
   explorerUrl = environment.explorerUrl;
 
   singlePhunk$ = this.route.params.pipe(
+    // tap((params: any) => console.log('ItemViewComponent', {params})),
     filter((params: any) => !!params.hashId),
     distinctUntilChanged((prev, curr) => prev.hashId === curr.hashId),
     switchMap((params: any) => this.dataSvc.fetchSinglePhunk(params.hashId)),
@@ -74,10 +75,7 @@ export class ItemViewComponent {
 
   config$ = this.store.select(appStateSelectors.selectConfig);
   isMobile$ = this.store.select(appStateSelectors.selectIsMobile);
-  indexerIsBehind$ = this.store.select(appStateSelectors.selectBlocksBehind).pipe(
-    filter((blocksBehind) => !!blocksBehind),
-    map((blocksBehind) => blocksBehind > 4),
-  );
+  indexerIsBehind$ = this.store.select(appStateSelectors.selectIndexerIsBehind);
 
   billboardExpanded = signal(false);
 
