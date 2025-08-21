@@ -527,3 +527,11 @@ form {
     height: auto;
   }
 }
+
+.transacting-disabled {
+  font-size: 1.2rem;
+  font-weight: normal;
+  color: rgba(var(--text-color), .75);
+  padding: 1rem;
+  text-align: center;
+}

@@ -143,12 +143,7 @@
 
 <app-slideout [active]="!!(slideoutActive$ | async)">
 
-  @if (blocksBehind$ | async) {
-    <div class="transacting-disabled">
-      <h2 i18n>Transacting Disabled</h2>
-      <p i18n>Transacting is disabled until indexer catches up.</p>
-    </div>
-  }
+  @let indexerIsBehind = (indexerIsBehind$ | async);
 
   @if (isListingBulk) {
     <form [formGroup]="bulkActionsForm" class="list">
@@ -195,7 +190,7 @@
 
       <div class="form-actions">
         <button type="reset" (click)="closeSlideout()">Cancel</button>
-        <button type="submit" (click)="submitBatchListing()">List All</button>
+        <button type="submit" (click)="submitBatchListing()" [class.disabled]="indexerIsBehind">List All</button>
       </div>
     </form>
   } @else if (isTransferingBulk) {
@@ -227,7 +222,7 @@
 
         <div class="form-actions">
           <button type="reset" (click)="closeSlideout()">Cancel</button>
-          <button type="submit" (click)="submitBatchTransfer()">Transfer All</button>
+          <button type="submit" (click)="submitBatchTransfer()" [class.disabled]="indexerIsBehind">Transfer All</button>
         </div>
       }
     </form>
@@ -254,7 +249,7 @@
       @if (bulkActionsForm.value.escrowPhunks?.length) {
         <div class="form-actions">
           <button type="reset" (click)="closeSlideout()">Cancel</button>
-          <button type="submit" (click)="submitBatchEscrow()">Escrow All</button>
+          <button type="submit" (click)="submitBatchEscrow()" [class.disabled]="indexerIsBehind">Escrow All</button>
         </div>
       }
     </form>
@@ -281,7 +276,7 @@
       @if (bulkActionsForm.value.withdrawPhunks?.length) {
         <div class="form-actions">
           <button type="reset" (click)="closeSlideout()">Cancel</button>
-          <button type="submit" (click)="submitBatchWithdraw()">Withdraw All</button>
+          <button type="submit" (click)="submitBatchWithdraw()" [class.disabled]="indexerIsBehind">Withdraw All</button>
         </div>
       }
     </form>
@@ -335,7 +330,7 @@
       @if (bulkActionsForm.value.buyPhunks?.length) {
         <div class="form-actions">
           <button type="reset" (click)="closeSlideout()">Cancel</button>
-          <button type="submit" (click)="submitBatchBuy()">Buy All</button>
+          <button type="submit" (click)="submitBatchBuy()" [class.disabled]="indexerIsBehind">Buy All</button>
         </div>
       } @else {
         <div class="form-actions">
@@ -343,6 +338,12 @@
         </div>
       }
     </form>
+  }
+
+  @if (indexerIsBehind) {
+    <div class="transacting-disabled">
+      <p i18n>Transacting is disabled until indexer catches up.</p>
+    </div>
   }
 </app-slideout>
 

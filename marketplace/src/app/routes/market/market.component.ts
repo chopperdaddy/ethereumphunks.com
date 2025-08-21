@@ -147,10 +147,7 @@ export class MarketComponent {
     tap((sort: any) => this.activeSortModel = sort)
   );
 
-  blocksBehind$ = this.store.select(appStateSelectors.selectBlocksBehind).pipe(
-    filter((blocksBehind) => !!blocksBehind),
-    map((blocksBehind) => true)
-  );
+  indexerIsBehind$ = this.store.select(appStateSelectors.selectIndexerIsBehind);
 
   advancedMode$ = this.store.select(appStateSelectors.selectAdvancedMode);
   usd$ = this.store.select(dataStateSelectors.selectUsd);
@@ -235,7 +232,7 @@ export class MarketComponent {
     this.bulkActionsForm.setControl('transferPhunks', formArray);
     this.selectedPhunksFormArray = this.bulkActionsForm.get('transferPhunks') as FormArray;
 
-    setTimeout(() => this.transferAddressInput.nativeElement.focus(), 0);
+    setTimeout(() => this.transferAddressInput.nativeElement.focus(), 100);
   }
 
   /**

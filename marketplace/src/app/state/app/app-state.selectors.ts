@@ -94,6 +94,11 @@ export const selectBlocksBehind = createSelector(
   (appState: AppState) => appState.blocksBehind
 );
 
+export const selectIndexerIsBehind = createSelector(
+  selectAppState,
+  (appState: AppState) => appState.blocksBehind > 3
+);
+
 export const selectUserPoints = createSelector(
   selectAppState,
   (appState: AppState) => appState.userPoints
