@@ -41,6 +41,7 @@ export class DataService {
   walletAddress$ = this.store.select(state => state.appState.walletAddress);
 
   private attributeCache = new Map<string, Observable<AttributeItem | null>>();
+  private rarityCache = new Map<string, { [key: string]: number }>();
 
   constructor(
     @Inject(Web3Service) private web3Svc: Web3Service,
@@ -171,6 +172,20 @@ export class DataService {
   }
 
   /**
+   * Gets rarity data for a collection
+   * @param slug Collection slug
+   */
+  async getRarityData(slug: string): Promise<{ [key: string]: number } | null> {
+    if (!this.rarityCache.has(slug)) {
+      const rarity = await this.storageSvc.getItem<{ [key: string]: number }>(`${slug}__rarity`);
+      if (rarity) {
+        this.rarityCache.set(slug, rarity);
+      }
+    }
+    return this.rarityCache.get(slug)!;
+  }
+
+  /**
    * Fetches attributes for a collection from the static URL
    * @param slug Collection slug
    */
@@ -191,7 +206,7 @@ export class DataService {
   }
 
   /**
-   * Creates filters for a collection
+   * Creates filters for a collection and generates rarity data
    * @param slug Collection slug
    * @param attributes Attributes
    */
@@ -260,7 +275,7 @@ export class DataService {
     });
 
     // Convert the Map of Sets into a plain object with arrays
-    const attributeObject: { [key: string]: string[] } = {};
+    const attributeObject: { [key: string]: string[] | number[] } = {};
     attributeMap.forEach((values, key) => {
       // Sort values by frequency (most common first)
       const sortedValues = Array.from(values).sort((a, b) => {
@@ -269,8 +284,11 @@ export class DataService {
         return freqB - freqA; // Sort in descending order of frequency
       });
 
+      // Check if all values in the set are numbers
+      const allNumbers = Array.from(values).every(value => typeof value === 'number');
+
       // Add "none" option if the attribute isn't present in all items
-      if (totalAttributeCount.get(key) !== totalItems) {
+      if (totalAttributeCount.get(key) !== totalItems && !allNumbers) {
         sortedValues.unshift('none');
       }
 
@@ -279,11 +297,26 @@ export class DataService {
 
     // Add trait count filter options
     const sortedTraitCounts = Array.from(traitCounts).sort((a, b) => a - b);
-    attributeObject['trait_count'] = sortedTraitCounts.map(count => count.toString());
+    attributeObject['trait_count'] = sortedTraitCounts.map(count => count);
 
-    // Store the filters object in local storage and return it
-    const stored = await this.storageSvc.setItem(`${slug}__filters`, attributeObject);
-    return stored;
+    // Generate rarity data from value frequencies
+    const rarityData: { [key: string]: number } = {};
+    valueFrequency.forEach((valueMap, attributeKey) => {
+      valueMap.forEach((count, value) => {
+        rarityData[value] = count;
+      });
+    });
+
+    // Store both the filters object and rarity data in local storage
+    const [storedFilters, storedRarity] = await Promise.all([
+      this.storageSvc.setItem(`${slug}__filters`, attributeObject),
+      this.storageSvc.setItem(`${slug}__rarity`, rarityData)
+    ]);
+
+    // Cache rarity data in memory for synchronous access
+    this.rarityCache.set(slug, rarityData);
+
+    return { storedFilters, storedRarity };
   }
 
   /**

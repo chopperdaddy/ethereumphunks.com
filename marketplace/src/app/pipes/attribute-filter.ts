@@ -40,13 +40,26 @@ export class AttributeFilterPipe implements PipeTransform {
 
     // Handle trait count filter if present
     if (traitCountFilter !== undefined) {
-      const traitCount = Number(traitCountFilter);
       filtered = filtered.filter((res) => {
         if (!res.attributes) return false;
         // Count only traits (exclude Name, Description, and Sex)
         const actualTraitCount = res.attributes.filter(attr =>
           !ignoredTraitFiltersForCounts[slug]?.includes(attr.k)
         ).length;
+
+        // Check if it's a range filter (e.g., "3-7")
+        if (typeof traitCountFilter === 'string' && traitCountFilter.includes('-')) {
+          const [minStr, maxStr] = traitCountFilter.split('-');
+          const min = parseInt(minStr, 10);
+          const max = parseInt(maxStr, 10);
+
+          if (!isNaN(min) && !isNaN(max)) {
+            return actualTraitCount >= min && actualTraitCount <= max;
+          }
+        }
+
+        // Handle exact match (backwards compatible)
+        const traitCount = Number(traitCountFilter);
         return actualTraitCount === traitCount;
       });
     }
@@ -69,7 +82,23 @@ export class AttributeFilterPipe implements PipeTransform {
             return !attribute;
           }
 
-          // Handle regular case
+          // Handle range filters for numeric attributes (e.g., "1-10")
+          if (typeof value === 'string' && value.includes('-') && value.match(/^\d+-\d+$/)) {
+            const [minStr, maxStr] = value.split('-');
+            const min = parseInt(minStr, 10);
+            const max = parseInt(maxStr, 10);
+
+            if (!isNaN(min) && !isNaN(max) && attribute?.v) {
+              const attributeValue = parseInt(attribute.v.toString(), 10);
+              if (!isNaN(attributeValue)) {
+                return attributeValue >= min && attributeValue <= max;
+              }
+            }
+            // If parsing fails, fall back to exact string match
+            return attribute?.v === value;
+          }
+
+          // Handle regular exact match case
           return attribute?.v === value;
         });
       });

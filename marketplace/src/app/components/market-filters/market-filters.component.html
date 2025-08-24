@@ -1,7 +1,48 @@
 @if (activeTraitFilters$ | async; as filters) {
   @for (key of objectKeys(filterData()); track key; let i = $index) {
 
-    @if (!(filterData()[key][0] | isNumber)) {
+    @if (isNumericFilter(key)) {
+      <!-- Numeric Range Slider -->
+      <div
+        [id]="key"
+        class="filter-group-wrapper range-filter">
+
+        <label class="range-label">
+          {{ key === 'trait_count' ? 'Trait Count' : (key | titlecase) }}
+          @if (rangeFilters[key]) {
+            <span class="range-values">
+              ({{ rangeFilters[key].selectedMin }}-{{ rangeFilters[key].selectedMax }})
+            </span>
+          }
+        </label>
+
+        @if (rangeFilters[key]) {
+          <div class="range-inputs">
+            <input
+              type="range"
+              class="range-slider min-slider"
+              [min]="rangeFilters[key].min"
+              [max]="rangeFilters[key].max"
+              [(ngModel)]="rangeFilters[key].selectedMin"
+              (input)="onRangeChange(key, 'min', +$any($event.target).value)">
+
+            <input
+              type="range"
+              class="range-slider max-slider"
+              [min]="rangeFilters[key].min"
+              [max]="rangeFilters[key].max"
+              [(ngModel)]="rangeFilters[key].selectedMax"
+              (input)="onRangeChange(key, 'max', +$any($event.target).value)">
+          </div>
+
+          <div class="range-labels">
+            <span class="min-label">{{ rangeFilters[key].min }}</span>
+            <span class="max-label">{{ rangeFilters[key].max }}</span>
+          </div>
+        }
+      </div>
+    } @else {
+      <!-- Regular Select Dropdown -->
       <div
         [id]="key"
         class="filter-group-wrapper">
@@ -14,11 +55,9 @@
           (change)="selectFilter($event)">
 
           @for (item of filterData()[key]; track item) {
-            @if (!(item | isNumber)) {
-              <ng-option [value]="item">
-                {{ item.toString() | titlecase }}
-              </ng-option>
-            }
+            <ng-option [value]="item">
+              {{ item.toString() | titlecase }}
+            </ng-option>
           }
         </ng-select>
       </div>
