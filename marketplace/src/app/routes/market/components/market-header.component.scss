@@ -75,6 +75,7 @@
   }
 
   @media (max-width: $mobile) {
+    grid-template-columns: 1fr;
     .left {
       h1 {
         font-size: 3rem;
