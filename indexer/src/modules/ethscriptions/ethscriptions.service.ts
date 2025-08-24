@@ -68,7 +68,7 @@ export class EthscriptionsService {
 
       // Check if its a duplicate (already been inscribed)
       const isDuplicate = await this.storageSvc.checkEthscriptionExistsBySha(sha);
-      if (isDuplicate) return
+      if (isDuplicate) return;
 
       Logger.debug('Processing new ethscription', transaction.hash);
       const event = await this.processEthscriptionCreationEvent(transaction as Transaction, createdAt, attributesData);
