@@ -1,0 +1,69 @@
+.ngx-slider {
+  margin: 2rem 0 1.5rem 0 !important;
+
+  // border: 1px solid red;
+
+  .ngx-slider-pointer {
+    border-radius: 0 !important;
+    background-color: rgba(var(--highlight), 1) !important;
+
+    transform: scale(.6) !important;
+    transform-origin: 0% 50% !important;
+
+    &:after {
+      display: none;
+    }
+  }
+
+  .ngx-slider-bar {
+    border-radius: 0 !important;
+    background-color: rgba(var(--highlight), 0.2) !important;
+    margin: 0 !important;
+    padding-top: 0.35rem !important;
+    padding-bottom: 0.35rem !important;
+  }
+
+  .ngx-slider-pointer-min {
+    // border: 1px solid green;
+  }
+
+  .ngx-slider-pointer-max {
+    // border: 1px solid yellow;
+  }
+
+  .ngx-slider-bubble {
+    color: rgba(var(--highlight), 1) !important;
+  }
+
+  .ngx-slider-floor {
+    // border: 1px solid purple;
+  }
+
+  .ngx-slider-ceil {
+    // border: 1px solid pink;
+  }
+
+  .ngx-slider-model-value {
+    // border: 1px solid brown;
+  }
+}
+
+
+// ngx-slider class is applied to the ngx-slider element
+// ngx-slider-pointer class is applied to slider pointers:
+// ngx-slider-pointer-min is applied to low pointer
+// ngx-slider-pointer-max is applied to high pointer
+// ngx-slider-bubble class is applied to all labels:
+// ngx-slider-floor class is applied to floor label
+// ngx-slider-ceil class is applied to ceil label
+// ngx-slider-model-value class is applied to low pointer label
+// ngx-slider-model-high class is applied to high pointer label
+// ngx-slider-combined class is appied to combined label
+// ngx-slider-bar class is applied to all bar elements:
+// no additional class is applied to full bar
+// ngx-slider-selection is applied to selection bar
+// ngx-slider-left-out-selection is applied to left outer selection bar
+// ngx-slider-right-out-selection is applied to right outer selection bar
+// ngx-slider-tick class is applied to each tick element:
+// ngx-slider-tick-value is applied to tick value label
+// ngx-slider-tick-legend is applied to tick legend label

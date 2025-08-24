@@ -1,75 +1,86 @@
 @if (activeTraitFilters$ | async; as filters) {
-  @for (key of objectKeys(filterData()); track key; let i = $index) {
+  <!-- Combined Filters Section -->
+  <div class="filters-section">
+    @for (key of objectKeys(filterData()); track key; let i = $index) {
+      @if (!isNumericFilter(key)) {
+        <!-- Regular Select Dropdown -->
+        <div
+          [id]="key"
+          class="filter-group-wrapper">
 
-    @if (isNumericFilter(key)) {
-      <!-- Numeric Range Slider -->
-      <div
-        [id]="key"
-        class="filter-group-wrapper range-filter">
+          <ng-select
+            [(ngModel)]="activeTraitFilters[key]"
+            [placeholder]="key === 'trait_count' ? 'Trait Count' : key"
+            [searchable]="true"
+            [class.active]="filters[key]"
+            (change)="selectFilter($event)">
 
-        <label class="range-label">
-          {{ key === 'trait_count' ? 'Trait Count' : (key | titlecase) }}
-          @if (rangeFilters[key]) {
-            <span class="range-values">
-              ({{ rangeFilters[key].selectedMin }}-{{ rangeFilters[key].selectedMax }})
+            @for (item of filterData()[key]; track item) {
+              <ng-option [value]="item">
+                {{ item.toString() | titlecase }}
+              </ng-option>
+            }
+          </ng-select>
+        </div>
+      } @else {
+        <!-- Individual Numeric Filter Dropdown -->
+        <div class="filter-group-wrapper numeric-dropdown-wrapper">
+          <div
+            class="numeric-dropdown-trigger"
+            [class.active]="isNumericDropdownOpen(key) || isNumericFilterActive(key)"
+            (click)="toggleNumericFilter(key)">
+
+            <span class="dropdown-label">
+              {{ key === 'trait_count' ? 'Trait Count' : (key | titlecase) }}
+              @if (rangeFilters[key]) {
+                <span class="range-values">
+                  ({{ rangeFilters[key].selectedMin }}-{{ rangeFilters[key].selectedMax }})
+                </span>
+              }
             </span>
-          }
-        </label>
 
-        @if (rangeFilters[key]) {
-          <div class="range-inputs">
-            <input
-              type="range"
-              class="range-slider min-slider"
-              [min]="rangeFilters[key].min"
-              [max]="rangeFilters[key].max"
-              [(ngModel)]="rangeFilters[key].selectedMin"
-              (input)="onRangeChange(key, 'min', +$any($event.target).value)">
-
-            <input
-              type="range"
-              class="range-slider max-slider"
-              [min]="rangeFilters[key].min"
-              [max]="rangeFilters[key].max"
-              [(ngModel)]="rangeFilters[key].selectedMax"
-              (input)="onRangeChange(key, 'max', +$any($event.target).value)">
+            <div class="numeric-dropdown-trigger-content">
+              @if (isNumericFilterActive(key)) {
+                <span class="numeric-dropdown-trigger-close" (click)="removeNumericFilter(key); $event.stopPropagation()">×</span>
+              }
+              <span class="dropdown-arrow" [class.rotated]="isNumericDropdownOpen(key)">
+                ▼
+              </span>
+            </div>
           </div>
 
-          <div class="range-labels">
-            <span class="min-label">{{ rangeFilters[key].min }}</span>
-            <span class="max-label">{{ rangeFilters[key].max }}</span>
-          </div>
-        }
-      </div>
-    } @else {
-      <!-- Regular Select Dropdown -->
-      <div
-        [id]="key"
-        class="filter-group-wrapper">
+          @if (isNumericDropdownOpen(key)) {
+            <div class="numeric-dropdown-content">
+              <!-- Numeric Range Slider -->
+              <div
+                [id]="key"
+                class="range-filter">
 
-        <ng-select
-          [(ngModel)]="activeTraitFilters[key]"
-          [placeholder]="key === 'trait_count' ? 'Trait Count' : key"
-          [searchable]="true"
-          [class.active]="filters[key]"
-          (change)="selectFilter($event)">
-
-          @for (item of filterData()[key]; track item) {
-            <ng-option [value]="item">
-              {{ item.toString() | titlecase }}
-            </ng-option>
+                @if (rangeFilters[key]) {
+                  <ngx-slider
+                    [value]="rangeFilters[key].selectedMin"
+                    [highValue]="rangeFilters[key].selectedMax"
+                    [options]="getSliderOptions(key)"
+                    (userChangeEnd)="onSliderChange(key, $event)">
+                  </ngx-slider>
+                }
+              </div>
+            </div>
           }
-        </ng-select>
+        </div>
+      }
+    }
+
+    <!-- Clear Filters Button -->
+    @if (objectKeys(activeTraitFilters).length) {
+      <div class="filter-group-wrapper clear-filters-wrapper">
+        <button
+          class="clear-filters"
+          (click)="clearFilters()">
+
+          Clear Filters
+        </button>
       </div>
     }
-  }
-
-  @if (objectKeys(activeTraitFilters).length) {
-    <button
-      class="clear-filters"
-      (click)="clearFilters()">
-
-      Clear Filters
-    </button>
-  }
+  </div>
 }

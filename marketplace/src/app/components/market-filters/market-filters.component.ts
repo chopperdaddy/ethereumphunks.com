@@ -3,23 +3,29 @@ import { FormsModule } from '@angular/forms';
 import { HttpParams } from '@angular/common/http';
 import { CommonModule, Location, TitleCasePipe } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
+
 import { Store } from '@ngrx/store';
+import { Actions, ofType } from '@ngrx/effects';
+
 import { NgSelectModule } from '@ng-select/ng-select';
+import { NgxSliderModule, Options, ChangeContext } from '@angular-slider/ngx-slider';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { filter, tap, debounceTime, Subject, Subscription } from 'rxjs';
 
 import { DataService } from '@/services/data.service';
 import { GlobalState } from '@/models/global-state';
 
+import * as appStateActions from '@/state/app/app-state.actions';
 import { setActiveTraitFilters } from '@/state/market/market-state.actions';
 import { selectActiveTraitFilters } from '@/state/market/market-state.selectors';
 
-import { filter, tap, debounceTime, Subject, Subscription } from 'rxjs';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 @Component({
   standalone: true,
   imports: [
     CommonModule,
     FormsModule,
     NgSelectModule,
+    NgxSliderModule,
     TitleCasePipe,
   ],
   selector: 'app-market-filters',
@@ -38,13 +44,17 @@ export class MarketFiltersComponent implements OnDestroy {
   activeTraitFilters: any = {};
   rangeFilters: { [key: string]: { min: number; max: number; selectedMin: number; selectedMax: number } } = {};
 
+  // Toggle state for individual numeric filter dropdowns
+  numericDropdownStates: { [key: string]: boolean } = {};
+
   // Debouncing for range slider changes
   private rangeChangeSubject = new Subject<{ key: string; type: 'min' | 'max'; value: number }>();
   private rangeChangeSubscription?: Subscription;
+
+  // Active trait filters from store
   activeTraitFilters$ = this.store.select(selectActiveTraitFilters).pipe(
     filter((filters) => !!filters),
     tap((filters) => {
-      console.log('filters', filters);
       const newFilters = { ...filters };
       delete newFilters.address;
       this.activeTraitFilters = { ...newFilters };
@@ -57,6 +67,7 @@ export class MarketFiltersComponent implements OnDestroy {
     private location: Location,
     private router: Router,
     private route: ActivatedRoute,
+    private actions$: Actions,
   ) {
     // Set up debounced range change handling
     this.rangeChangeSubscription = this.rangeChangeSubject.pipe(
@@ -64,6 +75,30 @@ export class MarketFiltersComponent implements OnDestroy {
       takeUntilDestroyed()
     ).subscribe(({ key, type, value }) => {
       this.applyRangeChange(key, type, value);
+    });
+
+    // Listen to global mouseDown actions to close dropdowns when clicking outside
+    this.actions$.pipe(
+      ofType(appStateActions.mouseDown),
+      takeUntilDestroyed()
+    ).subscribe((action) => {
+      const target = action.event.target as HTMLElement;
+
+      // Check if any dropdowns are open
+      const hasOpenDropdowns = Object.values(this.numericDropdownStates).some(isOpen => isOpen);
+
+      if (hasOpenDropdowns) {
+        // Check if click was on a dropdown trigger (to allow toggling)
+        const isDropdownTrigger = target.closest('.numeric-dropdown-trigger');
+
+        // Check if click was inside any dropdown content
+        const isInsideDropdownContent = target.closest('.numeric-dropdown-content');
+
+        // Close dropdowns if click was not on trigger or inside dropdown content
+        if (!isDropdownTrigger && !isInsideDropdownContent) {
+          this.closeAllNumericDropdowns();
+        }
+      }
     });
 
     effect(async () => {
@@ -85,6 +120,12 @@ export class MarketFiltersComponent implements OnDestroy {
         this.filterData.set({});
       }
     });
+  }
+
+  ngOnDestroy(): void {
+    // Clean up subscriptions to prevent memory leaks
+    this.rangeChangeSubscription?.unsubscribe();
+    this.rangeChangeSubject.complete();
   }
 
   selectFilter($event: any): void {
@@ -140,20 +181,38 @@ export class MarketFiltersComponent implements OnDestroy {
     });
   }
 
-    // Handle range slider changes (debounced)
-  onRangeChange(key: string, type: 'min' | 'max', value: number): void {
-    if (this.rangeFilters[key]) {
+  // Get slider options for ngx-slider
+  getSliderOptions(key: string): Options {
+    const range = this.rangeFilters[key];
+    if (!range) return {};
+
+    return {
+      floor: range.min,
+      ceil: range.max,
+      step: 1,
+      noSwitching: true,
+      animate: false,
+      showTicks: false,
+      showTicksValues: false,
+      showSelectionBar: true,
+      hideLimitLabels: true,
+      hidePointerLabels: false,
+      stepsArray: undefined,
+      translate: (value: number): string => value.toString()
+    };
+  }
+
+  // Handle slider changes from ngx-slider
+  onSliderChange(key: string, changeContext: ChangeContext): void {
+    if (this.rangeFilters[key] && changeContext.value !== undefined && changeContext.highValue !== undefined) {
       const range = this.rangeFilters[key];
 
-      // Update the local state immediately for responsive UI
-      if (type === 'min') {
-        range.selectedMin = Math.min(value, range.selectedMax);
-      } else {
-        range.selectedMax = Math.max(value, range.selectedMin);
-      }
+      // Update the range values
+      range.selectedMin = changeContext.value;
+      range.selectedMax = changeContext.highValue;
 
-      // Send to debounced subject instead of applying immediately
-      this.rangeChangeSubject.next({ key, type, value });
+      // Send to debounced subject for processing
+      this.rangeChangeSubject.next({ key, type: 'min', value: changeContext.value });
     }
   }
 
@@ -176,6 +235,40 @@ export class MarketFiltersComponent implements OnDestroy {
     }
   }
 
+  // Toggle individual numeric filter dropdown
+  toggleNumericFilter(key: string): void {
+    this.numericDropdownStates[key] = !this.numericDropdownStates[key];
+  }
+
+  // Check if a specific numeric filter dropdown is open
+  isNumericDropdownOpen(key: string): boolean {
+    return !!this.numericDropdownStates[key];
+  }
+
+  // Check if a specific numeric filter is active
+  isNumericFilterActive(key: string): boolean {
+    const range = this.rangeFilters[key];
+    return range && (range.selectedMin > range.min || range.selectedMax < range.max);
+  }
+
+  removeNumericFilter(key: string): void {
+    delete this.activeTraitFilters[key];
+
+    // Reset the range filter values to full range
+    if (this.rangeFilters[key]) {
+      const range = this.rangeFilters[key];
+      range.selectedMin = range.min;
+      range.selectedMax = range.max;
+    }
+
+    this.selectFilter(null);
+  }
+
+  // Close all numeric filter dropdowns
+  closeAllNumericDropdowns(): void {
+    this.numericDropdownStates = {};
+  }
+
   clearFilters() {
     const activeParams = this.route.snapshot.queryParams;
     const newParams = activeParams.address ? { address: activeParams.address } : {};
@@ -187,12 +280,9 @@ export class MarketFiltersComponent implements OnDestroy {
       range.selectedMax = range.max;
     });
 
-    this.router.navigate([], { queryParams: newParams });
-  }
+    // Close all numeric filter dropdowns
+    this.closeAllNumericDropdowns();
 
-  ngOnDestroy(): void {
-    // Clean up subscriptions to prevent memory leaks
-    this.rangeChangeSubscription?.unsubscribe();
-    this.rangeChangeSubject.complete();
+    this.router.navigate([], { queryParams: newParams });
   }
 }

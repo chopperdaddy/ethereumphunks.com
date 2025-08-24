@@ -1,6 +1,7 @@
 @charset 'UTF-8';
 
 @use '@ng-select/ng-select/scss/default.theme' as ng-select-theme;
+@use 'ngx-slider/scss/ngx-slider.scss';
 @use 'tippy.js/dist/tippy.css' as tippy-base;
 @use 'tippy.js/themes/translucent.css';
 @use 'tippy.js/animations/shift-away-subtle.css';
@@ -36,6 +37,9 @@
 @use './components/_tippy' as tippy-custom;
 @use './components/_app-address';
 @use './components/_chat';
+@use './components/_sliders';
 
 // 6. Themes
 @use './themes/_default';
+
+

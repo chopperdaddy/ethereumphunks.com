@@ -119,6 +119,7 @@ export default defineConfig(({ command, mode }) => {
           __dirname,
           "node_modules/@ng-select/ng-select"
         ),
+        "ngx-slider": resolve(__dirname, "node_modules/@angular-slider/ngx-slider"),
         qrcode: resolve(__dirname, "node_modules/qrcode/lib/browser.js"),
         "tippy.js": resolve(__dirname, "node_modules/tippy.js"),
       },
