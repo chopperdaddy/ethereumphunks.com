@@ -19,7 +19,7 @@
                 <ng-select
                   class="sort"
                   [(ngModel)]="activeSortModel"
-                  [items]="sorts"
+                  [items]="sorts()"
                   (change)="setSort($event)"
                   [searchable]="false"
                   [clearable]="false"

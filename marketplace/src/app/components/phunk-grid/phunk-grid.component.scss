@@ -11,6 +11,24 @@
     position: relative;
     width: 100%;
 
+    .rank-wrapper {
+      position: absolute;
+      top: .2rem;
+      left: .2rem;
+      z-index: 1;
+
+      background-color: rgba(var(--highlight), 1);
+
+      .rank {
+        font-family: var(--secondary-font-stack);
+        font-size: 1.1rem;
+        font-weight: normal;
+        color: rgba(var(--background), 1);
+
+        padding: .15rem;
+      }
+    }
+
     .owned-label {
       position: absolute;
 

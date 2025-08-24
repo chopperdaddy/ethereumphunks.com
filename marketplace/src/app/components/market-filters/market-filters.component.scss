@@ -165,7 +165,7 @@
 
   @media (max-width: $mobile) {
     .filters-section {
-      grid-template-columns: repeat(2, 1fr);
+      grid-template-columns: 1fr;
       gap: 1rem;
     }
 

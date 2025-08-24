@@ -95,6 +95,17 @@
         </div>
 
         @if (showLabels && viewType === 'market') {
+
+          @if (activeSort === 'rank-high' || activeSort === 'rank-low') {
+            @if (phunk | rank; as rankData) {
+              @if (rankData.value) {
+                <div class="rank-wrapper" [style.background-color]="rankData.color">
+                  <div class="rank">{{ rankData.value }}</div>
+                </div>
+              }
+            }
+          }
+
           <div class="labels-wrapper">
             <div class="label">#{{ phunk.tokenId }}</div>
 

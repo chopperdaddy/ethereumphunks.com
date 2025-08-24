@@ -1,4 +1,4 @@
-import { Component, ElementRef, ViewChild } from '@angular/core';
+import { Component, ElementRef, signal, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterModule } from '@angular/router';
 import { FormArray, FormBuilder, FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
@@ -13,7 +13,7 @@ import { PhunkGridComponent } from '@/components/phunk-grid/phunk-grid.component
 import { MarketFiltersComponent } from '@/components/market-filters/market-filters.component';
 import { SlideoutComponent } from '@/components/slideout/slideout.component';
 
-import { Sorts } from '@/models/pipes';
+import { Sort, Sorts } from '@/models/pipes';
 
 import { GlobalState, Notification, TraitFilter } from '@/models/global-state';
 import { Phunk } from '@/models/db';
@@ -37,6 +37,7 @@ import { upsertNotification } from '@/state/notification/notification.actions';
 import { environment } from '@environments/environment';
 
 import { filter, map, tap } from 'rxjs';
+import { MarketType } from '@/models/market.state';
 
 const defaultActionState = {
   canList: false,
@@ -78,14 +79,16 @@ export class MarketComponent {
 
   escrowAddress = environment.marketAddress;
 
-  sorts: { label: string, value: Sorts }[] = [
+  sorts = signal<{ label: string, value: Sorts }[]>([
     { label: 'Price Low', value: 'price-low' },
     { label: 'Price High', value: 'price-high' },
-    // { label: 'Recent', value: 'recent' },
-    { label: 'Token ID', value: 'id' },
+    { label: 'Rank High', value: 'rank-high' },
+    { label: 'Rank Low', value: 'rank-low' },
     { label: 'Recently Listed', value: 'recently-listed' },
-  ];
-  activeSortModel: any = this.sorts[0];
+    { label: 'Token ID', value: 'id' },
+    // { label: 'Recent', value: 'recent' },
+  ]);
+  activeSortModel: Sort = this.sorts()[0];
   filtersVisible: boolean = false;
 
   bulkActionsForm = this.fb.group({
@@ -132,8 +135,20 @@ export class MarketComponent {
     })
   );
 
-  marketType$ = this.store.select(marketStateSelectors.selectMarketType);
-  activeMarketRouteData$ = this.store.select(marketStateSelectors.selectActiveMarketRouteData);
+  marketType$ = this.store.select(marketStateSelectors.selectMarketType).pipe(
+    filter((marketType: MarketType | null) => !!marketType),
+    tap((marketType: MarketType) => {
+      if (marketType === 'all') {
+        this.sorts.set(this.sorts().slice(2));
+        this.activeSortModel = this.sorts()[0];
+      }
+    })
+  );
+  activeMarketRouteData$ = this.store.select(marketStateSelectors.selectActiveMarketRouteData).pipe(
+    // tap((routeData: any) => {
+    //   console.log({ routeData });
+    // })
+  );
 
   activeTraitFilters$ = this.store.select(marketStateSelectors.selectActiveTraitFilters).pipe(
     map((traitFilters: any) => {
@@ -169,7 +184,7 @@ export class MarketComponent {
    * Sets the active sort option for the market view
    * @param $event - The sort option selected by the user
    */
-  setSort($event: any): void {
+  setSort($event: Sort): void {
     this.store.dispatch(marketStateActions.setActiveSort({ activeSort: $event }));
   }
 

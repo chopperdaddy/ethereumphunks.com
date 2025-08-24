@@ -1,5 +1,6 @@
 import { Auction, Phunk } from './db';
 import { TraitFilter } from './global-state';
+import { Sort } from './pipes';
 
 export interface MarketState {
   marketType: MarketType | null;
@@ -19,7 +20,7 @@ export interface MarketState {
 
   selectedPhunks: Phunk[];
 
-  activeSort: { label: 'Price Low', value: 'price-low' };
+  activeSort: Sort;
   activeTraitFilters: TraitFilter | null;
 }
 

@@ -12,7 +12,7 @@ export class TraitRarityPipe implements PipeTransform {
   async transform(value: string, slug: string): Promise<string> {
     // Try to get dynamic rarity data from the data service's in-memory cache
     const dynamicRarity = await this.dataSvc.getRarityData(slug);
-    console.log({ dynamicRarity });
+    // console.log({ dynamicRarity });
     if (dynamicRarity && dynamicRarity[value] !== undefined) {
       return dynamicRarity[value].toString();
     }

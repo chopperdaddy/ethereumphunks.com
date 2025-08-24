@@ -42,6 +42,25 @@ export class SortPipe implements PipeTransform {
       sorted = sorted.sort((a, b) => dateToNumber(b.listing?.createdAt) - dateToNumber(a.listing?.createdAt));
     }
 
+    if (sort === 'rank-high') {
+      // the rank is in the attributes
+      sorted = sorted.sort((a, b) => {
+        const aRank = Number((a.attributes?.find((attr) => attr.k === 'Rank'))?.v || 0);
+        const bRank = Number((b.attributes?.find((attr) => attr.k === 'Rank'))?.v || 0);
+        if (!aRank || !bRank) return 0;
+        return aRank - bRank;
+      });
+    }
+
+    if (sort === 'rank-low') {
+      sorted = sorted.sort((a, b) => {
+        const aRank = Number((a.attributes?.find((attr) => attr.k === 'Rank'))?.v || 0);
+        const bRank = Number((b.attributes?.find((attr) => attr.k === 'Rank'))?.v || 0);
+        if (!aRank || !bRank) return 0;
+        return bRank - aRank;
+      });
+    }
+
     // if (sort === 'recent') {
     //   if (type === 'listings') {
     //     sorted = sorted.sort((a, b) => dateToNumber(b.listing?.createdAt) - dateToNumber(a.listing?.createdAt));

@@ -1,4 +1,4 @@
-import { Component, ElementRef, EventEmitter, Input, OnChanges, Output, QueryList, SimpleChanges, ViewChildren } from '@angular/core';
+import { Component, ElementRef, EventEmitter, Input, OnChanges, Output, QueryList, signal, SimpleChanges, ViewChildren } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 
@@ -20,6 +20,7 @@ import { FormatCashPipe } from '@/pipes/format-cash.pipe';
 import { SortPipe } from '@/pipes/sort.pipe';
 import { AttributeFilterPipe } from '@/pipes/attribute-filter';
 import { ImageUrlPipe } from '@/pipes/image-url.pipe';
+import { RankPipe } from '@/pipes/rank.pipe';
 
 import { environment } from '@environments/environment';
 
@@ -41,6 +42,7 @@ import * as marketStateActions from '@/state/market/market-state.actions';
     SortPipe,
     AttributeFilterPipe,
     ImageUrlPipe,
+    RankPipe,
   ],
   host:  {
     '[class.selectable]': 'selectable',
@@ -82,6 +84,7 @@ export class PhunkGridComponent implements OnChanges {
   usd$ = this.store.select(dataStateSelectors.selectUsd);
 
   showLoadMore: boolean = false;
+  ranksActive = signal(false);
 
   constructor(
     private store: Store<GlobalState>,
