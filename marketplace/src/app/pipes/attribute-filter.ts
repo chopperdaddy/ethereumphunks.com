@@ -88,7 +88,7 @@ export class AttributeFilterPipe implements PipeTransform {
             const min = parseInt(minStr, 10);
             const max = parseInt(maxStr, 10);
 
-            if (!isNaN(min) && !isNaN(max) && attribute?.v) {
+            if (!isNaN(min) && !isNaN(max) && attribute?.v !== null && attribute?.v !== undefined) {
               const attributeValue = parseInt(attribute.v.toString(), 10);
               if (!isNaN(attributeValue)) {
                 return attributeValue >= min && attributeValue <= max;

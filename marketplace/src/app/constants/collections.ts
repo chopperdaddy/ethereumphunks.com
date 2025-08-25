@@ -7,9 +7,9 @@ export const ignoredTraitFilters: { [key: string]: string[] } = {
 };
 
 export const ignoredTraitFiltersForCounts: { [key: string]: string[] } = {
-  'ethereum-phunks': ['Sex'],
-  'missing-phunks': ['Sex'],
-  'misprint-mingos': [],
-  'dysto-phunks': ['Sex'],
-  'call-data-comrades': ['Description', 'Name'],
+  'ethereum-phunks': ['Sex', 'Rank'],
+  'missing-phunks': ['Sex', 'Rank'],
+  'misprint-mingos': ['Rank'],
+  'dysto-phunks': ['Sex', 'Rank'],
+  'call-data-comrades': ['Description', 'Name', 'Classification', 'Affiliation', 'Rank'],
 };

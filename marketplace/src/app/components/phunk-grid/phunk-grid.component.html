@@ -98,7 +98,7 @@
 
           @if (activeSort === 'rank-high' || activeSort === 'rank-low') {
             @if (phunk | rank; as rankData) {
-              @if (rankData.value) {
+              @if (rankData.value || rankData.value === 0) {
                 <div class="rank-wrapper" [style.background-color]="rankData.color">
                   <div class="rank">{{ rankData.value }}</div>
                 </div>

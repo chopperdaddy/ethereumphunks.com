@@ -8,15 +8,15 @@ export class RankPipe implements PipeTransform {
   transform(value: any): { value: number | null, color: string } {
     const rank = value.attributes?.find((attr: any) => attr?.k === 'Rank')?.v;
 
-    if (!rank || rank === null || rank === undefined) {
+    if (rank === null || rank === undefined) {
       return { value: null, color: 'rgba(var(--highlight), 1)' };
     }
 
     // Neon color algorithm based on rank ranges
     let color: string;
 
-    if (rank === 1) {
-      // Ultra rare #1 - Hot Pink
+    if (rank <= 1) {
+      // Ultra rare #0 - Hot Pink (even more special than #1)
       color = 'rgba(var(--pink), 1)';
     } else if (rank <= 10) {
       // Top 10 - Purple (bid color)
