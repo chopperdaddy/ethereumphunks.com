@@ -1,3 +1,4 @@
+import { MarketType } from '@/models/market.state';
 import { MarketSorts, SortOption } from '@/models/sorts.model';
 
 export const marketSorts: MarketSorts = {
@@ -44,4 +45,12 @@ export const sortLabels = {
   [SortOption.RANK_HIGH]: 'Rank High',
   [SortOption.RECENTLY_LISTED]: 'Recently Listed',
   [SortOption.ID]: 'Token ID',
+};
+
+export const defaultSort: Record<MarketType, SortOption> = {
+  listings: SortOption.PRICE_LOW,
+  owned: SortOption.PRICE_LOW,
+  all: SortOption.ID,
+  activity: SortOption.RECENTLY_LISTED,
+  auctions: SortOption.ID,
 };

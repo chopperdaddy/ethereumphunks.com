@@ -51,7 +51,6 @@ export class MarketSortsComponent {
    * @param $event - The sort option selected by the user
    */
   setSort($event: SortOption): void {
-    console.log({ $event });
     this.store.dispatch(setActiveSort({ activeSort: $event }));
   }
 }

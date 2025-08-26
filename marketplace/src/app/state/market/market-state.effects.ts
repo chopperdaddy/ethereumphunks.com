@@ -16,9 +16,10 @@ import * as appStateActions from '../app/app-state.actions';
 import * as appStateSelectors from '../app/app-state.selectors';
 
 import { DataService } from '@/services/data.service';
-import { MarketState } from '@/models/market.state';
+import { MarketState, MarketType } from '@/models/market.state';
 
 import { Phunk, Event } from '@/models/db';
+import { defaultSort, marketSorts } from '@/constants/sorts';
 
 @Injectable()
 export class MarketStateEffects {
@@ -33,8 +34,10 @@ export class MarketStateEffects {
       this.store.select(appStateSelectors.selectConfig),
     ),
     mergeMap(([{ payload }, queryParams, routeParams, config]) => {
+      const marketType = routeParams['marketType'] as MarketType;
+
       const actions: any[] = [
-        marketStateActions.setMarketType({ marketType: routeParams['marketType'] }),
+        marketStateActions.setMarketType({ marketType }),
       ];
 
       // Use route params if available
@@ -45,8 +48,12 @@ export class MarketStateEffects {
       if (event.urlAfterRedirects === '/') marketSlug = config.defaultCollection;
 
       // Set market slug if available
-      if (marketSlug) actions.push(marketStateActions.setMarketSlug({ marketSlug }));
+      if (marketSlug) {
+        actions.push(marketStateActions.setMarketSlug({ marketSlug }));
+      }
+
       actions.push(marketStateActions.setActiveTraitFilters({ traitFilters: queryParams }));
+      actions.push(marketStateActions.setActiveSort({ activeSort: defaultSort[marketType] }));
       return actions;
     })
   ));
@@ -222,16 +229,21 @@ export class MarketStateEffects {
   ));
 
   setTraitFilter$ = createEffect(() => this.actions$.pipe(
-    ofType(marketStateActions.setActiveTraitFilters),
+    ofType(
+      marketStateActions.setActiveTraitFilters,
+      marketStateActions.setActiveSort
+    ),
     withLatestFrom(
       this.store.select(marketStateSelectors.selectMarketType),
       this.store.select(marketStateSelectors.selectMarketSlug),
       this.store.select(marketStateSelectors.selectActiveTraitFilters),
       this.store.select(marketStateSelectors.selectActiveSort),
     ),
-    filter(([action, marketType]) => marketType === 'all'),
-    tap((action) => console.log('setTraitFilter$', action)),
-    switchMap(([action, marketType, slug, traitFilters, activeSort]) => {
+    filter(([_, marketType]) => marketType === 'all'),
+    tap(([action, marketType, slug, traitFilters, activeSort]) =>
+      console.log('setTraitFilter$', {action, marketType, slug, traitFilters, activeSort})
+    ),
+    switchMap(([_, __, slug, traitFilters, activeSort]) => {
       return this.dataSvc.fetchAllWithPagination(slug, 0, this.defaultFetchLength, traitFilters, activeSort).pipe(
         mergeMap((data: MarketState['activeMarketRouteData']) => [
           marketStateActions.setActiveMarketRouteData({ activeMarketRouteData: data })
@@ -239,19 +251,6 @@ export class MarketStateEffects {
       );
     })
   ));
-
-  // setUserOpenBids$ = createEffect(() => this.actions$.pipe(
-  //   ofType(marketStateActions.setMarketData),
-  //   switchMap((action) => {
-  //     return this.store.select(appStateSelectors.selectWalletAddress).pipe(
-  //       map((address) => {
-  //         return dataStateActions.setUserOpenBids({
-  //           userOpenBids: action.marketData?.filter((item) => item.bid && item.bid?.fromAddress === address) || []
-  //         });
-  //       })
-  //     );
-  //   })
-  // ));
 
   // fetchMarketStats$ = createEffect(() => this.actions$.pipe(
   //   ofType(marketStateActions.setMarketSlug),

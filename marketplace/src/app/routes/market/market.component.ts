@@ -122,11 +122,11 @@ export class MarketComponent {
   );
 
   activeSort$ = this.store.select(marketStateSelectors.selectActiveSort);
-  marketType$ = this.store.select(marketStateSelectors.selectMarketType);
+  marketType$ = this.store.select(marketStateSelectors.selectMarketType)
   activeMarketRouteData$ = this.store.select(marketStateSelectors.selectActiveMarketRouteData).pipe(
-    // tap((routeData: any) => {
-    //   console.log({ routeData });
-    // })
+    tap(() => {
+      this.clearSelectedAndClose();
+    })
   );
 
   activeTraitFilters$ = this.store.select(marketStateSelectors.selectActiveTraitFilters).pipe(

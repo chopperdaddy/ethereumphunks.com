@@ -198,8 +198,8 @@ BEGIN
             CASE
                 WHEN p_sort_by = 'price-low' THEN COALESCE(l."minValue"::numeric, 999999999999)
                 WHEN p_sort_by = 'price-high' THEN -COALESCE(l."minValue"::numeric, -1)
-                WHEN p_sort_by = 'rank-low' THEN COALESCE((a.values ->> 'Rank')::numeric, 999999)
-                WHEN p_sort_by = 'rank-high' THEN -COALESCE((a.values ->> 'Rank')::numeric, -1)
+                WHEN p_sort_by = 'rank-low' THEN -COALESCE((a.values ->> 'Rank')::numeric, -1)
+                WHEN p_sort_by = 'rank-high' THEN COALESCE((a.values ->> 'Rank')::numeric, 999999)
                 WHEN p_sort_by = 'recently-listed' THEN -EXTRACT(EPOCH FROM COALESCE(l."createdAt", '1970-01-01'::timestamp))
                 ELSE e."tokenId"::numeric
             END,
@@ -409,8 +409,8 @@ BEGIN
             CASE
                 WHEN p_sort_by = 'price-low' THEN COALESCE(l."minValue"::numeric, 999999999999)
                 WHEN p_sort_by = 'price-high' THEN -COALESCE(l."minValue"::numeric, -1)
-                WHEN p_sort_by = 'rank-low' THEN COALESCE((a.values ->> 'Rank')::numeric, 999999)
-                WHEN p_sort_by = 'rank-high' THEN -COALESCE((a.values ->> 'Rank')::numeric, -1)
+                WHEN p_sort_by = 'rank-low' THEN -COALESCE((a.values ->> 'Rank')::numeric, -1)
+                WHEN p_sort_by = 'rank-high' THEN COALESCE((a.values ->> 'Rank')::numeric, 999999)
                 WHEN p_sort_by = 'recently-listed' THEN -EXTRACT(EPOCH FROM COALESCE(l."createdAt", '1970-01-01'::timestamp))
                 ELSE e."tokenId"::numeric
             END,

@@ -5,12 +5,13 @@ import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { Store } from '@ngrx/store';
 import { GlobalState } from '@/models/global-state';
 
-import * as dataStateSelectors from '@/state/data/data-state.selectors';
+import { firstValueFrom } from 'rxjs';
 
+import { MarketType } from '@/models/market.state';
+
+import * as dataStateSelectors from '@/state/data/data-state.selectors';
 import * as appStateSelectors from '@/state/app/app-state.selectors';
 import * as appStateActions from '@/state/app/app-state.actions';
-
-import { firstValueFrom } from 'rxjs';
 
 @Component({
   standalone: true,
@@ -40,5 +41,25 @@ export class CollectionsDropdownComponent {
       this.store.select(appStateSelectors.selectCollectionsMenuActive)
     );
     this.store.dispatch(appStateActions.setCollectionsMenuActive({ collectionsMenuActive: !isActive }));
+  }
+
+  /**
+   * Builds the target route for a collection while preserving child routes
+   * @param newSlug - The slug of the collection to navigate to
+   * @returns Promise resolving to boolean indicating navigation success
+   */
+  async buildCollectionRoute(newSlug: string): Promise<boolean> {
+    const currentRoute = this.router.routerState.snapshot;
+    const routeParams = currentRoute.root.children[0].params;
+    const queryParams = currentRoute.root.queryParams;
+
+    const marketType = routeParams['marketType'] as MarketType;
+    if (marketType) {
+      return this.router.navigate(['/', newSlug, 'market', marketType], {
+        queryParams
+      });
+    }
+
+    return this.router.navigate(['/', newSlug]);
   }
 }

@@ -21,8 +21,8 @@
 
   <div class="curated-dropdown">
     @for (item of (collections$ | async); track item.slug) {
-      <a
-        [routerLink]="['/curated', item.slug]"
+      <button
+        (click)="buildCollectionRoute(item.slug)"
         [class.active]="(activeCollection$ | async)?.slug === item.slug">
 
         <div class="image-wrapper">
@@ -30,7 +30,7 @@
         </div>
 
         <span>{{ item.name }}</span>
-      </a>
+      </button>
     }
   </div>
 </div>

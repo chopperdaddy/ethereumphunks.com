@@ -89,13 +89,14 @@
     visibility: hidden;
     pointer-events: none;
 
-    a {
+    button {
       display: flex;
       align-items: center;
 
       padding: 0 .5rem;
       margin: 0 0 .5rem;
 
+      font-family: var(--secondary-font-stack);
       font-size: 1.2rem;
       color: rgba(var(--black), 1);
       font-weight: 400;
