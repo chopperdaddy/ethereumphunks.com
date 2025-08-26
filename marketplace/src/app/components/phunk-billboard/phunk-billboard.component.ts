@@ -33,7 +33,7 @@ export class PhunkBillboardComponent {
       if (!phunk) return;
 
       untracked(async () => {
-        const data = await this.ethscriptionSvc.processImage(phunk);
+        const data = await this.ethscriptionSvc.fetchImage(phunk, false);
         this.contentData.set(data);
       });
     });

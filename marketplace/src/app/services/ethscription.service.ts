@@ -24,12 +24,12 @@ export class EthscriptionService {
    * Processes a phunk's image data from the blockchain
    * @param phunk The phunk object containing the hash ID
    */
-  async processImage(phunk: Phunk | null): Promise<DecodedData | null> {
+  async fetchImage(phunk: Phunk | null, transparentVersion: boolean): Promise<DecodedData | null> {
     if (!phunk) return null;
 
     let imageData;
     if (phunk?.isSupported) {
-      imageData = await this.fetchHostedImage(phunk);
+      imageData = await this.fetchHostedImage(phunk, transparentVersion);
     } else {
       const inscriptionTx = await this.web3Svc.getTransactionL1(phunk?.hashId as string);
       const txData = fromHex(inscriptionTx.input || inscriptionTx.data, 'string');
@@ -40,16 +40,17 @@ export class EthscriptionService {
     return this.decodeDataURI(imageData);
   }
 
-  async fetchHostedImage(phunk: Phunk | null): Promise<string | null> {
-    const image = await this.imageSvc.fetchSupportedImageBySha(phunk?.sha as string);
+  async fetchHostedImage(phunk: Phunk | null, transparentVersion: boolean): Promise<string | null> {
+    const image = await this.imageSvc.fetchSupportedImageBySha((`${phunk?.sha}${transparentVersion ? '_transparent' : ''}`) as string);
 
     // Convert ArrayBuffer to base64 string
     const uint8Array = new Uint8Array(image);
+    const mimeType = this.detectImageFormat(image);
     const binaryString = uint8Array.reduce((str, byte) => str + String.fromCharCode(byte), '');
     const base64String = btoa(binaryString);
 
     // Create data URI (assuming it's a PNG - adjust content type if different)
-    const dataUri = `data:image/png;base64,${base64String}`;
+    const dataUri = `data:${mimeType};base64,${base64String}`;
 
     return dataUri;
   }
@@ -129,5 +130,39 @@ export class EthscriptionService {
       default:
         return { type: 'unsupported', mimeType, data: `Unsupported MIME type: ${mimeType}` };
     }
+  }
+
+  private detectImageFormat(buffer: ArrayBuffer): string {
+    const uint8Array = new Uint8Array(buffer);
+
+    // PNG: 89 50 4E 47
+    if (uint8Array[0] === 0x89 && uint8Array[1] === 0x50 &&
+        uint8Array[2] === 0x4E && uint8Array[3] === 0x47) {
+      return 'image/png';
+    }
+
+    // JPEG: FF D8 FF
+    if (uint8Array[0] === 0xFF && uint8Array[1] === 0xD8 && uint8Array[2] === 0xFF) {
+      return 'image/jpeg';
+    }
+
+    // GIF: 47 49 46 38
+    if (uint8Array[0] === 0x47 && uint8Array[1] === 0x49 &&
+        uint8Array[2] === 0x46 && uint8Array[3] === 0x38) {
+      return 'image/gif';
+    }
+
+    // WebP: starts with "RIFF" and contains "WEBP"
+    if (uint8Array[0] === 0x52 && uint8Array[1] === 0x49 &&
+        uint8Array[2] === 0x46 && uint8Array[3] === 0x46) {
+      // Check for WEBP at offset 8
+      if (uint8Array[8] === 0x57 && uint8Array[9] === 0x45 &&
+          uint8Array[10] === 0x42 && uint8Array[11] === 0x50) {
+        return 'image/webp';
+      }
+    }
+
+    // Default fallback
+    return 'image/png';
   }
 }

@@ -43,7 +43,12 @@
             </div>
 
             <div class="actions-wrapper">
-              <button (click)="downloadCanvas()">Save</button>
+              <button
+                (click)="downloadCanvas()"
+                [class.disabled]="!downloadEnabled()">
+
+                Save
+              </button>
             </div>
           </div>
         }

@@ -50,6 +50,11 @@
           color: rgba(var(--background), 1);
           padding: .5rem 1.5rem;
           font-size: 1.4rem;
+
+          &.disabled {
+            opacity: .5;
+            pointer-events: none;
+          }
         }
       }
     }
