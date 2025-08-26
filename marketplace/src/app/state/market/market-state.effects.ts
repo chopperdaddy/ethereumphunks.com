@@ -37,20 +37,16 @@ export class MarketStateEffects {
         marketStateActions.setMarketType({ marketType: routeParams['marketType'] }),
       ];
 
-      // console.log({ payload, queryParams, routeParams, config });
-
       // Use route params if available
       let marketSlug = routeParams['slug'];
 
       // Use default slug if no slug is available
       const { event } = payload as RouterNavigationPayload;
       if (event.urlAfterRedirects === '/') marketSlug = config.defaultCollection;
-      // if (routeParams['marketType'] === 'user') marketSlug = 'user';
 
       // Set market slug if available
       if (marketSlug) actions.push(marketStateActions.setMarketSlug({ marketSlug }));
       actions.push(marketStateActions.setActiveTraitFilters({ traitFilters: queryParams }));
-      // console.log({marketSlug});
       return actions;
     })
   ));
@@ -117,6 +113,20 @@ export class MarketStateEffects {
     map((marketData) => marketStateActions.setMarketData({ marketData }))
   ));
 
+  fetchOwned$ = createEffect(() => this.actions$.pipe(
+    ofType(appStateActions.setWalletAddress),
+    distinctUntilChanged((a, b) => a.walletAddress === b.walletAddress),
+    switchMap(({ walletAddress }) => {
+      if (!walletAddress) return of([]);
+      return this.store.select(marketStateSelectors.selectMarketSlug).pipe(
+        distinctUntilChanged(),
+        switchMap((slug) => this.dataSvc.fetchOwned(walletAddress, slug)),
+      );
+    }),
+    // tap((phunks) => console.log('fetchOwned$', phunks)),
+    map((phunks) => marketStateActions.setOwned({ owned: phunks })),
+  ));
+
   fetchEvents$ = createEffect(() => this.actions$.pipe(
     ofType(marketStateActions.setMarketSlug),
     distinctUntilChanged((a, b) => a.marketSlug === b.marketSlug),
@@ -177,20 +187,6 @@ export class MarketStateEffects {
     map((all: Phunk[]) => marketStateActions.setAll({ all })),
   ));
 
-  fetchOwned$ = createEffect(() => this.actions$.pipe(
-    ofType(appStateActions.setWalletAddress),
-    distinctUntilChanged((a, b) => a.walletAddress === b.walletAddress),
-    switchMap(({ walletAddress }) => {
-      if (!walletAddress) return of([]);
-      return this.store.select(marketStateSelectors.selectMarketSlug).pipe(
-        distinctUntilChanged(),
-        switchMap((slug) => this.dataSvc.fetchOwned(walletAddress, slug)),
-      );
-    }),
-    // tap((phunks) => console.log('fetchOwned$', phunks)),
-    map((phunks) => marketStateActions.setOwned({ owned: phunks })),
-  ));
-
   paginateAll$ = createEffect(() => this.actions$.pipe(
     ofType(marketStateActions.setPagination),
     // distinctUntilChanged((a, b) => a.pagination.fromIndex === b.pagination.fromIndex),
@@ -204,7 +200,6 @@ export class MarketStateEffects {
     filter(([action, , marketType]) => {
       return marketType === 'all' && (this.defaultFetchLength + 1) <= action.pagination.toIndex;
     }),
-    // tap((action) => console.log('paginateAll', action)),
     switchMap(([action, marketSlug, marketType, routeData, traitFilters, activeSort]) => {
       return this.dataSvc.fetchAllWithPagination(
         marketSlug,
@@ -235,6 +230,7 @@ export class MarketStateEffects {
       this.store.select(marketStateSelectors.selectActiveSort),
     ),
     filter(([action, marketType]) => marketType === 'all'),
+    tap((action) => console.log('setTraitFilter$', action)),
     switchMap(([action, marketType, slug, traitFilters, activeSort]) => {
       return this.dataSvc.fetchAllWithPagination(slug, 0, this.defaultFetchLength, traitFilters, activeSort).pipe(
         mergeMap((data: MarketState['activeMarketRouteData']) => [

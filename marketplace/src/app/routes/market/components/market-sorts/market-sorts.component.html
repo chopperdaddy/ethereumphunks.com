@@ -1,13 +1,16 @@
 
 <div class="sort-wrapper">
   <div class="label">Sort:</div>
-  <!-- [(ngModel)]="activeSortModel" -->
+
   <ng-select
     class="sort"
-    [items]="sorts()"
     [ngModel]="activeSortOption()"
     (change)="setSort($event)"
     [searchable]="false"
-    [clearable]="false"
-  />
+    [clearable]="false">
+
+    @for (sort of sorts(); track sort) {
+      <ng-option [value]="sort">{{ sortLabels[sort] }}</ng-option>
+    }
+  </ng-select>
 </div>

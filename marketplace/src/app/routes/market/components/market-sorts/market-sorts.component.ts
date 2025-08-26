@@ -8,7 +8,7 @@ import { NgSelectModule } from '@ng-select/ng-select';
 import { SortOption } from '@/models/sorts.model';;
 import { GlobalState } from '@/models/global-state';
 import { MarketType } from '@/models/market.state';
-import { marketSorts } from '@/constants/sorts';
+import { marketSorts, sortLabels } from '@/constants/sorts';
 import { setActiveSort } from '@/state/market/market-state.actions';
 
 @Component({
@@ -29,6 +29,8 @@ export class MarketSortsComponent {
 
   sorts = signal<SortOption[]>([]);
   activeSortOption = signal<SortOption | null>(null);
+
+  sortLabels = sortLabels;
 
   constructor(
     private store: Store<GlobalState>,

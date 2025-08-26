@@ -34,10 +34,6 @@ export const resetMarketState = createAction(
   '[Market State] Reset Market State',
 );
 
-export const fetchMarketData = createAction(
-  '[Market State] Fetch Market Data',
-);
-
 export const setMarketData = createAction(
   '[Market State] Set Market Data',
   props<{ marketData: Phunk[] }>()
@@ -57,18 +53,9 @@ export const setOwned = createAction(
   props<{ owned: Phunk[] }>()
 );
 
-export const fetchAll = createAction(
-  '[Market State] Fetch All'
-);
-
 export const setAll = createAction(
   '[Market State] Set All',
   props<{ all: Phunk[] }>()
-);
-
-export const paginateAll = createAction(
-  '[Market State] Paginate All',
-  props<{ limit: number }>()
 );
 
 export const setActiveMarketRouteData = createAction(

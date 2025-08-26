@@ -36,3 +36,12 @@ export const marketSorts: MarketSorts = {
     SortOption.ID,
   ],
 };
+
+export const sortLabels = {
+  [SortOption.PRICE_LOW]: 'Price Low',
+  [SortOption.PRICE_HIGH]: 'Price High',
+  [SortOption.RANK_LOW]: 'Rank Low',
+  [SortOption.RANK_HIGH]: 'Rank High',
+  [SortOption.RECENTLY_LISTED]: 'Recently Listed',
+  [SortOption.ID]: 'Token ID',
+};
