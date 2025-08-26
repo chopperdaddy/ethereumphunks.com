@@ -11,7 +11,6 @@ import { GlobalState, TraitFilter } from '@/models/global-state';
 import { MarketType } from '@/models/market.state';
 import { ViewType } from '@/models/view-types';
 import { Phunk } from '@/models/db';
-import { Sort } from '@/models/pipes';
 
 import { DataService } from '@/services/data.service';
 
@@ -21,6 +20,7 @@ import { SortPipe } from '@/pipes/sort.pipe';
 import { AttributeFilterPipe } from '@/pipes/attribute-filter';
 import { ImageUrlPipe } from '@/pipes/image-url.pipe';
 import { RankPipe } from '@/pipes/rank.pipe';
+import { SortOption } from '@/models/sorts.model';
 
 import { environment } from '@environments/environment';
 
@@ -59,7 +59,7 @@ export class PhunkGridComponent implements OnChanges {
   escrowAddress = environment.marketAddress;
 
   @Input() marketType!: MarketType;
-  @Input() activeSort!: Sort['value'];
+  @Input() activeSort!: SortOption;
 
   @Input() viewType: ViewType = 'market';
   @Input() slug!: string;

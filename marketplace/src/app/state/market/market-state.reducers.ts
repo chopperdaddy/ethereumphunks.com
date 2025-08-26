@@ -4,6 +4,7 @@ import { MarketState } from '@/models/market.state';
 import { Phunk } from '@/models/db';
 
 import * as actions from '../market/market-state.actions';
+import { SortOption } from '@/models/sorts.model';
 
 export const initialState: MarketState = {
   marketType: null,
@@ -22,7 +23,7 @@ export const initialState: MarketState = {
 
   selectedPhunks: [],
 
-  activeSort: { label: 'Price Low', value: 'price-low' },
+  activeSort: SortOption.ID,
   activeTraitFilters: {},
 
   pagination: {

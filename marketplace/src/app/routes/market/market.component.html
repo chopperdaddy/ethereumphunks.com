@@ -13,19 +13,10 @@
       <div class="toolbar-wrapper">
         <div class="toolbar">
           <div class="left">
-            @if (marketType !== 'all') {
-              <div class="sort-wrapper">
-                <div class="label">Sort:</div>
-                <ng-select
-                  class="sort"
-                  [(ngModel)]="activeSortModel"
-                  [items]="sorts()"
-                  (change)="setSort($event)"
-                  [searchable]="false"
-                  [clearable]="false"
-                />
-              </div>
-            }
+            <app-market-sorts
+              [marketType]="marketType"
+              [activeSort]="(activeSort$ | async)!"
+            />
           </div>
 
           <div class="right">
@@ -120,7 +111,7 @@
         <app-phunk-grid
           [observe]="true"
           [marketType]="marketType"
-          [activeSort]="(activeSort$ | async).value"
+          [activeSort]="(activeSort$ | async)!"
           [limit]="250"
           [traitFilters]="(activeTraitFilters$ | async)"
           [phunkData]="phunkData.data"

@@ -24,6 +24,7 @@ import { ignoredTraitFilters, ignoredTraitFiltersForCounts } from '@/constants/c
 
 import * as dataStateActions from '@/state/data/data-state.actions';
 import * as appStateActions from '@/state/app/app-state.actions';
+import { SortOption } from '@/models/sorts.model';
 
 const supabaseUrl = environment.supabaseUrl;
 const supabaseKey = environment.supabaseKey;
@@ -1146,6 +1147,7 @@ export class DataService {
     fromNum: number,
     toNum: number,
     filters?: any,
+    sortBy?: SortOption,
   ): Observable<MarketState['activeMarketRouteData']> {
 
     return from(
@@ -1154,6 +1156,7 @@ export class DataService {
         p_from_num: fromNum,
         p_to_num: toNum,
         p_filters: filters,
+        p_sort_by: sortBy,
       })
     ).pipe(
       switchMap((res: any) => {

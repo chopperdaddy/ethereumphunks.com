@@ -1,4 +1,4 @@
-import { Component, ElementRef, signal, ViewChild } from '@angular/core';
+import { Component, ElementRef, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterModule } from '@angular/router';
 import { FormArray, FormBuilder, FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
@@ -6,17 +6,18 @@ import { FormArray, FormBuilder, FormControl, FormsModule, ReactiveFormsModule }
 import { Store } from '@ngrx/store';
 import { NgxPaginationModule } from 'ngx-pagination';
 import { LazyLoadImageModule } from 'ng-lazyload-image';
-import { NgSelectModule } from '@ng-select/ng-select';
 
-import { MarketHeaderComponent } from './components/market-header.component';
+import { filter, map, tap } from 'rxjs';
+
+import { MarketSortsComponent } from './components/market-sorts/market-sorts.component';
+import { MarketHeaderComponent } from './components/market-header/market-header.component';
+
 import { PhunkGridComponent } from '@/components/phunk-grid/phunk-grid.component';
-import { MarketFiltersComponent } from '@/components/market-filters/market-filters.component';
+import { MarketFiltersComponent } from '@/routes/market/components/market-filters/market-filters.component';
 import { SlideoutComponent } from '@/components/slideout/slideout.component';
 
-import { Sort, Sorts } from '@/models/pipes';
-
-import { GlobalState, Notification, TraitFilter } from '@/models/global-state';
 import { Phunk } from '@/models/db';
+import { GlobalState, Notification, TraitFilter } from '@/models/global-state';
 
 import { DataService } from '@/services/data.service';
 import { Web3Service } from '@/services/web3.service';
@@ -30,14 +31,9 @@ import * as appStateSelectors from '@/state/app/app-state.selectors';
 import * as appStateActions from '@/state/app/app-state.actions';
 import * as dataStateSelectors from '@/state/data/data-state.selectors';
 import * as marketStateSelectors from '@/state/market/market-state.selectors';
-import * as marketStateActions from '@/state/market/market-state.actions';
-
 import { upsertNotification } from '@/state/notification/notification.actions';
 
 import { environment } from '@environments/environment';
-
-import { filter, map, tap } from 'rxjs';
-import { MarketType } from '@/models/market.state';
 
 const defaultActionState = {
   canList: false,
@@ -53,7 +49,6 @@ const defaultActionState = {
     RouterModule,
     LazyLoadImageModule,
     NgxPaginationModule,
-    NgSelectModule,
     FormsModule,
     ReactiveFormsModule,
 
@@ -61,6 +56,7 @@ const defaultActionState = {
     PhunkGridComponent,
     MarketFiltersComponent,
     SlideoutComponent,
+    MarketSortsComponent,
 
     WeiToEthPipe,
     CalcPipe,
@@ -79,16 +75,6 @@ export class MarketComponent {
 
   escrowAddress = environment.marketAddress;
 
-  sorts = signal<{ label: string, value: Sorts }[]>([
-    { label: 'Price Low', value: 'price-low' },
-    { label: 'Price High', value: 'price-high' },
-    { label: 'Rank High', value: 'rank-high' },
-    { label: 'Rank Low', value: 'rank-low' },
-    { label: 'Recently Listed', value: 'recently-listed' },
-    { label: 'Token ID', value: 'id' },
-    // { label: 'Recent', value: 'recent' },
-  ]);
-  activeSortModel: Sort = this.sorts()[0];
   filtersVisible: boolean = false;
 
   bulkActionsForm = this.fb.group({
@@ -135,15 +121,8 @@ export class MarketComponent {
     })
   );
 
-  marketType$ = this.store.select(marketStateSelectors.selectMarketType).pipe(
-    filter((marketType: MarketType | null) => !!marketType),
-    tap((marketType: MarketType) => {
-      if (marketType === 'all') {
-        this.sorts.set(this.sorts().slice(2));
-        this.activeSortModel = this.sorts()[0];
-      }
-    })
-  );
+  activeSort$ = this.store.select(marketStateSelectors.selectActiveSort);
+  marketType$ = this.store.select(marketStateSelectors.selectMarketType);
   activeMarketRouteData$ = this.store.select(marketStateSelectors.selectActiveMarketRouteData).pipe(
     // tap((routeData: any) => {
     //   console.log({ routeData });
@@ -156,10 +135,6 @@ export class MarketComponent {
       delete traitFiltersCopy['address'];
       return traitFiltersCopy as TraitFilter;
     })
-  );
-
-  activeSort$ = this.store.select(marketStateSelectors.selectActiveSort).pipe(
-    tap((sort: any) => this.activeSortModel = sort)
   );
 
   indexerIsBehind$ = this.store.select(appStateSelectors.selectIndexerIsBehind);
@@ -179,14 +154,6 @@ export class MarketComponent {
     private fb: FormBuilder,
     private route: ActivatedRoute,
   ) {}
-
-  /**
-   * Sets the active sort option for the market view
-   * @param $event - The sort option selected by the user
-   */
-  setSort($event: Sort): void {
-    this.store.dispatch(marketStateActions.setActiveSort({ activeSort: $event }));
-  }
 
   /**
    * Executes a batch action on selected phunks

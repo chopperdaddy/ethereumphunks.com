@@ -1,6 +1,6 @@
-import { Auction, Phunk } from './db';
+import { Phunk } from './db';
 import { TraitFilter } from './global-state';
-import { Sort } from './pipes';
+import { SortOption } from './sorts.model';
 
 export interface MarketState {
   marketType: MarketType | null;
@@ -20,11 +20,11 @@ export interface MarketState {
 
   selectedPhunks: Phunk[];
 
-  activeSort: Sort;
+  activeSort: SortOption;
   activeTraitFilters: TraitFilter | null;
 }
 
-export type MarketType = 'listings' | 'bids' | 'owned' | 'all' | 'activity' | 'auctions';
+export type MarketType = 'listings' | 'owned' | 'all' | 'activity' | 'auctions';
 
 export interface PaginationState {
   fromIndex: number;

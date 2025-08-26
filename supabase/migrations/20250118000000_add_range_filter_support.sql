@@ -7,7 +7,8 @@ CREATE OR REPLACE FUNCTION fetch_all_with_pagination_new(
     p_from_num integer,
     p_to_num integer,
     p_filters jsonb,
-    p_trait_count_exclusions text[] DEFAULT ARRAY['Description', 'Name', 'Sex', 'Rank', 'Classification', 'Affiliation']
+    p_trait_count_exclusions text[] DEFAULT ARRAY['Description', 'Name', 'Sex', 'Rank', 'Classification', 'Affiliation'],
+    p_sort_by text DEFAULT 'id'
 ) RETURNS jsonb
 LANGUAGE plpgsql
 AS $$
@@ -193,7 +194,16 @@ BEGIN
                     ) = trait_count_filter::INTEGER
             END
         )
-        ORDER BY e."tokenId"
+        ORDER BY
+            CASE
+                WHEN p_sort_by = 'price-low' THEN COALESCE(l."minValue"::numeric, 999999999999)
+                WHEN p_sort_by = 'price-high' THEN -COALESCE(l."minValue"::numeric, -1)
+                WHEN p_sort_by = 'rank-low' THEN COALESCE((a.values ->> 'Rank')::numeric, 999999)
+                WHEN p_sort_by = 'rank-high' THEN -COALESCE((a.values ->> 'Rank')::numeric, -1)
+                WHEN p_sort_by = 'recently-listed' THEN -EXTRACT(EPOCH FROM COALESCE(l."createdAt", '1970-01-01'::timestamp))
+                ELSE e."tokenId"::numeric
+            END,
+            e."tokenId" -- Secondary sort for consistency
         LIMIT p_to_num - p_from_num + 1
         OFFSET p_from_num
     ) t;
@@ -208,7 +218,8 @@ CREATE OR REPLACE FUNCTION fetch_all_with_pagination_new_sepolia(
     p_from_num integer,
     p_to_num integer,
     p_filters jsonb DEFAULT '{}'::jsonb,
-    p_trait_count_exclusions text[] DEFAULT ARRAY['Description', 'Name', 'Sex', 'Rank', 'Classification', 'Affiliation']
+    p_trait_count_exclusions text[] DEFAULT ARRAY['Description', 'Name', 'Sex', 'Rank', 'Classification', 'Affiliation'],
+    p_sort_by text DEFAULT 'id'
 ) RETURNS jsonb
 LANGUAGE plpgsql
 AS $$
@@ -394,7 +405,16 @@ BEGIN
                     ) = trait_count_filter::INTEGER
             END
         )
-        ORDER BY e."tokenId"
+        ORDER BY
+            CASE
+                WHEN p_sort_by = 'price-low' THEN COALESCE(l."minValue"::numeric, 999999999999)
+                WHEN p_sort_by = 'price-high' THEN -COALESCE(l."minValue"::numeric, -1)
+                WHEN p_sort_by = 'rank-low' THEN COALESCE((a.values ->> 'Rank')::numeric, 999999)
+                WHEN p_sort_by = 'rank-high' THEN -COALESCE((a.values ->> 'Rank')::numeric, -1)
+                WHEN p_sort_by = 'recently-listed' THEN -EXTRACT(EPOCH FROM COALESCE(l."createdAt", '1970-01-01'::timestamp))
+                ELSE e."tokenId"::numeric
+            END,
+            e."tokenId" -- Secondary sort for consistency
         LIMIT p_to_num - p_from_num + 1
         OFFSET p_from_num
     ) t;
@@ -404,8 +424,8 @@ END;
 $$;
 
 -- Add a comment to document the new functionality
-COMMENT ON FUNCTION fetch_all_with_pagination_new(text, integer, integer, jsonb, text[]) IS
-'Updated function with backwards-compatible range filter support and configurable trait count exclusions. Supports both exact matches (e.g., "5") and ranges (e.g., "3-7") for numeric attributes. The p_trait_count_exclusions parameter allows collection-specific exclusion of attributes from trait counting (defaults to Description, Name, Sex for backwards compatibility).';
+COMMENT ON FUNCTION fetch_all_with_pagination_new(text, integer, integer, jsonb, text[], text) IS
+'Updated function with backwards-compatible range filter support, configurable trait count exclusions, and sorting. Supports both exact matches (e.g., "5") and ranges (e.g., "3-7") for numeric attributes. The p_trait_count_exclusions parameter allows collection-specific exclusion of attributes from trait counting. The p_sort_by parameter supports: "id", "price-low", "price-high", "rank-low", "rank-high", "recently-listed" (defaults to "id").';
 
-COMMENT ON FUNCTION fetch_all_with_pagination_new_sepolia(text, integer, integer, jsonb, text[]) IS
-'Updated Sepolia function with backwards-compatible range filter support and configurable trait count exclusions. Supports both exact matches (e.g., "5") and ranges (e.g., "3-7") for numeric attributes including trait_count. The p_trait_count_exclusions parameter allows collection-specific exclusion of attributes from trait counting (defaults to Description, Name, Sex for backwards compatibility).';
+COMMENT ON FUNCTION fetch_all_with_pagination_new_sepolia(text, integer, integer, jsonb, text[], text) IS
+'Updated Sepolia function with backwards-compatible range filter support, configurable trait count exclusions, and sorting. Supports both exact matches (e.g., "5") and ranges (e.g., "3-7") for numeric attributes including trait_count. The p_trait_count_exclusions parameter allows collection-specific exclusion of attributes from trait counting. The p_sort_by parameter supports: "id", "price-low", "price-high", "rank-low", "rank-high", "recently-listed" (defaults to "id").';

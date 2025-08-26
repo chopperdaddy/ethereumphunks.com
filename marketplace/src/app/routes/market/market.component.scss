@@ -205,33 +205,6 @@
   }
 }
 
-.sort-wrapper {
-  display: flex;
-  align-items: center;
-
-  .label {
-    padding-right: 1rem;
-    font-weight: 700;
-  }
-
-  ng-select {
-    min-width: 20rem;
-    // --height: 2.8rem;
-  }
-
-  &.disabled {
-    display: none;
-    opacity: .25;
-    pointer-events: none;
-  }
-
-  @media (max-width: $mobile) {
-    ng-select {
-      width: 100%;
-    }
-  }
-}
-
 .filter-wrapper {
   width: 100%;
 }

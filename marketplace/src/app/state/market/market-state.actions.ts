@@ -1,8 +1,9 @@
 import { createAction, props } from '@ngrx/store';
 
+import { Phunk } from '@/models/db';
 import { MarketState, MarketType } from '@/models/market.state';
-import { Auction, Phunk } from '@/models/db';
 import { TraitFilter } from '@/models/global-state';
+import { SortOption } from '@/models/sorts.model';
 
 export const setMarketSlug = createAction(
   '[Market State] Set Market slug',
@@ -16,7 +17,7 @@ export const setMarketType = createAction(
 
 export const setActiveSort = createAction(
   '[Market State] Set Active Sort',
-  props<{ activeSort: MarketState['activeSort'] }>()
+  props<{ activeSort: SortOption }>()
 );
 
 export const setActiveTraitFilters = createAction(

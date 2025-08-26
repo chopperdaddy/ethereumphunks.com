@@ -19,6 +19,7 @@ import { DataService } from '@/services/data.service';
 import { MarketState } from '@/models/market.state';
 
 import { Phunk, Event } from '@/models/db';
+
 @Injectable()
 export class MarketStateEffects {
 
@@ -168,8 +169,11 @@ export class MarketStateEffects {
   fetchAll$ = createEffect(() => this.actions$.pipe(
     ofType(marketStateActions.setMarketSlug),
     distinctUntilChanged((a, b) => a.marketSlug === b.marketSlug),
-    switchMap(({ marketSlug }) => {
-      return this.dataSvc.fetchAllWithPagination(marketSlug, 0, 110, {}).pipe(
+    withLatestFrom(
+      this.store.select(marketStateSelectors.selectActiveSort)
+    ),
+    switchMap(([{ marketSlug }, activeSort]) => {
+      return this.dataSvc.fetchAllWithPagination(marketSlug, 0, 110, {}, activeSort).pipe(
         map((data: MarketState['activeMarketRouteData']) => data.data)
       );
     }),
@@ -198,17 +202,19 @@ export class MarketStateEffects {
       this.store.select(marketStateSelectors.selectMarketType),
       this.store.select(marketStateSelectors.selectActiveMarketRouteData),
       this.store.select(marketStateSelectors.selectActiveTraitFilters),
+      this.store.select(marketStateSelectors.selectActiveSort),
     ),
     filter(([action, , marketType]) => {
       return marketType === 'all' && (this.defaultFetchLength + 1) <= action.pagination.toIndex;
     }),
     // tap((action) => console.log('paginateAll', action)),
-    switchMap(([action, marketSlug, marketType, routeData, traitFilters]) => {
+    switchMap(([action, marketSlug, marketType, routeData, traitFilters, activeSort]) => {
       return this.dataSvc.fetchAllWithPagination(
         marketSlug,
         action.pagination.fromIndex,
         action.pagination.toIndex,
-        traitFilters
+        traitFilters,
+        activeSort
       ).pipe(
         map((data: MarketState['activeMarketRouteData']) => {
           return {
@@ -229,12 +235,32 @@ export class MarketStateEffects {
       this.store.select(marketStateSelectors.selectMarketType),
       this.store.select(marketStateSelectors.selectMarketSlug),
       this.store.select(marketStateSelectors.selectActiveTraitFilters),
+      this.store.select(marketStateSelectors.selectActiveSort),
     ),
     filter(([action, marketType]) => marketType === 'all'),
-    switchMap(([action, marketType, slug, traitFilters]) => {
-      return this.dataSvc.fetchAllWithPagination(slug, 0, this.defaultFetchLength, traitFilters).pipe(
+    switchMap(([action, marketType, slug, traitFilters, activeSort]) => {
+      return this.dataSvc.fetchAllWithPagination(slug, 0, this.defaultFetchLength, traitFilters, activeSort).pipe(
         mergeMap((data: MarketState['activeMarketRouteData']) => [
           marketStateActions.setActiveMarketRouteData({ activeMarketRouteData: data })
+        ]),
+      );
+    })
+  ));
+
+  setSortFilter$ = createEffect(() => this.actions$.pipe(
+    ofType(marketStateActions.setActiveSort),
+    withLatestFrom(
+      this.store.select(marketStateSelectors.selectMarketType),
+      this.store.select(marketStateSelectors.selectMarketSlug),
+      this.store.select(marketStateSelectors.selectActiveTraitFilters),
+      this.store.select(marketStateSelectors.selectActiveSort),
+    ),
+    filter(([action, marketType]) => marketType === 'all'),
+    switchMap(([action, marketType, slug, traitFilters, activeSort]) => {
+      return this.dataSvc.fetchAllWithPagination(slug, 0, this.defaultFetchLength, traitFilters, activeSort).pipe(
+        mergeMap((data: MarketState['activeMarketRouteData']) => [
+          marketStateActions.setActiveMarketRouteData({ activeMarketRouteData: data }),
+          marketStateActions.setPagination({ pagination: { fromIndex: 0, toIndex: this.defaultFetchLength } })
         ]),
       );
     })

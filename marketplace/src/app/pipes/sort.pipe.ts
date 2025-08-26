@@ -1,18 +1,20 @@
 import { Pipe, PipeTransform } from '@angular/core';
+
 import { Phunk } from '@/models/db';
+import { SortOption } from '@/models/sorts.model';
+import { MarketType } from '@/models/market.state';
 
 @Pipe({
   standalone: true,
   name: 'sort'
 })
 export class SortPipe implements PipeTransform {
-  transform(value: Phunk[], ...args: any): Phunk[] {
+  transform(value: Phunk[], ...args: [SortOption, MarketType]): Phunk[] {
     if (!value?.length) return [];
     if (!args) return value;
 
     const sort = args[0];
     const marketType = args[1];
-
     if (marketType === 'all') return value;
 
     let sorted = [...value];
@@ -23,26 +25,26 @@ export class SortPipe implements PipeTransform {
     };
 
     const priceComparison = (a: Phunk, b: Phunk, isLowToHigh: boolean) => {
-      const aPrice = marketType === 'bids' ? Number(a.bid?.value || '0') : Number(a.listing?.minValue || '0');
-      const bPrice = marketType === 'bids' ? Number(b.bid?.value || '0') : Number(b.listing?.minValue || '0');
+      const aPrice = Number(a.listing?.minValue || '0');
+      const bPrice = Number(b.listing?.minValue || '0');
       const aVal = aPrice ? aPrice : Infinity;
       const bVal = bPrice ? bPrice : Infinity;
       return isLowToHigh ? aVal - bVal : bVal - aVal;
     };
 
-    if (sort === 'price-low') {
+    if (sort === SortOption.PRICE_LOW) {
       sorted = sorted.sort((a, b) => priceComparison(a, b, true));
     }
 
-    if (sort === 'price-high') {
+    if (sort === SortOption.PRICE_HIGH) {
       sorted = sorted.sort((a, b) => priceComparison(a, b, false));
     }
 
-    if (sort === 'recently-listed') {
+    if (sort === SortOption.RECENTLY_LISTED) {
       sorted = sorted.sort((a, b) => dateToNumber(b.listing?.createdAt) - dateToNumber(a.listing?.createdAt));
     }
 
-    if (sort === 'rank-high') {
+    if (sort === SortOption.RANK_HIGH) {
       // the rank is in the attributes
       sorted = sorted.sort((a, b) => {
         const aRank = Number((a.attributes?.find((attr) => attr.k === 'Rank'))?.v || 0);
@@ -52,7 +54,7 @@ export class SortPipe implements PipeTransform {
       });
     }
 
-    if (sort === 'rank-low') {
+    if (sort === SortOption.RANK_LOW) {
       sorted = sorted.sort((a, b) => {
         const aRank = Number((a.attributes?.find((attr) => attr.k === 'Rank'))?.v || 0);
         const bRank = Number((b.attributes?.find((attr) => attr.k === 'Rank'))?.v || 0);
@@ -61,15 +63,7 @@ export class SortPipe implements PipeTransform {
       });
     }
 
-    // if (sort === 'recent') {
-    //   if (type === 'listings') {
-    //     sorted = sorted.sort((a, b) => dateToNumber(b.listing?.createdAt) - dateToNumber(a.listing?.createdAt));
-    //   } else if (type === 'bids') {
-    //     sorted = sorted.sort((a, b) => dateToNumber(b.bid?.createdAt) - dateToNumber(a.bid?.createdAt));
-    //   }
-    // }
-
-    if (sort === 'id') {
+    if (sort === SortOption.ID) {
       sorted = sorted.sort((a, b) => a.tokenId - b.tokenId);
     }
 

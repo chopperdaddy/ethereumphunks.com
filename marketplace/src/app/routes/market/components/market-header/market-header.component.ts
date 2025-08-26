@@ -41,7 +41,6 @@ export class MarketHeaderComponent {
   marketTitles: { [key in MarketType]: string } = {
     all: 'All %collectionName%s',
     listings: ' %collectionName%s for Sale',
-    bids: 'Current Bids',
     owned: ' %collectionName%s Owned',
     activity: 'Activity',
     auctions: 'Auctions',
