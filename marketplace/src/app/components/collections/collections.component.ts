@@ -6,6 +6,7 @@ import { Store } from '@ngrx/store';
 import { GlobalState } from '@/models/global-state';
 
 import { DataService } from '@/services/data.service';
+import { SortOption } from '@/models/sorts.model';
 
 import { PhunkGridComponent } from '../phunk-grid/phunk-grid.component';
 import { selectCollections } from '@/state/data/data-state.selectors';
@@ -33,6 +34,8 @@ export class CollectionsComponent {
       return collections.slice(1);
     })
   )
+
+  SortOption = SortOption;
 
   constructor(
     private dataSvc: DataService,

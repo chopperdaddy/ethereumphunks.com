@@ -21,6 +21,7 @@ import { DataService } from '@/services/data.service';
 import { ThemeService } from '@/services/theme.service';
 
 import { GlobalState } from '@/models/global-state';
+import { SortOption } from '@/models/sorts.model';
 
 import * as dataStateSelectors from '@/state/data/data-state.selectors';
 import * as appStateSelectors from '@/state/app/app-state.selectors';
@@ -70,6 +71,8 @@ export class IndexComponent {
   auctions$ = this.store.select(marketStateSelectors.selectAuctions).pipe(
     filter((auctions) => auctions?.length > 0),
   );
+
+  SortOption = SortOption;
 
   constructor(
     private store: Store<GlobalState>,

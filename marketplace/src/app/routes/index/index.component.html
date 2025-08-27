@@ -64,7 +64,7 @@
                       [viewType]="'compact'"
                       [limit]="(isMobile$ | async) ? 100 : 110"
                       [marketType]="'owned'"
-                      [activeSort]="'price-low'"
+                      [activeSort]="SortOption.PRICE_LOW"
                     />
                   </div>
                 </section>
@@ -90,7 +90,7 @@
                   [viewType]="'compact'"
                   [limit]="(isMobile$ | async) ? 100 : 110"
                   [marketType]="'listings'"
-                  [activeSort]="'price-low'"
+                  [activeSort]="SortOption.PRICE_LOW"
                 />
               }
             </div>
@@ -110,7 +110,7 @@
                     [viewType]="'compact'"
                     [limit]="(isMobile$ | async) ? 100 : 110"
                     [marketType]="'auctions'"
-                    [activeSort]="'price-high'"
+                    [activeSort]="SortOption.PRICE_HIGH"
                   />
               </div>
             </section>
@@ -139,7 +139,7 @@
                     [viewType]="'compact'"
                     [limit]="(isMobile$ | async) ? 100 : 110"
                     [marketType]="'all'"
-                    [activeSort]="'id'"
+                    [activeSort]="SortOption.ID"
                   />
                 }
               }
