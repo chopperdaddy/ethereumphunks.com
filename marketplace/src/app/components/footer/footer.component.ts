@@ -1,8 +1,9 @@
-import { magma } from '@/constants/magmaChain';
-import { WalletAddressDirective } from '@/directives/wallet-address.directive';
 import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
+
 import { environment } from '@environments/environment';
+
+import { WalletAddressDirective } from '@/directives/wallet-address.directive';
 
 @Component({
   standalone: true,
@@ -25,7 +26,7 @@ export class FooterComponent implements OnInit {
   layer2Bridge = environment.bridgeAddressL2;
   layer2Market = environment.marketAddressL2;
 
-  layer2ExplorerUrl = magma.blockExplorers.default.url;
+  // layer2ExplorerUrl = magma.blockExplorers.default.url;
 
   constructor() { }
 

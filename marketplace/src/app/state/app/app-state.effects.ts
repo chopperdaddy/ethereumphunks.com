@@ -151,7 +151,7 @@ export class AppStateEffects {
     map(([action, cooldowns]) => {
       let cooldownsCopy = { ...cooldowns };
       Object.keys(cooldowns).forEach(hashId => {
-        if (action.currentBlock >= (cooldowns[hashId] + this.web3Svc.maxCooldown)) {
+        if (action.currentBlock >= (cooldowns[hashId] + this.web3Svc.minCooldown)) {
           delete cooldownsCopy[hashId];
         }
       });

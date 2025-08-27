@@ -14,8 +14,9 @@
 
   .filters-section {
     display: grid;
-    grid-template-columns: repeat(5, 1fr);
+    grid-template-columns: repeat(5, calc(20% - 2rem));
     gap: 2rem;
+    justify-content: space-between;
   }
 
   .clear-filters-section {
@@ -160,6 +161,18 @@
     &.disabled {
       opacity: .5;
       pointer-events: none;
+    }
+  }
+
+  @media (max-width: 1200px) {
+    .filters-section {
+      grid-template-columns: repeat(4, calc(25% - 2rem));
+    }
+  }
+
+  @media (max-width: 1000px) {
+    .filters-section {
+      grid-template-columns: repeat(3, calc(33.33% - 2rem));
     }
   }
 

@@ -110,7 +110,7 @@ export class MarketFiltersComponent implements OnDestroy {
 
       try {
         const filters = await this.dataSvc.getFilters(slug);
-        console.log('filters', filters);
+        // console.log('filters', filters);
         this.filterData.set(filters || {});
 
         // Initialize range filters after data is loaded

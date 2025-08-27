@@ -123,7 +123,16 @@ export default defineConfig(({ command, mode }) => {
         qrcode: resolve(__dirname, "node_modules/qrcode/lib/browser.js"),
         "tippy.js": resolve(__dirname, "node_modules/tippy.js"),
       },
+      // WalletConnect compatibility
+      conditions: ["import", "module", "browser", "default"],
     },
+
+    // Define global variables for WalletConnect compatibility
+    // define: {
+    //   global: "globalThis",
+    //   "process.env": {},
+    //   "process.env.NODE_ENV": JSON.stringify(mode),
+    // },
 
     // Build configuration
     build: {
@@ -136,10 +145,23 @@ export default defineConfig(({ command, mode }) => {
         input: {
           main: currentEnv.indexHtml || resolve(__dirname, "src/index.html"),
         },
+        external: [
+          'react',
+          'react-dom',
+          '@tanstack/react-query',
+          'use-sync-external-store'
+        ],
         output: {
           manualChunks: {
             // Vendor chunk configuration for better caching
-            vendor: ["@web3modal/wagmi", "@xmtp/proto", "@ng-select/ng-select"],
+            vendor: ["@xmtp/proto", "@ng-select/ng-select"],
+            // WalletConnect chunk for better compatibility
+            walletconnect: [
+              "@walletconnect/universal-provider",
+              "@walletconnect/core",
+              "@walletconnect/ethereum-provider",
+              "@walletconnect/sign-client"
+            ],
           },
         },
       },
@@ -271,13 +293,20 @@ export default defineConfig(({ command, mode }) => {
     // Dependency optimization configuration
     optimizeDeps: {
       include: [
-        "@web3modal/wagmi",
+        "@wagmi/core",
         "qrcode",
         "zone.js",
         "@ng-select/ng-select",
         "@xmtp/proto",
       ],
-      exclude: ["@xmtp/wasm-bindings", "@xmtp/browser-sdk"],
+      exclude: [
+        "@xmtp/wasm-bindings",
+        "@xmtp/browser-sdk",
+        "react",
+        "react-dom",
+        "@tanstack/react-query",
+        "use-sync-external-store"
+      ],
       cacheDir: "node_modules/.vite",
       esbuildOptions: {
         target: "es2020",

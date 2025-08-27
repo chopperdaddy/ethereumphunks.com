@@ -27,9 +27,6 @@ if (!config || !['mainnet', 'sepolia'].includes(config)) {
 const cloudNode = process.env.IPFS_CLOUD_NODE;
 const cloudToken = process.env.IPFS_CLOUD_TOKEN;
 
-// Get the current timestamp for the build directory
-const timestamp = moment().format('MMMD').toLowerCase();
-
 // Common IPFS options for consistent hashing
 const ipfsOptions = {
   cidVersion: 1,
@@ -94,7 +91,13 @@ async function deployToIPFS() {
 
     logSection(`Deploying ${config.toUpperCase()} Build`);
 
-    const buildDir = path.join(__dirname, 'dist', `etherphunks-market-${config}_${timestamp}`, 'browser');
+    // Generate timestamp for build output directory (format: MMDD)
+    const timestamp = new Date().toLocaleDateString("en", {
+      month: "2-digit",
+      day: "2-digit",
+    }).replace("/", "").toLowerCase();
+
+    const buildDir = path.join(__dirname, 'dist', `etherphunks-market-${config}_${timestamp}`);
 
     if (!fs.existsSync(buildDir)) {
       logError(`Build directory not found: ${buildDir}`);

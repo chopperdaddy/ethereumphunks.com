@@ -4,9 +4,18 @@ import { Store } from '@ngrx/store';
 
 import { GlobalState } from '@/models/global-state';
 import { Auction, Phunk } from '@/models/db';
-import { AuctionRequest, AuctionResult, formatAuction, isValidAuction } from '@/models/auctions';
+import { AuctionRequest, formatAuction, isValidAuction } from '@/models/auctions';
 
-import { Observable, catchError, firstValueFrom, interval, from, of, tap, map, switchMap, merge } from 'rxjs';
+import { Observable, catchError, firstValueFrom, interval, from, of, tap, switchMap, merge } from 'rxjs';
+
+import { AppKit, createAppKit } from '@reown/appkit'
+import { WagmiAdapter } from '@reown/appkit-adapter-wagmi'
+import { AppKitNetwork, mainnet, sepolia } from '@reown/appkit/networks'
+
+import { getBlockNumber, getEnsAddress, getEnsAvatar, getEnsName, getTransaction, getTransactionReceipt, multicall, readContract, simulateContract, watchBlockNumber, watchContractEvent } from 'viem/actions';
+import { Client, TransactionReceipt, WatchBlockNumberReturnType, WatchContractEventReturnType, bytesToHex, decodeFunctionData, formatEther, isAddress, keccak256, numberToBytes, parseEther, stringToBytes, toHex, zeroAddress, http } from 'viem';
+
+import { reconnect, Config, watchAccount, getPublicClient, getAccount, disconnect, getChainId, getWalletClient, GetWalletClientReturnType, GetAccountReturnType, signTypedData } from '@wagmi/core';
 
 // L1
 import { EtherPhunksMarketABI } from '@/abi/EtherPhunksMarket';
@@ -17,17 +26,7 @@ import { auctionHouseL1 } from '@/abi/AuctionHouseL1';
 import { EtherPhunksNftMarketABI } from '@/abi/EtherPhunksNftMarket';
 import { EtherPhunksBridgeL2ABI } from '@/abi/EtherPhunksBridgeL2';
 
-import { reconnect, http, createConfig, Config, watchAccount, getPublicClient, getAccount, disconnect, getChainId, getWalletClient, GetWalletClientReturnType, GetAccountReturnType, signTypedData } from '@wagmi/core';
-import { coinbaseWallet, walletConnect, injected } from '@wagmi/connectors';
-
 import * as appStateActions from '@/state/app/app-state.actions';
-
-import { Chain, mainnet, sepolia } from 'viem/chains';
-import { magma } from '@/constants/magmaChain';
-
-import { createWeb3Modal } from '@web3modal/wagmi';
-
-import { PublicClient, TransactionReceipt, WatchBlockNumberReturnType, WatchContractEventReturnType, bytesToHex, createPublicClient, custom, decodeFunctionData, formatEther, isAddress, keccak256, numberToBytes, parseEther, stringToBytes, toHex, zeroAddress } from 'viem';
 
 import { selectIsBanned } from '@/state/app/app-state.selectors';
 
@@ -43,15 +42,15 @@ const projectId = 'd183619f342281fd3f3ff85716b6016a';
 
 const metadata = {
   name: 'Ethereum Phunks Market',
-  description: '',
+  description: 'A decentralized marketplace for Ethereum Phunks & Curated Ethscription Collections',
   url: 'https://etherphunks.eth.limo',
-  icons: []
+  icons: ['https://etherphunks.eth.limo/favicon.ico']
 };
 
 const themeVariables = {
   '--w3m-font-family': 'Montserrat, sans-serif',
   '--w3m-accent': 'rgba(var(--highlight), 1)',
-  '--w3m-z-index': 99999,
+  '--w3m-z-index': 9999999999999,
   '--w3m-border-radius-master': '0',
 };
 
@@ -60,132 +59,55 @@ const themeVariables = {
 })
 export class Web3Service {
 
-  maxCooldown = 4;
-  connectedState!: Observable<any>;
+  minCooldown = 4;
+  connectedState$!: Observable<GetAccountReturnType<Config>>;
 
-  l1Client!: PublicClient;
-  l2Client!: PublicClient;
+  l1Client!: Client;
+  l2Client!: Client;
 
   config!: Config;
-  modal;
+  modal!: AppKit;
+  wagmiAdapter!: WagmiAdapter;
+  networks: [AppKitNetwork, ...AppKitNetwork[]] = environment.chainId === 1 ? [mainnet] : [sepolia];
 
-  globalConfig$ = this.store.select(state => state.appState.config).pipe(
-    map((res) => ({
-      ...res,
-      maintenance: environment.production ? res.maintenance : false
-    }))
-  );
-
-  chains: [Chain, ...Chain[]] = environment.chainId === 1 ? [mainnet] : [sepolia];
+  globalConfig$ = this.store.select(state => state.appState.config);
 
   constructor(
     private store: Store<GlobalState>,
     private ngZone: NgZone
   ) {
-    this.l1Client = createPublicClient({
-      chain: this.chains[0],
-      transport: http(environment.rpcHttpProvider)
-    });
 
-    this.l2Client = createPublicClient({
-      chain: this.chains[1],
-      transport: http(this.chains[1]?.rpcUrls.default.http[0] || environment.magmaRpcHttpProvider)
-    });
-
-    this.config = createConfig({
-      chains: this.chains,
-      transports: {
-        [environment.chainId]: http(environment.rpcHttpProvider),
-        // 6969696969: http(environment.magmaRpcHttpProvider)
-      },
-      connectors: [
-        injected({ shimDisconnect: true }),
-        walletConnect({ projectId, metadata, showQrModal: false }),
-        // coinbaseWallet({
-        //   appName: metadata.name,
-        //   appLogoUrl: metadata.icons[0]
-        // })
-      ]
-    });
-
-    this.modal = createWeb3Modal({
-      wagmiConfig: this.config,
+    this.wagmiAdapter = new WagmiAdapter({
       projectId,
-      enableAnalytics: false,
-      themeVariables,
+      networks: this.networks,
+      transports: {
+        [mainnet.id]: http(environment.rpcHttpProvider),
+      }
     });
+
+    this.modal = createAppKit({
+      adapters: [this.wagmiAdapter],
+      networks: this.networks,
+      metadata,
+      themeVariables,
+      projectId,
+      enableNetworkSwitch: false,
+      enableWalletGuide: false,
+      allWallets: "ONLY_MOBILE",
+      features: {
+        analytics: false,
+        swaps: false,
+        onramp: false,
+      }
+    });
+
+    this.config = this.wagmiAdapter.wagmiConfig;
+    this.l1Client = this.config.getClient();
+    this.l2Client = this.config.getClient();
 
     this.createListeners();
     this.startBlockWatcher();
     this.startPointsWatcher();
-
-    // setInterval(() => {
-    //   console.log({
-    //     l1: this.l1Client,
-    //     l2: this.l2Client
-    //   });
-    // }, 10_000);
-  }
-
-  /**
-   * Creates and initializes Web3 event listeners for account changes and blockchain events
-   * @returns Promise that resolves when listeners are set up
-   */
-  async createListeners(): Promise<void> {
-
-    this.connectedState = new Observable((observer) => watchAccount(this.config, {
-      onChange: (account) => this.ngZone.run(() => observer.next(account))
-    }));
-
-    this.connectedState.pipe(
-      tap((account: GetAccountReturnType) => {
-        this.store.dispatch(appStateActions.setConnected({ connected: account.isConnected }));
-        this.store.dispatch(appStateActions.setWalletAddress({ walletAddress: account.address?.toLowerCase() }));
-        // if (account.chainId !== environment.chainId) this.switchNetwork();
-      }),
-      catchError((err) => {
-        this.disconnectWeb3();
-        return of(err);
-      }),
-    ).subscribe();
-
-    await reconnect(this.config);
-  }
-
-  /**
-   * Starts watching for new blocks on the L1 chain
-   * Updates the current block number in the store when new blocks arrive
-   */
-  blockWatcher!: WatchBlockNumberReturnType | undefined;
-  startBlockWatcher(): void {
-    if (this.blockWatcher) return;
-    this.blockWatcher = this.l1Client.watchBlockNumber({
-      emitOnBegin: true,
-      onBlockNumber: (blockNumber) => {
-        const currentBlock = Number(blockNumber);
-        this.store.dispatch(appStateActions.setCurrentBlock({ currentBlock }));
-      }
-    });
-  }
-
-  /**
-   * Starts watching for points-related events from the Points contract
-   * Dispatches store actions when points are added or multipliers change
-   */
-  pointsWatcher!: WatchContractEventReturnType | undefined;
-  startPointsWatcher(): void {
-    if (this.pointsWatcher) return;
-    this.pointsWatcher = this.l1Client.watchContractEvent({
-      address: pointsAddress as `0x${string}`,
-      abi: PointsABI,
-      onLogs: (logs) => {
-        logs.forEach((log: any) => {
-          if (log.eventName === 'PointsAdded') this.store.dispatch(appStateActions.pointsChanged({ log }));
-          // TODO: Add event to smart contract
-          if (log.eventName === 'MultiplierSet') {}
-        });
-      }
-    });
   }
 
   /**
@@ -214,6 +136,67 @@ export class Web3Service {
   }
 
   /**
+   * Creates and initializes Web3 event listeners for account changes and blockchain events
+   * @returns Promise that resolves when listeners are set up
+   */
+  async createListeners(): Promise<void> {
+
+    this.connectedState$ = new Observable((observer) => watchAccount(this.config, {
+      onChange: (account) => this.ngZone.run(() => observer.next(account))
+    }));
+
+    this.connectedState$.pipe(
+      tap((account: GetAccountReturnType) => {
+        this.store.dispatch(appStateActions.setConnected({ connected: account.isConnected }));
+        this.store.dispatch(appStateActions.setWalletAddress({ walletAddress: account.address?.toLowerCase() }));
+        // if (account.chainId !== environment.chainId) this.switchNetwork();
+      }),
+      catchError((err) => {
+        this.disconnectWeb3();
+        return of(err);
+      }),
+    ).subscribe();
+
+    await reconnect(this.config);
+  }
+
+  /**
+   * Starts watching for new blocks on the L1 chain
+   * Updates the current block number in the store when new blocks arrive
+   */
+  blockWatcher!: WatchBlockNumberReturnType | undefined;
+  startBlockWatcher(): void {
+    if (this.blockWatcher) return;
+    this.blockWatcher = watchBlockNumber(this.l1Client, {
+      emitOnBegin: true,
+      onBlockNumber: (blockNumber) => {
+        const currentBlock = Number(blockNumber);
+        this.store.dispatch(appStateActions.setCurrentBlock({ currentBlock }));
+      }
+    });
+  }
+
+  /**
+   * Starts watching for points-related events from the Points contract
+   * Dispatches store actions when points are added or multipliers change
+   */
+  pointsWatcher!: WatchContractEventReturnType | undefined;
+  startPointsWatcher(): void {
+    if (this.pointsWatcher) return;
+    this.pointsWatcher = watchContractEvent(this.l1Client, {
+      address: pointsAddress as `0x${string}`,
+      abi: PointsABI,
+      onLogs: (logs) => {
+        logs.forEach((log: any) => {
+          if (log.eventName === 'PointsAdded') this.store.dispatch(appStateActions.pointsChanged({ log }));
+          // TODO: Add event to smart contract
+          if (log.eventName === 'MultiplierSet') {}
+        });
+      }
+    });
+  }
+
+  /**
    * Switches the connected wallet to the specified network
    * @param l Network to switch to - 'l1' for mainnet/testnet or 'l2' for Magma
    */
@@ -226,8 +209,8 @@ export class Web3Service {
       console.log('switching chain', chainId, environment.chainId);
       return await walletClient?.switchChain({ id: environment.chainId });
     } else if (l === 'l2') {
-      if (chainId === magma.id) return;
-      return await walletClient?.switchChain({ id: magma.id });
+      // if (chainId === magma.id) return;
+      // return await walletClient?.switchChain({ id: magma.id });
     }
   }
 
@@ -463,7 +446,7 @@ export class Web3Service {
    */
   async readMarketContract(functionName: any, args: (string | undefined)[]): Promise<any | null> {
     try {
-      const call: any = await this.l1Client.readContract({
+      const call: any = await readContract(this.l1Client, {
         address: marketAddress as `0x${string}`,
         abi: EtherPhunksMarketABI,
         functionName,
@@ -508,7 +491,7 @@ export class Web3Service {
 
   async readAuctionContract(functionName: any, args: (string | undefined)[]): Promise<any | null> {
     try {
-      const call = await this.l1Client.readContract({
+      const call = await readContract(this.l1Client, {
         address: auctionHouseAddress as `0x${string}`,
         abi: auctionHouseL1,
         functionName,
@@ -739,7 +722,7 @@ export class Web3Service {
    * @returns Promise resolving to the points balance as a number
    */
   async getUserPoints(address: string): Promise<number> {
-    const points = await this.l1Client.readContract({
+    const points = await readContract(this.l1Client, {
       address: pointsAddress as `0x${string}`,
       abi: PointsABI,
       functionName: 'points',
@@ -753,7 +736,7 @@ export class Web3Service {
    * @returns Promise resolving to the current multiplier value
    */
   async getMultiplier(): Promise<any> {
-    const multiplier = await this.l1Client.readContract({
+    const multiplier = await readContract(this.l1Client, {
       address: pointsAddress as `0x${string}`,
       abi: PointsABI,
       functionName: 'multiplier',
@@ -774,7 +757,7 @@ export class Web3Service {
       abi: EtherPhunksMarketABI as any
     };
 
-    const multicall = await this.l1Client.multicall({
+    const call = await multicall(this.l1Client, {
       contracts: [{
         ...contract,
         functionName: 'userEthscriptionPossiblyStored',
@@ -786,7 +769,7 @@ export class Web3Service {
         args: [hashId as `0x${string}`],
       }]
     });
-    return multicall;
+    return call;
   }
 
   /**
@@ -814,7 +797,7 @@ export class Web3Service {
       });
     }
 
-    const res = await this.l1Client.multicall({ contracts: calls });
+    const res = await multicall(this.l1Client, { contracts: calls });
 
     // console.log({res})
 
@@ -946,7 +929,7 @@ export class Web3Service {
     };
     if (value) tx.value = value;
 
-    const { request, result } = await this.l2Client.simulateContract(tx);
+    const { request, result } = await simulateContract(this.l2Client, tx);
     return await walletClient?.writeContract(request);
   }
 
@@ -984,7 +967,7 @@ export class Web3Service {
     };
     if (value) tx.value = value;
 
-    const { request, result } = await this.l2Client.simulateContract(tx);
+    const { request, result } = await simulateContract(this.l2Client, tx);
     return await walletClient?.writeContract(request);
   }
 
@@ -997,7 +980,7 @@ export class Web3Service {
   async readMarketContractL2(functionName: any, args: (string | undefined)[]): Promise<any> {
     // console.log('l2client', this.l2Client);
     if (!this.l2Client?.chain) return null;
-    const call: any = await this.l2Client.readContract({
+    const call: any = await readContract(this.l2Client, {
       address: marketAddressL2 as `0x${string}`,
       abi: EtherPhunksNftMarketABI,
       functionName,
@@ -1016,7 +999,7 @@ export class Web3Service {
   async readTokenContractL2(functionName: any, args: (string | undefined)[]): Promise<any> {
     // console.log('l2client', this.l2Client);
     if (!this.l2Client?.chain) return null;
-    const call: any = await this.l2Client.readContract({
+    const call: any = await readContract(this.l2Client, {
       address: bridgeAddressL2 as `0x${string}`,
       abi: EtherPhunksBridgeL2ABI,
       functionName,
@@ -1036,7 +1019,7 @@ export class Web3Service {
    * @returns Promise resolving to the transaction details
    */
   async getTransactionL1(hash: string): Promise<any> {
-    const transaction = await this.l1Client.getTransaction({ hash: hash as `0x${string}` });
+    const transaction = await getTransaction(this.l1Client, { hash: hash as `0x${string}` });
     return transaction;
   }
 
@@ -1046,7 +1029,7 @@ export class Web3Service {
    * @returns Promise resolving to the transaction receipt if found
    */
   async getTransactionReceiptL1(hash: string): Promise<TransactionReceipt | undefined> {
-    const receipt = await this.l1Client.getTransactionReceipt({ hash: hash as `0x${string}` });
+    const receipt = await getTransactionReceipt(this.l1Client, { hash: hash as `0x${string}` });
     return receipt;
   }
 
@@ -1128,7 +1111,7 @@ export class Web3Service {
    * @returns Promise resolving to the current block number
    */
   async getCurrentBlockL1(): Promise<number> {
-    const blockNum = await this.l1Client.getBlockNumber();
+    const blockNum = await getBlockNumber(this.l1Client);
     return Number(blockNum);
   }
 
@@ -1194,7 +1177,7 @@ export class Web3Service {
    * @returns Promise resolving to the associated address
    */
   async getEnsOwner(name: string) {
-    return await this.l1Client.getEnsAddress({ name });
+    return await getEnsAddress(this.l1Client, { name });
   }
 
   /**
@@ -1205,7 +1188,7 @@ export class Web3Service {
   async getEnsFromAddress(address: string | null | undefined): Promise<string | null> {
     if (!address) return null;
     try {
-      return await this.l1Client.getEnsName({ address: address as `0x${string}` });
+      return await getEnsName(this.l1Client, { address: address as `0x${string}` });
     } catch (err) {
       return null;
     }
@@ -1218,7 +1201,7 @@ export class Web3Service {
    */
   async getEnsAvatar(name: string): Promise<string | null> {
     if (!name) return null;
-    return await this.l1Client.getEnsAvatar({ name });
+    return await getEnsAvatar(this.l1Client, { name });
   }
 
   /**
@@ -1241,3 +1224,4 @@ export class Web3Service {
     };
   }
 }
+

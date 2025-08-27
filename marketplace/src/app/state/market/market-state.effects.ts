@@ -240,9 +240,9 @@ export class MarketStateEffects {
       this.store.select(marketStateSelectors.selectActiveSort),
     ),
     filter(([_, marketType]) => marketType === 'all'),
-    tap(([action, marketType, slug, traitFilters, activeSort]) =>
-      console.log('setTraitFilter$', {action, marketType, slug, traitFilters, activeSort})
-    ),
+    // tap(([action, marketType, slug, traitFilters, activeSort]) =>
+    //   console.log('setTraitFilter$', {action, marketType, slug, traitFilters, activeSort})
+    // ),
     switchMap(([_, __, slug, traitFilters, activeSort]) => {
       return this.dataSvc.fetchAllWithPagination(slug, 0, this.defaultFetchLength, traitFilters, activeSort).pipe(
         mergeMap((data: MarketState['activeMarketRouteData']) => [

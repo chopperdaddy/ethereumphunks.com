@@ -327,7 +327,7 @@
 <ng-template #cooldown let-phunk>
   @if ((isCooling$ | async) && !phunk.nft) {
     <div class="cooldown-wrapper">
-      <p>{{ web3Svc.maxCooldown }} Block cooldown</p>
+      <p>{{ web3Svc.minCooldown }} Block cooldown</p>
       <img src="/loader-phunk.gif" width="40" height="40" alt="">
     </div>
   }

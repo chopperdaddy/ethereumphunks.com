@@ -24,11 +24,18 @@
     outline: none !important;
 
     .ng-value-container {
+      width: 100%;
 
       .ng-placeholder {
         font-size: 1.6rem;
         font-weight: 600;
         color: rgba(var(--text-color), 1);
+
+        width: 100%;
+        max-width: 100%;
+        text-overflow: ellipsis;
+        overflow: hidden;
+        white-space: nowrap;
       }
 
       .ng-input {

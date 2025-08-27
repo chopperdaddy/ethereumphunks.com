@@ -46,6 +46,9 @@ $mobile: 800px;
   --escrow-color: 255, 230, 0;
   --magma: 255, 102, 73;
 
+  // AppKit
+  --w3m-z-index: 9999999999999;
+
   @media (max-width: $mobile) {
     --header-height: 12rem;
     --slideout-width: 100%;

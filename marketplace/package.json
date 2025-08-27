@@ -42,10 +42,9 @@
     "@ngrx/router-store": "^19.1.0",
     "@ngrx/store": "^19.1.0",
     "@ngrx/store-devtools": "^19.1.0",
+    "@reown/appkit": "^1.8.1",
+    "@reown/appkit-adapter-wagmi": "^1.8.1",
     "@supabase/supabase-js": "^2.47.16",
-    "@wagmi/connectors": "^5.8.1",
-    "@wagmi/core": "^2.17.1",
-    "@web3modal/wagmi": "^5.1.11",
     "@xmtp/browser-sdk": "^4.0.2",
     "animejs": "^3.2.1",
     "apollo-angular": "^10.0.3",
@@ -61,7 +60,6 @@
     "ngx-socket-io": "4.8.5",
     "ngx-timeago": "^3.0.0",
     "ngxtension": "^5.0.0",
-    "react": "^19.1.0",
     "rxjs": "^7.4.0",
     "svgson": "^5.3.1",
     "tinycolor2": "^1.6.0",
@@ -70,13 +68,10 @@
     "upng-js": "^2.1.0",
     "uri-js": "^4.4.1",
     "uuid": "^9.0.1",
-    "viem": "^2.31.7",
+    "viem": "^2.36.0",
+    "wagmi": "^2.16.8",
     "webpack": "^5.47.1",
     "zone.js": "~0.15.0"
-  },
-  "resolutions": {
-    "@noble/hashes": "^1.8.0",
-    "@noble/curves": "^1.9.1"
   },
   "devDependencies": {
     "@analogjs/vite-plugin-angular": "^1.16.1",
@@ -90,14 +85,13 @@
     "@types/get-pixels": "^3.3.4",
     "@types/jasmine": "~3.6.0",
     "@types/node": "^12.11.1",
-    "@types/react": "^18.3.3",
     "@types/tinycolor2": "^1.4.3",
     "@types/upng-js": "^2.1.5",
     "@types/uuid": "^9.0.8",
     "esbuild-wasm": "^0.25.4",
     "rollup-plugin-visualizer": "^5.14.0",
     "sass": "^1.89.0",
-    "typescript": "5.5.4",
+    "typescript": "~5.7.2",
     "vite": "^6.3.5",
     "vite-plugin-checker": "^0.9.3"
   }
