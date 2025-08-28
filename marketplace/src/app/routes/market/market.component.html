@@ -11,9 +11,10 @@
       }
 
       @let routeParamAddress = (routeParamAddress$ | async);
+      @let showComments = routeParamAddress && (globalConfig$ | async)?.comments;
       @let routeParamAddressEns = (routeParamAddress | address) | async;
 
-      <div class="content-wrapper" [class.comments-active]="routeParamAddress">
+      <div class="content-wrapper" [class.comments-active]="showComments">
         <div class="left">
           <div class="toolbar-wrapper">
             <div class="toolbar">
@@ -116,6 +117,7 @@
             <app-phunk-grid
               [observe]="true"
               [marketType]="marketType"
+              [narrow]="showComments"
               [activeSort]="(activeSort$ | async)!"
               [limit]="250"
               [traitFilters]="(activeTraitFilters$ | async)"
@@ -135,7 +137,7 @@
           </div>
         </div>
         <div class="right">
-          @if (routeParamAddress) {
+          @if (showComments) {
             <div class="comments-wrapper">
               <h2>
                 Comments for <span class="highlight">{{ routeParamAddressEns }}</span>

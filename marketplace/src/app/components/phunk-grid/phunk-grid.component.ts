@@ -47,7 +47,7 @@ import * as marketStateActions from '@/state/market/market-state.actions';
   host:  {
     '[class.selectable]': 'selectable',
     '[class]': 'viewType',
-    '[class.narrow]': 'marketType === "owned" && viewType === "market"',
+    '[class.narrow]': 'narrow',
   },
   templateUrl: './phunk-grid.component.html',
   styleUrls: ['./phunk-grid.component.scss']
@@ -61,6 +61,7 @@ export class PhunkGridComponent implements OnChanges {
 
   @Input() marketType!: MarketType;
   @Input() activeSort!: SortOption;
+  @Input() narrow: boolean = false;
 
   @Input() viewType: ViewType = 'market';
   @Input() slug!: string;

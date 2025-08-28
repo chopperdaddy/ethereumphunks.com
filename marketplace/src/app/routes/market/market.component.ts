@@ -112,6 +112,7 @@ export class MarketComponent {
     canEscrow: boolean,
   } = defaultActionState;
 
+  globalConfig$ = this.store.select(appStateSelectors.selectConfig);
   activeCollection$ = this.store.select(dataStateSelectors.selectActiveCollection);
   walletAddress$ = this.store.select(appStateSelectors.selectWalletAddress);
 
