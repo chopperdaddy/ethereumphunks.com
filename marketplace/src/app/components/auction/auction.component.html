@@ -1,18 +1,29 @@
 @if (phunkWithAuction$ | async; as phunk) {
 
-  <div class="auction-header">
-    <h2>
-      @if ((phunk.collection); as collection) {
-        {{ collection.singleName }} {{ phunk.tokenId }}
-      } @else {
-        Loading...
-      }
-    </h2>
+  <div class="auction-header" [class.has-next]="nextButton()">
+    <div class="left">
+      <h2>
+        @if ((phunk.collection); as collection) {
+          {{ collection.singleName }} {{ phunk.tokenId }}
+        } @else {
+          Loading...
+        }
+      </h2>
 
-    <h3>
-      <span class="indicator" [class.active]="!auctionComplete()"></span>
-      {{ auctionComplete() ? 'Auction Complete' : 'Live Auction' }}
-    </h3>
+      <h3>
+        <span class="indicator" [class.active]="!auctionComplete()"></span>
+        {{ auctionComplete() ? 'Auction Complete' : 'Live Auction' }}
+      </h3>
+    </div>
+
+    <div class="right">
+      @if (nextButton()) {
+        <button (click)="nextAuction()">
+          Next
+          <ng-container *ngTemplateOutlet="menuIcon"></ng-container>
+        </button>
+      }
+    </div>
   </div>
 
   @if (phunk.auction; as auction) {
@@ -148,4 +159,8 @@
 
 <ng-template #questionMarkIcon>
   <svg height="26" viewBox="0 0 26 26" width="26" xmlns="http://www.w3.org/2000/svg"><path d="m16 24v2h-6v-2zm4-2v2h-4v-2zm-10 0v2h-4v-2zm12-2v2h-2v-2zm-16 0v2h-2v-2zm18-4v4h-2v-4zm-20 0v4h-2v-4zm10 0v2h-2v-2zm12-6v6h-2v-6zm-24 0v6h-2v-6zm14 2v2h-4v-2zm-6-2v2h-2v-2zm8 0v2h-2v-2zm6-4v4h-2v-4zm-20 0v4h-2v-4zm12 2v2h-6v-2zm6-4v2h-2v-2zm-16 0v2h-2v-2zm4-2v2h-4v-2zm10 0v2h-4v-2zm-4-2v2h-6v-2z" fill-rule="evenodd" fill="rgba(var(--text-color), 1)" /></svg>
+</ng-template>
+
+<ng-template #menuIcon>
+  <svg height="15" viewBox="0 0 9 15" width="9" xmlns="http://www.w3.org/2000/svg"><path d="m6 6h3v3h-3zm-3-3h3v3h-3zm0 6h3v3h-3zm-3-9h3v3h-3zm0 12h3v3h-3z" fill-rule="evenodd"/></svg>
 </ng-template>

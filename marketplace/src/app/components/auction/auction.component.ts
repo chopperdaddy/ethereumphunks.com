@@ -1,4 +1,4 @@
-import { Component, input, signal } from '@angular/core';
+import { Component, input, output, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
@@ -53,6 +53,9 @@ export class AuctionComponent {
 
   collection = input<Collection | undefined>();
   collection$ = toObservable(this.collection);
+
+  nextButton = input<boolean>(false);
+  nextClicked = output<void>();
 
   phunkWithAuction$ = combineLatest([this.phunk$, this.collection$]).pipe(
     // delay(5000),
@@ -237,5 +240,9 @@ export class AuctionComponent {
 
   handleTimeLeft(timeLeft: any): void {
     this.auctionComplete.set(timeLeft.left <= 0);
+  }
+
+  nextAuction(): void {
+    this.nextClicked.emit();
   }
 }
