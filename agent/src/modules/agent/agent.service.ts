@@ -121,7 +121,7 @@ export class AgentService implements OnModuleInit {
         route: frontendContext?.route || 'unknown'
       });
 
-      return await this.langchainSvc.ask(contextualMessage, message.conversationId);
+      return await this.langchainSvc.ask(contextualMessage, message.conversationId, senderAddress);
     }
 
     // Fallback to original message if no context available
@@ -209,15 +209,12 @@ export class AgentService implements OnModuleInit {
       route
     });
 
-    // Create a context section with database guidance for the LLM
-    const tableSuffix = network === 'sepolia' || chainId === '11155111' ? '_sepolia' : '';
+    // Create a clean context section without technical details
     const contextSection = `
 [SYSTEM CONTEXT - User: ${userAddress}]
 - Network: ${network} (Chain ID: ${chainId})
 - Page: ${pageType} at ${route}
 - User Address: ${userAddress}
-- Database Tables: Use ethscriptions${tableSuffix}, listings${tableSuffix}, events${tableSuffix}, bids${tableSuffix}
-- REMINDER: For ownership questions, you MUST query the database using mcp__supabase__execute_sql
 - Timestamp: ${new Date().toISOString()}
 [END CONTEXT]
 
