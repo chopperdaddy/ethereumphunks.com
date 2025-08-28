@@ -304,7 +304,7 @@ contract EtherPhunksMarketV2SepoliaDowngrade is
      * @notice The function transfers the pending withdrawals to the user's address.
      * @notice If the transfer fails, an error message is thrown.
      */
-    function withdraw() public nonReentrant {
+    function withdraw() public virtual nonReentrant {
         require(
             (pendingWithdrawalsV2[msg.sender] + pendingWithdrawals[msg.sender]) != 0,
             "No pending withdrawals"
@@ -454,7 +454,7 @@ contract EtherPhunksMarketV2SepoliaDowngrade is
     /**
      * @dev It handles the deposit and/or listing of single or multiple items (hashId).
      */
-    fallback() external {
+    fallback() external virtual {
         require(!paused(), "Contract is paused");
 
         bytes32 signature;
