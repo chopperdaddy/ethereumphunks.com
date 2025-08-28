@@ -19,7 +19,7 @@ const config: HardhatUserConfig = {
     },
   },
   paths: {
-    sources: './contracts/AuctionHouse',
+    sources: './contracts/V2Sepolia',
     tests: './test',
     cache: './cache',
     artifacts: './artifacts',
