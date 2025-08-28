@@ -14,8 +14,8 @@
 
   .filters-section {
     display: grid;
-    grid-template-columns: repeat(5, calc(20% - 2rem));
-    gap: 2rem;
+    grid-template-columns: repeat(5, calc(20% - 1rem));
+    gap: 1rem;
     justify-content: space-between;
   }
 

@@ -32,8 +32,10 @@ import { selectWalletAddress } from '@/state/app/app-state.selectors';
     CommonModule,
     FormsModule,
     RouterModule,
+
     WalletAddressDirective,
     TippyDirective,
+
     AvatarComponent,
   ],
   selector: 'app-comments',
@@ -42,10 +44,11 @@ import { selectWalletAddress } from '@/state/app/app-state.selectors';
 })
 export class CommentsComponent {
 
+  title = input<string>('Comments');
+  showTitle = input<boolean>(true);
+
   mainTopic = input.required<string>();
   mainTopic$ = toObservable(this.mainTopic);
-
-  showTitle = input<boolean>(true);
 
   commentValue = model<Record<string, string>>({});
   expanded = signal<Record<string, boolean>>({});

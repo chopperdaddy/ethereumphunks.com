@@ -22,6 +22,7 @@ import { addCooldown } from '@/state/app/app-state.actions';
 
 import { environment } from '@environments/environment';
 import { selectNotifications } from '@/state/notification/notification.selectors';
+import { setChat, setCreateConversationWithAddress } from '@/state/chat/chat.actions';
 
 interface ActionsState {
   sell: boolean;
@@ -50,6 +51,9 @@ export class ItemActionsComponent {
 
   phunk = input.required<Phunk>();
   phunk$ = toObservable(this.phunk);
+
+  disabled = input.required<boolean>();
+  disabled$ = toObservable(this.disabled);
 
   // Other Forms
   @ViewChild('sellPriceInput') sellPriceInput!: ElementRef<HTMLInputElement>;
@@ -711,12 +715,11 @@ export class ItemActionsComponent {
     if (!res[0]?.consensus) throw new Error('Consensus not reached. Contact Support @etherphunks');
   }
 
-  async setChat() {
-    // TODO: set chat
-    console.log('setChat');
-    // this.store.dispatch(setChat({
-    //   active: true,
-    //   conversationId: '0xf1Aa941d56041d47a9a18e99609A047707Fe96c7'
-    // }));
+  /**
+   * Initiates the creation of a chat conversation with a specific address
+   * @param address - The wallet address to start a conversation with
+   */
+  async createConversation() {
+    this.store.dispatch(setCreateConversationWithAddress({ address: '0xf1Aa941d56041d47a9a18e99609A047707Fe96c7' }));
   }
 }

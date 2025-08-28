@@ -153,7 +153,8 @@ export class ChatEffects {
   createConversationWithAddress$ = createEffect(() => this.actions$.pipe(
     ofType(setCreateConversationWithAddress),
     filter(({ address }) => !!address),
-    switchMap(({ address }) => from(this.chatSvc.checkIfUserIsOnNetwork(address!)).pipe(
+    map(({ address }) => address.toLowerCase()),
+    switchMap((address) => from(this.chatSvc.checkIfUserIsOnNetwork(address)).pipe(
       switchMap((isOnNetwork) => {
         console.log({isOnNetwork});
         return from(this.chatSvc.createConversation(address!));

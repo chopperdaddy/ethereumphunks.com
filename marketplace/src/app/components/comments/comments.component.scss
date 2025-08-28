@@ -120,6 +120,10 @@ h2 {
         font-size: 1.6rem;
         font-weight: 400;
 
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+        white-space: pre-wrap;
+
         &.deleted {
           opacity: .5;
         }

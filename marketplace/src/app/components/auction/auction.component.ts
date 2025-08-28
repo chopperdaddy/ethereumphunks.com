@@ -5,7 +5,7 @@ import { RouterModule } from '@angular/router';
 
 import { Store } from '@ngrx/store';
 import { toObservable } from '@angular/core/rxjs-interop';
-import { combineLatest, distinctUntilChanged, filter, map, of, switchMap } from 'rxjs';
+import { combineLatest, delay, distinctUntilChanged, filter, map, of, switchMap } from 'rxjs';
 import { zeroAddress } from 'viem';
 
 import { Collection } from '@/models/data.state';
@@ -55,6 +55,7 @@ export class AuctionComponent {
   collection$ = toObservable(this.collection);
 
   phunkWithAuction$ = combineLatest([this.phunk$, this.collection$]).pipe(
+    // delay(5000),
     filter(([phunk, collection]) => !!phunk?.auction || !!phunk?.isAuctioned),
     map(([phunk, collection]) => {
       const hasCollection = !!phunk.collection;

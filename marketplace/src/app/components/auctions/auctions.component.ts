@@ -39,7 +39,7 @@ export class AuctionsComponent {
 
     effect(async () => {
       const auctions = this.auctions();
-      console.log({auctions});
+      // console.log({auctions});
       if (!auctions?.length) return;
 
       untracked(async () => {

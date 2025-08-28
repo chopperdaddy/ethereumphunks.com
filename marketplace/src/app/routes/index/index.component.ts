@@ -68,9 +68,7 @@ export class IndexComponent {
   mintImage = signal<string | null>(null);
   auctionImage = signal<string | null>(null);
 
-  auctions$ = this.store.select(marketStateSelectors.selectAuctions).pipe(
-    filter((auctions) => auctions?.length > 0),
-  );
+  auctions$ = this.store.select(marketStateSelectors.selectAuctions);
 
   SortOption = SortOption;
 

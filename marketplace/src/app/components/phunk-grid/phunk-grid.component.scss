@@ -211,12 +211,24 @@
     }
   }
 
+  &.narrow {
+    grid-template-columns: repeat(11, calc(100% / 11));
+  }
+
   @media (max-width: 1200px) {
     grid-template-columns: repeat(12, calc(100% / 12));
+
+    &.narrow {
+      grid-template-columns: repeat(9, calc(100% / 9));
+    }
   }
 
   @media (max-width: 1000px) {
     grid-template-columns: repeat(10, calc(100% / 10));
+
+    &.narrow {
+      grid-template-columns: repeat(7, calc(100% / 7));
+    }
   }
 
   @media (max-width: $mobile) {
@@ -229,6 +241,10 @@
 
     &.menu {
       grid-template-columns: repeat(16, calc(100% / 16));
+    }
+
+    &.narrow {
+      grid-template-columns: repeat(4, calc(100% / 4));
     }
   }
 }

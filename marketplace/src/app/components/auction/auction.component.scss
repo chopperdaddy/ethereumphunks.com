@@ -164,6 +164,12 @@
       font-family: var(--secondary-font-stack);
       font-weight: 400;
       font-size: 1.2rem;
+
+      &.disabled {
+        opacity: .5;
+        cursor: not-allowed;
+        pointer-events: none;
+      }
     }
   }
 }

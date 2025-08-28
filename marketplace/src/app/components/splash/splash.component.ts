@@ -44,6 +44,7 @@ export class SplashComponent {
 
   // Separate observable for base images that only updates when collection changes
   private baseImages$ = this.collection$.pipe(
+    // tap((collection) => console.log('SplashComponent baseImages$', collection)),
     switchMap((collection) => {
       if (!collection) return of(this.defaultImages);
 
@@ -74,7 +75,7 @@ export class SplashComponent {
         );
       }
 
-      return of(this.currentImages());
+      return of(baseImages);
     }),
     startWith(this.defaultImages)
   );

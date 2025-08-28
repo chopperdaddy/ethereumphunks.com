@@ -935,12 +935,15 @@ export class DataService {
     if (!hashId) return null;
 
     try {
-      const [ callL1, callL2 ] = await Promise.all([
+      const [
+        callL1,
+        // callL2,
+      ] = await Promise.all([
         this.web3Svc.readMarketContract('phunksOfferedForSale', [hashId]),
-        this.web3Svc.phunksOfferedForSaleL2(hashId),
+        // this.web3Svc.phunksOfferedForSaleL2(hashId),
       ]);
 
-      const offer = callL1[0] ? callL1 : callL2;
+      const offer = callL1[0] ? callL1 : null;
       if (!offer?.[0]) return null;
 
       const listing = {

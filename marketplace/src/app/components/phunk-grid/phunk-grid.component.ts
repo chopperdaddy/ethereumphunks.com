@@ -47,6 +47,7 @@ import * as marketStateActions from '@/state/market/market-state.actions';
   host:  {
     '[class.selectable]': 'selectable',
     '[class]': 'viewType',
+    '[class.narrow]': 'marketType === "owned" && viewType === "market"',
   },
   templateUrl: './phunk-grid.component.html',
   styleUrls: ['./phunk-grid.component.scss']

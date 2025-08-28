@@ -1,7 +1,5 @@
 @if (phunkWithAuction$ | async; as phunk) {
 
-  <!-- {{ phunk | json }} -->
-
   <div class="auction-header">
     <h2>
       @if ((phunk.collection); as collection) {
@@ -94,6 +92,58 @@
       />
     }
   }
+} @else {
+  <div class="auction-header">
+    <h2>Loading...</h2>
+    <h3>&nbsp;</h3>
+  </div>
+
+  <div class="bid-info">
+    <div class="bid-info-item">
+      <div class="label">Bids</div>
+      <div class="value">0</div>
+    </div>
+
+    <div class="bid-info-item current-bid">
+      <div class="label">
+        {{ auctionComplete() ? 'Winning' : 'Current' }}
+      </div>
+      <div class="value">
+        <span class="eth-symbol">Ξ</span>0
+      </div>
+    </div>
+
+    <div class="bid-info-item time-remaining">
+      <div class="label">Time remaining</div>
+      <div class="value">
+        <app-timer [endTime]="'0'" />
+      </div>
+    </div>
+  </div>
+
+  <div class="form-wrapper">
+    <div class="form">
+      <div class="input-wrapper">
+        <input
+          type="number"
+          [formControl]="bidValue"
+          [placeholder]="'Loading...'"
+        />
+
+        <div class="info">
+          <ng-template [ngTemplateOutlet]="questionMarkIcon" />
+        </div>
+      </div>
+
+      <button
+        [class.disabled]="true"
+        (click)="submitBid()"
+        type="submit">
+
+        Place Bid
+      </button>
+    </div>
+  </div>
 }
 
 <ng-template #questionMarkIcon>

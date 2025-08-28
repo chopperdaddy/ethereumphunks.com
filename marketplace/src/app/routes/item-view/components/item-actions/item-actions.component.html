@@ -1,6 +1,6 @@
 @if ((walletAddress$ | async); as address) {
   @if (phunk(); as phunk) {
-    @if (phunk.isSupported) {
+    @if (phunk.isSupported && !disabled) {
 
       <!-- Escrow actions (Send) -->
       @if ((config$ | async)?.auctions && !phunk.isAuctioned) {
@@ -113,11 +113,12 @@
           <ng-container *ngTemplateOutlet="bridgeForm; context:{ $implicit: phunk }" />
         }
       } -->
-      @if (!phunk.consensus && !(isCooling$ | async)) {
-        <div class="notice">
-          <p>This {{ phunk.collection?.singleName }} does not have consensus with one or more indexers. <a href="https://x.com/etherphunks" target="_blank">Contact support</a> to resolve this issue.</p>
-        </div>
-      }
+    }
+
+    @if (phunk.isSupported && !phunk.consensus && !(isCooling$ | async)) {
+      <div class="notice">
+        <p>This {{ phunk.collection?.singleName }} does not have consensus with one or more indexers. <span (click)="createConversation()">Contact support</span> to resolve this issue.</p>
+      </div>
     }
   }
 } @else {

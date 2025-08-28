@@ -13,6 +13,7 @@ import { MarketSortsComponent } from './components/market-sorts/market-sorts.com
 import { MarketHeaderComponent } from './components/market-header/market-header.component';
 
 import { PhunkGridComponent } from '@/components/phunk-grid/phunk-grid.component';
+import { CommentsComponent } from '@/components/comments/comments.component';
 import { MarketFiltersComponent } from '@/routes/market/components/market-filters/market-filters.component';
 import { SlideoutComponent } from '@/components/slideout/slideout.component';
 
@@ -26,6 +27,7 @@ import { UtilService } from '@/services/util.service';
 import { WeiToEthPipe } from '@/pipes/wei-to-eth.pipe';
 import { CalcPipe } from '@/pipes/calculate.pipe';
 import { FormatCashPipe } from '@/pipes/format-cash.pipe';
+import { AddressPipe } from '@/pipes/address.pipe';
 
 import * as appStateSelectors from '@/state/app/app-state.selectors';
 import * as appStateActions from '@/state/app/app-state.actions';
@@ -57,10 +59,12 @@ const defaultActionState = {
     MarketFiltersComponent,
     SlideoutComponent,
     MarketSortsComponent,
+    CommentsComponent,
 
     WeiToEthPipe,
     CalcPipe,
     FormatCashPipe,
+    AddressPipe,
   ],
   selector: 'app-phunk-grid-view',
   templateUrl: './market.component.html',

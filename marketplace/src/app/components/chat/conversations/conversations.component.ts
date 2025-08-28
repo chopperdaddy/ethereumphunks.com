@@ -92,7 +92,6 @@ export class ConversationsComponent {
   ) {}
 
   newConversation() {
-    console.log('createConversation');
     this.isCreatingNewConversation.set(true);
     setTimeout(() => this.newConversationToInput.nativeElement.focus(), 100);
   }

@@ -1,16 +1,18 @@
 @if (config$ | async; as config) {
   @if ((activeCollection$ | async); as activeCollection) {
 
+    @let auctions = auctions$ | async;
+
     @if (config.maintenance) {
       <app-brb />
     } @else {
       <app-splash
         [collection]="activeCollection"
         [mintImage]="activeCollection.mintEnabled ? mintImage() : null"
-        [auctionImage]="(auctions$ | async)?.length ? auctionImage() : null"
+        [auctionImage]="auctions?.length ? auctionImage() : null"
       />
 
-      @if (config.auctions && (auctions$ | async); as auctions) {
+      @if (config.auctions && auctions?.length) {
         <app-auctions
           [auctions]="auctions"
           [collection]="activeCollection"
