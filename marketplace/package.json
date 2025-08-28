@@ -49,6 +49,7 @@
     "animejs": "^3.2.1",
     "apollo-angular": "^10.0.3",
     "dotenv": "^16.4.5",
+    "form-data": "^4.0.4",
     "get-pixels": "^3.3.3",
     "gsap": "^3.12.7",
     "ipfs-http-client": "56.0.1",
