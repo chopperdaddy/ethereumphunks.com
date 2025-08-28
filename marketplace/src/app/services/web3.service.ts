@@ -82,6 +82,7 @@ export class Web3Service {
       networks: this.networks,
       transports: {
         [mainnet.id]: http(environment.rpcHttpProvider),
+        [sepolia.id]: http(environment.rpcHttpProvider),
       }
     });
 
@@ -95,9 +96,7 @@ export class Web3Service {
       enableWalletGuide: false,
       allWallets: "ONLY_MOBILE",
       features: {
-        analytics: false,
-        swaps: false,
-        onramp: false,
+        analytics: false
       }
     });
 
