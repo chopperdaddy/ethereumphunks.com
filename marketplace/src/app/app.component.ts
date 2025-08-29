@@ -12,15 +12,13 @@ import { FooterComponent } from '@/components/footer/footer.component';
 import { MenuComponent } from '@/components/menu/menu.component';
 import { NotificationsComponent } from '@/components/notifications/notifications.component';
 import { StatusBarComponent } from '@/components/status-bar/status-bar.component';
-import { ChatComponent } from './components/chat/chat.component';
-import { LoggerComponent } from './components/logger/logger.component';
 
 import { Web3Service } from '@/services/web3.service';
 import { DataService } from '@/services/data.service';
 import { ThemeService } from '@/services/theme.service';
 import { PwaUpdateService } from '@/services/pwa-update.service';
 
-import { selectConfig, selectIsMobile, selectAdvancedMode } from '@/state/app/app-state.selectors';
+import { selectConfig, selectAdvancedMode } from '@/state/app/app-state.selectors';
 import { selectLogsActive } from '@/state/indexer-logs/indexer-logs.selectors';
 
 import * as appStateActions from '@/state/app/app-state.actions';
@@ -28,7 +26,7 @@ import * as dataStateActions from '@/state/data/data-state.actions';
 import { setChat } from '@/state/chat/chat.actions';
 import { selectChat, selectUnreadCount } from '@/state/chat/chat.selectors';
 
-import { asyncScheduler, fromEvent, debounceTime, filter, observeOn, scan, tap, withLatestFrom, map, firstValueFrom, of } from 'rxjs';
+import { asyncScheduler, fromEvent, debounceTime, filter, observeOn, scan, tap, withLatestFrom, map, firstValueFrom } from 'rxjs';
 
 import { environment } from '@environments/environment';
 
@@ -44,8 +42,6 @@ import { environment } from '@environments/environment';
     FooterComponent,
     NotificationsComponent,
     StatusBarComponent,
-    ChatComponent,
-    LoggerComponent
   ],
   selector: 'app-root',
   templateUrl: './app.component.html',
@@ -56,16 +52,10 @@ export class AppComponent implements OnInit {
 
   env = environment;
 
-  statusBarVisible = signal(true);
-
   // Target sequence for advanced mode activation
   private readonly targetSequence: string = '8008135';
 
-  chatActive$ = this.store.select(selectChat).pipe(map(({ active }) => active));
-  logsActive$ = this.store.select(selectLogsActive);
-  config$ = this.store.select(selectConfig);
   advancedMode$ = this.store.select(selectAdvancedMode);
-  unreadCount$ = this.store.select(selectUnreadCount);
 
   constructor(
     @Inject(DOCUMENT) private document: Document,
@@ -134,11 +124,11 @@ export class AppComponent implements OnInit {
     ).subscribe();
 
     // scroll event
-    fromEvent(window, 'scroll').pipe(
-      withLatestFrom(this.store.select(selectIsMobile)),
-      filter(([_, isMobile]) => !!isMobile),
-      tap(([$event, isMobile]) => this.setStatusBarVisible())
-    ).subscribe();
+    // fromEvent(window, 'scroll').pipe(
+    //   withLatestFrom(this.store.select(selectIsMobile)),
+    //   filter(([_, isMobile]) => !!isMobile),
+    //   tap(([$event, isMobile]) => this.setStatusBarVisible())
+    // ).subscribe();
 
         // keydown event for advanced mode activation
     fromEvent(this.document, 'keydown').pipe(
@@ -204,11 +194,6 @@ console.log(`
     //   const scrollY = window.scrollY;
     //   this.statusBarVisible.set(scrollY > 100);
     // }
-  }
-
-  async toggleChat() {
-    const active = await firstValueFrom(this.chatActive$);
-    this.store.dispatch(setChat({ active: !active }));
   }
 
   /**

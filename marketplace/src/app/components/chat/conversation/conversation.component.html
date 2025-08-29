@@ -3,6 +3,7 @@
 
     @let walletAddress = (walletAddress$ | async);
     @let recipient = chatSvc.getRecipientAddress(conversation, walletAddress);
+    @let activeSlug = (activeSlug$ | async);
 
     <div
       class="chat-header">
@@ -16,7 +17,13 @@
       </div>
 
       <div class="with">
-        Chatting with <app-address [address]="recipient" />
+        Chatting with
+        <a
+          [routerLink]="['/', activeSlug, 'market', 'owned']"
+          [queryParams]="{ address: recipient }">
+
+          <app-address [address]="recipient" />
+        </a>
       </div>
     </div>
 

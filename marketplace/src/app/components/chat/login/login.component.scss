@@ -3,6 +3,7 @@
 
 :host {
   font-family: var(--secondary-font-stack);
+  color: rgba(var(--white), 1);
   font-weight: 400;
   text-align: center;
 
@@ -59,7 +60,7 @@
     font-size: 1rem;
     font-weight: 400;
     text-decoration: underline;
-    color: rgba(var(--text-color), 1);
+    color: rgba(var(--white), 1);
   }
 }
 

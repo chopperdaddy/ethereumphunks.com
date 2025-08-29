@@ -22,7 +22,8 @@
   background: none;
   border: none;
 
-  &[data-active-view='conversation'] {
+  &[data-active-view='conversation'],
+  &[data-active-view='login'] {
     svg {
       path {
         fill: rgba(var(--base-color), 1);

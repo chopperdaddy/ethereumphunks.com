@@ -20,37 +20,4 @@
 <app-footer />
 <app-notifications />
 
-<div
-  class="status-wrapper"
-  [class.visible]="statusBarVisible()">
-
-  <app-status-bar />
-
-  @if ((config$ | async)?.chat) {
-    <button
-      class="chat-button"
-      [class.active]="chatActive$ | async"
-      (click)="toggleChat()">
-
-      @if ((unreadCount$ | async); as unreadCount) {
-        @if (unreadCount > 0) {
-          <span class="unread-count">{{ unreadCount }}</span>
-        }
-      }
-
-      <ng-template [ngTemplateOutlet]="chatIcon" />
-    </button>
-  }
-</div>
-
-@if ((chatActive$ | async); as active) {
-  <app-chat />
-}
-
-@if ((logsActive$ | async); as active) {
-  <app-logger />
-}
-
-<ng-template #chatIcon>
-  <svg height="9" viewBox="0 0 11 9" width="11" xmlns="http://www.w3.org/2000/svg"><path d="m2 7v1h3v1h-5v-1h1v-1zm6 0v1h-3v-1zm-5-1v1h-1v-1zm6 0v1h-1v-1zm-7-1v1h-1v-1zm8 0v1h-1v-1zm-9-3v3h-1v-3zm10 0v3h-1v-3zm-9-1v1h-1v-1zm8 0v1h-1v-1zm-8 0v-1h7v1z"/></svg>
-</ng-template>
+<app-status-bar />
