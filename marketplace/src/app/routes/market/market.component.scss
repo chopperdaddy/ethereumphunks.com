@@ -16,7 +16,13 @@
   }
 
   .right {
-
+    .comments-wrapper {
+      h2 {
+        font-size: 1.4rem;
+        line-height: 1.4;
+        padding-bottom: 1rem;
+      }
+    }
   }
 
   &.comments-active {
