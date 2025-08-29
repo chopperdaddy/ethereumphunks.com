@@ -95,5 +95,8 @@
     "typescript": "~5.7.2",
     "vite": "^6.3.5",
     "vite-plugin-checker": "^0.9.3"
+  },
+  "overrides": {
+    "@coinbase/wallet-sdk": false
   }
 }

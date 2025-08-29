@@ -5,11 +5,15 @@
 
 import { defineConfig, loadEnv } from "vite";
 import { join, resolve } from "path";
-import { visualizer } from "rollup-plugin-visualizer"; // For bundle size analysis
 
-import angular from "@analogjs/vite-plugin-angular"; // Angular integration for Vite
-import checker from "vite-plugin-checker"; // For TypeScript type checking
+import angular from "@analogjs/vite-plugin-angular";
+import { visualizer } from "rollup-plugin-visualizer";
+import checker from "vite-plugin-checker";
+
+import { environmentSetupPlugin, coinbaseExclusionPlugin, htmlRenamingPlugin } from "./vite-plugins";
+
 import fs from "fs";
+
 
 /**
  * Main Vite configuration function
@@ -76,8 +80,6 @@ export default defineConfig(({ command, mode }) => {
 
   // Get current environment config, fallback to dev-sepolia if not found
   const currentEnv = envConfig[mode] || envConfig["dev-sepolia"];
-
-  console.log(`🔧 Build Mode: ${mode}`);
 
   // Environment file handling
   const targetEnvFile = currentEnv.envFile || `environment.${mode}.ts`;
@@ -149,32 +151,27 @@ export default defineConfig(({ command, mode }) => {
           'react',
           'react-dom',
           '@tanstack/react-query',
-          'use-sync-external-store'
+          'use-sync-external-store',
+          '@coinbase/wallet-sdk'
         ],
         output: {
-          manualChunks: {
-            // Vendor chunk configuration for better caching
-            vendor: ["@xmtp/proto", "@ng-select/ng-select"],
-            // WalletConnect chunk for better compatibility
-            walletconnect: [
-              "@walletconnect/universal-provider",
-              "@walletconnect/core",
-              "@walletconnect/ethereum-provider",
-              "@walletconnect/sign-client"
-            ],
+          manualChunks: (id) => {
+            // Phosphor icons from wagmi?
+            if (id.includes('@phosphor-icons')) {
+              return 'phosphor';
+            }
           },
         },
       },
       modulePreload: true, // Enable module preloading
       cssCodeSplit: !isDevMode, // Disable CSS code splitting in dev mode to prevent missing styles on navigation
-      chunkSizeWarningLimit: 500, // Warning threshold for chunk size
+      chunkSizeWarningLimit: 1000, // Warning threshold for chunk size (increased due to better chunking)
       reportCompressedSize: true, // Report gzipped sizes
       assetsInlineLimit: 4096, // Max size for inlined assets
     },
 
     // Vite plugins configuration
     plugins: [
-
       // Angular integration plugin
       angular({
         inlineStylesExtension: "scss",
@@ -185,51 +182,13 @@ export default defineConfig(({ command, mode }) => {
       }),
 
       // Environment setup plugin
-      {
-        name: "environment-setup",
-        buildStart() {
-          // Ensure environment file exists at build start
-          if (!fs.existsSync(destEnvPath)) {
-            fs.copyFileSync(sourceEnvPath, destEnvPath);
-            console.log(`✅ Created environment.ts from ${targetEnvFile} (build start)`);
-          }
-        },
-        configureServer(server) {
-          // Clean up environment file when dev server closes
-          server.httpServer?.on('close', () => {
-            if (fs.existsSync(destEnvPath)) {
-              try {
-                fs.unlinkSync(destEnvPath);
-                console.log(`🧹 Cleaned up environment.ts`);
-              } catch (error) {
-                console.warn(`⚠️  Could not clean up environment.ts: ${error.message}`);
-              }
-            }
-          });
-        },
-        buildEnd() {
-          // Clean up environment file after build
-          if (fs.existsSync(destEnvPath)) {
-            try {
-              fs.unlinkSync(destEnvPath);
-              console.log(`🧹 Cleaned up environment.ts`);
-            } catch (error) {
-              console.warn(`⚠️  Could not clean up environment.ts: ${error.message}`);
-            }
-          }
-        },
-        closeBundle() {
-          // Final cleanup of environment file
-          if (fs.existsSync(destEnvPath)) {
-            try {
-              fs.unlinkSync(destEnvPath);
-              console.log(`🧹 Cleaned up environment.ts (final)`);
-            } catch (error) {
-              console.warn(`⚠️  Could not clean up environment.ts: ${error.message}`);
-            }
-          }
-        },
-      },
+      environmentSetupPlugin(mode),
+
+      // Coinbase exclusion plugin (fuck coinbase)
+      coinbaseExclusionPlugin(),
+
+      // HTML file renaming plugin
+      htmlRenamingPlugin(command, mode, currentEnv.outDir),
 
       // TypeScript type checking plugin
       checker({
@@ -250,23 +209,6 @@ export default defineConfig(({ command, mode }) => {
         gzipSize: true,
         brotliSize: true,
       }),
-
-      // HTML file renaming plugin
-      {
-        name: "rename-html-after-build",
-        closeBundle() {
-          if (command !== "build") return;
-          const outDir = currentEnv.outDir;
-          const htmlName = `index.${chainName}.html`;
-          const src = join(outDir, htmlName);
-          const dest = join(outDir, "index.html");
-
-          if (fs.existsSync(src)) {
-            fs.copyFileSync(src, dest);
-            fs.unlinkSync(src);
-          }
-        },
-      },
     ],
 
     // Development server configuration
@@ -305,7 +247,8 @@ export default defineConfig(({ command, mode }) => {
         "react",
         "react-dom",
         "@tanstack/react-query",
-        "use-sync-external-store"
+        "use-sync-external-store",
+        "@coinbase/wallet-sdk",
       ],
       cacheDir: "node_modules/.vite",
       esbuildOptions: {

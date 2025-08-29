@@ -1,6 +1,6 @@
 @if ((walletAddress$ | async); as address) {
   @if (phunk(); as phunk) {
-    @if (phunk.isSupported && !disabled) {
+    @if (phunk.isSupported && !disabled()) {
 
       <!-- Escrow actions (Send) -->
       @if ((config$ | async)?.auctions && !phunk.isAuctioned) {
