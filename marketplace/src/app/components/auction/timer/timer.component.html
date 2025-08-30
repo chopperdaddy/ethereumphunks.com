@@ -32,13 +32,15 @@
   </div>
 </div>
 
-<div class="colon">:</div>
+@if (+days() === 0) {
+  <div class="colon">:</div>
 
-<div class="section seconds">
-  <div class="label">sec</div>
-  <div class="value">
-    @for (digit of seconds(); track i; let i = $index) {
-      <div class="digit">{{ digit }}</div>
-    }
+  <div class="section seconds">
+    <div class="label">sec</div>
+    <div class="value">
+      @for (digit of seconds(); track i; let i = $index) {
+        <div class="digit">{{ digit }}</div>
+      }
+    </div>
   </div>
-</div>
+}
