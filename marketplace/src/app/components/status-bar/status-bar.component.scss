@@ -19,7 +19,6 @@
   @include trans($duration: .2s);
 
   @media (max-width: $mobile) {
-    bottom: -100%;
     padding-bottom: calc(env(safe-area-inset-bottom) + 2rem);
   }
 }
