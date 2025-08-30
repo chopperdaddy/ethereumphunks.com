@@ -128,8 +128,8 @@
             ) {
               @if (phunk.auction; as auction) {
                 <p i18n>
-                  {{ (auction.value | weiToEth) }}Ξ<br />
-                  ${{ ((auction.value | weiToEth) * ((usd$ | async) || 0)) | formatCash }}
+                  {{ (auction.amount | weiToEth) }}Ξ<br />
+                  ${{ ((auction.amount | weiToEth) * ((usd$ | async) || 0)) | formatCash }}
                 </p>
               }
             }
