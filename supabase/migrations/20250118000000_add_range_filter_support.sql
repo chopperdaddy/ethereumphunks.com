@@ -1,6 +1,10 @@
 -- Migration: Add range filter support to pagination functions
 -- This update adds backwards-compatible range filtering (e.g., "3-7") while preserving all existing functionality
 
+-- Drop existing functions to prevent duplicates
+DROP FUNCTION IF EXISTS fetch_all_with_pagination_new(text, integer, integer, jsonb);
+DROP FUNCTION IF EXISTS fetch_all_with_pagination_new_sepolia(text, integer, integer, jsonb);
+
 -- Update the main network function
 CREATE OR REPLACE FUNCTION fetch_all_with_pagination_new(
     p_slug text,
