@@ -16,8 +16,8 @@ import { Web3Service } from '@/services/web3.service';
 import { DataService } from '@/services/data.service';
 import { UtilService } from '@/services/util.service';
 
-import { TimerComponent } from '@/components/auction/timer/timer.component';
-import { BidHistoryComponent } from '@/components/auction/bid-history/bid-history.component';
+import { TimerComponent } from './timer/timer.component';
+import { BidHistoryComponent } from './bid-history/bid-history.component';
 
 import { WeiToEthPipe } from '@/pipes/wei-to-eth.pipe';
 

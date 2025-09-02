@@ -1,9 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, input, output, signal } from '@angular/core';
 
-import { toObservable } from '@angular/core/rxjs-interop';
-import { distinctUntilChanged, of, switchMap, tap } from 'rxjs';
-
 import { Auction, AuctionBid } from '@/models/db';
 
 import { DataService } from '@/services/data.service';

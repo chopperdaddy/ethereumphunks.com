@@ -6,9 +6,9 @@ import { LazyLoadImageModule } from 'ng-lazyload-image';
 import { DataService } from '@/services/data.service';
 import { ImageService } from '@/services/image.service';
 
-import { Auction, Phunk } from '@/models/db';
+import { Phunk } from '@/models/db';
 
-import { AuctionComponent } from '../auction/auction.component';
+import { AuctionComponent } from './auction/auction.component';
 import { Collection } from '@/models/data.state';
 
 @Component({
