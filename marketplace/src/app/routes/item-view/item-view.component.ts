@@ -10,7 +10,7 @@ import { distinctUntilChanged, filter, fromEvent, map, shareReplay, switchMap, S
 import { PhunkBillboardComponent } from '@/components/phunk-billboard/phunk-billboard.component';
 import { TxHistoryComponent } from '@/components/tx-history/tx-history.component';
 import { BreadcrumbsComponent } from '@/routes/item-view/components/breadcrumbs/breadcrumbs.component';
-import { AuctionComponent } from '@/components/auction/auction.component';
+import { AuctionComponent } from '@/components/auctions/auction/auction.component';
 import { CommentsComponent } from '@/components/comments/comments.component';
 
 import { ItemStatusComponent } from './components/item-status/item-status.component';

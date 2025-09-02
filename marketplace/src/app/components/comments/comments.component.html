@@ -48,9 +48,7 @@
         </div>
 
         <div class="comment-content">
-          <p [class.deleted]="comment.deleted">
-            {{ comment.deleted ? '[deleted]' : comment.content }}
-          </p>
+          <p [class.deleted]="comment.deleted">{{ comment.deleted ? '[deleted]' : comment.content }}</p>
         </div>
 
         @if (!comment.deleted) {
