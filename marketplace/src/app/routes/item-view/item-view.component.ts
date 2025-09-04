@@ -29,6 +29,8 @@ import { GlobalState } from '@/models/global-state';
 import * as appStateSelectors from '@/state/app/app-state.selectors';
 
 import { environment } from '@environments/environment';
+import { Phunk } from '@/models/db';
+import { setMarketSlug } from '@/state/market/market-state.actions';
 
 @Component({
   standalone: true,
@@ -62,11 +64,19 @@ export class ItemViewComponent {
   explorerUrl = environment.explorerUrl;
 
   singlePhunk$ = this.route.params.pipe(
-    // tap((params: any) => console.log('ItemViewComponent', {params})),
     filter((params: any) => !!params.hashId),
     distinctUntilChanged((prev, curr) => prev.hashId === curr.hashId),
     switchMap((params: any) => this.dataSvc.fetchSinglePhunk(params.hashId)),
+    tap((phunk: Phunk) => this.store.dispatch(setMarketSlug({ marketSlug: phunk.slug }))),
     shareReplay({ bufferSize: 1, refCount: true }),
+  );
+
+  name$ = this.singlePhunk$.pipe(
+    map((phunk: Phunk) => phunk.attributes?.filter(item => item.k === 'Name')[0]?.v),
+  );
+
+  description$ = this.singlePhunk$.pipe(
+    map((phunk: Phunk) => phunk.attributes?.filter(item => item.k === 'Description')[0]?.v),
   );
 
   scrollY$ = fromEvent(document, 'scroll').pipe(
@@ -78,6 +88,7 @@ export class ItemViewComponent {
   indexerIsBehind$ = this.store.select(appStateSelectors.selectIndexerIsBehind);
 
   billboardExpanded = signal(false);
+  descriptionExpanded = signal(false);
 
   constructor(
     private store: Store<GlobalState>,
@@ -87,5 +98,9 @@ export class ItemViewComponent {
 
   expandBillboard(): void {
     this.billboardExpanded.update((expanded) => !expanded);
+  }
+
+  toggleDescription(): void {
+    this.descriptionExpanded.update((expanded) => !expanded);
   }
 }

@@ -1,7 +1,7 @@
 <h2 i18n>Attributes</h2>
 <div class="accessories">
   @if (phunk(); as phunk) {
-    @for (item of phunk.attributes; track item; let i = $index) {
+    @for (item of attributes(); track item; let i = $index) {
       @if (i > 0) {
         <!-- {{ item | json }} -->
         <div class="accessory">
@@ -32,6 +32,10 @@
               }
             </span>
           }
+        </div>
+      } @else {
+        <div class="accessory">
+          <span class="value">None</span>
         </div>
       }
     }

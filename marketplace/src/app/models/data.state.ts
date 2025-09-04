@@ -18,6 +18,10 @@ export interface Collection {
     sales: number;
     volume: number;
   };
+
+  ignoredTraitFilters: string[];
+  ignoredTraitFiltersForCounts: string[];
+  mainTrait: string;
 }
 
 export interface DataState {

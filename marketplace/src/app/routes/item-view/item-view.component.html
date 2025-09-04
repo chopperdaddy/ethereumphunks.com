@@ -26,7 +26,11 @@
       <div class="details-wrapper">
         @if (phunk.owner) {
           <div class="title-wrapper">
-            <h1 i18n>{{ phunk.collection?.singleName }} {{ phunk.tokenId }}</h1>
+            @if (name$ | async; as name) {
+              <h1 i18n>{{ name }}</h1>
+            } @else {
+              <h1 i18n>{{ phunk.collection?.singleName }} {{ phunk.tokenId }}</h1>
+            }
 
             <div class="hash-id">
               <span>Provenance Hash: </span>
@@ -34,6 +38,17 @@
                 <app-address [address]="phunk.hashId" />
               </a>
             </div>
+
+            @if (description$ | async; as description) {
+              <div class="description-wrapper">
+                <button class="description-toggle" (click)="toggleDescription()">
+                  <span i18n>{{ descriptionExpanded() ? 'Hide' : 'View' }} Description</span>
+                </button>
+                @if (descriptionExpanded()) {
+                  <p i18n>{{ description }}</p>
+                }
+              </div>
+            }
 
             @if (phunk.attributes && phunk.attributes.length) {
               <h2 i18n>One of {{ ((phunk.attributes[0].v | traitRarity : phunk.slug) | async) || '----' }}

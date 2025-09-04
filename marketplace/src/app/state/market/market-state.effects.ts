@@ -116,6 +116,7 @@ export class MarketStateEffects {
   fetchMarketData$ = createEffect(() => this.actions$.pipe(
     ofType(marketStateActions.setMarketSlug),
     distinctUntilChanged((a, b) => a.marketSlug === b.marketSlug),
+    // tap(({ marketSlug }) => console.log('fetchMarketData$', marketSlug)),
     switchMap(({ marketSlug }) => this.dataSvc.fetchMarketData(marketSlug)),
     map((marketData) => marketStateActions.setMarketData({ marketData }))
   ));
@@ -137,6 +138,7 @@ export class MarketStateEffects {
   fetchEvents$ = createEffect(() => this.actions$.pipe(
     ofType(marketStateActions.setMarketSlug),
     distinctUntilChanged((a, b) => a.marketSlug === b.marketSlug),
+    // tap(({ marketSlug }) => console.log('fetchEvents$', marketSlug)),
     switchMap(({ marketSlug }) => {
       return combineLatest([
         this.store.select(appStateSelectors.selectEventTypeFilter),
@@ -177,6 +179,7 @@ export class MarketStateEffects {
   resetEventPage$ = createEffect(() => this.actions$.pipe(
     ofType(marketStateActions.setMarketSlug),
     distinctUntilChanged((a, b) => a.marketSlug === b.marketSlug),
+    // tap(({ marketSlug }) => console.log('resetEventPage$', marketSlug)),
     switchMap(() => this.store.select(appStateSelectors.selectEventTypeFilter).pipe(
       distinctUntilChanged(),
       map(() => appStateActions.setEventPage({ page: 0 }))
@@ -186,6 +189,7 @@ export class MarketStateEffects {
   fetchAll$ = createEffect(() => this.actions$.pipe(
     ofType(marketStateActions.setMarketSlug),
     distinctUntilChanged((a, b) => a.marketSlug === b.marketSlug),
+    // tap(({ marketSlug }) => console.log('fetchAll$', marketSlug)),
     switchMap(({ marketSlug }) => {
       return this.dataSvc.fetchAllWithPagination(marketSlug, 0, 110, {}).pipe(
         map((data: MarketState['activeMarketRouteData']) => data.data)
@@ -208,6 +212,7 @@ export class MarketStateEffects {
       return marketType === 'all' && (this.defaultFetchLength + 1) <= action.pagination.toIndex;
     }),
     switchMap(([action, marketSlug, marketType, routeData, traitFilters, activeSort]) => {
+      // console.log('paginateAll$', marketSlug);
       return this.dataSvc.fetchAllWithPagination(
         marketSlug,
         action.pagination.fromIndex,

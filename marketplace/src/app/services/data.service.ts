@@ -20,7 +20,7 @@ import { Observable, of, from, forkJoin, firstValueFrom, EMPTY, timer, merge, fi
 
 import { environment } from '@environments/environment';
 
-import { ignoredTraitFilters, ignoredTraitFiltersForCounts } from '@/constants/collections';
+import { ignoredTraitFilters, ignoredTraitFiltersForCounts, mainTrait } from '@/constants/collections';
 
 import * as dataStateActions from '@/state/data/data-state.actions';
 import * as appStateActions from '@/state/app/app-state.actions';
@@ -234,7 +234,7 @@ export class DataService {
         // Skip Description and Name attributes since they aren't used for filtering
         if (ignoredTraitFilters[slug]?.includes(attribute.k)) return;
 
-        // Count traits (exclude Sex from trait counting, but still include it as a filter)
+        // Count traits (exclude mainTrait from trait counting, but still include it as a filter)
         if (!ignoredTraitFiltersForCounts[slug]?.includes(attribute.k)) {
           traitCount++;
         }
@@ -345,8 +345,8 @@ export class DataService {
           if (!originalAttributes) return item;
 
           const attributes = [...originalAttributes]?.sort((a: Attribute, b: Attribute) => {
-            if (a.k === "Sex" || a.k === "Type") return -1;
-            if (b.k === "Sex" || b.k === "Type") return 1;
+            if (a.k === mainTrait[slug]) return -1;
+            if (b.k === mainTrait[slug]) return 1;
             return 0;
           });
 
