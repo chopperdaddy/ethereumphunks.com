@@ -11,7 +11,6 @@ CREATE OR REPLACE FUNCTION fetch_all_with_pagination_new(
     p_from_num integer,
     p_to_num integer,
     p_filters jsonb,
-    p_trait_count_exclusions text[] DEFAULT ARRAY['Description', 'Name', 'Sex', 'Rank', 'Classification', 'Affiliation'],
     p_sort_by text DEFAULT 'id'
 ) RETURNS jsonb
 LANGUAGE plpgsql
@@ -22,7 +21,16 @@ DECLARE
     filter_count INTEGER;
     trait_count_filter TEXT;
     has_trait_count_filter BOOLEAN;
+    collection_trait_exclusions TEXT[];
 BEGIN
+    -- Get collection-specific trait count exclusions
+    SELECT ARRAY(
+        SELECT jsonb_array_elements_text(c."ignoredTraitFiltersForCounts")
+    )
+    INTO collection_trait_exclusions
+    FROM collections c
+    WHERE c.slug = p_slug;
+
     -- Check if trait_count filter is present
     SELECT p_filters ->> 'trait_count' INTO trait_count_filter;
     has_trait_count_filter := trait_count_filter IS NOT NULL;
@@ -79,7 +87,7 @@ BEGIN
                             )
                         ELSE
                             a.values ->> f.key = f.value
-                                            END
+                    END
             END
     ) = filter_count)
     AND (
@@ -90,7 +98,7 @@ BEGIN
                 (
                     SELECT COUNT(*)
                     FROM jsonb_object_keys(COALESCE(a.values, '{}'::jsonb)) k
-                    WHERE k <> ALL(p_trait_count_exclusions)
+                    WHERE k <> ALL(collection_trait_exclusions)
                 ) BETWEEN
                     split_part(trait_count_filter, '-', 1)::INTEGER AND
                     split_part(trait_count_filter, '-', 2)::INTEGER
@@ -99,7 +107,7 @@ BEGIN
                 (
                     SELECT COUNT(*)
                     FROM jsonb_object_keys(COALESCE(a.values, '{}'::jsonb)) k
-                    WHERE k <> ALL(p_trait_count_exclusions)
+                    WHERE k <> ALL(collection_trait_exclusions)
                 ) = trait_count_filter::INTEGER
         END
     );
@@ -185,7 +193,7 @@ BEGIN
                     (
                         SELECT COUNT(*)
                         FROM jsonb_object_keys(COALESCE(a.values, '{}'::jsonb)) k
-                        WHERE k <> ALL(p_trait_count_exclusions)
+                        WHERE k <> ALL(collection_trait_exclusions)
                     ) BETWEEN
                         split_part(trait_count_filter, '-', 1)::INTEGER AND
                         split_part(trait_count_filter, '-', 2)::INTEGER
@@ -194,7 +202,7 @@ BEGIN
                     (
                         SELECT COUNT(*)
                         FROM jsonb_object_keys(COALESCE(a.values, '{}'::jsonb)) k
-                        WHERE k <> ALL(p_trait_count_exclusions)
+                        WHERE k <> ALL(collection_trait_exclusions)
                     ) = trait_count_filter::INTEGER
             END
         )
@@ -222,7 +230,6 @@ CREATE OR REPLACE FUNCTION fetch_all_with_pagination_new_sepolia(
     p_from_num integer,
     p_to_num integer,
     p_filters jsonb DEFAULT '{}'::jsonb,
-    p_trait_count_exclusions text[] DEFAULT ARRAY['Description', 'Name', 'Sex', 'Rank', 'Classification', 'Affiliation'],
     p_sort_by text DEFAULT 'id'
 ) RETURNS jsonb
 LANGUAGE plpgsql
@@ -233,7 +240,16 @@ DECLARE
     filter_count INTEGER;
     trait_count_filter TEXT;
     has_trait_count_filter BOOLEAN;
+    collection_trait_exclusions TEXT[];
 BEGIN
+    -- Get collection-specific trait count exclusions
+    SELECT ARRAY(
+        SELECT jsonb_array_elements_text(c."ignoredTraitFiltersForCounts")
+    )
+    INTO collection_trait_exclusions
+    FROM collections_sepolia c
+    WHERE c.slug = p_slug;
+
     -- Check if trait_count filter is present
     SELECT p_filters ->> 'trait_count' INTO trait_count_filter;
     has_trait_count_filter := trait_count_filter IS NOT NULL;
@@ -301,7 +317,7 @@ BEGIN
                 (
                     SELECT COUNT(*)
                     FROM jsonb_object_keys(COALESCE(a.values, '{}'::jsonb)) k
-                    WHERE k <> ALL(p_trait_count_exclusions)
+                    WHERE k <> ALL(collection_trait_exclusions)
                 ) BETWEEN
                     split_part(trait_count_filter, '-', 1)::INTEGER AND
                     split_part(trait_count_filter, '-', 2)::INTEGER
@@ -310,7 +326,7 @@ BEGIN
                 (
                     SELECT COUNT(*)
                     FROM jsonb_object_keys(COALESCE(a.values, '{}'::jsonb)) k
-                    WHERE k <> ALL(p_trait_count_exclusions)
+                    WHERE k <> ALL(collection_trait_exclusions)
                 ) = trait_count_filter::INTEGER
         END
     );
@@ -396,7 +412,7 @@ BEGIN
                     (
                         SELECT COUNT(*)
                         FROM jsonb_object_keys(COALESCE(a.values, '{}'::jsonb)) k
-                        WHERE k <> ALL(p_trait_count_exclusions)
+                        WHERE k <> ALL(collection_trait_exclusions)
                     ) BETWEEN
                         split_part(trait_count_filter, '-', 1)::INTEGER AND
                         split_part(trait_count_filter, '-', 2)::INTEGER
@@ -405,7 +421,7 @@ BEGIN
                     (
                         SELECT COUNT(*)
                         FROM jsonb_object_keys(COALESCE(a.values, '{}'::jsonb)) k
-                        WHERE k <> ALL(p_trait_count_exclusions)
+                        WHERE k <> ALL(collection_trait_exclusions)
                     ) = trait_count_filter::INTEGER
             END
         )
@@ -428,8 +444,8 @@ END;
 $$;
 
 -- Add a comment to document the new functionality
-COMMENT ON FUNCTION fetch_all_with_pagination_new(text, integer, integer, jsonb, text[], text) IS
-'Updated function with backwards-compatible range filter support, configurable trait count exclusions, and sorting. Supports both exact matches (e.g., "5") and ranges (e.g., "3-7") for numeric attributes. The p_trait_count_exclusions parameter allows collection-specific exclusion of attributes from trait counting. The p_sort_by parameter supports: "id", "price-low", "price-high", "rank-low", "rank-high", "recently-listed" (defaults to "id").';
+COMMENT ON FUNCTION fetch_all_with_pagination_new(text, integer, integer, jsonb, text) IS
+'Updated function with backwards-compatible range filter support and collection-specific trait count exclusions. Supports both exact matches (e.g., "5") and ranges (e.g., "3-7") for numeric attributes. Uses collection-specific trait count exclusions from the collections table. The p_sort_by parameter supports: "id", "price-low", "price-high", "rank-low", "rank-high", "recently-listed" (defaults to "id").';
 
-COMMENT ON FUNCTION fetch_all_with_pagination_new_sepolia(text, integer, integer, jsonb, text[], text) IS
-'Updated Sepolia function with backwards-compatible range filter support, configurable trait count exclusions, and sorting. Supports both exact matches (e.g., "5") and ranges (e.g., "3-7") for numeric attributes including trait_count. The p_trait_count_exclusions parameter allows collection-specific exclusion of attributes from trait counting. The p_sort_by parameter supports: "id", "price-low", "price-high", "rank-low", "rank-high", "recently-listed" (defaults to "id").';
+COMMENT ON FUNCTION fetch_all_with_pagination_new_sepolia(text, integer, integer, jsonb, text) IS
+'Updated Sepolia function with backwards-compatible range filter support and collection-specific trait count exclusions. Supports both exact matches (e.g., "5") and ranges (e.g., "3-7") for numeric attributes including trait_count. Uses collection-specific trait count exclusions from the collections_sepolia table. The p_sort_by parameter supports: "id", "price-low", "price-high", "rank-low", "rank-high", "recently-listed" (defaults to "id").';
