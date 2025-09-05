@@ -51,7 +51,7 @@ export class SplashComponent {
       const shas = collection.previews?.map(({ sha }) => sha);
       if (!shas?.length) return of(this.defaultImages);
 
-      return from(this.createDefaultImageArray(shas));
+      return from(this.createDefaultImageArray(shas, collection.slug));
     }),
     tap((images) => this.currentImages.set(images)),
     shareReplay({ bufferSize: 1, refCount: true }) // Cache the result so it doesn't recompute unnecessarily
@@ -68,7 +68,7 @@ export class SplashComponent {
       // Apply center image to current images
       const centerImage = (mintImage && collection?.isMinting) ? mintImage : auctionImage;
       if (centerImage) {
-        return from(this.handleCenterImage(centerImage, this.currentImages())).pipe(
+        return from(this.handleCenterImage(centerImage, this.currentImages(), collection?.slug)).pipe(
           tap((updatedImages) => {
             this.currentImages.set(updatedImages);
           })
@@ -91,7 +91,7 @@ export class SplashComponent {
   //  * @param shas - Array of SHA hashes identifying the images to fetch and process
   //  * @returns Promise that resolves when image processing is complete
   //  */
-  async createDefaultImageArray(shas: string[]): Promise<SplashImage[]> {
+  async createDefaultImageArray(shas: string[], slug: string): Promise<SplashImage[]> {
     if (!shas?.length) return [];
 
     const imageArray = [...this.defaultImages];
@@ -109,7 +109,7 @@ export class SplashComponent {
 
           const pixels = await this.pixelArtSvc.processPixelArtImage(image);
           const svg = this.pixelArtSvc.convertToSvg(pixels);
-          const stripped = this.pixelArtSvc.stripColors(svg);
+          const stripped = this.pixelArtSvc.stripColors(svg, slug);
           const base64 = this.pixelArtSvc.convertToBase64(stripped);
 
           return {
@@ -138,7 +138,9 @@ export class SplashComponent {
     return imageArray;
   }
 
-  async handleCenterImage(image: string, images: SplashImage[]): Promise<SplashImage[]> {
+  async handleCenterImage(image: string, images: SplashImage[], slug: string | undefined): Promise<SplashImage[]> {
+    if (!slug) return [...images];
+
     const imagesWrapper = this.imagesWrapper()?.nativeElement;
     if (!imagesWrapper) return [...images]; // Return copy of original images if wrapper not available
 
@@ -152,12 +154,14 @@ export class SplashComponent {
     };
 
     // Process any blob images that might need conversion
-    await this.processArrayBlobImages(newImages);
+    await this.processArrayBlobImages(newImages, slug);
 
     return newImages;
   }
 
-  private async processArrayBlobImages(images: SplashImage[]): Promise<void> {
+  private async processArrayBlobImages(images: SplashImage[], slug: string | undefined): Promise<void> {
+    if (!slug) return;
+
     const centerIndex = Math.floor(this.IMAGE_LIMIT / 2);
 
     // Process any blob images in the array
@@ -167,7 +171,7 @@ export class SplashComponent {
           const buffer = await fetch(images[i].src).then((res) => res.arrayBuffer());
           const pixelArtImage = await this.pixelArtSvc.processPixelArtImage(buffer);
           const svg = this.pixelArtSvc.convertToSvg(pixelArtImage);
-          const newImage = this.pixelArtSvc.stripColors(svg);
+          const newImage = this.pixelArtSvc.stripColors(svg, slug);
           images[i] = {
             src: this.pixelArtSvc.convertToBase64(newImage),
             type: 'gray' as const
