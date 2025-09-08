@@ -224,6 +224,10 @@ BEGIN
 END;
 $$;
 
+-- Add a comment to document the new functionality
+COMMENT ON FUNCTION fetch_all_with_pagination_new(text, integer, integer, jsonb, text) IS
+'Updated function with backwards-compatible range filter support and collection-specific trait count exclusions. Supports both exact matches (e.g., "5") and ranges (e.g., "3-7") for numeric attributes. Uses collection-specific trait count exclusions from the collections table. The p_sort_by parameter supports: "id", "price-low", "price-high", "rank-low", "rank-high", "recently-listed" (defaults to "id").';
+
 -- Update the Sepolia network function
 CREATE OR REPLACE FUNCTION fetch_all_with_pagination_new_sepolia(
     p_slug text,
@@ -442,10 +446,6 @@ BEGIN
     RETURN result_json;
 END;
 $$;
-
--- Add a comment to document the new functionality
-COMMENT ON FUNCTION fetch_all_with_pagination_new(text, integer, integer, jsonb, text) IS
-'Updated function with backwards-compatible range filter support and collection-specific trait count exclusions. Supports both exact matches (e.g., "5") and ranges (e.g., "3-7") for numeric attributes. Uses collection-specific trait count exclusions from the collections table. The p_sort_by parameter supports: "id", "price-low", "price-high", "rank-low", "rank-high", "recently-listed" (defaults to "id").';
 
 COMMENT ON FUNCTION fetch_all_with_pagination_new_sepolia(text, integer, integer, jsonb, text) IS
 'Updated Sepolia function with backwards-compatible range filter support and collection-specific trait count exclusions. Supports both exact matches (e.g., "5") and ranges (e.g., "3-7") for numeric attributes including trait_count. Uses collection-specific trait count exclusions from the collections_sepolia table. The p_sort_by parameter supports: "id", "price-low", "price-high", "rank-low", "rank-high", "recently-listed" (defaults to "id").';
