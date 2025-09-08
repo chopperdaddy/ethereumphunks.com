@@ -5,7 +5,7 @@ import { RouterModule } from '@angular/router';
 
 import { Store } from '@ngrx/store';
 import { toObservable } from '@angular/core/rxjs-interop';
-import { combineLatest, delay, distinctUntilChanged, filter, map, of, switchMap } from 'rxjs';
+import { combineLatest, delay, distinctUntilChanged, filter, map, of, switchMap, tap } from 'rxjs';
 import { zeroAddress } from 'viem';
 
 import { Collection } from '@/models/data.state';
@@ -54,12 +54,12 @@ export class AuctionComponent {
   collection = input<Collection | undefined>();
   collection$ = toObservable(this.collection);
 
-  nextButton = input<boolean>(false);
+  navButtons = input<boolean>(false);
   nextClicked = output<void>();
+  prevClicked = output<void>();
 
   phunkWithAuction$ = combineLatest([this.phunk$, this.collection$]).pipe(
-    // delay(5000),
-    filter(([phunk, collection]) => !!phunk?.auction || !!phunk?.isAuctioned),
+    filter(([phunk]) => !!phunk?.auction || !!phunk?.isAuctioned),
     map(([phunk, collection]) => {
       const hasCollection = !!phunk.collection;
       if (hasCollection) return phunk;
@@ -73,11 +73,11 @@ export class AuctionComponent {
     )),
   );
 
-  auctionBids$ = this.phunkWithAuction$.pipe(
+  auctionBids$ = this.phunk$.pipe(
     distinctUntilChanged((a, b) => a?.auction?.auctionId === b?.auction?.auctionId),
-    switchMap((phunkWithAuction) => {
-      if (!phunkWithAuction?.auction) return of([]);
-      return this.dataSvc.watchAuctionBids(phunkWithAuction.auction.auctionId);
+    switchMap((phunk) => {
+      if (!phunk?.auction) return of([]);
+      return this.dataSvc.watchAuctionBids(phunk.auction.auctionId);
     }),
   );
 
@@ -94,7 +94,6 @@ export class AuctionComponent {
   ) {}
 
   async submitBid(): Promise<void> {
-
     // Get the phunk
     const phunk = this.phunk();
     if (!phunk) throw new Error('Phunk not found');
@@ -244,5 +243,9 @@ export class AuctionComponent {
 
   nextAuction(): void {
     this.nextClicked.emit();
+  }
+
+  prevAuction(): void {
+    this.prevClicked.emit();
   }
 }

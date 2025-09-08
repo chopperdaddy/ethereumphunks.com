@@ -2,24 +2,18 @@
   #imagesWrapper
   class="images-wrapper"
   [class.mint-mode]="collection()?.isMinting"
-  [class.is-minting]="!!mintImage() && collection()?.isMinting">
+  [class.is-minting]="!!mintImage() && collection()?.isMinting"
+  [class.has-center-image]="!!centerImage()">
 
   @for (
     image of (imageArray$ | async) || defaultImages;
     track image.src + image.type + idx;
     let idx = $index;
   ) {
-    <div class="image-wrapper">
+    <div class="image-wrapper" [class.center]="idx === centerIndex()">
       <img [src]="image.src" width="320" height="320" />
     </div>
-  } @empty {
-    <!-- @for (image of defaultImages; track image.src + image.type + idx; let idx = $index) {
-      <div class="image-wrapper" [class]="image.type">
-        <img [src]="image.src" width="320" height="320" />
-      </div>
-    } -->
   }
-
 </div>
 
 <!-- <app-stats [collection]="collection()" /> -->

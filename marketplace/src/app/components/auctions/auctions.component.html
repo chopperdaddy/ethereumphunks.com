@@ -1,6 +1,7 @@
 <app-auction
   [phunk]="activeAuction()!"
   [collection]="collection()!"
-  [nextButton]="(auctions()?.length ?? 0) > 1"
+  [navButtons]="(auctions()?.length ?? 0) > 1"
   (nextClicked)="nextAuction()"
+  (prevClicked)="prevAuction()"
 />

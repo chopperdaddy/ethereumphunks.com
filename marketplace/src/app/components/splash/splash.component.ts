@@ -1,16 +1,19 @@
 import { Component, ElementRef, input, signal, viewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
+import { Store } from '@ngrx/store';
 import { LazyLoadImageModule } from 'ng-lazyload-image';
 import { toObservable } from '@angular/core/rxjs-interop';
 import { combineLatest, from, of, shareReplay, startWith, switchMap, tap } from 'rxjs';
 
 import { Collection } from '@/models/data.state';
+import { SplashImage } from '@/models/image.model';
+import { GlobalState } from '@/models/global-state';
 
 import { PixelArtService } from '@/services/pixel-art.service';
 import { ImageService } from '@/services/image.service';
 
-import { SplashImage } from '@/models/image.model';
+import { selectIsMobile } from '@/state/app/app-state.selectors';
 
 @Component({
   selector: 'app-splash',
@@ -24,6 +27,8 @@ import { SplashImage } from '@/models/image.model';
 })
 export class SplashComponent {
 
+  isMobile$ = this.store.select(selectIsMobile);
+
   imagesWrapper = viewChild<ElementRef>('imagesWrapper');
 
   Array = Array;
@@ -33,6 +38,8 @@ export class SplashComponent {
   readonly defaultImage = { src: '/loadingphunk.png', type: 'loading' };
   readonly defaultImages: SplashImage[] = Array(this.IMAGE_LIMIT).fill(this.defaultImage);
 
+  centerIndex = signal<number>(Math.floor(this.IMAGE_LIMIT / 2));
+
   collection = input<Collection | null>();
   collection$ = toObservable(this.collection);
 
@@ -41,6 +48,8 @@ export class SplashComponent {
 
   auctionImage = input<string | null>();
   auctionImage$ = toObservable(this.auctionImage);
+
+  centerImage = signal<string | null | undefined>(null);
 
   // Separate observable for base images that only updates when collection changes
   private baseImages$ = this.collection$.pipe(
@@ -65,33 +74,74 @@ export class SplashComponent {
     this.auctionImage$,
   ]).pipe(
     switchMap(([collection, baseImages, mintImage, auctionImage]) => {
-      // Apply center image to current images
-      const centerImage = (mintImage && collection?.isMinting) ? mintImage : auctionImage;
-      if (centerImage) {
-        return from(this.handleCenterImage(centerImage, this.currentImages(), collection?.slug)).pipe(
-          tap((updatedImages) => {
-            this.currentImages.set(updatedImages);
-          })
-        );
-      }
+      return this.isMobile$.pipe(
+        switchMap((isMobile) => {
 
-      return of(baseImages);
+          this.centerIndex.set(isMobile ? Math.floor(this.IMAGE_LIMIT / 2) : Math.floor(this.IMAGE_LIMIT / 2) - 1);
+          this.centerImage.set((mintImage && collection?.isMinting) ? mintImage : auctionImage);
+
+          if (this.centerImage()) {
+            return from(this.handleCenterImage(
+              this.centerImage()!,
+              this.currentImages(),
+              collection?.slug,
+              this.centerIndex()
+            )).pipe(
+              tap((updatedImages) => this.currentImages.set(updatedImages))
+            );
+          }
+          return of(baseImages);
+        })
+      )
     }),
     startWith(this.defaultImages)
   );
 
   constructor(
+    private store: Store<GlobalState>,
     private pixelArtSvc: PixelArtService,
     private imageSvc: ImageService
   ) {}
 
-  // /**
-  //  * Creates an array of processed images from a list of SHA hashes
-  //  *
-  //  * @param shas - Array of SHA hashes identifying the images to fetch and process
-  //  * @returns Promise that resolves when image processing is complete
-  //  */
-  async createDefaultImageArray(shas: string[], slug: string): Promise<SplashImage[]> {
+  /**
+   * Handles the center image for the splash component
+   *
+   * @param image - The image to place at the center
+   * @param images - The current images array
+   * @param slug - The slug of the collection
+   * @param centerIndex - The index of the center image
+   * @returns The updated images array
+   */
+  async handleCenterImage(
+    image: string,
+    images: SplashImage[],
+    slug: string | undefined,
+    centerIndex: number
+  ): Promise<SplashImage[]> {
+    if (!slug) return [...images];
+
+    const imagesWrapper = this.imagesWrapper()?.nativeElement;
+    if (!imagesWrapper) return [...images];
+
+    let newImages = [...images];
+    // Place new image at center
+    newImages[centerIndex] = {
+      src: image,
+      type: 'mint' as const
+    };
+
+    // Process any blob images that might need conversion
+    await this.processArrayBlobImages(newImages, slug, centerIndex);
+    return newImages;
+  }
+
+  /**
+   * Creates an array of processed images from a list of SHA hashes
+   *
+   * @param shas - Array of SHA hashes identifying the images to fetch and process
+   * @returns Promise that resolves when image processing is complete
+   */
+  private async createDefaultImageArray(shas: string[], slug: string): Promise<SplashImage[]> {
     if (!shas?.length) return [];
 
     const imageArray = [...this.defaultImages];
@@ -138,31 +188,20 @@ export class SplashComponent {
     return imageArray;
   }
 
-  async handleCenterImage(image: string, images: SplashImage[], slug: string | undefined): Promise<SplashImage[]> {
-    if (!slug) return [...images];
-
-    const imagesWrapper = this.imagesWrapper()?.nativeElement;
-    if (!imagesWrapper) return [...images]; // Return copy of original images if wrapper not available
-
-    const centerIndex = Math.floor(this.IMAGE_LIMIT / 2);
-    let newImages = [...images];
-
-    // Place new image at center
-    newImages[centerIndex] = {
-      src: image,
-      type: 'mint' as const
-    };
-
-    // Process any blob images that might need conversion
-    await this.processArrayBlobImages(newImages, slug);
-
-    return newImages;
-  }
-
-  private async processArrayBlobImages(images: SplashImage[], slug: string | undefined): Promise<void> {
+  /**
+   * Processes any blob images in the array
+   *
+   * @param images - The current images array
+   * @param slug - The slug of the collection
+   * @param centerIndex - The index of the center image
+   * @returns The updated images array
+   */
+  private async processArrayBlobImages(
+    images: SplashImage[],
+    slug: string | undefined,
+    centerIndex: number
+  ): Promise<void> {
     if (!slug) return;
-
-    const centerIndex = Math.floor(this.IMAGE_LIMIT / 2);
 
     // Process any blob images in the array
     for (let i = 0; i < images.length; i++) {

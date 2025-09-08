@@ -70,4 +70,18 @@ export class AuctionsComponent {
     this.auctionImage.emit(imageUrl);
     this.activeAuction.set(auction);
   }
+
+  async prevAuction() {
+    const auctions = this.auctions();
+    if (!auctions?.length) return;
+    this.activeAuctionIndex.set(this.activeAuctionIndex() === 0 ? auctions.length - 1 : this.activeAuctionIndex() - 1);
+
+    const auction = auctions[this.activeAuctionIndex()];
+    if (!auction || !auction.sha) return;
+
+    const image = await this.imageSvc.fetchSupportedImageBySha(auction.sha);
+    const imageUrl = URL.createObjectURL(new Blob([image]));
+    this.auctionImage.emit(imageUrl);
+    this.activeAuction.set(auction);
+  }
 }

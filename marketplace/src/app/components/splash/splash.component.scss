@@ -54,4 +54,18 @@
       }
     }
   }
+
+  &.has-center-image {
+    .image-wrapper {
+      opacity: .75;
+      filter: blur(1rem);
+
+      &.center {
+        opacity: 1;
+        filter: blur(0px);
+        mix-blend-mode: normal;
+        transform: translateY(0);
+      }
+    }
+  }
 }

@@ -1,10 +1,10 @@
 @if (phunkWithAuction$ | async; as phunk) {
 
-  <div class="auction-header" [class.has-next]="nextButton()">
+  <div class="auction-header" [class.has-next]="navButtons()">
     <div class="left">
       <h2>
         @if ((phunk.collection); as collection) {
-          {{ collection.singleName }} {{ phunk.tokenId }}
+          <a [routerLink]="['/', 'details', phunk.hashId]">{{ collection.singleName }} {{ phunk.tokenId }}</a>
         } @else {
           Loading...
         }
@@ -17,11 +17,16 @@
     </div>
 
     <div class="right">
-      @if (nextButton()) {
-        <button (click)="nextAuction()">
-          Next
-          <ng-container *ngTemplateOutlet="menuIcon"></ng-container>
-        </button>
+      @if (navButtons()) {
+        <div class="nav-buttons">
+          <button (click)="prevAuction()" class="prev">
+            <ng-container *ngTemplateOutlet="menuIcon"></ng-container>
+          </button>
+
+          <button (click)="nextAuction()" class="next">
+            <ng-container *ngTemplateOutlet="menuIcon"></ng-container>
+          </button>
+        </div>
       }
     </div>
   </div>
@@ -96,17 +101,18 @@
       </div>
     }
 
-    @if (auction.bidder !== zeroAddr) {
-      <app-bid-history
-        [auction]="auction"
-        [auctionBids]="auctionBids$ | async"
-      />
-    }
+    <app-bid-history
+      [auction]="auction"
+      [auctionBids]="auctionBids$ | async"
+    />
   }
 } @else {
   <div class="auction-header">
     <h2>Loading...</h2>
-    <h3>&nbsp;</h3>
+    <h3>
+      <span class="indicator"></span>
+      Loading Auction
+    </h3>
   </div>
 
   <div class="bid-info">
@@ -155,6 +161,8 @@
       </button>
     </div>
   </div>
+
+  <app-bid-history />
 }
 
 <ng-template #questionMarkIcon>
