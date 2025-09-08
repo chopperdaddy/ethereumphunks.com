@@ -32,34 +32,34 @@ export class CollectionAdminController {
     return this.collectionAdminSvc.generateNewCollectionMetadata(slug, metadataUrl);
   }
 
-  /**
-   * Adds attributes to the database attributes_new table
-   * This is a requirement for indexing collection items
-   * @param slug - The slug of the collection
-   */
-  @Post('add-attributes-to-db')
-  async addAttributes(@Body() body: { slug: string }) {
-    const { slug } = body;
+  // /**
+  //  * Adds attributes to the database attributes_new table
+  //  * This is a requirement for indexing collection items
+  //  * @param slug - The slug of the collection
+  //  */
+  // @Post('add-attributes-to-db')
+  // async addAttributes(@Body() body: { slug: string }) {
+  //   const { slug } = body;
 
-    if (!slug) {
-      throw new HttpException('Slug is required', HttpStatus.BAD_REQUEST);
-    }
+  //   if (!slug) {
+  //     throw new HttpException('Slug is required', HttpStatus.BAD_REQUEST);
+  //   }
 
-    return this.collectionAdminSvc.addAttributesToDb(slug);
-  }
+  //   return this.collectionAdminSvc.addAttributesToDb(slug);
+  // }
 
-  /**
-   * Generates and uploads attributes filters for a collection
-   * @param slug - The slug of the collection
-   */
-  @Post('add-filters-file')
-  async addFilters(@Body() body: { slug: string }) {
-    const { slug } = body;
+  // /**
+  //  * Generates and uploads attributes filters for a collection
+  //  * @param slug - The slug of the collection
+  //  */
+  // @Post('add-filters-file')
+  // async addFilters(@Body() body: { slug: string }) {
+  //   const { slug } = body;
 
-    if (!slug) {
-      throw new HttpException('Slug is required', HttpStatus.BAD_REQUEST);
-    }
+  //   if (!slug) {
+  //     throw new HttpException('Slug is required', HttpStatus.BAD_REQUEST);
+  //   }
 
-    return this.collectionAdminSvc.generateAttributesFiltersAndUpload(slug);
-  }
+  //   return this.collectionAdminSvc.generateAttributesFiltersAndUpload(slug);
+  // }
 }
