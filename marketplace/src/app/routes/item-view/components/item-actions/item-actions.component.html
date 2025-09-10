@@ -2,6 +2,14 @@
   @if (phunk(); as phunk) {
     @if (phunk.isSupported && !disabled()) {
 
+      <!-- Remint button -->
+      <!-- @if (chainId === 11155111 && isDev) {
+        <button class="remint" (click)="remintItem()">
+          <span>Remint</span>
+          <ng-container *ngTemplateOutlet="pending; context:{ $implicit: 'remint' }" />
+        </button>
+      } -->
+
       <!-- Escrow actions (Send) -->
       @if ((config$ | async)?.auctions && !phunk.isAuctioned) {
         @if ((phunk.owner | lowercase) === (address | lowercase)) {
