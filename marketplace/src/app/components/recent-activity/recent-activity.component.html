@@ -30,8 +30,7 @@
       <a
         [routerLink]="['/', 'details', event.hashId]"
         class="event-item"
-        [class]="event.type | lowercase"
-        [class.background]="collection()?.hasBackgrounds">
+        [class]="event.type | lowercase">
 
         <div class="image-wrapper">
           <img

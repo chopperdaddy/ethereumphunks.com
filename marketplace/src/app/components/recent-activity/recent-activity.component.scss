@@ -151,11 +151,9 @@ section {
           background-color: rgba(#{$color}, 1);
         }
 
-        &.background {
-          .labels-wrapper {
-            .token-id {
-              color: rgba(#{$color}, 1);
-            }
+        .labels-wrapper {
+          .token-id {
+            color: rgba(#{$color}, 1);
           }
         }
       }
