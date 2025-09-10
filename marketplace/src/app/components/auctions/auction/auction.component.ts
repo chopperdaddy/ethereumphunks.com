@@ -81,6 +81,10 @@ export class AuctionComponent {
     }),
   );
 
+  name$ = this.phunk$.pipe(
+    map((phunk: Phunk) => phunk.attributes?.filter(item => item.k === 'Name')[0]?.v),
+  );
+
   bidValue = new FormControl<number | null>(null);
 
   auctionComplete = signal(false);

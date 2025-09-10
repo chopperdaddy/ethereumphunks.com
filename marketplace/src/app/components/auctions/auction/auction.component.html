@@ -4,7 +4,11 @@
     <div class="left">
       <h2>
         @if ((phunk.collection); as collection) {
-          <a [routerLink]="['/', 'details', phunk.hashId]">{{ collection.singleName }} {{ phunk.tokenId }}</a>
+          @if (name$ | async; as name) {
+            {{ name }}
+          } @else {
+            <a [routerLink]="['/', 'details', phunk.hashId]">{{ collection.singleName }} {{ phunk.tokenId }}</a>
+          }
         } @else {
           Loading...
         }
