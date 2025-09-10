@@ -494,6 +494,21 @@ export class DataService {
   }
 
   /**
+   * Fetches SHA from hash ID
+   * @param hashId Token hash ID
+   */
+  async fetchShaFromHashId(hashId: string): Promise<string | null> {
+    const query = supabase
+      .from('ethscriptions' + this.suffix)
+      .select('sha')
+      .eq('hashId', hashId);
+
+    const res = await query;
+    if (res?.data?.length) return res.data[0]?.sha;
+    return null;
+  }
+
+  /**
    * Fetches data for a single Phunk
    * @param hashId Token hash ID
    */
@@ -543,9 +558,9 @@ export class DataService {
       map(([[phunk], listing, [consensus]]) => ({
         ...consensus,
         ...phunk,
-        listing: listing?.listedBy.toLowerCase() === phunk.prevOwner?.toLowerCase() ? listing : null,
+        // Make sure the listing is from the previous owner and the item is escrowed.
+        listing: (listing?.listedBy.toLowerCase() === phunk.prevOwner?.toLowerCase() && phunk.owner === environment.marketAddress) ? listing : null,
       })),
-      // tap((phunk) => console.log('fetchSinglePhunk', phunk)),
     );
 
         // Create a reactive polling system that starts/stops based on consensus
@@ -605,35 +620,6 @@ export class DataService {
     );
 
     return pollingWithConsensusControl$;
-  }
-
-  /**
-   * Watches for changes to a single Phunk
-   * @param hashId Token hash ID
-   */
-  private watchSinglePhunkByHashId(hashId: string) {
-    return new Observable<void>((subscriber) => {
-      const channel = supabase
-        .channel(`ethscription_changes__${hashId}`)
-        .on(
-          'postgres_changes',
-          {
-            event: '*',
-            schema: 'public',
-            table: 'ethscriptions' + this.suffix,
-            filter: `hashId=eq.${hashId}`
-          },
-          (payload: any) => {
-            // console.log('watchSinglePhunk', payload);
-            subscriber.next();
-          }
-        )
-        .subscribe();
-
-      return () => {
-        channel.unsubscribe();
-      };
-    });
   }
 
   /**
