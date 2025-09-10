@@ -1,32 +1,34 @@
 @if (marketType) {
 
-  @for (
-    phunk of phunkData |
-    attributeFilter : traitFilters : slug |
-    sort: activeSort : marketType;
-    track phunk.sha;
-    let i = $index;
-  ) {
-    @if (i < limit) {
-      <!-- {{ phunk.listing | json }} -->
-      <ng-container *ngTemplateOutlet="phunkItem; context:{ $implicit: phunk, index: i }" />
-    }
-  } @empty {
-    @for (i of limitArr; track i) {
-      <div class="item">
-        <div class="item-link">
-          <div class="image-wrapper">
-            <img [src]="'/loadingphunk.png'" width="50" height="50" />
-          </div>
-
-          @if (viewType === 'market') {
-            <div class="labels-wrapper">
-              <div class="label">#0000</div>
-              <div class="label">Loading...<br />&nbsp;</div>
+  @if (phunkData && phunkData.length) {
+    @for (
+      phunk of phunkData |
+      attributeFilter : traitFilters : slug |
+      sort: activeSort : marketType;
+      track phunk.sha;
+      let i = $index;
+    ) {
+      @if (i < limit) {
+        <!-- {{ phunk.listing | json }} -->
+        <ng-container *ngTemplateOutlet="phunkItem; context:{ $implicit: phunk, index: i }" />
+      }
+    } @empty {
+      @for (i of limitArr; track i) {
+        <div class="item">
+          <div class="item-link">
+            <div class="image-wrapper">
+              <img [src]="'/loadingphunk.png'" width="50" height="50" />
             </div>
-          }
+
+            @if (viewType === 'market') {
+              <div class="labels-wrapper">
+                <div class="label">Loading...</div>
+                <div class="label">&nbsp;</div>
+              </div>
+            }
+          </div>
         </div>
-      </div>
+      }
     }
   }
 

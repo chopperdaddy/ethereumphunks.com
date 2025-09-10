@@ -65,7 +65,7 @@ export class PhunkGridComponent implements OnChanges {
 
   @Input() viewType: ViewType = 'market';
   @Input() slug!: string;
-  @Input() phunkData!: Phunk[];
+  @Input() phunkData!: Phunk[] | null;
   @Input() total: number = 0;
   @Input() limit: number = 0;
 
