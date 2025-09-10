@@ -1222,5 +1222,12 @@ export class Web3Service {
       address: account.address as `0x${string}`,
     };
   }
+
+  async remintItem(hashId: string, sha: string): Promise<string | undefined> {
+    const hash = await this.inscribe(`data:application/phunky;rule=esip6,${sha}`);
+    if (!hash) throw new Error('Could not remint item');
+
+    return hash;
+  }
 }
 
