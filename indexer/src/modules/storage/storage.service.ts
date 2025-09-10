@@ -937,11 +937,11 @@ export class StorageService implements OnModuleInit {
    * @param tokenId - The token ID to look up
    * @returns The ethscription if found, undefined otherwise
    */
-  async getEthscriptionByTokenId(tokenId: string): Promise<db.Ethscription> {
+  async getEthscriptionBySha(sha: string): Promise<db.Ethscription> {
     const response: db.EthscriptionResponse = await this.supabase
       .from('ethscriptions' + this.suffix)
       .select('*')
-      .eq('tokenId', tokenId);
+      .eq('sha', sha);
 
     const { data, error } = response;
 
@@ -1328,5 +1328,32 @@ export class StorageService implements OnModuleInit {
 
     const { error } = response;
     if (error) console.log(error);
+  }
+
+  async deleteEthscription(hashId: string): Promise<void> {
+    const chainId = this.configSvc.chain.chainIdL1;
+    if (chainId !== 11155111) throw new Error('Cannot only delete ethscriptions on Sepolia');
+
+    await this.removeListing(hashId);
+    await this.removeAllEventsByHashId(hashId);
+
+    const response = await this.supabase
+      .from('ethscriptions' + this.suffix)
+      .delete()
+      .eq('hashId', hashId);
+
+    const { error } = response;
+    if (error) console.log(error);
+  }
+
+  private async removeAllEventsByHashId(hashId: string): Promise<void> {
+    const response = await this.supabase
+      .from('events' + this.suffix)
+      .delete()
+      .eq('hashId', hashId.toLowerCase());
+
+    Logger.log('Removed events', hashId);
+    const { error } = response;
+    if (error) throw error;
   }
 }

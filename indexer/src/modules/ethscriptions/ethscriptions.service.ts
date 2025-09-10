@@ -67,13 +67,39 @@ export class EthscriptionsService {
       if (!attributesData) return;
 
       // Check if its a duplicate (already been inscribed)
-      const isDuplicate = await this.storageSvc.checkEthscriptionExistsBySha(sha);
-      if (isDuplicate) return;
+      const exists = await this.storageSvc.checkEthscriptionExistsBySha(sha);
+      if (exists) return;
 
       Logger.debug('Processing new ethscription', transaction.hash);
       const event = await this.processEthscriptionCreationEvent(transaction as Transaction, createdAt, attributesData);
       return [event];
     }
+
+    // ======================================================================================== //
+    // Check if possible etherphunk re-mint (Sepolia only) ==================================== //
+    // CAUTION: This is ONLY supported on Sepolia & is intended for development purposes! ===== //
+    // Re-minting will remove all existing items from the database including listings & events. //
+    // This is NOT intended for production use!!!!!!!. ======================================== //
+    // ======================================================================================== //
+    // if (
+    //   this.configSvc.chain.chainIdL1 === 11155111 &&
+    //   cleanedString.startsWith('data:application/phunky;rule=esip6,')
+    // ) {
+    //   const sha = cleanedString.split(',')[1];
+
+    //   const exists = await this.storageSvc.checkEthscriptionExistsBySha(sha);
+    //   if (exists) {
+    //     const attributesData = await this.storageSvc.checkIsCuratedCollection(sha);
+    //     if (!attributesData) return;
+
+    //     const item = await this.storageSvc.getEthscriptionBySha(sha);
+    //     await this.storageSvc.deleteEthscription(item.hashId);
+
+    //     Logger.debug('Processing new ethscription', transaction.hash);
+    //     const event = await this.processEthscriptionCreationEvent(transaction as Transaction, createdAt, attributesData);
+    //     return [event];
+    //   }
+    // }
 
     // Check if possible transfer
     const possibleTransfer = this.utilitySvc.possibleTransfer(input);
@@ -187,8 +213,6 @@ export class EthscriptionsService {
     const isMatchedHashId = ethscript.hashId.toLowerCase() === hashId.toLowerCase();
     const transferrerIsOwner = ethscript.owner.toLowerCase() === txn.from.toLowerCase();
 
-    // console.log({ isMatchedHashId, transferrerIsOwner, ethscript })
-
     if (!isMatchedHashId || !transferrerIsOwner) return null;
 
     Logger.debug(
@@ -196,7 +220,7 @@ export class EthscriptionsService {
       txn.hash
     );
 
-    // Update the eth phunk owner
+    // Update the inscription owner
     await this.storageSvc.updateEthscriptionOwner(hashId, ethscript.owner, txn.to);
     Logger.log(
       `Updated ethscription owner to ${txn.to} (Transfer event)`,
@@ -377,7 +401,6 @@ export class EthscriptionsService {
     if (!this.utilitySvc.possibleBatchTransfer(input)) return [];
 
     const allHashes = data.match(/.{1,64}/g).map((hash) => '0x' + hash);
-    // console.log(allHashes.length);
     const validItems = await this.storageSvc.checkEthscriptionsExistsByHashIds(allHashes);
 
     if (!validItems?.length) return [];
