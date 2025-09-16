@@ -161,14 +161,12 @@ export class AppStateEffects {
 
   onNewBlock$ = createEffect(() =>
     this.web3Svc.blockWatcher$().pipe(
-      tap(currentBlock => console.log('new block', currentBlock)),
       map(currentBlock => appStateActions.setCurrentBlock({ currentBlock }))
     )
   );
 
   onPointsEvent$ = createEffect(() =>
     this.web3Svc.pointsWatcher$().pipe(
-      tap(log => console.log('points event', log)),
       filter(log => log.eventName === 'PointsAdded'),
       map(log => appStateActions.pointsChanged({ log }))
     )
