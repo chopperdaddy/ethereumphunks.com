@@ -1,35 +1,25 @@
 import { Inject, Injectable, Logger, Optional } from '@nestjs/common';
 
-import { AppConfigService } from '@/config/config.service';
+import { Log, Transaction, TransactionReceipt, decodeEventLog, hexToString, zeroAddress } from 'viem';
+import { createHash } from 'crypto';
+
 import { UtilityService } from '@/modules/shared/services/utility.service';
-import { Web3Service } from '@/modules/shared/services/web3.service';
 import { StorageService } from '@/modules/storage/storage.service';
-import { MarketplaceService } from '@/modules/marketplace/marketplace.service';
-import { PointsService } from '@/modules/points/points.service';
 
 import { BridgeProcessingQueue } from '@/modules/queue/queues/bridge-processing.queue';
 
-import * as esips from '@/modules/ethscriptions/constants/esips';
-import { esip1, esip2, bridgeL1 } from '@/abi';
-
 import { AttributeItem, Ethscription, Event } from '@/modules/storage/models/db';
 
-import { Log, Transaction, TransactionReceipt, decodeEventLog, hexToString, zeroAddress } from 'viem';
-
-import { createHash } from 'crypto';
+import * as esips from '@/modules/ethscriptions/constants/esips';
+import { esip1, esip2, bridgeL1 } from '@/abi';
 
 @Injectable()
 export class EthscriptionsService {
 
   constructor(
     @Optional() private readonly bridgeQueue: BridgeProcessingQueue,
-    @Inject('WEB3_SERVICE_L1') private readonly web3SvcL1: Web3Service,
-    @Inject('WEB3_SERVICE_L2') private readonly web3SvcL2: Web3Service,
     private readonly storageSvc: StorageService,
     private readonly utilitySvc: UtilityService,
-    private readonly configSvc: AppConfigService,
-    private readonly marketplaceSvc: MarketplaceService,
-    private readonly pointsSvc: PointsService,
   ) {}
 
   /**
@@ -57,7 +47,9 @@ export class EthscriptionsService {
     const possibleEthPhunk =
       cleanedString.startsWith('data:image/svg+xml,') ||
       cleanedString.startsWith('data:image/png;base64,') ||
-      cleanedString.startsWith('data:image/gif;base64,');
+      cleanedString.startsWith('data:image/gif;base64,') ||
+      cleanedString.startsWith('data:image/jpeg;base64,') ||
+      cleanedString.startsWith('data:image/webp;base64,');
 
     if (possibleEthPhunk) {
       const sha = createHash('sha256').update(cleanedString).digest('hex');
