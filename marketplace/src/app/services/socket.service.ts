@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 
 import { Socket, SocketIoConfig } from 'ngx-socket-io';
+import { shareReplay } from 'rxjs';
 
 import { environment } from '@environments/environment';
 
@@ -41,10 +42,14 @@ const socketConfig: SocketIoConfig = {
 export class SocketService extends Socket {
 
   /** Observable stream of individual log messages for current chain */
-  log$ = this.fromEvent<LogItem, `log_${typeof chain}`>(`log_${chain}`);
+  log$ = this.fromEvent<LogItem, `log_${typeof chain}`>(`log_${chain}`).pipe(
+    shareReplay(1)
+  );
 
   /** Observable stream of log message arrays for current chain */
-  logs$ = this.fromEvent<LogItem[], `logs_${typeof chain}`>(`logs_${chain}`);
+  logs$ = this.fromEvent<LogItem[], `logs_${typeof chain}`>(`logs_${chain}`).pipe(
+    shareReplay(1)
+  );
 
   /** Observable stream of pending inscription SHAs */
   // pendingInscriptionShas$ = this.fromEvent<Map<string, string>, 'pendingInscriptionShas'>('pendingInscriptionShas');
@@ -59,6 +64,17 @@ export class SocketService extends Socket {
    */
   connect(callback?: ((err: any) => void) | undefined): this {
     super.connect();
+    return this;
+  }
+
+  /**
+   * Checks if socket is connected and reconnects if needed
+   */
+  ensureConnected(): this {
+    if (!this.ioSocket?.connected) {
+      console.log('Socket not connected, reconnecting...');
+      this.connect();
+    }
     return this;
   }
 

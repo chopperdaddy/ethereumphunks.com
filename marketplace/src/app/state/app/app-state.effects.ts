@@ -12,6 +12,7 @@ import { Web3Service } from '@/services/web3.service';
 import { ThemeService } from '@/services/theme.service';
 import { DataService } from '@/services/data.service';
 import { SocketService } from '@/services/socket.service';
+import { GasService } from '@/services/gas.service';
 import { StorageService } from '@/services/storage.service';
 
 import { GlobalState, LinkedAccount } from '@/models/global-state';
@@ -158,6 +159,21 @@ export class AppStateEffects {
     }),
   ), { dispatch: false });
 
+  onNewBlock$ = createEffect(() =>
+    this.web3Svc.blockWatcher$().pipe(
+      tap(currentBlock => console.log('new block', currentBlock)),
+      map(currentBlock => appStateActions.setCurrentBlock({ currentBlock }))
+    )
+  );
+
+  onPointsEvent$ = createEffect(() =>
+    this.web3Svc.pointsWatcher$().pipe(
+      tap(log => console.log('points event', log)),
+      filter(log => log.eventName === 'PointsAdded'),
+      map(log => appStateActions.pointsChanged({ log }))
+    )
+  );
+
   onNewBlockCheckCooldown$ = createEffect(() => this.actions$.pipe(
     ofType(appStateActions.setCurrentBlock),
     withLatestFrom(this.store.select(appStateSelectors.selectCooldowns)),
@@ -242,6 +258,19 @@ export class AppStateEffects {
     }),
   ), { dispatch: false });
 
+  /**
+   * Handles socket reconnection when browser becomes active
+   */
+  browserActivitySocketReconnect$ = createEffect(() => this.actions$.pipe(
+    ofType(appStateActions.setBrowserActive),
+    filter(({ isBrowserActive }) => isBrowserActive), // Only when browser becomes active
+    tap(() => {
+      console.log('Browser became active, ensuring socket connections...');
+      this.socketSvc.ensureConnected();
+      this.gasSvc.ensureConnected();
+    })
+  ), { dispatch: false });
+
   constructor(
     private store: Store<GlobalState>,
     private actions$: Actions,
@@ -249,6 +278,7 @@ export class AppStateEffects {
     private themeSvc: ThemeService,
     private dataSvc: DataService,
     private socketSvc: SocketService,
+    private gasSvc: GasService,
     private storageSvc: StorageService,
   ) {
     // Initialize browser activity tracking
