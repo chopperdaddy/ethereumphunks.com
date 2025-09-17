@@ -7,21 +7,36 @@ export interface Collection {
   singleName: string;
   description: string;
   supply: number;
+  active: boolean;
   isMinting: boolean;
   mintEnabled: boolean;
   hasBackgrounds: boolean;
-  defaultBackground: string;
+  notifications: boolean;
+  standalone: boolean;
 
+  // Optional fields
   image?: string;
+  createdAt?: string;
+  posterHashId?: string;
+  website?: string;
+  twitter?: string;
+  discord?: string;
+  defaultBackground?: string;
+  mainTrait?: string;
+  contractAddress?: string;
+  type?: 'nft' | 'inscription';
+
+  // Arrays
+  adminAddress?: string[];
+  ignoredTraitFilters: string[];
+  ignoredTraitFiltersForCounts: string[];
+
+  // Runtime fields
   previews?: Phunk[];
   stats?: {
     sales: number;
     volume: number;
   };
-
-  ignoredTraitFilters: string[];
-  ignoredTraitFiltersForCounts: string[];
-  mainTrait: string;
 }
 
 export interface DataState {
