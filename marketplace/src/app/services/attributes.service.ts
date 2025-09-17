@@ -1,48 +1,102 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 
-import { Observable, from, switchMap, filter, tap, shareReplay, of, map } from 'rxjs';
+import { Store } from '@ngrx/store';
+import { Observable, from, switchMap, filter, tap, shareReplay, of, map, take, first } from 'rxjs';
 
-import { Attribute, AttributeItem } from '@/models/attributes';
+import { GlobalState } from '@/models/global-state';
+import { Attribute, AttributeItems } from '@/models/attributes';
 import { Phunk } from '@/models/db';
-
-import { ignoredTraitFilters, ignoredTraitFiltersForCounts, mainTrait } from '@/constants/collections';
 
 import { StorageService } from '@/services/storage.service';
 
 import { environment } from '@environments/environment';
+import { selectCollections } from '@/state/data/data-state.selectors';
+import { Collection } from '@/models/data.state';
 
 @Injectable({
   providedIn: 'root'
 })
 export class AttributesService {
 
-  private attributeCache = new Map<string, Observable<AttributeItem | null>>();
+  private attributeCache = new Map<string, Observable<AttributeItems | null>>();
   private rarityCache = new Map<string, { [key: string]: number }>();
 
   constructor(
+    private store: Store<GlobalState>,
     private http: HttpClient,
     private storageSvc: StorageService,
   ) {}
 
   /**
+   * Adds attributes to an array of Phunks
+   * @param slug Collection slug
+   * @param phunks Array of Phunks to add attributes to
+   */
+  addAttributes(slug: string | undefined, phunks: Phunk[]): Observable<Phunk[]> {
+    if (!phunks.length) return of(phunks);
+    if (!slug) return of(phunks);
+
+    return this.getAttributes(slug).pipe(
+      filter((res: AttributeItems | null) => !!res),
+      switchMap((res: AttributeItems | null) => {
+        return this.store.select(selectCollections).pipe(
+          first((collections: Collection[]) => {
+            // Wait until we have the collection we're looking for
+            return collections.some(c => c.slug === slug);
+          }),
+          map((collections: Collection[]) => collections.find((c: Collection) => c.slug === slug)),
+          map((collection: Collection | undefined) => {
+            return phunks.map((item: Phunk) => {
+              const originalAttributes = item.sha ? res![item.sha] : [];
+              if (!originalAttributes) return item;
+              const attributes = [...originalAttributes]?.sort((a: Attribute, b: Attribute) => {
+                if (a.k === collection?.mainTrait) return -1;
+                if (b.k === collection?.mainTrait) return 1;
+                return 0;
+              });
+              return { ...item, attributes };
+            });
+          }),
+        )
+      })
+    );
+  }
+
+  /**
    * Fetches attributes for a collection
    * @param slug Collection slug
    */
-  getAttributes(slug: string): Observable<AttributeItem | null> {
+  getAttributes(slug: string): Observable<AttributeItems | null> {
     if (!this.attributeCache.has(slug)) {
-      const attributes$ = from(this.storageSvc.getItem<AttributeItem>(`${slug}__attributes`)).pipe(
-        switchMap((res: AttributeItem | null) => {
-          if (res) return of(res);
+      const attributes$ = from(this.storageSvc.getItem<AttributeItems>(`${slug}__attributes`)).pipe(
+        switchMap((attributes: AttributeItems | null) => {
+          if (attributes) return of(attributes);
           return this.fetchAttributes(slug);
         }),
-        filter((res: AttributeItem | null) => !!res),
-        tap((res: AttributeItem) => this.createFilters(slug, res)),
+        filter((attributes: AttributeItems | null) => !!attributes),
+        switchMap((attributes: AttributeItems) => this.store.select(selectCollections).pipe(
+          filter((collections: Collection[]) => collections.length > 0),
+          take(1),
+          map((collections: Collection[]) => collections.find((collection: Collection) => collection.slug === slug)),
+          tap((collection: Collection | undefined) => this.createFilters(slug, attributes, collection)),
+          map(() => attributes),
+        )),
         shareReplay({ bufferSize: 1, refCount: true })
       );
       this.attributeCache.set(slug, attributes$);
     }
     return this.attributeCache.get(slug)!;
+  }
+
+  /**
+   * Fetches attributes for a collection from the static URL
+   * @param slug Collection slug
+   */
+  private fetchAttributes(slug: string): Observable<AttributeItems> {
+    return this.http.get<AttributeItems>(`${environment.staticUrl}/data/${slug}_attributes.json`).pipe(
+      switchMap((res: AttributeItems) => from(this.cacheAttributes(slug, res))),
+    );
   }
 
   /**
@@ -60,22 +114,12 @@ export class AttributesService {
   }
 
   /**
-   * Fetches attributes for a collection from the static URL
-   * @param slug Collection slug
-   */
-  fetchAttributes(slug: string): Observable<AttributeItem> {
-    return this.http.get<AttributeItem>(`${environment.staticUrl}/data/${slug}_attributes.json`).pipe(
-      switchMap((res: AttributeItem) => from(this.cacheAttributes(slug, res))),
-    );
-  }
-
-  /**
    * Caches attributes for a collection
    * @param slug Collection slug
    * @param attributes Attributes
    */
-  private async cacheAttributes(slug: string, attributes: AttributeItem) {
-    const stored = await this.storageSvc.setItem<AttributeItem>(`${slug}__attributes`, attributes);
+  private async cacheAttributes(slug: string, attributes: AttributeItems) {
+    const stored = await this.storageSvc.setItem<AttributeItems>(`${slug}__attributes`, attributes);
     return stored;
   }
 
@@ -84,7 +128,7 @@ export class AttributesService {
    * @param slug Collection slug
    * @param attributes Attributes
    */
-  private async createFilters(slug: string, attributes: AttributeItem) {
+  private async createFilters(slug: string, attributes: AttributeItems, collection: Collection | undefined) {
     // Create a map to store unique attribute keys and their possible values
     const attributeMap = new Map<string, Set<string>>();
     // Track which attributes are present in all items
@@ -105,10 +149,10 @@ export class AttributesService {
 
       item.forEach((attribute: Attribute) => {
         // Skip Description and Name attributes since they aren't used for filtering
-        if (ignoredTraitFilters[slug]?.includes(attribute.k)) return;
+        if (collection?.ignoredTraitFilters?.includes(attribute.k)) return;
 
         // Count traits (exclude mainTrait from trait counting, but still include it as a filter)
-        if (!ignoredTraitFiltersForCounts[slug]?.includes(attribute.k)) {
+        if (!collection?.ignoredTraitFiltersForCounts?.includes(attribute.k)) {
           traitCount++;
         }
 
@@ -200,33 +244,5 @@ export class AttributesService {
   async getFilters(slug: string): Promise<{ [key: string]: string[] } | null> {
     const stored = await this.storageSvc.getItem<{ [key: string]: string[] }>(`${slug}__filters`);
     return stored;
-  }
-
-  /**
-   * Adds attributes to an array of Phunks
-   * @param slug Collection slug
-   * @param phunks Array of Phunks to add attributes to
-   */
-  addAttributes(slug: string | undefined, phunks: Phunk[]): Observable<Phunk[]> {
-    if (!phunks.length) return of(phunks);
-    if (!slug) return of(phunks);
-
-    return this.getAttributes(slug).pipe(
-      filter((res: AttributeItem | null) => !!res),
-      map((res: AttributeItem | null) => {
-        return phunks.map((item: Phunk) => {
-          const originalAttributes = item.sha ? res![item.sha] : [];
-          if (!originalAttributes) return item;
-
-          const attributes = [...originalAttributes]?.sort((a: Attribute, b: Attribute) => {
-            if (a.k === mainTrait[slug]) return -1;
-            if (b.k === mainTrait[slug]) return 1;
-            return 0;
-          });
-
-          return { ...item, attributes };
-        });
-      }),
-    );
   }
 }

@@ -1,15 +1,16 @@
 @if (marketType) {
 
-  @if (phunkData && phunkData.length) {
+  @let data = phunkData |
+  attributeFilter : traitFilters : slug : (collections$ | async) |
+  sort: activeSort : marketType;
+
+  @if (data) {
     @for (
-      phunk of phunkData |
-      attributeFilter : traitFilters : slug |
-      sort: activeSort : marketType;
+      phunk of data;
       track phunk.sha;
       let i = $index;
     ) {
       @if (i < limit) {
-        <!-- {{ phunk.listing | json }} -->
         <ng-container *ngTemplateOutlet="phunkItem; context:{ $implicit: phunk, index: i }" />
       }
     } @empty {

@@ -25,12 +25,15 @@ import { QueryParamsPipe } from '@/pipes/query-params.pipe';
 import { DataService } from '@/services/data.service';
 
 import { GlobalState } from '@/models/global-state';
+import { Phunk } from '@/models/db';
+import { Collection } from '@/models/data.state';
 
 import * as appStateSelectors from '@/state/app/app-state.selectors';
 
 import { environment } from '@environments/environment';
-import { Phunk } from '@/models/db';
 import { setMarketSlug } from '@/state/market/market-state.actions';
+import { selectCollections } from '@/state/data/data-state.selectors';
+import { selectMarketSlug } from '@/state/market/market-state.selectors';
 
 @Component({
   standalone: true,
@@ -69,6 +72,13 @@ export class ItemViewComponent {
     switchMap((params: any) => this.dataSvc.fetchSinglePhunk(params.hashId)),
     tap((phunk: Phunk) => this.store.dispatch(setMarketSlug({ marketSlug: phunk.slug }))),
     shareReplay({ bufferSize: 1, refCount: true }),
+  );
+
+  collection$ = this.store.select(selectMarketSlug).pipe(
+    filter((slug: string) => !!slug),
+    switchMap((slug: string) => this.store.select(selectCollections).pipe(
+      map((collections: Collection[]) => collections.find((collection: Collection) => collection.slug === slug)),
+    )),
   );
 
   name$ = this.singlePhunk$.pipe(

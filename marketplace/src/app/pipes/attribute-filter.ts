@@ -1,19 +1,8 @@
 import { Pipe, PipeTransform } from '@angular/core';
 import { Phunk } from '@/models/db';
 import { TraitFilter } from '@/models/global-state';
-import { ignoredTraitFilters, ignoredTraitFiltersForCounts } from '@/constants/collections';
+import { Collection } from '@/models/data.state';
 
-/**
- * Pipe that filters an array of Phunks based on their attributes
- *
- * Takes an array of Phunks and active trait filters and returns a filtered array
- * containing only Phunks that match all the specified trait criteria.
- *
- * @example
- * // Input phunks: Array of Phunk objects
- * // Input filters: { "Type": "Alien", "trait_count": "5" }
- * // Usage in template: *ngFor="let phunk of phunks | attributeFilter:activeFilters"
- */
 @Pipe({
   standalone: true,
   name: 'attributeFilter'
@@ -26,10 +15,20 @@ export class AttributeFilterPipe implements PipeTransform {
    * @param activeTraitFilters - Object containing active trait filters
    * @returns Filtered array of Phunks that match all trait criteria
    */
-  transform(value: Phunk[], activeTraitFilters: TraitFilter | null, slug: string): Phunk[] {
-    if (!value) return [];
+  transform(
+    value: Phunk[] | null,
+    activeTraitFilters: TraitFilter | null,
+    slug: string,
+    collections: Collection[] | null
+  ): Phunk[] | null {
+
+    if (!value) return null;
     if (!activeTraitFilters) return value;
 
+    const collection = collections?.find(collection => collection.slug === slug);
+    if (!collection) return value;
+
+    // console.log({value, activeTraitFilters, slug, collections});
     // Create copy of filters and remove address field since it's handled separately
     const traitFilters: TraitFilter = { ...activeTraitFilters };
     delete traitFilters['address'];
@@ -44,7 +43,7 @@ export class AttributeFilterPipe implements PipeTransform {
         if (!res.attributes) return false;
         // Count only traits (exclude Name, Description, and Sex)
         const actualTraitCount = res.attributes.filter(attr =>
-          !ignoredTraitFiltersForCounts[slug]?.includes(attr.k)
+          !collection.ignoredTraitFiltersForCounts?.includes(attr.k)
         ).length;
 
         // Check if it's a range filter (e.g., "3-7")

@@ -3,6 +3,6 @@ export interface Attribute {
   v: string;
 }
 
-export interface AttributeItem {
+export interface AttributeItems {
   [sha: string]: Attribute[];
 }

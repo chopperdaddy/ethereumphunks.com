@@ -89,7 +89,10 @@
             <div class="right">
               <div class="accessories-wrapper">
                 @if (phunk.attributes?.length) {
-                  <app-item-attributes [phunk]="phunk" />
+                  <app-item-attributes
+                    [phunk]="phunk"
+                    [collection]="(collection$ | async)"
+                  />
                 }
               </div>
             </div>

@@ -16,8 +16,11 @@ export class SortPipe implements PipeTransform {
    * @param args - The sort option and market type
    * @returns The sorted array of Phunks
    */
-  transform(value: Phunk[], ...args: [SortOption, MarketType]): Phunk[] {
-    if (!value?.length) return [];
+  transform(
+    value: Phunk[] | null,
+    ...args: [SortOption, MarketType]
+  ): Phunk[] | null {
+    if (!value?.length) return null;
     if (!args) return value;
 
     const sort = args[0];
