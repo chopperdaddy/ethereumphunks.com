@@ -173,20 +173,23 @@
     }
 
     .curated-dropdown {
+      position: fixed;
+      z-index: 1;
+      top: var(--header-height);
       right: 0;
-      left: auto;
+      left: 0;
       width: 100%;
 
       button {
-        justify-content: flex-end;
+        justify-content: flex-start;
 
         span {
-          display: none;
+          padding-left: 1rem;
         }
 
         .image-wrapper {
           margin: 0;
-          width: 100%;
+          width: 4rem;
           height: 4rem;
         }
       }
