@@ -9,7 +9,7 @@ import { LazyLoadImageModule } from 'ng-lazyload-image';
 
 import { PhunkGridComponent } from '@/components/phunk-grid/phunk-grid.component';
 import { RecentActivityComponent } from '@/components/recent-activity/recent-activity.component';
-import { SplashComponent } from '@/components/splash/splash.component';
+import { SplashComponent } from '@/routes/index/splash/splash.component';
 import { BrbComponent } from '@/components/brb/brb.component';
 import { MintComponent } from '@/components/mint/mint.component';
 import { AuctionsComponent } from '@/components/auctions/auctions.component';

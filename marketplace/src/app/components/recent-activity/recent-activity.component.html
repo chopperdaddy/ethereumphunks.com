@@ -49,7 +49,7 @@
 
           <div class="label">
             @if (event.type) {
-              <span [innerHTML]="labels[event.type] + ' '"></span>
+              <span class="label-text" [innerHTML]="labels[event.type] + ' '"></span>
             }
 
             @if (
@@ -71,7 +71,7 @@
               event.type !== 'bridgeIn' &&
               event.type !== 'bridgeOut'
             ) {
-              <span class="value">
+              <span class="label-value">
                 for Ξ{{ event.value | weiToEth }}
               </span>
             }

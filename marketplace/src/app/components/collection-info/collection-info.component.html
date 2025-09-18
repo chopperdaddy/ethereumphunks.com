@@ -1,0 +1,11 @@
+<div class="collection-info-wrapper">
+  <img [src]="collection()?.image" alt="{{ collection()?.name }}" />
+  <div class="collection-info-content">
+    <h1>{{ collection()?.name }}</h1>
+    <a
+      [href]="'https://x.com/' + collection()?.twitter"
+      target="_blank">
+      &#x40;{{ collection()?.twitter }}
+    </a>
+  </div>
+</div>

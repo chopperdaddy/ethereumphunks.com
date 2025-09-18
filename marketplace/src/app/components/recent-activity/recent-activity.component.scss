@@ -118,9 +118,19 @@ section {
         font-weight: 500;
         max-width: 12rem;
 
+        .label-text {
+          display: block;
+        }
+
+        .label-value {
+          display: block;
+        }
 
         app-address {
-          display: inline;
+          display: block;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
         }
       }
 

@@ -14,13 +14,15 @@ import { PixelArtService } from '@/services/pixel-art.service';
 import { ImageService } from '@/services/image.service';
 
 import { selectIsMobile } from '@/state/app/app-state.selectors';
+import { CollectionInfoComponent } from '@/components/collection-info/collection-info.component';
 
 @Component({
   selector: 'app-splash',
   standalone: true,
   imports: [
     CommonModule,
-    LazyLoadImageModule
+    LazyLoadImageModule,
+    CollectionInfoComponent
   ],
   templateUrl: './splash.component.html',
   styleUrls: ['./splash.component.scss'],
