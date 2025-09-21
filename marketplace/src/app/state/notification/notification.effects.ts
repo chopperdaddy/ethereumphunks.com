@@ -1,38 +1,57 @@
 import { Injectable } from '@angular/core';
 
 import { Store } from '@ngrx/store';
-
 import { Actions, createEffect, ofType } from '@ngrx/effects';
 
+import { EMPTY, catchError, delay, filter, from, map, of, switchMap, tap, withLatestFrom } from 'rxjs';
+
 import { Web3Service } from '@/services/web3.service';
+import { UtilService } from '@/services/util.service';
+import { StorageService } from '@/services/storage.service';
+import { DataService } from '@/services/data.service';
 
 import { GlobalState, Notification } from '@/models/global-state';
 import { Event } from '@/models/db';
-
-import { EMPTY, catchError, delay, map, of, switchMap, tap, withLatestFrom } from 'rxjs';
-
-import { environment } from '@environments/environment';
-import { DataService } from '@/services/data.service';
 
 import { selectNotifHoverState, selectNotifications } from '../notification/notification.selectors';
 import { selectCurrentBlock, selectWalletAddress } from '../app/app-state.selectors';
 
 import { setCurrentBlock, setWalletAddress } from '../app/app-state.actions';
 import { removeNotification, setNotifications, upsertNotification } from '../notification/notification.actions';
-import { UtilService } from '@/services/util.service';
+
+import { environment } from '@environments/environment';
 
 
 @Injectable()
 export class NotificationEffects {
 
-  addressChanged$ = createEffect(() => this.actions$.pipe(
+  migrateNotifications$ = createEffect(() => this.actions$.pipe(
     ofType(setWalletAddress),
-    map((action) => {
+    switchMap((action) => {
       const address = action.walletAddress?.toLowerCase();
-      const stored = localStorage.getItem(`EtherPhunks_notifs__${environment.chainId}__${address}`);
-      const notifications = JSON.parse(stored || '[]')
-      return setNotifications({ notifications });
-    })
+      const key = `EtherPhunks_notifs__${environment.chainId}__${address}`;
+      const migratedKey = `EtherPhunks_notifs__${environment.chainId}__${address}:migrated`;
+
+      const isMigrated = localStorage.getItem(migratedKey);
+      // console.log({isMigrated: !!isMigrated});
+      if (isMigrated) return from(this.storageSvc.getItem(key, true)).pipe(map(res => res || []));
+
+      const stored = localStorage.getItem(key);
+      if (!stored) return of([]);
+
+      const notifications = JSON.parse(stored);
+      // console.log({notifications});
+      if (!notifications) return of([]);
+
+      return from(this.storageSvc.setItem(key, notifications, true)).pipe(
+        tap(() => {
+          localStorage.removeItem(key);
+          localStorage.setItem(migratedKey, '1');
+        }),
+        map(() => notifications)
+      );
+    }),
+    map((notifications) => setNotifications({ notifications })),
   ));
 
   onRemoveNotification$ = createEffect(() => this.actions$.pipe(
@@ -41,11 +60,13 @@ export class NotificationEffects {
       this.store.select(selectNotifications),
       this.store.select(selectWalletAddress),
     ),
-    tap(([_, notifications, address]) => {
-      localStorage.setItem(
-        `EtherPhunks_notifs__${environment.chainId}__${address}`,
-        JSON.stringify(notifications.filter((txn: Notification) => txn.type === 'complete' || txn.type === 'event'))
-      );
+    switchMap(([_, notifications, address]) => {
+      const key = `EtherPhunks_notifs__${environment.chainId}__${address}`;
+      return from(this.storageSvc.setItem(
+        key,
+        notifications.filter((txn: Notification) => txn.type === 'complete' || txn.type === 'event'),
+        true
+      ));
     }),
   ), { dispatch: false });
 
@@ -55,27 +76,30 @@ export class NotificationEffects {
       this.store.select(selectNotifications),
       this.store.select(selectWalletAddress),
     ),
-    tap(([_, notifications, address]) => {
-      localStorage.setItem(
-        `EtherPhunks_notifs__${environment.chainId}__${address}`,
-        JSON.stringify(notifications.filter((txn: Notification) => txn.type === 'complete' || txn.type === 'event'))
+    switchMap(([action, notifications, address]) => {
+      const key = `EtherPhunks_notifs__${environment.chainId}__${address}`;
+      return from(this.storageSvc.setItem(
+        key,
+        notifications.filter((txn: Notification) => txn.type === 'complete' || txn.type === 'event'),
+        true
+      )).pipe(
+        switchMap(() => {
+          // If the notification is a complete or error, remove it after 5 seconds
+          if (action.notification.type === 'complete' || action.notification.type === 'error') {
+            return of(action).pipe(
+              delay(5000),
+              withLatestFrom(this.store.select(selectNotifHoverState)),
+              tap(([action, notifHoverState]) => {
+                if (!notifHoverState[action.notification.id]) {
+                  this.store.dispatch(removeNotification({ txId: action.notification.id }));
+                }
+              })
+            );
+          }
+          return EMPTY;
+        })
       );
     }),
-    switchMap(([action]) => {
-      // If the notification is a complete or error, remove it after 5 seconds
-      if (action.notification.type === 'complete' || action.notification.type === 'error') {
-        return of(action).pipe(
-          delay(5000),
-          withLatestFrom(this.store.select(selectNotifHoverState)),
-          tap(([action, notifHoverState]) => {
-            if (!notifHoverState[action.notification.id]) {
-              this.store.dispatch(removeNotification({ txId: action.notification.id }));
-            }
-          })
-        );
-      }
-      return EMPTY;
-    })
   ), { dispatch: false });
 
   onBlockNumber$ = createEffect(() => this.actions$.pipe(
@@ -105,7 +129,8 @@ export class NotificationEffects {
     private actions$: Actions,
     private dataSvc: DataService,
     private web3Svc: Web3Service,
-    private utilSvc: UtilService
+    private utilSvc: UtilService,
+    private storageSvc: StorageService
   ) {}
 
   checkEventForPurchaseFromUser(event: Event, userAddress: string) {
