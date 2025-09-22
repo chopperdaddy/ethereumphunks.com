@@ -16,7 +16,6 @@ import { StatusBarComponent } from '@/components/status-bar/status-bar.component
 import { Web3Service } from '@/services/web3.service';
 import { DataService } from '@/services/data.service';
 import { ThemeService } from '@/services/theme.service';
-import { PwaUpdateService } from '@/services/pwa-update.service';
 
 import { selectConfig, selectAdvancedMode } from '@/state/app/app-state.selectors';
 import { selectLogsActive } from '@/state/indexer-logs/indexer-logs.selectors';
@@ -64,7 +63,6 @@ export class AppComponent implements OnInit {
     public web3Svc: Web3Service,
     public themeSvc: ThemeService,
     private router: Router,
-    private pwaUpdateSvc: PwaUpdateService,
   ) {
     this.store.dispatch(appStateActions.setTheme({ theme: 'initial' }));
     this.store.dispatch(appStateActions.initGlobalConfig());
@@ -180,7 +178,6 @@ console.log(`
     ).subscribe();
 
     this.setIsMobile();
-    this.pwaUpdateSvc.checkForUpdate();
   }
 
   setIsMobile(): void {
