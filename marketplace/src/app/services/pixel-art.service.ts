@@ -212,4 +212,18 @@ export class PixelArtService {
     const base64 = btoa(string);
     return `data:image/svg+xml;base64,${base64}`;
   }
+
+  /**
+   * Converts an ArrayBuffer to a base64 string
+   * @param buffer ArrayBuffer to convert
+   * @returns Base64 string
+   */
+  arrayBufferToBase64(buffer: ArrayBuffer): string {
+    const bytes = new Uint8Array(buffer);
+    let binary = '';
+    for (let i = 0; i < bytes.byteLength; i++) {
+      binary += String.fromCharCode(bytes[i]);
+    }
+    return btoa(binary);
+  }
 }

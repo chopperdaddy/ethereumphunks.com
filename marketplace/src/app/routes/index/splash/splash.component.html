@@ -10,7 +10,11 @@
     track image.src + image.type + idx;
     let idx = $index;
   ) {
-    <div class="image-wrapper" [class.center]="idx === centerIndex()">
+    <div
+      class="image-wrapper"
+      [class.center]="idx === centerIndex()"
+      [class]="image.type">
+
       <img [src]="image.src" width="320" height="320" />
     </div>
   }

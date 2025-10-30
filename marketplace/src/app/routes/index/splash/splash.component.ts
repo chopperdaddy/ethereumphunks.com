@@ -15,6 +15,7 @@ import { ImageService } from '@/services/image.service';
 
 import { selectIsMobile } from '@/state/app/app-state.selectors';
 import { CollectionInfoComponent } from '@/components/collection-info/collection-info.component';
+import { fromBytes } from 'viem';
 
 @Component({
   selector: 'app-splash',
@@ -157,16 +158,24 @@ export class SplashComponent {
       const batchPromises = shas.slice(currentIndex, currentIndex + batchSize).map(async (sha) => {
         try {
           const image = await this.imageSvc.fetchSupportedImageBySha(sha);
-          if (image.byteLength > this.MAX_IMAGE_SIZE) return null;
 
-          const pixels = await this.pixelArtSvc.processPixelArtImage(image);
-          const svg = this.pixelArtSvc.convertToSvg(pixels);
-          const stripped = this.pixelArtSvc.stripColors(svg, slug);
-          const base64 = this.pixelArtSvc.convertToBase64(stripped);
+          let base64 = null;
+          let type: SplashImage['type'] = 'gray';
+          if (image.byteLength > this.MAX_IMAGE_SIZE) {
+            const imageBase64 = this.pixelArtSvc.arrayBufferToBase64(image);
+            base64 = `data:image/jpeg;base64,${imageBase64}`;
+            type = 'jpeg';
+          } else {
+            const pixels = await this.pixelArtSvc.processPixelArtImage(image);
+            const svg = this.pixelArtSvc.convertToSvg(pixels);
+            const stripped = this.pixelArtSvc.stripColors(svg, slug);
+            base64 = this.pixelArtSvc.convertToBase64(stripped);
+            type = 'gray';
+          }
 
           return {
             src: base64,
-            type: 'gray' as const
+            type
           };
         } catch (error) {
           console.error(`Error processing image ${sha}:`, error);

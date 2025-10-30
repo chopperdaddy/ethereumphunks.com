@@ -117,15 +117,15 @@ export interface UnreadConversation {
   unreadMessages: number;
 }
 
-export interface NotificationState {
-  notifications: Notification[];
-  notifHoverState: { [notificationId: string]: boolean };
-}
-
 export interface HistoryItem { type: string; value: string };
 
 export interface Cooldowns {
   [hashId: string]: number;
+}
+
+export interface NotificationState {
+  notifications: Notification[];
+  notifHoverState: { [notificationId: string]: boolean };
 }
 
 export interface Notification {
