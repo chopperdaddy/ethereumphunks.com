@@ -53,8 +53,12 @@ h2 {
   background-color: rgba(var(--dark-text), .1);
   padding: 1rem;
   padding-right: 0;
+  max-width: 100%;
+  overflow: hidden;
 
   .comment {
+    max-width: 100%;
+    padding-bottom: 1rem;
 
     .reply-button,
     .delete-button {
@@ -115,17 +119,37 @@ h2 {
 
     .comment-content {
       padding-left: $padding;
+      max-width: 100%;
+      overflow: hidden;
+      padding-top: 1rem;
 
       p {
         font-size: 1.6rem;
-        font-weight: 400;
+        font-weight: 500;
+
+        padding: 0;
+        margin: 0;
+        padding-right: 1rem;
+        color: rgba(var(--text-color), .75);
 
         word-wrap: break-word;
         overflow-wrap: break-word;
+        word-break: break-all;
         white-space: pre-wrap;
+        max-width: 100%;
 
         &.deleted {
           opacity: .5;
+        }
+      }
+
+      .image-wrapper {
+        img {
+          max-width: 100%;
+          width: 32rem;
+          height: auto;
+          aspect-ratio: 1;
+          image-rendering: pixelated;
         }
       }
     }

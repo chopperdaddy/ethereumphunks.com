@@ -1,0 +1,10 @@
+img {
+  &.ng-failed-lazyloaded {
+    position: relative;
+    border: none;
+    background-color: rgba(var(--black), 1);
+
+    color: rgba(var(--white), 1);
+    padding: 25% 0;
+  }
+}

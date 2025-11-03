@@ -5,9 +5,10 @@ import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 
 import { Store } from '@ngrx/store';
+import { LazyLoadImageModule } from 'ng-lazyload-image';
 
 import { from } from 'rxjs';
-import { switchMap, startWith } from 'rxjs/operators';
+import { switchMap, startWith, tap } from 'rxjs/operators';
 import { zeroAddress } from 'viem';
 
 import { DataService } from '@/services/data.service';
@@ -25,6 +26,11 @@ import { AvatarComponent } from '@/components/avatar/avatar.component';
 import { upsertNotification } from '@/state/notification/notification.actions';
 import { selectActiveCollection } from '@/state/data/data-state.selectors';
 import { selectWalletAddress } from '@/state/app/app-state.selectors';
+import { MarkdownPipe } from '@/pipes/markdown.pipe';
+import { JsonPrettifyPipe } from '@/pipes/json-prettify.pipe';
+import { FromHexPipe } from '@/pipes/from-hex.pipe';
+import { FromBase64Pipe } from '@/pipes/from-base64.pipe';
+import { FromAsciiPipe } from '@/pipes/from-ascii.pipe';
 
 @Component({
   standalone: true,
@@ -32,11 +38,17 @@ import { selectWalletAddress } from '@/state/app/app-state.selectors';
     CommonModule,
     FormsModule,
     RouterModule,
+    LazyLoadImageModule,
 
     WalletAddressDirective,
     TippyDirective,
 
     AvatarComponent,
+    JsonPrettifyPipe,
+    FromHexPipe,
+    FromBase64Pipe,
+    FromAsciiPipe,
+    MarkdownPipe,
   ],
   selector: 'app-comments',
   templateUrl: './comments.component.html',
@@ -52,6 +64,7 @@ export class CommentsComponent {
 
   commentValue = model<Record<string, string>>({});
   expanded = signal<Record<string, boolean>>({});
+  jsonExpanded = signal<Record<string, boolean>>({});
   replyActive = signal<string | null>(null);
 
   comments$ = this.mainTopic$.pipe(
@@ -65,7 +78,8 @@ export class CommentsComponent {
           );
         })
       );
-    })
+    }),
+    tap(comments => console.log({comments}))
   );
 
   activeCollection$ = this.store.select(selectActiveCollection);
@@ -90,6 +104,8 @@ export class CommentsComponent {
     };
 
     comments.forEach(comment => addCommentTopicsAndIds(comment));
+
+    console.log({uniqueTopics});
     return Array.from(uniqueTopics);
   }
 
@@ -171,6 +187,14 @@ export class CommentsComponent {
    */
   expandComment(commentId: string) {
     this.expanded.update(prev => ({...prev, [commentId]: !prev[commentId]}));
+  }
+
+  /**
+   * Toggles the expanded state of JSON content to show/hide full JSON
+   * @param commentId The ID of the comment with JSON content
+   */
+  expandJson(commentId: string) {
+    this.jsonExpanded.update(prev => ({...prev, [commentId]: !prev[commentId]}));
   }
 
   /**

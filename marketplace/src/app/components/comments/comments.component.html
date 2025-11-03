@@ -48,7 +48,67 @@
         </div>
 
         <div class="comment-content">
-          <p [class.deleted]="comment.deleted">{{ comment.deleted ? '[deleted]' : comment.content }}</p>
+          <!-- <p>{{ comment.encoding }}</p> -->
+          @if (comment.deleted) {
+            <p class="deleted">[deleted]</p>
+          } @else if (comment.encoding === 'json') {
+            <div class="json-wrapper">
+              <div
+                class="json-prettify"
+                [class.collapsed]="!jsonExpanded()[comment.id]"
+                [innerHTML]="comment.content | jsonPrettify : true : 2 : 2">
+              </div>
+              @if (!jsonExpanded()[comment.id]) {
+                <button class="view-more-button" (click)="expandJson(comment.id)">
+                  View more
+                </button>
+              } @else {
+                <button class="view-more-button" (click)="expandJson(comment.id)">
+                  View less
+                </button>
+              }
+            </div>
+          } @else if (comment.encoding === 'hex') {
+            @let decoded = comment.content | fromHex;
+            @if (decoded && decoded.type === 'image') {
+              <div class="image-wrapper">
+                <img
+                  [lazyLoad]="decoded.content"
+                  [errorImage]="'/broken-image.svg'"
+                />
+              </div>
+            } @else if (decoded) {
+              <p>{{ decoded.content }}</p>
+            }
+          } @else if (comment.encoding === 'base64') {
+            @let decoded = comment.content | fromBase64;
+            @if (decoded && decoded.type === 'image') {
+              <div class="image-wrapper">
+                <img
+                  [lazyLoad]="decoded.content"
+                  [errorImage]="'/broken-image.svg'"
+                />
+              </div>
+            } @else if (decoded) {
+              <p>{{ decoded.content }}</p>
+            }
+          } @else if (comment.encoding === 'ascii') {
+            @let decoded = comment.content | fromAscii;
+            @if (decoded && decoded.type === 'image') {
+              <div class="image-wrapper">
+                <img
+                  [lazyLoad]="decoded.content"
+                  [errorImage]="'/broken-image.svg'"
+                />
+              </div>
+            } @else if (decoded) {
+              <p>{{ decoded.content }}</p>
+            }
+          } @else if (comment.encoding === 'markdown') {
+            <div [innerHTML]="comment.content | markdown"></div>
+          } @else {
+            <p>{{ comment.content }}</p>
+          }
         </div>
 
         @if (!comment.deleted) {

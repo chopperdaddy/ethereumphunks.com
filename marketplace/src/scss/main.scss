@@ -38,6 +38,8 @@
 @use './components/_app-address';
 @use './components/_chat';
 @use './components/_sliders';
+@use './components/_json-prettify';
+@use './components/_image';
 
 // 6. Themes
 @use './themes/_default';
