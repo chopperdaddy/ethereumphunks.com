@@ -187,7 +187,7 @@ export class MarketStateEffects {
     ofType(marketStateActions.setMarketSlug),
     distinctUntilChanged((a, b) => a.marketSlug === b.marketSlug),
     switchMap(({ marketSlug }) => {
-      return this.dataSvc.fetchAllWithPagination(marketSlug, 0, 110, {}).pipe(
+      return this.dataSvc.fetchAllWithPagination(marketSlug, 0, 110, {}, defaultSort['all']).pipe(
         map((data: MarketState['activeMarketRouteData']) => data.data)
       );
     }),
