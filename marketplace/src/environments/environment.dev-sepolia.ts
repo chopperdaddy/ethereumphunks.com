@@ -9,8 +9,8 @@ export const environment: Environment = {
   chainId: 11155111,
 
   // rpcHttpProvider: 'http://geth.sepolia-geth.dappnode:8545',
-  rpcHttpProvider: 'https://eth-sepolia.g.alchemy.com/v2/0FN3yRRyJYmfFlfvjco_d9Y8HaVBIH45',
-  // rpcHttpProvider: 'https://ethereum-sepolia-rpc.publicnode.com',
+  // rpcHttpProvider: 'https://eth-sepolia.g.alchemy.com/v2/0FN3yRRyJYmfFlfvjco_d9Y8HaVBIH45',
+  rpcHttpProvider: 'https://ethereum-sepolia-rpc.publicnode.com',
   explorerUrl: 'https://sepolia.etherscan.io',
   externalMarketUrl: 'https://sepolia.ethscriptions.com',
 
@@ -25,11 +25,11 @@ export const environment: Environment = {
   auctionHouseAddress: '0x3A50E6D0F8d1c68cD2DD1510a982323805272d48'.toLowerCase(),
 
   // relayUrl: 'https://relay-sepolia.ethereumphunks.com',
-  relayUrl: 'http://0.0.0.0:3003',
-  staticUrl: 'https://kcbuycbhynlmsrvoegzp.supabase.co/storage/v1/object/public',
+  relayUrl: 'http://localhost:3069',
+  staticUrl: 'https://oafirqjkcmgmjononxiy.supabase.co/storage/v1/object/public',
 
-  supabaseUrl: 'https://kcbuycbhynlmsrvoegzp.supabase.co',
-  supabaseKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtjYnV5Y2JoeW5sbXNydm9lZ3pwIiwicm9sZSI6ImFub24iLCJpYXQiOjE2ODkyMTMzNTQsImV4cCI6MjAwNDc4OTM1NH0.jUvNzW6jrBPfKg9SvDhW5auqF8y_DKo4tmAmXCwgHAY',
+  supabaseUrl: 'https://oafirqjkcmgmjononxiy.supabase.co',
+  supabaseKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9hZmlycWprY21nbWpvbm9ueGl5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM3NjkxMjIsImV4cCI6MjA3OTEyOTEyMn0.lbss8jaxkY3TT5fY9D0Gy69oZw9xkIw04CxBPq7HwL4',
   // supabaseUrl: 'http://10.0.0.73:54321',
   // supabaseKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0',
 };

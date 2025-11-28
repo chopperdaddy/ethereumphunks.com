@@ -1,7 +1,7 @@
 export const appConfig = {
   version: '1.6.2',
   standalone: false,
-  defaultCollection: '',
+  defaultCollection: 'nakamingos',
   agent: {
     enabled: false,
     address: '0x22ddc627a3c721ad10b18890bc95aca76d33432c'.toLowerCase(),
