@@ -25,11 +25,12 @@ export const environment: Environment = {
   auctionHouseAddress: '0x3A50E6D0F8d1c68cD2DD1510a982323805272d48'.toLowerCase(),
 
   // relayUrl: 'https://relay-sepolia.ethereumphunks.com',
+  // staticUrl: 'https://oafirqjkcmgmjononxiy.supabase.co/storage/v1/object/public',
   relayUrl: 'http://localhost:3069',
-  staticUrl: 'https://oafirqjkcmgmjononxiy.supabase.co/storage/v1/object/public',
+  staticUrl: 'http://127.0.0.1:54321/storage/v1/object/public',
 
-  supabaseUrl: 'https://oafirqjkcmgmjononxiy.supabase.co',
-  supabaseKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9hZmlycWprY21nbWpvbm9ueGl5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM3NjkxMjIsImV4cCI6MjA3OTEyOTEyMn0.lbss8jaxkY3TT5fY9D0Gy69oZw9xkIw04CxBPq7HwL4',
-  // supabaseUrl: 'http://10.0.0.73:54321',
-  // supabaseKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0',
+  // supabaseUrl: 'https://oafirqjkcmgmjononxiy.supabase.co',
+  // supabaseKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9hZmlycWprY21nbWpvbm9ueGl5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM3NjkxMjIsImV4cCI6MjA3OTEyOTEyMn0.lbss8jaxkY3TT5fY9D0Gy69oZw9xkIw04CxBPq7HwL4',
+  supabaseUrl: 'http://127.0.0.1:54321',
+  supabaseKey: 'sb_publishable_ACJWlzQHlZjBrEguHvfOxg_3BJgxAaH',
 };
