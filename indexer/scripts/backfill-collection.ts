@@ -11,10 +11,10 @@
  * 5. Processes transactions in correct order via indexer's reindex endpoint
  * 
  * Usage:
- *   ts-node scripts/backfill-collection.ts --slug=nakamingos --metadata=./metadata/nakamingos.json
+ *   ts-node scripts/backfill-collection.ts --metadata=./metadata/collection.json
  * 
  * Options:
- *   --slug: Collection slug (default: nakamingos)
+ *   --slug: Collection slug (optional - defaults to slug from metadata JSON)
  *   --metadata: Path to metadata JSON file (required)
  *   --network: Network to use - "mainnet" or "sepolia" (default: mainnet)
  *   --indexer-url: Indexer URL (default: http://localhost:3069)
@@ -93,7 +93,7 @@ interface TransactionToProcess {
 function parseArgs() {
   const args = process.argv.slice(2);
   const options: any = {
-    slug: 'nakamingos',
+    slug: null,  // Will be read from metadata JSON
     indexerUrl: 'http://localhost:3069',
     network: 'mainnet',
     dryRun: false,
@@ -568,7 +568,6 @@ async function main() {
 
   console.log('\n🚀 Starting collection backfill...');
   console.log(`   Network: ${options.network} (chain ID: ${options.chainId})`);
-  console.log(`   Slug: ${options.slug}`);
   console.log(`   Indexer URL: ${options.indexerUrl}`);
   console.log(`   API Key: ${options.apiKey ? '***' + options.apiKey.slice(-4) : 'none'}`);
   console.log(`   Dry Run: ${options.dryRun}`);
@@ -592,8 +591,16 @@ async function main() {
     // 2. Load metadata
     const metadata = await loadMetadata(options.metadata);
 
-    // 3. Populate attributes
-    await populateAttributes(supabase, options.slug, metadata.collection_items);
+    // 3. Use slug from metadata (CLI --slug overrides if provided)
+    const slug = options.slug || metadata.slug;
+    if (!slug) {
+      console.error('Error: No slug found in metadata JSON and --slug not provided');
+      process.exit(1);
+    }
+    console.log(`   Slug (from ${options.slug ? 'CLI' : 'metadata'}): ${slug}`);
+
+    // 4. Populate attributes
+    await populateAttributes(supabase, slug, metadata.collection_items);
 
     // 4. Ensure collection exists
     await ensureCollection(supabase, metadata, options.tableSuffix);
