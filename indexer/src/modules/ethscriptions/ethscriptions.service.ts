@@ -53,11 +53,21 @@ export class EthscriptionsService {
     const stringData = hexToString(input.toString() as `0x${string}`);
     const cleanedString = stringData.replace(/\x00/g, '');
 
-    // Check if possible ethPhunk creation
+    // Check if possible ethscription creation (any supported content type)
     const possibleEthPhunk =
       cleanedString.startsWith('data:image/svg+xml,') ||
       cleanedString.startsWith('data:image/png;base64,') ||
-      cleanedString.startsWith('data:image/gif;base64,');
+      cleanedString.startsWith('data:image/gif;base64,') ||
+      cleanedString.startsWith('data:image/jpeg;base64,') ||
+      cleanedString.startsWith('data:image/jpg;base64,') ||
+      cleanedString.startsWith('data:image/webp;base64,') ||
+      cleanedString.startsWith('data:image/avif;base64,') ||
+      cleanedString.startsWith('data:video/webm;base64,') ||
+      cleanedString.startsWith('data:text/html,') ||
+      cleanedString.startsWith('data:text/html;charset=utf-8,') ||
+      cleanedString.startsWith('data:application/json,') ||
+      cleanedString.startsWith('data:application/json;charset=utf-8,') ||
+      cleanedString.startsWith('data:application/pdf;base64,');
 
     if (possibleEthPhunk) {
       const sha = createHash('sha256').update(cleanedString).digest('hex');
