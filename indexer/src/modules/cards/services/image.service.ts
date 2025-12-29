@@ -60,32 +60,32 @@ export class ImageService implements OnModuleInit {
     ctx.fillRect(0, bottomBarPos, canvasWidth, bottomBarHeight);
 
     ctx.fillStyle = colors.base;
-    ctx.font = 'bold 36px RetroComputer';
+    ctx.font = '400 36px RetroComputer';
     ctx.fillText(data.collection.singleName, 34, bottomBarPos + 65);
 
     ctx.fillStyle = colors.base;
-    ctx.font = 'bold 100px RetroComputer';
+    ctx.font = '400 100px RetroComputer';
     ctx.fillText(`${data.ethscription.tokenId}`, 30, canvasHeight - 40);
 
     ctx.fillStyle = colors.blue;
-    ctx.font = 'bold 33px RetroComputer';
+    ctx.font = '400 33px RetroComputer';
     const rarityNumberWidth = ctx.measureText(`${data.attributes[0].rarity}`).width;
     ctx.fillText(`${data.attributes[0].rarity}`, (canvasWidth - rarityNumberWidth) - 60, bottomBarPos + 65);
 
     ctx.fillStyle = colors.base;
-    ctx.font = 'bold 33px RetroComputer';
+    ctx.font = '400 33px RetroComputer';
     const text = `One of`;
     const textWidth = ctx.measureText(text).width;
     ctx.fillText(text, (canvasWidth - textWidth) - 60 - (rarityNumberWidth + 15), bottomBarPos + 65);
 
     ctx.fillStyle = colors.blue;
-    ctx.font = 'bold 33px RetroComputer';
+    ctx.font = '400 33px RetroComputer';
     const text2 = `${data.attributes[0].v}`;
     const text2Width = ctx.measureText(text2).width;
     ctx.fillText(text2, (canvasWidth - text2Width) - 60, bottomBarPos + 110);
 
     ctx.fillStyle = colors.base;
-    ctx.font = 'bold 33px RetroComputer';
+    ctx.font = '400 33px RetroComputer';
     const text3 = `${data.collection.singleName}s`;
     const text3Width = ctx.measureText(text3).width;
     ctx.fillText(text3, (canvasWidth - text3Width) - 60, bottomBarPos + 155);
@@ -150,6 +150,8 @@ export class ImageService implements OnModuleInit {
     const canvasWidth = 1200;
     const canvasHeight = 630;
 
+    console.log(collection);
+
     const colors = {
       base: '#C3FF00',
       pink: '#FF03B4',
@@ -163,7 +165,7 @@ export class ImageService implements OnModuleInit {
     ctx.fillStyle = colors.base;
     ctx.fillRect(0, 0, canvasWidth, canvasHeight);
 
-    const bottomBarHeight = 100;
+    const bottomBarHeight = 140;
     const bottomBarPos = canvasHeight - bottomBarHeight;
 
     const topBarHeight = 20;
@@ -173,16 +175,54 @@ export class ImageService implements OnModuleInit {
     ctx.fillStyle = colors.pink;
     ctx.fillRect(0, bottomBarPos, canvasWidth, bottomBarHeight);
 
-    ctx.fillStyle = colors.base;
-    ctx.font = 'bold 36px RetroComputer';
-    ctx.fillText(collection.name, 34, bottomBarPos + 65);
+    const logoSize = 80;
+    const logoY = bottomBarPos + (bottomBarHeight - logoSize) / 2;
+    const logoX = 34;
 
-    const baseImageUrl = `https://kcbuycbhynlmsrvoegzp.supabase.co/storage/v1/object/public/images`;
+    if (collection.image) {
+      const logoBackgroundColor = `#${collection.defaultBackground ?? 'C3FF00'}`;
+      ctx.fillStyle = logoBackgroundColor;
+      ctx.fillRect(logoX, logoY, logoSize, logoSize);
+
+      try {
+        const collectionImage = new Image();
+        await new Promise<void>((resolve, reject) => {
+          collectionImage.onload = () => {
+            ctx.drawImage(collectionImage, logoX, logoY, logoSize, logoSize);
+            resolve();
+          };
+          collectionImage.onerror = () => {
+            Logger.error('Failed to load collection image');
+            resolve();
+          };
+          if (collection.image.startsWith('data:')) {
+            const base64Data = collection.image.split(',')[1];
+            collectionImage.src = Buffer.from(base64Data, 'base64');
+          } else {
+            collectionImage.src = collection.image;
+          }
+        });
+      } catch (err) {
+        Logger.error('Failed to load collection image:', err);
+      }
+    }
+
+    ctx.fillStyle = colors.base;
+    ctx.font = '400 36px RetroComputer';
+    const collectionNameX = collection.image ? logoX + logoSize + 15 : logoX;
+    ctx.fillText(collection.name, collectionNameX, bottomBarPos + 65);
+
+    ctx.fillStyle = colors.base;
+    ctx.font = '400 28px RetroComputer';
+    const urlText = `etherphunks.eth.limo/${collection.slug}`;
+    ctx.fillText(urlText, collectionNameX, bottomBarPos + 105);
+
+    const baseImageUrl = `https://kcbuycbhynlmsrvoegzp.supabase.co/storage/v1/object/public/static/images`;
 
     if (previewItems.length > 0) {
       const gridSize = Math.min(4, previewItems.length);
-      const itemSize = 250;
-      const spacing = 20;
+      const itemSize = 340;
+      const spacing = 0;
       const totalWidth = (itemSize * gridSize) + (spacing * (gridSize - 1));
       const startX = canvasWidth / 2 - totalWidth / 2;
       const startY = bottomBarPos - itemSize;
@@ -192,7 +232,7 @@ export class ImageService implements OnModuleInit {
         const x = startX + (i * (itemSize + spacing));
 
         try {
-          const response = await fetch(`${baseImageUrl}/${item.sha}.png`);
+          const response = await fetch(`${baseImageUrl}/${item.sha}${collection.hasTransparents ? '_transparent' : ''}`);
           if (response.ok) {
             const imageBuffer = await response.arrayBuffer();
             const img = new Image();

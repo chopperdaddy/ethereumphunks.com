@@ -109,7 +109,8 @@ export class CardsService implements OnModuleInit {
    */
   async generateCollectionCard(slug: string): Promise<string> {
     try {
-      const collection = await this.storageSvc.fetchCollection(slug);
+      const collections = await this.storageSvc.fetchCollectionsWithPreviews();
+      const collection = (collections.find((c) => c.ethscription.slug === slug)).ethscription;
 
       if (!collection) {
         return this.generateFallbackHtml('collection', { slug });
@@ -118,9 +119,8 @@ export class CardsService implements OnModuleInit {
       // Generate custom collection social share image
       let imageUrl = 'https://ethereumphunks.com/default-collection.png';
       try {
-        // Fetch some preview items for the collection (first 4 items)
-        const allItems = await this.storageSvc.fetchAllEthscriptions(slug);
-        const previewItems = allItems.slice(0, 4);
+        // Fetch random preview items for the collection
+        const previewItems = collection.previews;
         const imageBuffer = await this.imgSvc.generateCollectionSocialImage(collection, previewItems);
         // Convert to base64 data URL for embedding
         imageUrl = `data:image/png;base64,${imageBuffer.toString('base64')}`;
@@ -147,53 +147,52 @@ export class CardsService implements OnModuleInit {
     }
   }
 
-  /**
-   * Generate HTML with meta tags for a collection market page
-   * @param slug The collection slug
-   * @param marketType The market type
-   * @returns HTML string with proper meta tags
-   */
-  async generateCollectionMarketCard(slug: string, marketType: string): Promise<string> {
-    try {
-      const collection = await this.storageSvc.fetchCollection(slug);
+  // /**
+  //  * Generate HTML with meta tags for a collection market page
+  //  * @param slug The collection slug
+  //  * @param marketType The market type
+  //  * @returns HTML string with proper meta tags
+  //  */
+  // async generateCollectionMarketCard(slug: string, marketType: string): Promise<string> {
+  //   try {
+  //     const collection = await this.storageSvc.fetchCollection(slug);
 
-      if (!collection) {
-        return this.generateFallbackHtml('market', { slug, marketType });
-      }
+  //     if (!collection) {
+  //       return this.generateFallbackHtml('market', { slug, marketType });
+  //     }
 
-      // Generate custom collection market social share image
-      let imageUrl = 'https://ethereumphunks.com/default-collection.png';
-      try {
-        // Fetch some preview items for the collection (first 4 items)
-        const allItems = await this.storageSvc.fetchAllEthscriptions(slug);
-        const previewItems = allItems.slice(0, 4);
-        const imageBuffer = await this.imgSvc.generateCollectionSocialImage(collection, previewItems);
-        // Convert to base64 data URL for embedding
-        imageUrl = `data:image/png;base64,${imageBuffer.toString('base64')}`;
-      } catch (error) {
-        console.error('Failed to generate collection market social share image:', error);
-        // Fallback to poster image or default
-        imageUrl = collection.image || collection.posterHashId
-          ? `https://kcbuycbhynlmsrvoegzp.supabase.co/storage/v1/object/public/images/${collection.posterHashId}.png`
-          : 'https://ethereumphunks.com/default-collection.png';
-      }
+  //     // Generate custom collection market social share image
+  //     let imageUrl = 'https://ethereumphunks.com/default-collection.png';
+  //     try {
+  //       // Fetch random preview items for the collection
+  //       const previewItems = await this.storageSvc.fetchRandomEthscriptions(slug, 4);
+  //       const imageBuffer = await this.imgSvc.generateCollectionSocialImage(collection, previewItems);
+  //       // Convert to base64 data URL for embedding
+  //       imageUrl = `data:image/png;base64,${imageBuffer.toString('base64')}`;
+  //     } catch (error) {
+  //       console.error('Failed to generate collection market social share image:', error);
+  //       // Fallback to poster image or default
+  //       imageUrl = collection.image || collection.posterHashId
+  //         ? `https://kcbuycbhynlmsrvoegzp.supabase.co/storage/v1/object/public/images/${collection.posterHashId}.png`
+  //         : 'https://ethereumphunks.com/default-collection.png';
+  //     }
 
-      const marketTypeTitle = marketType.charAt(0).toUpperCase() + marketType.slice(1);
+  //     const marketTypeTitle = marketType.charAt(0).toUpperCase() + marketType.slice(1);
 
-      return this.generateSocialHtml({
-        title: `${collection.name} ${marketTypeTitle}`,
-        description: `Browse ${marketType} in the ${collection.name} collection. ${collection.supply} unique digital collectibles.`,
-        image: imageUrl,
-        url: `/${slug}/market/${marketType}`,
-        siteName: 'EtherPhunks',
-        redirectUrl: `https://etherphunks.eth.limo/${slug}/market/${marketType}`
-      });
+  //     return this.generateSocialHtml({
+  //       title: `${collection.name} ${marketTypeTitle}`,
+  //       description: `Browse ${marketType} in the ${collection.name} collection. ${collection.supply} unique digital collectibles.`,
+  //       image: imageUrl,
+  //       url: `/${slug}/market/${marketType}`,
+  //       siteName: 'EtherPhunks',
+  //       redirectUrl: `https://etherphunks.eth.limo/${slug}/market/${marketType}`
+  //     });
 
-    } catch (error) {
-      console.error('Error generating collection market card:', error);
-      return this.generateFallbackHtml('market', { slug, marketType });
-    }
-  }
+  //   } catch (error) {
+  //     console.error('Error generating collection market card:', error);
+  //     return this.generateFallbackHtml('market', { slug, marketType });
+  //   }
+  // }
 
   /**
    * Generate the actual HTML with meta tags
