@@ -150,7 +150,7 @@ export class AuthService {
         .from(`collections${this.suffix}`)
         .select('"adminAddress"')
         .eq('slug', collectionSlug)
-        .eq('"adminAddress"', address.toLowerCase())
+        .contains('adminAddress', [address.toLowerCase()])
         .single();
 
       if (collection) {
@@ -183,7 +183,7 @@ export class AuthService {
       const { data: collections, error } = await this.storageService.supabase
         .from(`collections${this.suffix}`)
         .select('slug')
-        .eq('"adminAddress"', address.toLowerCase());
+        .contains('adminAddress', [address.toLowerCase()]);
 
       if (error) {
         console.error('❌ Error fetching admin collections:', error);

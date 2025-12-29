@@ -31,6 +31,7 @@ import { ProcessingService } from '@/modules/processing/processing.service';
 
 import { ApiKeyMiddleware } from '@/middleware/api-key.middleware';
 import { AppConfigModule } from '@/config/config.module';
+import { CardsModule } from './modules/cards/cards.module';
 
 @Module({
   imports: [
@@ -54,6 +55,7 @@ import { AppConfigModule } from '@/config/config.module';
     MarketplaceModule,
     PointsModule,
     AuctionsModule,
+    CardsModule,
 
     ConditionalModule.registerWhen(
       BridgeL1Module,
