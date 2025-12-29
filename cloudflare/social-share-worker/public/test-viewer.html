@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Social Share Card Viewer - EtherPhunks</title>
+	<style>
+		* {
+			box-sizing: border-box;
+			margin: 0;
+			padding: 0;
+		}
+
+		body {
+			font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+			background: #f5f5f5;
+			padding: 20px;
+		}
+
+		.container {
+			max-width: 1200px;
+			margin: 0 auto;
+		}
+
+		h1 {
+			margin-bottom: 20px;
+			color: #333;
+		}
+
+		.input-section {
+			background: white;
+			padding: 20px;
+			border-radius: 8px;
+			box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+			margin-bottom: 20px;
+		}
+
+		.input-group {
+			display: flex;
+			gap: 10px;
+			margin-bottom: 10px;
+		}
+
+		input[type="text"] {
+			flex: 1;
+			padding: 12px;
+			border: 2px solid #ddd;
+			border-radius: 4px;
+			font-size: 14px;
+		}
+
+		input[type="text"]:focus {
+			outline: none;
+			border-color: #C3FF00;
+		}
+
+		button {
+			padding: 12px 24px;
+			background: #C3FF00;
+			color: #000;
+			border: none;
+			border-radius: 4px;
+			font-weight: bold;
+			cursor: pointer;
+			font-size: 14px;
+		}
+
+		button:hover {
+			background: #b0e600;
+		}
+
+		button:disabled {
+			background: #ccc;
+			cursor: not-allowed;
+		}
+
+		.user-agent-select {
+			margin-top: 10px;
+			padding: 8px;
+			border: 2px solid #ddd;
+			border-radius: 4px;
+			font-size: 12px;
+			width: 100%;
+		}
+
+		.preview-section {
+			background: white;
+			padding: 20px;
+			border-radius: 8px;
+			box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+		}
+
+		.preview-header {
+			display: flex;
+			justify-content: space-between;
+			align-items: center;
+			margin-bottom: 20px;
+			padding-bottom: 10px;
+			border-bottom: 1px solid #eee;
+		}
+
+		.preview-title {
+			font-weight: bold;
+			color: #333;
+		}
+
+		.status {
+			font-size: 12px;
+			color: #666;
+		}
+
+		.status.loading {
+			color: #C3FF00;
+		}
+
+		.status.error {
+			color: #ff0000;
+		}
+
+		.status.success {
+			color: #00aa00;
+		}
+
+		.preview-container {
+			border: 1px solid #ddd;
+			border-radius: 4px;
+			overflow: hidden;
+			min-height: 400px;
+		}
+
+		.preview-iframe {
+			width: 100%;
+			border: none;
+			min-height: 400px;
+		}
+
+		.meta-preview {
+			background: #f9f9f9;
+			padding: 15px;
+			border-radius: 4px;
+			margin-top: 20px;
+			font-size: 12px;
+		}
+
+		.meta-preview h3 {
+			margin-bottom: 10px;
+			color: #333;
+		}
+
+		.meta-item {
+			margin-bottom: 8px;
+		}
+
+		.meta-label {
+			font-weight: bold;
+			color: #666;
+			display: inline-block;
+			width: 120px;
+		}
+
+		.meta-value {
+			color: #333;
+			word-break: break-all;
+		}
+
+		.error-message {
+			background: #ffe6e6;
+			color: #cc0000;
+			padding: 15px;
+			border-radius: 4px;
+			margin-top: 20px;
+		}
+	</style>
+</head>
+<body>
+	<div class="container">
+		<h1>🔍 Social Share Card Viewer</h1>
+
+		<div class="input-section">
+			<div class="input-group">
+				<input
+					type="text"
+					id="urlInput"
+					placeholder="Paste URL here (e.g., http://localhost:8787/details/0x35b1e4f43177b7a3fe1029d93ebc44b16bbf3f7fe94d01242cc45278d26fffae)"
+					value="http://localhost:8787/details/0x35b1e4f43177b7a3fe1029d93ebc44b16bbf3f7fe94d01242cc45278d26fffae?test=true"
+				>
+				<button id="loadButton" onclick="loadPreview()">Load Preview</button>
+			</div>
+			<select id="userAgentSelect" class="user-agent-select">
+				<option value="twitterbot">Twitter Bot</option>
+				<option value="facebookexternalhit">Facebook</option>
+				<option value="linkedinbot">LinkedIn</option>
+				<option value="discordbot">Discord</option>
+				<option value="telegrambot">Telegram</option>
+				<option value="whatsapp">WhatsApp</option>
+				<option value="slackbot">Slack</option>
+				<option value="redditbot">Reddit</option>
+				<option value="googlebot">Google</option>
+			</select>
+		</div>
+
+		<div class="preview-section">
+			<div class="preview-header">
+				<div class="preview-title">Preview</div>
+				<div class="status" id="status">Ready</div>
+			</div>
+			<div id="fetchUrlDisplay" style="font-size: 11px; color: #666; margin-bottom: 10px; font-family: monospace; word-break: break-all;"></div>
+
+			<div id="previewContainer" class="preview-container">
+				<iframe id="previewFrame" class="preview-iframe" src="about:blank"></iframe>
+				<img id="imagePreview" style="display: none; width: 100%; height: auto; max-width: 1200px; margin: 0 auto;" alt="Social Share Card Preview" />
+			</div>
+
+			<div id="metaPreview" class="meta-preview" style="display: none;">
+				<h3>Meta Tags Detected:</h3>
+				<div id="metaContent"></div>
+			</div>
+
+			<div id="errorMessage" class="error-message" style="display: none;"></div>
+		</div>
+	</div>
+
+	<script>
+		const userAgents = {
+			twitterbot: 'Mozilla/5.0 (compatible; Twitterbot/1.0)',
+			facebookexternalhit: 'facebookexternalhit/1.1 (+http://www.facebook.com/externalhit_uatext.php)',
+			linkedinbot: 'LinkedInBot/1.0 (compatible; Mozilla/5.0; +http://www.linkedin.com)',
+			discordbot: 'DiscordBot (https://discord.com)',
+			telegrambot: 'TelegramBot (like TwitterBot)',
+			whatsapp: 'WhatsApp/2.0',
+			slackbot: 'Slackbot-LinkExpanding 1.0 (+https://api.slack.com/robots)',
+			redditbot: 'redditbot/1.0',
+			googlebot: 'Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)'
+		};
+
+		async function loadPreview() {
+			const urlInput = document.getElementById('urlInput');
+			const loadButton = document.getElementById('loadButton');
+			const status = document.getElementById('status');
+			const previewFrame = document.getElementById('previewFrame');
+			const metaPreview = document.getElementById('metaPreview');
+			const metaContent = document.getElementById('metaContent');
+			const errorMessage = document.getElementById('errorMessage');
+			const userAgentSelect = document.getElementById('userAgentSelect');
+
+			const url = urlInput.value.trim();
+			if (!url) {
+				alert('Please enter a URL');
+				return;
+			}
+
+			// Validate URL
+			try {
+				new URL(url);
+			} catch (e) {
+				alert('Invalid URL');
+				return;
+			}
+
+			// Update UI
+			loadButton.disabled = true;
+			status.textContent = 'Loading...';
+			status.className = 'status loading';
+			errorMessage.style.display = 'none';
+			metaPreview.style.display = 'none';
+			const imgPreview = document.getElementById('imagePreview');
+			if (imgPreview) imgPreview.style.display = 'none';
+			previewFrame.style.display = 'block';
+
+			try {
+				// Add test parameter if not present to force crawler mode
+				const urlObj = new URL(url);
+				if (!urlObj.searchParams.has('test') && !urlObj.searchParams.has('preview')) {
+					urlObj.searchParams.set('test', 'true');
+				}
+				const fetchUrl = urlObj.toString();
+				const fetchUrlDisplay = document.getElementById('fetchUrlDisplay');
+				fetchUrlDisplay.textContent = `Fetching: ${fetchUrl}`;
+
+				console.log('Fetching URL:', fetchUrl);
+
+				const response = await fetch(fetchUrl, {
+					redirect: 'manual' // Don't follow redirects automatically
+				});
+
+				// Check if it's a redirect
+				if (response.status >= 300 && response.status < 400) {
+					const location = response.headers.get('location');
+					throw new Error(`Got redirect to: ${location}. Make sure the URL includes ?test=true parameter.`);
+				}
+
+				if (!response.ok) {
+					throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+				}
+
+				const html = await response.text();
+				console.log('Received HTML length:', html.length);
+				console.log('HTML preview:', html.substring(0, 500));
+
+				// Check if we got a redirect page instead of the card
+				// Look for the redirect meta tag or redirect script that shouldn't be there in test mode
+				const hasRedirectMeta = html.includes('<meta http-equiv="refresh"');
+				const hasRedirectScript = html.includes('window.location.href') && !html.includes('Social Share Card Preview');
+
+				if (hasRedirectMeta || hasRedirectScript) {
+					console.warn('Warning: Card still contains redirect elements. Test mode may not be working.');
+					errorMessage.textContent = 'Warning: Card contains redirect elements. The worker may not be detecting test mode properly.';
+					errorMessage.style.display = 'block';
+				}
+
+				// Extract meta tags first to get the image URL
+				const metaTags = extractMetaTags(html);
+
+				// Display the image if available, otherwise show HTML
+				if (metaTags.imageUrl && metaTags.imageUrl !== 'https://ethereumphunks.com/default-share.png') {
+					// Show the actual social share card image
+					previewFrame.style.display = 'none';
+					const imgPreview = document.getElementById('imagePreview') || createImagePreview();
+					imgPreview.src = metaTags.imageUrl;
+					imgPreview.style.display = 'block';
+					console.log('Displaying image:', metaTags.imageUrl);
+				} else {
+					// Fallback to HTML view
+					previewFrame.srcdoc = html;
+					previewFrame.style.display = 'block';
+					const imgPreview = document.getElementById('imagePreview');
+					if (imgPreview) imgPreview.style.display = 'none';
+				}
+
+				status.textContent = 'Loaded successfully';
+				status.className = 'status success';
+
+			} catch (error) {
+				console.error('Error loading preview:', error);
+				errorMessage.textContent = `Error: ${error.message}`;
+				errorMessage.style.display = 'block';
+				status.textContent = 'Error';
+				status.className = 'status error';
+			} finally {
+				loadButton.disabled = false;
+			}
+		}
+
+		function extractMetaTags(html) {
+			const parser = new DOMParser();
+			const doc = parser.parseFromString(html, 'text/html');
+			const metaContent = document.getElementById('metaContent');
+			const metaPreview = document.getElementById('metaPreview');
+
+			const metaTags = {
+				title: doc.querySelector('title')?.textContent || 'Not found',
+				'og:title': doc.querySelector('meta[property="og:title"]')?.getAttribute('content') || 'Not found',
+				'og:description': doc.querySelector('meta[property="og:description"]')?.getAttribute('content') || 'Not found',
+				'og:image': doc.querySelector('meta[property="og:image"]')?.getAttribute('content') || 'Not found',
+				'og:url': doc.querySelector('meta[property="og:url"]')?.getAttribute('content') || 'Not found',
+				'twitter:card': doc.querySelector('meta[name="twitter:card"]')?.getAttribute('content') || 'Not found',
+				'twitter:title': doc.querySelector('meta[name="twitter:title"]')?.getAttribute('content') || 'Not found',
+				'twitter:description': doc.querySelector('meta[name="twitter:description"]')?.getAttribute('content') || 'Not found',
+				'twitter:image': doc.querySelector('meta[name="twitter:image"]')?.getAttribute('content') || 'Not found',
+			};
+
+			// Store imageUrl for use in display
+			metaTags.imageUrl = metaTags['og:image'];
+
+			let htmlContent = '';
+			for (const [key, value] of Object.entries(metaTags)) {
+				if (key === 'imageUrl') continue; // Don't display this separately
+				htmlContent += `
+					<div class="meta-item">
+						<span class="meta-label">${key}:</span>
+						<span class="meta-value">${value}</span>
+					</div>
+				`;
+			}
+
+			metaContent.innerHTML = htmlContent;
+			metaPreview.style.display = 'block';
+
+			return metaTags;
+		}
+
+		function createImagePreview() {
+			const img = document.createElement('img');
+			img.id = 'imagePreview';
+			img.style.cssText = 'display: none; width: 100%; height: auto; max-width: 1200px; margin: 0 auto;';
+			img.alt = 'Social Share Card Preview';
+			document.getElementById('previewContainer').appendChild(img);
+			return img;
+		}
+
+		// Allow Enter key to trigger load
+		document.getElementById('urlInput').addEventListener('keypress', (e) => {
+			if (e.key === 'Enter') {
+				loadPreview();
+			}
+		});
+
+		// Auto-load on page load if URL is present
+		window.addEventListener('load', () => {
+			const urlInput = document.getElementById('urlInput');
+			if (urlInput.value.trim()) {
+				loadPreview();
+			}
+		});
+	</script>
+</body>
+</html>

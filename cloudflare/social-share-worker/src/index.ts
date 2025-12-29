@@ -5,12 +5,18 @@
  * for NFT pages, while redirecting regular users to the eth.limo domain.
  */
 
-interface NFTMetadata {
-	id: string;
-	name: string;
-	description: string;
-	image: string;
-	collection?: string;
+/**
+ * Get API URL based on environment
+ * In development (localhost), use local NestJS API
+ * In production, use the relay API
+ */
+function getApiUrl(requestUrl: string): string {
+	const url = new URL(requestUrl);
+	// Check if we're running locally (localhost or 127.0.0.1)
+	if (url.hostname === 'localhost' || url.hostname === '127.0.0.1' || url.hostname.includes('localhost')) {
+		return 'http://localhost:3002';
+	}
+	return 'https://relay.ethereumphunks.com';
 }
 
 // Social media crawler user agents
@@ -35,15 +41,27 @@ export default {
 		const url = new URL(request.url);
 		const userAgent = request.headers.get('user-agent')?.toLowerCase() || '';
 
-		// Check if this is a social media crawler
-		const isCrawler = SOCIAL_CRAWLERS.some(crawler => userAgent.includes(crawler));
+		// Check if this is a social media crawler or test mode
+		const isTestMode = url.searchParams.has('test') || url.searchParams.has('preview');
+		const isCrawler = SOCIAL_CRAWLERS.some(crawler => userAgent.includes(crawler)) || isTestMode;
 
 		// Extract route information based on actual Angular routes
 		const routeInfo = extractRouteInfo(url.pathname);
 
+		// Debug logging (remove in production)
+		if (isTestMode) {
+			console.log('Test mode detected:', {
+				pathname: url.pathname,
+				routeType: routeInfo.type,
+				isCrawler,
+				searchParams: url.search
+			});
+		}
+
 		if (isCrawler && routeInfo.type) {
-			// Fetch HTML from NestJS API for social crawlers
-			return fetchCardFromAPI(routeInfo);
+			// Fetch HTML card from NestJS API for social crawlers
+			const apiUrl = getApiUrl(request.url);
+			return fetchCardFromAPI(routeInfo as { type: 'details' | 'market' | 'collection', params: any }, isTestMode, apiUrl);
 		} else if (routeInfo.type) {
 			// Redirect regular users to eth.limo with the same path
 			return Response.redirect(`https://etherphunks.eth.limo${url.pathname}`, 302);
@@ -136,19 +154,19 @@ function getRouteUrl(routeInfo: { type: string, params: any }): string {
 /**
  * Fetch HTML card from NestJS API
  */
-async function fetchCardFromAPI(routeInfo: { type: string, params: any }): Promise<Response> {
+async function fetchCardFromAPI(routeInfo: { type: string, params: any }, isTestMode: boolean = false, baseApiUrl: string = 'https://relay.ethereumphunks.com'): Promise<Response> {
 	try {
 		let apiUrl: string;
 
 		switch (routeInfo.type) {
 			case 'details':
-				apiUrl = `https://relay.ethereumphunks.com/cards/ethscription/${routeInfo.params.hashId}`;
+				apiUrl = `${baseApiUrl}/cards/ethscription/${routeInfo.params.hashId}`;
 				break;
 			case 'collection':
-				apiUrl = `https://relay.ethereumphunks.com/cards/collection/${routeInfo.params.slug}`;
+				apiUrl = `${baseApiUrl}/cards/collection/${routeInfo.params.slug}`;
 				break;
 			case 'market':
-				apiUrl = `https://relay.ethereumphunks.com/cards/collection/${routeInfo.params.slug}/market/${routeInfo.params.marketType}`;
+				apiUrl = `${baseApiUrl}/cards/collection/${routeInfo.params.slug}/market/${routeInfo.params.marketType}`;
 				break;
 			default:
 				return generateFallbackHTML(routeInfo);
@@ -160,18 +178,26 @@ async function fetchCardFromAPI(routeInfo: { type: string, params: any }): Promi
 			}
 		});
 
-		if (response.ok) {
-			const html = await response.text();
-			return new Response(html, {
-				headers: {
-					'content-type': 'text/html;charset=UTF-8',
-					'cache-control': 'public, max-age=300', // 5 minute cache
-				},
-			});
-		} else {
+		if (!response.ok) {
 			console.error(`API returned ${response.status} for ${apiUrl}`);
 			return generateFallbackHTML(routeInfo);
 		}
+
+		let html = await response.text();
+
+		// If in test mode, disable redirects
+		if (isTestMode) {
+			html = html
+				.replace(/<meta http-equiv="refresh"[^>]*>/gi, '<!-- Redirect disabled for testing -->')
+				.replace(/setTimeout\([^)]*window\.location[^)]*\)/gi, '// Redirect disabled for testing');
+		}
+
+		return new Response(html, {
+			headers: {
+				'content-type': 'text/html;charset=UTF-8',
+				'cache-control': 'public, max-age=300', // 5 minute cache
+			},
+		});
 
 	} catch (error) {
 		console.error('Error fetching card from API:', error);
@@ -210,28 +236,28 @@ function generateFallbackHTML(routeInfo: { type: string, params: any }): Respons
 <head>
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title>${title}</title>
+	<title>${escapeHtml(title)}</title>
 
 	<!-- Open Graph / Facebook -->
 	<meta property="og:type" content="website">
 	<meta property="og:url" content="https://ethereumphunks.com${getRouteUrl(routeInfo)}">
-	<meta property="og:title" content="${title}">
-	<meta property="og:description" content="${description}">
+	<meta property="og:title" content="${escapeHtml(title)}">
+	<meta property="og:description" content="${escapeHtml(description)}">
 	<meta property="og:image" content="https://ethereumphunks.com/default-share.png">
 	<meta property="og:site_name" content="EtherPhunks">
 
 	<!-- Twitter -->
-	<meta property="twitter:card" content="summary_large_image">
-	<meta property="twitter:url" content="https://ethereumphunks.com${getRouteUrl(routeInfo)}">
-	<meta property="twitter:title" content="${title}">
-	<meta property="twitter:description" content="${description}">
-	<meta property="twitter:image" content="https://ethereumphunks.com/default-share.png">
-	<meta property="twitter:site" content="@ethereumphunks">
+	<meta name="twitter:card" content="summary_large_image">
+	<meta name="twitter:url" content="https://ethereumphunks.com${getRouteUrl(routeInfo)}">
+	<meta name="twitter:title" content="${escapeHtml(title)}">
+	<meta name="twitter:description" content="${escapeHtml(description)}">
+	<meta name="twitter:image" content="https://ethereumphunks.com/default-share.png">
+	<meta name="twitter:site" content="@ethereumphunks">
 
 	<!-- Discord -->
 	<meta name="theme-color" content="#C3FF00">
 
-	<meta http-equiv="refresh" content="1;url=${redirectUrl}">
+	<meta http-equiv="refresh" content="1;url=${escapeHtml(redirectUrl)}">
 
 	<style>
 		body {
@@ -287,13 +313,13 @@ function generateFallbackHTML(routeInfo: { type: string, params: any }): Respons
 		<div class="spinner"></div>
 		<p style="margin-top: 2rem; font-size: 0.9rem; opacity: 0.8;">
 			If not redirected automatically,
-			<a href="${redirectUrl}">click here</a>
+			<a href="${escapeHtml(redirectUrl)}">click here</a>
 		</p>
 	</div>
 
 	<script>
 		setTimeout(() => {
-			window.location.href = '${redirectUrl}';
+			window.location.href = '${escapeHtml(redirectUrl)}';
 		}, 1000);
 	</script>
 </body>
@@ -305,4 +331,18 @@ function generateFallbackHTML(routeInfo: { type: string, params: any }): Respons
 			'cache-control': 'public, max-age=60',
 		},
 	});
+}
+
+/**
+ * Escape HTML to prevent XSS
+ */
+function escapeHtml(text: string): string {
+	const map: Record<string, string> = {
+		'&': '&amp;',
+		'<': '&lt;',
+		'>': '&gt;',
+		'"': '&quot;',
+		"'": '&#039;'
+	};
+	return text.replace(/[&<>"']/g, (m) => map[m]);
 }
