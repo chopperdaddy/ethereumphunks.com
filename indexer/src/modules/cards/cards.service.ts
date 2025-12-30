@@ -55,14 +55,20 @@ export class CardsService implements OnModuleInit {
           attributes: transformedAttributes
         });
 
-        // Convert to base64 data URL for embedding
-        imageUrl = `data:image/png;base64,${imageBuffer.toString('base64')}`;
+        // Upload image to storage and get public URL
+        const socialImageFilename = `details-${hashId}.png`;
+        await this.storageSvc.uploadImage(
+          imageBuffer,
+          socialImageFilename,
+          'png',
+          ethscription.slug
+        );
+
+        // Use public URL instead of data URI for better social media crawler support
+        imageUrl = `https://kcbuycbhynlmsrvoegzp.supabase.co/storage/v1/object/public/static/cards/${socialImageFilename}`;
       } catch (error) {
         console.error('Failed to generate social share image:', error);
-        // Fallback to direct image URL
-        imageUrl = ethscription.sha
-          ? `https://kcbuycbhynlmsrvoegzp.supabase.co/storage/v1/object/public/images/${ethscription.sha}.png`
-          : 'https://etherphunks.eth.limo/poster.png';
+        imageUrl = 'https://etherphunks.eth.limo/poster.png';
       }
 
       // Extract name from attributes or use token ID
@@ -73,9 +79,7 @@ export class CardsService implements OnModuleInit {
 
       // Extract description from attributes or use default
       const descAttr = attributes?.values?.['Description'] || attributes?.values?.['description'];
-      const description = descAttr
-        ? (Array.isArray(descAttr) ? descAttr[0] : descAttr)
-        : `A unique digital collectible from the ${collection?.name || 'Unknown'} collection.`;
+      const description = 'Ethereum Phunks Market 👍';
 
       return this.generateSocialHtml({
         title: name,
@@ -112,19 +116,27 @@ export class CardsService implements OnModuleInit {
         // Fetch random preview items for the collection
         const previewItems = collection.previews;
         const imageBuffer = await this.imgSvc.generateCollectionSocialImage(collection, previewItems);
-        // Convert to base64 data URL for embedding
-        imageUrl = `data:image/png;base64,${imageBuffer.toString('base64')}`;
+
+        // Upload image to storage and get public URL
+        const socialImageFilename = `collection-${slug}.png`;
+        await this.storageSvc.uploadImage(
+          imageBuffer,
+          socialImageFilename,
+          'png',
+          slug
+        );
+
+        // Use public URL instead of data URI for better social media crawler support
+        imageUrl = `https://kcbuycbhynlmsrvoegzp.supabase.co/storage/v1/object/public/static/cards/${socialImageFilename}`;
       } catch (error) {
         console.error('Failed to generate collection social share image:', error);
         // Fallback to poster image or default
-        imageUrl = collection.image || collection.posterHashId
-          ? `https://kcbuycbhynlmsrvoegzp.supabase.co/storage/v1/object/public/images/${collection.posterHashId}.png`
-          : 'https://etherphunks.eth.limo/poster.png';
+        imageUrl = 'https://etherphunks.eth.limo/poster.png';
       }
 
       return this.generateSocialHtml({
         title: collection.name,
-        description: collection.description || `Explore the ${collection.name} collection with ${collection.supply} unique digital collectibles.`,
+        description: 'Ethereum Phunks Market 👍',
         image: imageUrl,
         url: `/${slug}`,
         siteName: 'EtherPhunks',

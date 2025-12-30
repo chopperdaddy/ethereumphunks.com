@@ -449,6 +449,23 @@ export class StorageService implements OnModuleInit {
     if (data) Logger.log('Uploaded image', `${sha}`);
   }
 
+  async uploadCardImage(
+    imageBuffer: Buffer,
+    filename: string,
+    extension: string
+  ): Promise<void> {
+    const { data, error } = await this.supabase.storage
+      .from('static/cards')
+      .upload(
+        filename,
+        imageBuffer,
+        { contentType: `image/${extension}`, upsert: true }
+      );
+
+    if (error) Logger.error(error.message, 'Error uploading card image');
+    if (data) Logger.log('Uploaded card image', `${filename}`);
+  }
+
   /**
    * Uploads an attributes file to storage
    * @param slug - The slug of the collection
