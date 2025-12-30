@@ -17,20 +17,62 @@ contract EtherPhunksAuctionHouse is
     ReentrancyGuard,
     Ownable
 {
+    // Custom errors
+    error InvalidPointsAddress();
+    error InvalidAddress();
+    error InvalidAddressInArray();
+    error AddressNotWhitelisted();
+    error AddressAlreadyWhitelisted();
+    error SellersMustBeEOAs();
+    error AuctionAlreadyExists();
+    error AuctionDoesNotExist();
+    error AuctionExpired();
+    error AuctionNotCompleted();
+    error AuctionAlreadySettled();
+    error InvalidHashId();
+    error InvalidDuration();
+    error InvalidBidIncrement();
+    error InvalidTimeBuffer();
+    error DataTooShort();
+    error InvalidDataLength();
+    error InsufficientBidAmount();
+    error OwnerCannotBid();
+    error BidderCannotOutbidSelf();
+    error FailedToPayAuctionWinner();
+    error NoPendingWithdrawals();
+    error FailedToSendEther();
+    error EmptyAccountsArray();
+    error TooManyAccounts();
+    error ContractPaused();
+
     bytes32 constant DEPOSIT_AND_AUCTION_SIGNATURE = keccak256("DEPOSIT_AND_AUCTION_SIGNATURE");
+
     // Address of the Points contract
     address public pointsAddress;
 
     // The current auction ID
     uint256 public auctionId;
 
+    // State of whitelist
+    bool public whitelistEnabled;
+
+    // Whitelist for addresses that can create auctions
+    mapping(address => bool) public whitelistedAddresses;
+
     mapping(address => mapping(bytes32 => IAuctionHouse.Auction)) public auctions;
+
+    // Pending withdrawals for outbid bidders (fallback when push refund fails)
+    mapping(address => uint256) public pendingWithdrawals;
 
     constructor(
         address _initialPointsAddress
     ) Ownable(msg.sender) {
-        require(_initialPointsAddress != address(0), "Invalid points address");
+        if (_initialPointsAddress == address(0)) revert InvalidPointsAddress();
         pointsAddress = _initialPointsAddress;
+        // Owner is automatically whitelisted
+        whitelistedAddresses[msg.sender] = true;
+        whitelistEnabled = true;
+        emit AddressWhitelisted(msg.sender);
     }
 
     function _addPoints(address phunk, uint256 amount) internal {
@@ -49,13 +91,18 @@ contract EtherPhunksAuctionHouse is
         uint8 minBidIncrementPercentage,
         uint256 timeBuffer
     ) internal {
+        if (whitelistEnabled) {
+            if (!whitelistedAddresses[owner]) revert AddressNotWhitelisted();
+        }
+
+        // Prevent contracts from creating auctions (sellers must be EOAs)
+        if (owner.code.length != 0) revert SellersMustBeEOAs();
+
         IAuctionHouse.Auction memory _auction = auctions[owner][hashId];
 
-        require(
-            _auction.startTime == 0 ||
-            block.timestamp >= _auction.endTime,
-            "Auction already exists"
-        );
+        if (_auction.startTime != 0 && block.timestamp < _auction.endTime) {
+            revert AuctionAlreadyExists();
+        }
 
         uint256 startTime = block.timestamp;
         uint256 endTime = startTime + auctionDuration;
@@ -93,12 +140,9 @@ contract EtherPhunksAuctionHouse is
     function _settleAuction(bytes32 hashId, address owner) internal {
         IAuctionHouse.Auction memory _auction = auctions[owner][hashId];
 
-        require(_auction.startTime != 0, "Auction does not exist");
-        require(!_auction.settled, "Auction has already been settled");
-        require(
-            block.timestamp >= _auction.endTime,
-            "Auction has not completed"
-        );
+        if (_auction.startTime == 0) revert AuctionDoesNotExist();
+        if (_auction.settled) revert AuctionAlreadySettled();
+        if (block.timestamp < _auction.endTime) revert AuctionNotCompleted();
 
         auctions[owner][hashId].settled = true;
 
@@ -106,11 +150,12 @@ contract EtherPhunksAuctionHouse is
             ? _auction.owner
             : _auction.bidder;
 
-        _transferEthscription(_auction.owner, dest, _auction.hashId);
-
+        // Transfer ETH before ethscription to prevent loss if ETH transfer fails
         if (_auction.amount > 0) {
-            require(_safeTransferETH(_auction.owner, _auction.amount), "Failed to pay auction winner");
+            if (!_safeTransferETH(_auction.owner, _auction.amount)) revert FailedToPayAuctionWinner();
         }
+
+        _transferEthscription(_auction.owner, dest, _auction.hashId);
 
         emit AuctionSettled(
             _auction.hashId,
@@ -127,23 +172,31 @@ contract EtherPhunksAuctionHouse is
     function createBid(bytes32 hashId, address owner) external payable override nonReentrant {
         IAuctionHouse.Auction storage _auction = auctions[owner][hashId];
 
-        require(_auction.startTime != 0, "Auction does not exist");
-        require(block.timestamp < _auction.endTime, "Auction expired");
-        require(
-            msg.value >=
+        if (_auction.startTime == 0) revert AuctionDoesNotExist();
+        if (block.timestamp >= _auction.endTime) revert AuctionExpired();
+        if (
+            msg.value <
                 _auction.amount +
-                    ((_auction.amount * _auction.minBidIncrementPercentage) / 100),
-            "Must send more than last bid by minBidIncrementPercentage amount"
-        );
+                    ((_auction.amount * _auction.minBidIncrementPercentage) / 100)
+        ) {
+            revert InsufficientBidAmount();
+        }
+        if (msg.sender == owner) revert OwnerCannotBid();
+        if (msg.sender == _auction.bidder) revert BidderCannotOutbidSelf();
 
         address payable lastBidder = _auction.bidder;
+        uint256 lastBidAmount = _auction.amount;
 
-        // Refund the last bidder, if applicable
+        // Try to refund immediately, fallback to pending withdrawals if it fails
         if (lastBidder != address(0)) {
-            require(_safeTransferETH(lastBidder, _auction.amount), "Failed to refund previous bidder");
+            bool refundSuccess = _safeTransferETH(lastBidder, lastBidAmount);
+            if (!refundSuccess) {
+                // If push refund fails, add to pending withdrawals
+                pendingWithdrawals[lastBidder] += lastBidAmount;
+            }
         }
 
-        // FIX: Update storage directly
+        // Update storage directly
         _auction.amount = msg.value;
         _auction.bidder = payable(msg.sender);
 
@@ -185,6 +238,23 @@ contract EtherPhunksAuctionHouse is
     }
 
     /**
+     * @notice Withdraw pending refunds.
+     * @dev Allows users to withdraw their pending refunds when push refund failed.
+     */
+    function withdraw() external nonReentrant {
+        uint256 amount = pendingWithdrawals[msg.sender];
+        if (amount == 0) revert NoPendingWithdrawals();
+
+        // Zero out the pending withdrawal before transfer
+        pendingWithdrawals[msg.sender] = 0;
+
+        (bool success, ) = payable(msg.sender).call{value: amount}("");
+        if (!success) revert FailedToSendEther();
+
+        emit Withdrawal(msg.sender, amount);
+    }
+
+    /**
      * @notice Pause the Phunks auction house.
      * @dev This function can only be called by the owner when the
      * contract is unpaused. While no new auctions can be started when paused,
@@ -216,8 +286,68 @@ contract EtherPhunksAuctionHouse is
      * @dev This function can only be called by the owner.
      */
     function setPointsAddress(address _pointsAddress) external onlyOwner {
-        require(_pointsAddress != address(0), "Invalid points address");
+        if (_pointsAddress == address(0)) revert InvalidPointsAddress();
         pointsAddress = _pointsAddress;
+    }
+
+    /**
+     * @notice Set the whitelist enabled.
+     * @dev This function can only be called by the owner.
+     */
+    function setWhitelistEnabled(bool _whitelistEnabled) external onlyOwner {
+        whitelistEnabled = _whitelistEnabled;
+        emit WhitelistEnabled(_whitelistEnabled);
+    }
+
+    /**
+     * @notice Add an address to the whitelist.
+     * @dev This function can only be called by the owner.
+     */
+    function addToWhitelist(address account) external onlyOwner {
+        if (account == address(0)) revert InvalidAddress();
+        if (whitelistedAddresses[account]) revert AddressAlreadyWhitelisted();
+
+        whitelistedAddresses[account] = true;
+        emit AddressWhitelisted(account);
+    }
+
+    /**
+     * @notice Remove an address from the whitelist.
+     * @dev This function can only be called by the owner.
+     */
+    function removeFromWhitelist(address account) external onlyOwner {
+        if (account == address(0)) revert InvalidAddress();
+        if (!whitelistedAddresses[account]) revert AddressNotWhitelisted();
+
+        whitelistedAddresses[account] = false;
+        emit AddressRemovedFromWhitelist(account);
+    }
+
+    /**
+     * @notice Add multiple addresses to the whitelist.
+     * @dev This function can only be called by the owner.
+     */
+    function addMultipleToWhitelist(address[] calldata accounts) external onlyOwner {
+        if (accounts.length == 0) revert EmptyAccountsArray();
+        if (accounts.length > 100) revert TooManyAccounts(); // Gas limit protection
+
+        for (uint256 i = 0; i < accounts.length; i++) {
+            address account = accounts[i];
+            if (account == address(0)) revert InvalidAddressInArray();
+
+            if (!whitelistedAddresses[account]) {
+                whitelistedAddresses[account] = true;
+                emit AddressWhitelisted(account);
+            }
+        }
+    }
+
+    /**
+     * @notice Check if an address is whitelisted.
+     * @dev This is a view function that returns the whitelist status.
+     */
+    function isWhitelisted(address account) external view returns (bool) {
+        return whitelistedAddresses[account];
     }
 
     /**
@@ -241,7 +371,7 @@ contract EtherPhunksAuctionHouse is
     }
 
     fallback() external {
-        require(!paused(), "Contract is paused");
+        if (paused()) revert ContractPaused();
 
         bytes32 signature;
         assembly {
@@ -249,8 +379,8 @@ contract EtherPhunksAuctionHouse is
         }
 
         if (signature == DEPOSIT_AND_AUCTION_SIGNATURE) {
-            require(msg.data.length >= 160, "Data too short"); // At least 4 * 32 bytes needed
-            require(msg.data.length % 32 == 0, "Invalid data length");
+            if (msg.data.length < 160) revert DataTooShort(); // At least 4 * 32 bytes needed
+            if (msg.data.length % 32 != 0) revert InvalidDataLength();
 
             bytes32 hashId;
             uint256 duration;
@@ -265,10 +395,10 @@ contract EtherPhunksAuctionHouse is
             }
 
             // Validate parameters
-            require(hashId != bytes32(0), "Invalid hashId");
-            require(duration >= 1 hours && duration <= 30 days, "Invalid duration");
-            require(minBidIncrementPercentage > 0 && minBidIncrementPercentage <= 100, "Invalid bid increment");
-            require(timeBuffer >= 5 minutes && timeBuffer <= 1 hours, "Invalid time buffer");
+            if (hashId == bytes32(0)) revert InvalidHashId();
+            if (duration < 1 hours || duration > 30 days) revert InvalidDuration();
+            if (minBidIncrementPercentage == 0 || minBidIncrementPercentage > 100) revert InvalidBidIncrement();
+            if (timeBuffer < 5 minutes || timeBuffer > 1 hours) revert InvalidTimeBuffer();
 
             // Create a new auction
             _createAuction(hashId, msg.sender, duration, minBidIncrementPercentage, timeBuffer);

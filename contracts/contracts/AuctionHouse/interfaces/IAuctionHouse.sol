@@ -35,6 +35,14 @@ interface IAuctionHouse {
 
     event AuctionSettled(bytes32 indexed hashId, uint256 auctionId, address winner, uint256 amount);
 
+    event AddressWhitelisted(address indexed account);
+
+    event AddressRemovedFromWhitelist(address indexed account);
+
+    event WhitelistEnabled(bool enabled);
+
+    event Withdrawal(address indexed account, uint256 amount);
+
     function settleAuction(bytes32 hashId, address owner) external;
 
     function createBid(bytes32 hashId, address owner) external payable;
@@ -42,4 +50,20 @@ interface IAuctionHouse {
     function pause() external;
 
     function unpause() external;
+
+    function addToWhitelist(address account) external;
+
+    function removeFromWhitelist(address account) external;
+
+    function addMultipleToWhitelist(address[] calldata accounts) external;
+
+    function isWhitelisted(address account) external view returns (bool);
+
+    function setWhitelistEnabled(bool _whitelistEnabled) external;
+
+    function setPointsAddress(address _pointsAddress) external;
+
+    function getAuction(address owner, bytes32 hashId) external view returns (Auction memory);
+
+    function withdraw() external;
 }
