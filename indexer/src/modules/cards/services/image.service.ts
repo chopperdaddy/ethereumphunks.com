@@ -1,24 +1,13 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
-import { HttpService } from '@nestjs/axios';
 
 import { createCanvas, Image, registerFont } from 'canvas';
 
 import { Collection, Ethscription } from '@/modules/storage/models/db';
-import { catchError, firstValueFrom, of } from 'rxjs';
 import { readFile } from 'fs/promises';
 import path from 'path';
 
-import { rarityData } from '@/modules/notifs/constants/rarity';
-
-/**
- * Service for generating notification images
- */
 @Injectable()
 export class ImageService implements OnModuleInit {
-
-  constructor(
-    private readonly http: HttpService
-  ) {}
 
   onModuleInit() {
     registerFont(path.join(__dirname, '../../../_static/retro-computer.ttf'), { family: 'RetroComputer' });

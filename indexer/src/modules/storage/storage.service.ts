@@ -336,6 +336,13 @@ export class StorageService implements OnModuleInit {
     Logger.log('Collection added', collection.slug);
   }
 
+  async fetchCollectionsWithPreviews() {
+    const res = this.supabase.rpc('fetch_collections_with_previews', { preview_limit: 4 });
+    const { data, error } = await res;
+    if (error) throw error;
+    return data;
+  }
+
   /**
    * Fetches all ethscriptions
    * @param slug - The slug of the collection

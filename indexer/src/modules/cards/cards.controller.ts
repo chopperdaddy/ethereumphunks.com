@@ -35,22 +35,4 @@ export class CardsController {
     res.setHeader('cache-control', 'public, max-age=300'); // 5 minute cache
     res.send(html);
   }
-
-  // /**
-  //  * Generate social share HTML for a collection market page
-  //  * @param slug The collection slug
-  //  * @param marketType The market type (offers, sales, etc.)
-  //  * @returns HTML with proper meta tags
-  //  */
-  // @Get('collection/:slug/market/:marketType')
-  // async getCollectionMarketCard(
-  //   @Param('slug') slug: string,
-  //   @Param('marketType') marketType: string,
-  //   @Res() res: Response
-  // ): Promise<void> {
-  //   const html = await this.cardsSvc.generateCollectionMarketCard(slug, marketType);
-  //   res.setHeader('content-type', 'text/html');
-  //   res.setHeader('cache-control', 'public, max-age=300'); // 5 minute cache
-  //   res.send(html);
-  // }
 }
