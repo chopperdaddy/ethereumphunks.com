@@ -2,7 +2,6 @@ import { Inject, Injectable, Logger } from '@nestjs/common';
 
 import { Web3Service } from '@/modules/shared/services/web3.service';
 import { StorageService } from '@/modules/storage/storage.service';
-import { TelegramService } from '@/modules/notifs/services/telegram.service';
 
 import { UtilityService } from '@/modules/shared/services/utility.service';
 import { TimeService } from '@/modules/shared/services/time.service';
@@ -40,8 +39,7 @@ export class ProcessingService {
     private readonly commentsSvc: CommentsService,
     private readonly marketplaceSvc: MarketplaceService,
     private readonly auctionsSvc: AuctionsService,
-    private readonly pointsSvc: PointsService,
-    private readonly telegramSvc: TelegramService
+    private readonly pointsSvc: PointsService
   ) {}
 
   /**

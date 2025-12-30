@@ -3,7 +3,6 @@ import { HttpModule } from '@nestjs/axios';
 
 import { SharedModule } from '@/modules/shared/shared.module';
 
-import { TelegramService } from '@/modules/notifs/services/telegram.service';
 import { DiscordService } from '@/modules/notifs/services/discord.service';
 import { ImageService } from '@/modules/notifs/services/image.service';
 
@@ -26,14 +25,12 @@ import { AppConfigModule } from '@/config/config.module';
   providers: [
     NotifsService,
 
-    TelegramService,
     DiscordService,
     ImageService,
     TwitterService,
   ],
   exports: [
     NotifsService,
-    TelegramService,
   ]
 })
 export class NotifsModule {}
