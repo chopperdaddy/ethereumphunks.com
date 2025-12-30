@@ -1,7 +1,7 @@
 const dotenv = require('dotenv');
 
 // Load the Supabase env
-dotenv.config({ path: '.env.supabase' });
+dotenv.config();
 
 // Load environment files
 const loadEnvFile = (filename) => {
@@ -24,16 +24,6 @@ module.exports = {
       env: {
         ...supabaseConfig,
         ...loadEnvFile('.env.mainnet'),
-        NODE_ENV: "development",
-        PORT: 3002,
-        CHAIN_ID_L1: 1,
-        CHAIN_ID_L2: 6969696969,
-        QUEUE: 1,
-        DISCORD: 0,
-        TWITTER: 0,
-        TELEGRAM: 0,
-        TX_POOL: 0,
-        MINT: 0,
       },
     },
     {
@@ -42,16 +32,6 @@ module.exports = {
       env: {
         ...supabaseConfig,
         ...loadEnvFile('.env.sepolia'),
-        NODE_ENV: "development",
-        PORT: 3003,
-        CHAIN_ID_L1: 11155111,
-        CHAIN_ID_L2: 6969696969,
-        QUEUE: 1,
-        DISCORD: 0,
-        TWITTER: 0,
-        TELEGRAM: 0,
-        TX_POOL: 0,
-        MINT: 0,
       },
     },
   ],
