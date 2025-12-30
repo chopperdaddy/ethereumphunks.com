@@ -31,7 +31,7 @@ export class CardsService implements OnModuleInit {
       const { ethscription, collection, attributes } = data;
 
       // Generate custom social share image
-      let imageUrl = 'https://ethereumphunks.com/default-nft.png';
+      let imageUrl = 'https://etherphunks.eth.limo/poster.png';
       try {
         // Transform attributes to match expected format with proper rarity calculation
         const transformedAttributes = Object.keys(attributes.values).map((attrKey: string) => {
@@ -62,7 +62,7 @@ export class CardsService implements OnModuleInit {
         // Fallback to direct image URL
         imageUrl = ethscription.sha
           ? `https://kcbuycbhynlmsrvoegzp.supabase.co/storage/v1/object/public/images/${ethscription.sha}.png`
-          : 'https://ethereumphunks.com/default-nft.png';
+          : 'https://etherphunks.eth.limo/poster.png';
       }
 
       // Extract name from attributes or use token ID
@@ -107,7 +107,7 @@ export class CardsService implements OnModuleInit {
       }
 
       // Generate custom collection social share image
-      let imageUrl = 'https://ethereumphunks.com/default-collection.png';
+      let imageUrl = 'https://etherphunks.eth.limo/poster.png';
       try {
         // Fetch random preview items for the collection
         const previewItems = collection.previews;
@@ -119,7 +119,7 @@ export class CardsService implements OnModuleInit {
         // Fallback to poster image or default
         imageUrl = collection.image || collection.posterHashId
           ? `https://kcbuycbhynlmsrvoegzp.supabase.co/storage/v1/object/public/images/${collection.posterHashId}.png`
-          : 'https://ethereumphunks.com/default-collection.png';
+          : 'https://etherphunks.eth.limo/poster.png';
       }
 
       return this.generateSocialHtml({
@@ -158,7 +158,7 @@ export class CardsService implements OnModuleInit {
 
   <!-- Open Graph / Facebook -->
   <meta property="og:type" content="website">
-  <meta property="og:url" content="https://ethereumphunks.com${data.url}">
+  <meta property="og:url" content="https://etherphunks.eth.limo${data.url}">
   <meta property="og:title" content="${data.title}">
   <meta property="og:description" content="${data.description}">
   <meta property="og:image" content="${data.image}">
@@ -168,7 +168,7 @@ export class CardsService implements OnModuleInit {
 
   <!-- Twitter -->
   <meta property="twitter:card" content="summary_large_image">
-  <meta property="twitter:url" content="https://ethereumphunks.com${data.url}">
+  <meta property="twitter:url" content="https://etherphunks.eth.limo${data.url}">
   <meta property="twitter:title" content="${data.title}">
   <meta property="twitter:description" content="${data.description}">
   <meta property="twitter:image" content="${data.image}">
@@ -210,7 +210,7 @@ export class CardsService implements OnModuleInit {
     return this.generateSocialHtml({
       title,
       description,
-      image: 'https://ethereumphunks.com/default-share.png',
+      image: 'https://etherphunks.eth.limo/poster.png',
       url: '/',
       siteName: 'EtherPhunks',
       redirectUrl
