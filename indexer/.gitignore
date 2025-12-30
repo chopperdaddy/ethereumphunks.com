@@ -7,7 +7,7 @@ node_modules
 metadata
 
 .env*
-!.env.example*
+!.env.**.example*
 
 lastBlock-*.txt
 twitter-cookies.json
