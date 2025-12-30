@@ -19,6 +19,7 @@ export class CollectionAdminController {
    */
   @Post('generate-collection-metadata')
   async createCollection(@Body() body: { slug: string, metadataUrl: string }) {
+    return false;
     const { slug, metadataUrl } = body;
 
     if (!slug) {
