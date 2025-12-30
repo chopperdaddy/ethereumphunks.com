@@ -8,7 +8,6 @@ import { NotificationMessage, NotifItemData } from './models/message.model';
 
 import { rarityData } from './constants/rarity';
 
-import { ImageService } from './services/image.service';
 import { DiscordService } from './services/discord.service';
 import { TwitterService } from './services/twitter.service';
 import { Web3Service } from '@/modules/shared/services/web3.service';
@@ -26,7 +25,6 @@ export class NotifsService implements OnModuleInit {
 
   constructor(
     @Inject('WEB3_SERVICE_L1') private readonly web3Svc: Web3Service,
-    private readonly imgSvc: ImageService,
     private readonly twitterSvc: TwitterService,
     private readonly discordSvc: DiscordService,
     private readonly storageSvc: StorageService,
@@ -84,15 +82,12 @@ export class NotifsService implements OnModuleInit {
     const { ethscription, collection } = ethscriptionData;
 
     const chainId = this.configSvc.chain.chainIdL1;
-    const baseUrl = chainId === 1 ? 'https://etherphunks.eth.limo' : 'https://sepolia.etherphunks.eth.limo';
-
-    const imageBuffer = await this.imgSvc.generateImage(ethscriptionData);
+    const baseUrl = chainId === 1 ? 'https://ethereumphunks.com' : 'https://sepolia.ethereumphunks.com';
 
     const weiValue = BigInt(event.value);
     if (!weiValue) return;
 
     const value = formatUnits(weiValue, 18);
-    const filename = `${new Date().getTime().toString()}.png`;
 
     const [fromAddress, toAddress] = await Promise.all([
       this.formatAddress(event.from),
@@ -107,8 +102,6 @@ export class NotifsService implements OnModuleInit {
       title,
       message,
       link,
-      imageBuffer,
-      filename,
     };
   }
 

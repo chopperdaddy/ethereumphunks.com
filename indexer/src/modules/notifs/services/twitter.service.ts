@@ -100,9 +100,8 @@ export class TwitterService {
   }
 
   /**
-   * Sends a tweet with optional image attachment
-   * @param text The text content of the tweet
-   * @param imagePath Optional path to image file to attach
+   * Sends a tweet with link - Twitter will automatically generate card preview from Open Graph meta tags
+   * @param data The notification message data containing title, message, link
    * @throws Error if tweet fails to send
    */
   async sendTweet(data: NotificationMessage): Promise<void> {
@@ -111,11 +110,12 @@ export class TwitterService {
     try {
       await this.initialize();
 
-      const { title, message, link, imageBuffer, filename } = data;
+      const { title, message, link } = data;
+      // Twitter will automatically fetch Open Graph meta tags and create a card preview
       await this.scraper.sendTweet(
         `${title}\n\n${message}\n\n${link}`,
         undefined,
-        [{ data: imageBuffer, mediaType: `image/${filename.split('.')[1]}` }]
+        undefined // No image attachment - Twitter will use og:image from the link
       );
     } catch (error) {
       console.error('Failed to send tweet:', error);

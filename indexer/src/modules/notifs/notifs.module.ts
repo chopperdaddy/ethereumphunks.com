@@ -4,7 +4,6 @@ import { HttpModule } from '@nestjs/axios';
 import { SharedModule } from '@/modules/shared/shared.module';
 
 import { DiscordService } from '@/modules/notifs/services/discord.service';
-import { ImageService } from '@/modules/notifs/services/image.service';
 
 import { NotifsService } from './notifs.service';
 import { NotifsController } from './notifs.controller';
@@ -26,7 +25,6 @@ import { AppConfigModule } from '@/config/config.module';
     NotifsService,
 
     DiscordService,
-    ImageService,
     TwitterService,
   ],
   exports: [

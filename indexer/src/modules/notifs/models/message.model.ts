@@ -4,8 +4,8 @@ export interface NotificationMessage {
   title: string;
   message: string;
   link: string;
-  imageBuffer: Buffer;
-  filename: string;
+  imageBuffer?: Buffer; // Optional - kept for backwards compatibility but not used
+  filename?: string; // Optional - kept for backwards compatibility but not used
 }
 
 export interface NotifItemData {
