@@ -139,6 +139,7 @@ export class CardsService implements OnModuleInit {
 
   /**
    * Generate the actual HTML with meta tags
+   * Simplified for crawlers - they only need meta tags, not redirect UI
    */
   private generateSocialHtml(data: {
     title: string;
@@ -175,75 +176,8 @@ export class CardsService implements OnModuleInit {
 
   <!-- Discord -->
   <meta name="theme-color" content="#C3FF00">
-
-  <!-- Auto-redirect to eth.limo after 1 second -->
-  <meta http-equiv="refresh" content="1;url=${data.redirectUrl}">
-
-  <style>
-    body {
-      font-family: 'Arial', sans-serif;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      min-height: 100vh;
-      margin: 0;
-      background: linear-gradient(135deg, #C3FF00 0%, #FF03B4 100%);
-      color: #000;
-      text-align: center;
-    }
-    .container {
-      max-width: 400px;
-      padding: 2rem;
-      background: rgba(255, 255, 255, 0.1);
-      border-radius: 20px;
-      backdrop-filter: blur(10px);
-    }
-    .logo {
-      font-size: 2rem;
-      font-weight: bold;
-      margin-bottom: 1rem;
-    }
-    .message {
-      margin-bottom: 1.5rem;
-      opacity: 0.9;
-    }
-    .spinner {
-      border: 3px solid rgba(0, 0, 0, 0.3);
-      border-radius: 50%;
-      border-top: 3px solid #000;
-      width: 40px;
-      height: 40px;
-      animation: spin 1s linear infinite;
-      margin: 0 auto;
-    }
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
-    }
-    a {
-      color: #000;
-      text-decoration: underline;
-    }
-  </style>
 </head>
-<body>
-  <div class="container">
-    <div class="logo">EtherPhunks</div>
-    <div class="message">Redirecting to ${data.title}...</div>
-    <div class="spinner"></div>
-    <p style="margin-top: 2rem; font-size: 0.9rem; opacity: 0.8;">
-      If not redirected automatically,
-      <a href="${data.redirectUrl}">click here</a>
-    </p>
-  </div>
-
-  <script>
-    // Fallback redirect in case meta refresh doesn't work
-    setTimeout(() => {
-      window.location.href = '${data.redirectUrl}';
-    }, 1000);
-  </script>
-</body>
+<body></body>
 </html>`;
   }
 
