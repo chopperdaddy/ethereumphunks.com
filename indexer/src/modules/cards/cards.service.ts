@@ -75,7 +75,7 @@ export class CardsService implements OnModuleInit {
       let imageUrl = 'https://etherphunks.eth.limo/poster.png';
 
       // Check cache first
-      const cacheKey = `ethscription-${hashId}`;
+      const cacheKey = `details-${hashId}`;
       const cachedUrl = this.getCachedCard(cacheKey);
 
       if (cachedUrl) {
@@ -106,11 +106,10 @@ export class CardsService implements OnModuleInit {
 
           // Upload image to storage and get public URL
           const socialImageFilename = `details-${hashId}.png`;
-          await this.storageSvc.uploadImage(
+          await this.storageSvc.uploadCardImage(
             imageBuffer,
             socialImageFilename,
-            'png',
-            ethscription.slug
+            'png'
           );
 
           // Use public URL instead of data URI for better social media crawler support
@@ -180,11 +179,10 @@ export class CardsService implements OnModuleInit {
 
           // Upload image to storage and get public URL
           const socialImageFilename = `collection-${slug}.png`;
-          await this.storageSvc.uploadImage(
+          await this.storageSvc.uploadCardImage(
             imageBuffer,
             socialImageFilename,
             'png',
-            slug
           );
 
           // Use public URL instead of data URI for better social media crawler support
