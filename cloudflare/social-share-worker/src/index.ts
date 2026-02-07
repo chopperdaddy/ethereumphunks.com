@@ -20,9 +20,11 @@ function getApiUrl(requestUrl: string): string {
 }
 
 // Social media crawler user agents
+// Note: Matching is case-insensitive (userAgent is lowercased)
 const SOCIAL_CRAWLERS = [
 	'facebookexternalhit',
-	'twitterbot',
+	'twitterbot',           // Twitter/X official bot: "Mozilla/5.0 (compatible; Twitterbot/1.0)"
+	'x-bot',                // X (Twitter) alternative
 	'linkedinbot',
 	'discordbot',
 	'telegrambot',
@@ -33,42 +35,68 @@ const SOCIAL_CRAWLERS = [
 	'snapchat',
 	'pinterest',
 	'googlebot',
-	'bingbot'
+	'bingbot',
+	// Common testing/preview tools
+	'socialsharepreview',   // Social Share Preview tool
+	'opengraph',            // Open Graph testing tools
+	'metascraper',          // Meta scraper tools
+];
+
+// Social media referer patterns (these platforms use browser user-agents but can be identified by referer)
+const SOCIAL_REFERERS = [
+	't.co',              // Twitter/X link shortener
+	'twitter.com',       // Twitter
+	'x.com',             // X (Twitter)
+	'facebook.com',      // Facebook
+	'linkedin.com',     // LinkedIn
+	'discord.com',       // Discord
+	'telegram.org',     // Telegram
+	'reddit.com',       // Reddit
 ];
 
 export default {
 	async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
 		const url = new URL(request.url);
 		const userAgent = request.headers.get('user-agent')?.toLowerCase() || '';
+		const referer = request.headers.get('referer')?.toLowerCase() || '';
 
 		// Check if this is a social media crawler or test mode
+		// IMPORTANT: Only check user-agent for crawler detection, not referer
+		// Regular users clicking links from social media will have social referers
+		// but should be redirected, not served the HTML card
 		const isTestMode = url.searchParams.has('test') || url.searchParams.has('preview');
-		const isCrawler = SOCIAL_CRAWLERS.some(crawler => userAgent.includes(crawler)) || isTestMode;
+		const matchesCrawlerPattern = SOCIAL_CRAWLERS.some(crawler => userAgent.includes(crawler));
+		const isCrawler = matchesCrawlerPattern || isTestMode;
 
 		// Extract route information based on actual Angular routes
 		const routeInfo = extractRouteInfo(url.pathname);
 
-		// Debug logging (remove in production)
-		if (isTestMode) {
-			console.log('Test mode detected:', {
+		// Debug logging - always log user-agent for debugging crawler detection
+		// This helps identify what user-agents testing tools are using
+		if (isTestMode || (!isCrawler && routeInfo.type)) {
+			const originalUserAgent = request.headers.get('user-agent') || 'missing';
+			const originalReferer = request.headers.get('referer') || 'missing';
+			console.log('Request details:', {
 				pathname: url.pathname,
 				routeType: routeInfo.type,
 				isCrawler,
-				searchParams: url.search
+				isTestMode,
+				matchesCrawlerPattern,
+				userAgent: originalUserAgent,
+				referer: originalReferer,
 			});
 		}
 
+		// If crawler and we have a valid route, serve HTML card
 		if (isCrawler && routeInfo.type) {
-			// Fetch HTML card from NestJS API for social crawlers
 			const apiUrl = getApiUrl(request.url);
-			return fetchCardFromAPI(routeInfo as { type: 'details' | 'market' | 'collection', params: any }, isTestMode, apiUrl);
-		} else if (routeInfo.type) {
-			// Redirect regular users to eth.limo with the same path
-			return Response.redirect(`https://etherphunks.eth.limo${url.pathname}`, 302);
+			return fetchCardFromAPI(routeInfo as { type: 'details' | 'collection', params: Record<string, string> }, isTestMode, apiUrl);
 		}
 
-		// For unknown paths, redirect to main eth.limo site
-		return Response.redirect('https://etherphunks.eth.limo/', 302);
+		// All other requests (non-crawlers) should be redirected to eth.limo
+		// Preserve the full pathname and query string
+		const redirectUrl = `https://etherphunks.eth.limo${url.pathname}${url.search}`;
+		return Response.redirect(redirectUrl, 302);
 	},
 } satisfies ExportedHandler<Env>;
 
@@ -80,7 +108,7 @@ export default {
  * - /admin (admin dashboard)
  * - /slug (collection index)
  */
-function extractRouteInfo(pathname: string): { type: 'details' | 'market' | 'collection' | 'admin' | 'home' | null, params: any } {
+function extractRouteInfo(pathname: string): { type: 'details' | 'collection' | 'admin' | 'home' | null, params: Record<string, string> } {
 	// Remove leading slash for easier matching
 	const path = pathname.slice(1);
 	const segments = path.split('/');
@@ -93,22 +121,22 @@ function extractRouteInfo(pathname: string): { type: 'details' | 'market' | 'col
 		};
 	}
 
+	// /slug/market/marketType - collection market
+	if (segments.length === 3 && segments[1] === 'market') {
+		return {
+			type: 'collection',
+			params: {
+				slug: segments[0],
+				marketType: segments[2]
+			}
+		};
+	}
+
 	// /admin
 	if (segments.length === 1 && segments[0] === 'admin') {
 		return {
 			type: 'admin',
 			params: {}
-		};
-	}
-
-	// /slug/market/marketType - collection market
-	if (segments.length === 3 && segments[1] === 'market') {
-		return {
-			type: 'market',
-			params: {
-				slug: segments[0],
-				marketType: segments[2]
-			}
 		};
 	}
 
@@ -133,15 +161,14 @@ function extractRouteInfo(pathname: string): { type: 'details' | 'market' | 'col
 
 /**
  * Get the original route URL from route info
+ * Note: This is used in meta tags, so we don't encode here - encoding happens in escapeHtml
  */
-function getRouteUrl(routeInfo: { type: string, params: any }): string {
+function getRouteUrl(routeInfo: { type: string, params: Record<string, string> }): string {
 	switch (routeInfo.type) {
 		case 'details':
-			return `/details/${routeInfo.params.hashId}`;
+			return `/details/${routeInfo.params.hashId || ''}`;
 		case 'collection':
-			return `/${routeInfo.params.slug}`;
-		case 'market':
-			return `/${routeInfo.params.slug}/market/${routeInfo.params.marketType}`;
+			return `/${routeInfo.params.slug || ''}`;
 		case 'admin':
 			return '/admin';
 		case 'home':
@@ -152,55 +179,109 @@ function getRouteUrl(routeInfo: { type: string, params: any }): string {
 }
 
 /**
+ * Validate hashId format (should be hex string, typically 66 chars with 0x prefix)
+ */
+function isValidHashId(hashId: string): boolean {
+	return /^0x[a-fA-F0-9]{64}$/.test(hashId);
+}
+
+/**
+ * Validate slug format (alphanumeric, hyphens, underscores only)
+ */
+function isValidSlug(slug: string): boolean {
+	return /^[a-zA-Z0-9_-]+$/.test(slug) && slug.length <= 100;
+}
+
+/**
  * Fetch HTML card from NestJS API
  */
-async function fetchCardFromAPI(routeInfo: { type: string, params: any }, isTestMode: boolean = false, baseApiUrl: string = 'https://relay.ethereumphunks.com'): Promise<Response> {
+async function fetchCardFromAPI(routeInfo: { type: string, params: Record<string, string> }, isTestMode: boolean = false, baseApiUrl: string = 'https://relay.ethereumphunks.com'): Promise<Response> {
 	try {
+		// Validate inputs before constructing URL
+		if (routeInfo.type === 'details' && routeInfo.params.hashId) {
+			if (!isValidHashId(routeInfo.params.hashId)) {
+				console.warn(`Invalid hashId format: ${routeInfo.params.hashId}`);
+				return generateFallbackHTML(routeInfo);
+			}
+		}
+		if (routeInfo.type === 'collection' && routeInfo.params.slug) {
+			if (!isValidSlug(routeInfo.params.slug)) {
+				console.warn(`Invalid slug format: ${routeInfo.params.slug}`);
+				return generateFallbackHTML(routeInfo);
+			}
+		}
+
 		let apiUrl: string;
 
 		switch (routeInfo.type) {
 			case 'details':
-				apiUrl = `${baseApiUrl}/cards/ethscription/${routeInfo.params.hashId}`;
+				apiUrl = `${baseApiUrl}/cards/ethscription/${encodeURIComponent(routeInfo.params.hashId)}`;
 				break;
 			case 'collection':
-				apiUrl = `${baseApiUrl}/cards/collection/${routeInfo.params.slug}`;
-				break;
-			case 'market':
-				apiUrl = `${baseApiUrl}/cards/collection/${routeInfo.params.slug}/market/${routeInfo.params.marketType}`;
+				apiUrl = `${baseApiUrl}/cards/collection/${encodeURIComponent(routeInfo.params.slug)}`;
 				break;
 			default:
 				return generateFallbackHTML(routeInfo);
 		}
 
-		const response = await fetch(apiUrl, {
-			headers: {
-				'User-Agent': 'EtherPhunks-Social-Worker/1.0'
-			}
-		});
+		// Add timeout to prevent hanging requests (Cloudflare Workers default is 30s, but we'll be explicit)
+		// Note: setTimeout works in Cloudflare Workers, but we use AbortController for better control
+		const controller = new AbortController();
+		const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
 
-		if (!response.ok) {
-			console.error(`API returned ${response.status} for ${apiUrl}`);
+		try {
+			const response = await fetch(apiUrl, {
+				headers: {
+					'User-Agent': 'EtherPhunks-Worker/1.0'
+				},
+				signal: controller.signal
+			});
+
+			clearTimeout(timeoutId);
+
+			if (!response.ok) {
+				console.error(`API returned ${response.status} for ${apiUrl}`);
+				return generateFallbackHTML(routeInfo);
+			}
+
+			let html = await response.text();
+
+			// Limit response size to prevent abuse (10MB max)
+			if (html.length > 10 * 1024 * 1024) {
+				console.error(`Response too large: ${html.length} bytes`);
+				return generateFallbackHTML(routeInfo);
+			}
+
+			// Strip out redirect elements - crawlers only need meta tags, not redirects
+			// Remove meta refresh redirects
+			html = html.replace(/<meta\s+http-equiv=["']refresh["'][^>]*>/gi, '');
+			// Remove JavaScript redirects (entire script tags with window.location)
+			html = html.replace(/<script[^>]*>[\s\S]*?window\.location[\s\S]*?<\/script>/gi, '');
+			// Remove setTimeout redirects
+			html = html.replace(/setTimeout\s*\([^)]*window\.location[^)]*\)/gi, '');
+			// Replace body content with empty body (crawlers don't render it anyway)
+			html = html.replace(/<body[^>]*>[\s\S]*?<\/body>/i, '<body></body>');
+
+			return new Response(html, {
+				headers: {
+					'content-type': 'text/html;charset=UTF-8',
+					'cache-control': 'public, max-age=300', // 5 minute cache
+					'x-content-type-options': 'nosniff',
+					'x-frame-options': 'DENY',
+				},
+			});
+		} catch (fetchError) {
+			clearTimeout(timeoutId);
+			if (fetchError instanceof Error && fetchError.name === 'AbortError') {
+				console.error('Request timeout fetching card from API');
+			} else {
+				throw fetchError;
+			}
 			return generateFallbackHTML(routeInfo);
 		}
 
-		let html = await response.text();
-
-		// If in test mode, disable redirects
-		if (isTestMode) {
-			html = html
-				.replace(/<meta http-equiv="refresh"[^>]*>/gi, '<!-- Redirect disabled for testing -->')
-				.replace(/setTimeout\([^)]*window\.location[^)]*\)/gi, '// Redirect disabled for testing');
-		}
-
-		return new Response(html, {
-			headers: {
-				'content-type': 'text/html;charset=UTF-8',
-				'cache-control': 'public, max-age=300', // 5 minute cache
-			},
-		});
-
 	} catch (error) {
-		console.error('Error fetching card from API:', error);
+		console.error('Error fetching card from API:', error instanceof Error ? error.message : 'Unknown error');
 		return generateFallbackHTML(routeInfo);
 	}
 }
@@ -208,28 +289,9 @@ async function fetchCardFromAPI(routeInfo: { type: string, params: any }, isTest
 /**
  * Generate fallback HTML when API is unavailable
  */
-function generateFallbackHTML(routeInfo: { type: string, params: any }): Response {
-	let title = 'EtherPhunks';
-	let description = 'Discover unique digital collectibles on the EtherPhunks marketplace.';
-	let redirectUrl = 'https://etherphunks.eth.limo/';
-
-	switch (routeInfo.type) {
-		case 'details':
-			title = `Digital Collectible | EtherPhunks`;
-			description = `Discover this unique digital collectible on EtherPhunks marketplace.`;
-			redirectUrl = `https://etherphunks.eth.limo/details/${routeInfo.params.hashId}`;
-			break;
-		case 'collection':
-			title = `${routeInfo.params.slug} Collection | EtherPhunks`;
-			description = `Explore the ${routeInfo.params.slug} collection on EtherPhunks marketplace.`;
-			redirectUrl = `https://etherphunks.eth.limo/${routeInfo.params.slug}`;
-			break;
-		case 'market':
-			title = `${routeInfo.params.slug} ${routeInfo.params.marketType} | EtherPhunks`;
-			description = `Browse ${routeInfo.params.marketType} in the ${routeInfo.params.slug} collection.`;
-			redirectUrl = `https://etherphunks.eth.limo/${routeInfo.params.slug}/market/${routeInfo.params.marketType}`;
-			break;
-	}
+function generateFallbackHTML(routeInfo: { type: string, params: Record<string, string> }): Response {
+	let title = 'Ethereum Phunks Market';
+	let description = 'Ethereum Phunks Market 👍';
 
 	const html = `<!DOCTYPE html>
 <html lang="en">
@@ -240,95 +302,32 @@ function generateFallbackHTML(routeInfo: { type: string, params: any }): Respons
 
 	<!-- Open Graph / Facebook -->
 	<meta property="og:type" content="website">
-	<meta property="og:url" content="https://ethereumphunks.com${getRouteUrl(routeInfo)}">
+	<meta property="og:url" content="https://etherphunks.eth.limo${getRouteUrl(routeInfo)}">
 	<meta property="og:title" content="${escapeHtml(title)}">
 	<meta property="og:description" content="${escapeHtml(description)}">
-	<meta property="og:image" content="https://ethereumphunks.com/default-share.png">
+	<meta property="og:image" content="https://etherphunks.eth.limo/poster.png">
 	<meta property="og:site_name" content="EtherPhunks">
 
 	<!-- Twitter -->
 	<meta name="twitter:card" content="summary_large_image">
-	<meta name="twitter:url" content="https://ethereumphunks.com${getRouteUrl(routeInfo)}">
+	<meta name="twitter:url" content="https://etherphunks.eth.limo${getRouteUrl(routeInfo)}">
 	<meta name="twitter:title" content="${escapeHtml(title)}">
 	<meta name="twitter:description" content="${escapeHtml(description)}">
-	<meta name="twitter:image" content="https://ethereumphunks.com/default-share.png">
+	<meta name="twitter:image" content="https://etherphunks.eth.limo/poster.png">
 	<meta name="twitter:site" content="@ethereumphunks">
 
 	<!-- Discord -->
 	<meta name="theme-color" content="#C3FF00">
-
-	<meta http-equiv="refresh" content="1;url=${escapeHtml(redirectUrl)}">
-
-	<style>
-		body {
-			font-family: 'Arial', sans-serif;
-			display: flex;
-			justify-content: center;
-			align-items: center;
-			min-height: 100vh;
-			margin: 0;
-			background: linear-gradient(135deg, #C3FF00 0%, #FF03B4 100%);
-			color: #000;
-			text-align: center;
-		}
-		.container {
-			max-width: 400px;
-			padding: 2rem;
-			background: rgba(255, 255, 255, 0.1);
-			border-radius: 20px;
-			backdrop-filter: blur(10px);
-		}
-		.logo {
-			font-size: 2rem;
-			font-weight: bold;
-			margin-bottom: 1rem;
-		}
-		.message {
-			margin-bottom: 1.5rem;
-			opacity: 0.9;
-		}
-		.spinner {
-			border: 3px solid rgba(0, 0, 0, 0.3);
-			border-radius: 50%;
-			border-top: 3px solid #000;
-			width: 40px;
-			height: 40px;
-			animation: spin 1s linear infinite;
-			margin: 0 auto;
-		}
-		@keyframes spin {
-			0% { transform: rotate(0deg); }
-			100% { transform: rotate(360deg); }
-		}
-		a {
-			color: #000;
-			text-decoration: underline;
-		}
-	</style>
 </head>
-<body>
-	<div class="container">
-		<div class="logo">EtherPhunks</div>
-		<div class="message">Redirecting to marketplace...</div>
-		<div class="spinner"></div>
-		<p style="margin-top: 2rem; font-size: 0.9rem; opacity: 0.8;">
-			If not redirected automatically,
-			<a href="${escapeHtml(redirectUrl)}">click here</a>
-		</p>
-	</div>
-
-	<script>
-		setTimeout(() => {
-			window.location.href = '${escapeHtml(redirectUrl)}';
-		}, 1000);
-	</script>
-</body>
+<body></body>
 </html>`;
 
 	return new Response(html, {
 		headers: {
 			'content-type': 'text/html;charset=UTF-8',
 			'cache-control': 'public, max-age=60',
+			'x-content-type-options': 'nosniff',
+			'x-frame-options': 'DENY',
 		},
 	});
 }

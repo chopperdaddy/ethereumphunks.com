@@ -3,6 +3,7 @@ import { Injectable, OnModuleInit } from '@nestjs/common';
 import { StorageService } from '@/modules/storage/storage.service';
 import { ImageService } from './services/image.service';
 import { rarityData } from '@/modules/notifs/constants/rarity';
+import { Collection, CollectionWithPreviews } from '../storage/models/db';
 
 interface CachedCard {
   url: string;
@@ -156,7 +157,7 @@ export class CardsService implements OnModuleInit {
   async generateCollectionCard(slug: string): Promise<string> {
     try {
       const collections = await this.storageSvc.fetchCollectionsWithPreviews();
-      const collection = (collections.find((c) => c.ethscription.slug === slug)).ethscription;
+      const collection = (collections.find((c) => c.ethscription.slug === slug)).ethscription as CollectionWithPreviews;
 
       if (!collection) {
         return this.generateFallbackHtml('collection', { slug });
@@ -174,20 +175,7 @@ export class CardsService implements OnModuleInit {
       } else {
         try {
           // Fetch random preview items for the collection
-          const previewItems = collection.previews;
-          const imageBuffer = await this.imgSvc.generateCollectionSocialImage(collection, previewItems);
-
-          // Upload image to storage and get public URL
-          const socialImageFilename = `collection-${slug}.png`;
-          await this.storageSvc.uploadCardImage(
-            imageBuffer,
-            socialImageFilename,
-            'png',
-          );
-
-          // Use public URL instead of data URI for better social media crawler support
-          imageUrl = `https://kcbuycbhynlmsrvoegzp.supabase.co/storage/v1/object/public/static/cards/${socialImageFilename}`;
-
+          imageUrl = await this.generateImage(collection);
           // Cache the URL
           this.setCachedCard(cacheKey, imageUrl);
         } catch (error) {
@@ -210,6 +198,22 @@ export class CardsService implements OnModuleInit {
       console.error('Error generating collection card:', error);
       return this.generateFallbackHtml('collection', { slug });
     }
+  }
+
+  async generateImage(collection: CollectionWithPreviews) {
+    const previewItems = collection.previews;
+    const imageBuffer = await this.imgSvc.generateCollectionSocialImage(collection, previewItems);
+
+    // Upload image to storage and get public URL
+    const socialImageFilename = `collection-${collection.slug}.png`;
+    await this.storageSvc.uploadCardImage(
+      imageBuffer,
+      socialImageFilename,
+      'png',
+    );
+
+    // Use public URL instead of data URI for better social media crawler support
+    return `https://kcbuycbhynlmsrvoegzp.supabase.co/storage/v1/object/public/static/cards/${socialImageFilename}`;
   }
 
   /**

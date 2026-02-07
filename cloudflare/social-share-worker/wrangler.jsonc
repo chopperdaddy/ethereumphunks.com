@@ -10,10 +10,10 @@
 	"compatibility_flags": [
 		"global_fetch_strictly_public"
 	],
-	"assets": {
-		// The path to the directory containing the `index.html` file to be served at `/`
-		"directory": "./public"
-	},
+	// Removed assets config - static files were overriding worker logic
+	// If needed, handle static assets explicitly in worker code
+	"workers_dev": false,
+	"preview_urls": false,
 	"observability": {
 		"enabled": true
 	}

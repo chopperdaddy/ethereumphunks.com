@@ -124,6 +124,10 @@ export interface Collection {
   standalone: boolean;
 }
 
+export interface CollectionWithPreviews extends Collection {
+  previews: Ethscription[];
+}
+
 export interface Event {
   txId: string;
   type: EventType;
