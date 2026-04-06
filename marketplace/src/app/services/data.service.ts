@@ -968,33 +968,61 @@ export class DataService {
   async checkConsensus(phunks: Phunk[]): Promise<Phunk[]> {
     if (!phunks.length) return [];
 
-    const prefix = this.suffix.replace('_', '');
+    // Determine API base URL based on chain
+    const isSepolia = environment.chainId === 11155111;
+    const apiBaseUrl = isSepolia 
+      ? 'https://sepolia-api.ethscriptions.com/v2' 
+      : 'https://api.ethscriptions.com/v2';
 
-    const hashIds = phunks.map((item: Phunk) => item.hashId);
-    let params: any = new HttpParams().set('consensus', 'true');
-    for (let i = 0; i < hashIds.length; i++) {
-      params = params.append('transaction_hash[]', hashIds[i]);
-    }
+    // Build query params with multiple transaction_hash parameters
+    let params = new HttpParams().set('max_results', '100');
+    phunks.forEach((phunk: Phunk) => {
+      params = params.append('transaction_hash', phunk.hashId);
+    });
 
-    const fetchPage = (key?: string): Observable<any> => {
-      if (key) {
-        params = params.set('page_key', key);
+    const fetchPage = (pageKey?: string): Observable<any> => {
+      let pageParams = params;
+      if (pageKey) {
+        pageParams = pageParams.set('page_key', pageKey);
       }
-      return this.http.get<any>(`https://ethscriptions-api${prefix ? ('-' + prefix) : ''}.flooredape.io/ethscriptions`, { params });
+      return this.http.get<any>(`${apiBaseUrl}/ethscriptions`, { params: pageParams });
     };
 
     return await firstValueFrom(
       fetchPage().pipe(
-        expand((res: any) => res.pagination.has_more ? fetchPage(res.pagination.page_key) : EMPTY),
-        reduce((acc: any, res) => res ? [...acc, ...res.result] : acc, []),
-        map((res: any) => res.map((item: any) => {
-          const phunk = phunks.find(p => p.hashId === item.transaction_hash);
-          const consensus = !!phunk && phunk.owner === item.current_owner && (phunk.prevOwner === item.previous_owner || !phunk.prevOwner);
-          return { ...phunk, consensus };
-        })),
+        expand((res: any) => res.pagination?.has_more ? fetchPage(res.pagination.page_key) : EMPTY),
+        reduce((acc: any[], res) => res?.result ? [...acc, ...res.result] : acc, []),
+        map((apiResults: any[]) => {
+          // Map each phunk to check consensus against API results
+          return phunks.map((phunk: Phunk) => {
+            const apiItem = apiResults.find((item: any) => 
+              item.transaction_hash?.toLowerCase() === phunk.hashId?.toLowerCase()
+            );
+            
+            if (!apiItem) {
+              console.log('checkConsensus: ethscription not found in API', phunk.hashId);
+              return { ...phunk, consensus: false };
+            }
+
+            const consensus = 
+              phunk.owner?.toLowerCase() === apiItem.current_owner?.toLowerCase() && 
+              (phunk.prevOwner?.toLowerCase() === apiItem.previous_owner?.toLowerCase() || !phunk.prevOwner);
+            
+            console.log('Consensus check:', {
+              hashId: phunk.hashId,
+              localOwner: phunk.owner,
+              apiOwner: apiItem.current_owner,
+              localPrevOwner: phunk.prevOwner,
+              apiPrevOwner: apiItem.previous_owner,
+              consensus
+            });
+
+            return { ...phunk, consensus };
+          });
+        }),
         catchError((err) => {
-          console.log('checkConsensus', err);
-          return of(phunks);
+          console.log('checkConsensus error', err);
+          return of(phunks.map(p => ({ ...p, consensus: false })));
         })
       )
     );
