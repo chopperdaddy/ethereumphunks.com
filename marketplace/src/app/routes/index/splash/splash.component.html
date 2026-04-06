@@ -1,0 +1,23 @@
+<div
+  #imagesWrapper
+  class="images-wrapper"
+  [class.mint-mode]="collection()?.isMinting"
+  [class.is-minting]="!!mintImage() && collection()?.isMinting"
+  [class.has-center-image]="!!centerImage()">
+
+  @for (
+    image of (imageArray$ | async) || defaultImages;
+    track image.src + image.type + idx;
+    let idx = $index;
+  ) {
+    <div
+      class="image-wrapper"
+      [class.center]="idx === centerIndex()"
+      [class]="image.type">
+
+      <img [src]="image.src" width="320" height="320" />
+    </div>
+  }
+</div>
+
+<!-- <app-collection-info [collection]="collection()" /> -->

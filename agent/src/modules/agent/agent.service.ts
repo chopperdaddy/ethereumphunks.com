@@ -4,17 +4,12 @@ import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 
 import { Client, Signer, type XmtpEnv, IdentifierKind, LogLevel } from '@xmtp/node-sdk';
-
-// Agent message metadata marker (must match frontend)
-const AGENT_MESSAGE_PREFIX = '⚡AGENT_CTX⚡';
-
 import { createWalletClient, fromHex, http, toBytes, toHex } from 'viem';
 import { privateKeyToAccount } from 'viem/accounts';
 import { sepolia } from 'viem/chains';
 import { getRandomValues } from 'crypto';
 
 import { KeyGenService } from './services/key-gen.service';
-import { LangchainService } from './services/langchain.service';
 
 interface User {
   key: `0x${string}`;
@@ -25,9 +20,20 @@ interface User {
 import dotenv from 'dotenv';
 dotenv.config();
 
-@Injectable()
-export class AgentService implements OnModuleInit {
+const DIGITAL_OCEAN_AGENT_URL = 'https://h5en4ny26mkz6fhtx6wczs2c.agents.do-ai.run/api/v1/chat/completions';
 
+interface ConversationHistory {
+  messages: Array<{
+    role: 'user' | 'assistant';
+    content: string;
+  }>;
+  lastActivity: Date;
+}
+
+export class AgentService implements OnModuleInit {
+  private readonly agentApiKey: string;
+  private conversations: Map<string, ConversationHistory> = new Map();
+  private readonly CONVERSATION_TIMEOUT = 30 * 60 * 1000; // 30 minutes
   signer = this.createSigner(process.env.AGENT_WALLET_PK as `0x${string}`);
   dbEncryptionKey = this.getEncryptionKeyFromHex(
     process.env.AGENT_ENCRYPTION_KEY as string
@@ -35,197 +41,118 @@ export class AgentService implements OnModuleInit {
 
   constructor(
     private readonly keyGenSvc: KeyGenService,
-    private readonly langchainSvc: LangchainService,
-  ) {}
-
-  /**
-   * Parse structured context from custom content type
-   */
-  private parseStructuredContext(contextString: string): any {
-    try {
-      // The context comes from the frontend's formatPageContextForAgent method
-      // Parse the [FRONTEND_CONTEXT] format
-      const match = contextString.match(/\[FRONTEND_CONTEXT\]([\s\S]*?)\[\/FRONTEND_CONTEXT\]/);
-      if (!match) return null;
-
-      const contextData = match[1];
-      const context: any = {};
-
-      // Parse the pipe-separated key:value pairs
-      const pairs = contextData.split('|');
-      for (const pair of pairs) {
-        const [key, value] = pair.split(':');
-        if (key && value) {
-          context[key.toLowerCase().trim()] = value.trim();
-        }
-      }
-
-      return context;
-    } catch (error) {
-      console.error('Error parsing structured context:', error);
-      return null;
+  ) {
+    this.agentApiKey = process.env.DIGITAL_OCEAN_AGENT_API_KEY;
+    if (!this.agentApiKey) {
+      throw new Error('DIGITAL_OCEAN_AGENT_API_KEY environment variable is not set');
     }
   }
 
   /**
-   * Process XMTP message and provide contextualized response
+   * Process XMTP message
    */
-  async processMessageWithContext(message: any, conversation: any): Promise<string> {
-    // Extract the sender's Ethereum address from the conversation
-    const senderAddress = await this.extractSenderAddress(message, conversation);
+    private getConversationHistory(conversationId: string): ConversationHistory {
+    // Clean up old conversations
+    this.cleanupOldConversations();
 
-    let cleanMessage: string;
-    let frontendContext: any = null;
-
-    // Check if this is a special agent message with encoded context
-    const messageText = message.content as string;
-    if (messageText && messageText.startsWith(AGENT_MESSAGE_PREFIX)) {
-
-      // Handle encoded agent message format: ⚡AGENT_CTX⚡{context}⚡END_CTX⚡{message}
-      const parts = messageText.split('⚡END_CTX⚡');
-      if (parts.length === 2) {
-        const contextPart = parts[0].replace(AGENT_MESSAGE_PREFIX, '');
-        cleanMessage = parts[1];
-
-        // Parse the structured context
-        frontendContext = this.parseStructuredContext(contextPart);
-
-        console.log('📨 Received encoded agent message:', {
-          message: cleanMessage,
-          hasContext: !!contextPart,
-          contextLength: contextPart.length
-        });
-      } else {
-        // Fallback if parsing fails
-        cleanMessage = messageText;
-        frontendContext = null;
-      }
-    } else {
-      // Handle legacy format - extract context from message text
-      const extracted = this.extractFrontendContext(messageText);
-      cleanMessage = extracted.cleanMessage;
-      frontendContext = extracted.frontendContext;
-
-      console.log('📨 Received legacy text message');
+    // Get or create conversation history
+    let conversation = this.conversations.get(conversationId);
+    if (!conversation) {
+      conversation = {
+        messages: [],
+        lastActivity: new Date()
+      };
+      this.conversations.set(conversationId, conversation);
     }
+    return conversation;
+  }
 
-    if (senderAddress) {
-      // Create contextualized message with network and page info
-      const contextualMessage = this.buildContextualMessage(cleanMessage, senderAddress, frontendContext);
+  private cleanupOldConversations() {
+    const now = new Date().getTime();
+    for (const [id, conversation] of this.conversations.entries()) {
+      if (now - conversation.lastActivity.getTime() > this.CONVERSATION_TIMEOUT) {
+        this.conversations.delete(id);
+      }
+    }
+  }
 
-      console.log(`Processing message with context for ${senderAddress}:`, {
-        userAddress: senderAddress,
-        network: frontendContext?.network || 'unknown',
-        chainId: frontendContext?.chainid || 'unknown',
-        pageType: frontendContext?.page_type || 'unknown',
-        route: frontendContext?.route || 'unknown'
+  private updateConversation(conversationId: string, userMessage: string, assistantMessage: string) {
+    const conversation = this.getConversationHistory(conversationId);
+    conversation.messages.push(
+      { role: 'user', content: userMessage },
+      { role: 'assistant', content: assistantMessage }
+    );
+    conversation.lastActivity = new Date();
+  }
+
+  private async callDigitalOceanAgent(message: string, conversationId: string): Promise<string> {
+    try {
+      console.log('Calling Digital Ocean agent with message:', message);
+
+      const conversation = this.getConversationHistory(conversationId);
+
+      const requestBody = {
+        messages: [
+          ...conversation.messages,
+          {
+            role: 'user',
+            content: message
+          }
+        ],
+        stream: false
+      };
+
+      console.log('Request body:', JSON.stringify(requestBody, null, 2));
+
+      const response = await fetch(DIGITAL_OCEAN_AGENT_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${this.agentApiKey}`
+        },
+        body: JSON.stringify(requestBody)
       });
 
-      return await this.langchainSvc.ask(contextualMessage, message.conversationId, senderAddress);
-    }
-
-    // Fallback to original message if no context available
-    return await this.langchainSvc.ask(cleanMessage, message.conversationId);
-  }
-
-  /**
-   * Extract frontend context from message content and return clean message
-   */
-  extractFrontendContext(messageContent: string): { cleanMessage: string; frontendContext: any } {
-    try {
-      // Look for frontend context pattern: [FRONTEND_CONTEXT]...[/FRONTEND_CONTEXT]
-      const contextMatch = messageContent.match(/\[FRONTEND_CONTEXT\]([\s\S]*?)\[\/FRONTEND_CONTEXT\]/);
-
-      if (contextMatch) {
-        const contextString = contextMatch[1];
-        const cleanMessage = messageContent.replace(contextMatch[0], '').trim();
-
-        // Parse the context string
-        const contextParts = contextString.split('|').filter(part => part.trim());
-        const frontendContext: any = {};
-
-        for (const part of contextParts) {
-          if (part.includes(':')) {
-            const [key, value] = part.split(':');
-            frontendContext[key.toLowerCase()] = value;
-          }
-        }
-
-        // Determine if this is Sepolia or Mainnet based on network info
-        frontendContext.isSepoliaNetwork = frontendContext.network === 'sepolia' || frontendContext.chainid === '11155111';
-
-        return { cleanMessage, frontendContext };
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('API Response:', {
+          status: response.status,
+          statusText: response.statusText,
+          headers: Object.fromEntries(response.headers.entries()),
+          body: errorText
+        });
+        throw new Error(`API call failed with status: ${response.status}. Response: ${errorText}`);
       }
 
-      return { cleanMessage: messageContent, frontendContext: null };
-    } catch (error) {
-      console.error('Error extracting frontend context:', error);
-      return { cleanMessage: messageContent, frontendContext: null };
-    }
-  }
+      const data = await response.json();
+      console.log('Digital Ocean agent response:', data);
 
-  /**
-   * Extract the sender's Ethereum address from XMTP message
-   */
-  async extractSenderAddress(message: any, conversation: any): Promise<string | null> {
-    try {
-      // Get conversation members to find the sender's address
-      const members = await conversation.members();
-      const sender = members.find((member: any) =>
-        member.inboxId === message.senderInboxId
-      );
-
-      if (sender && sender.accountIdentifiers && sender.accountIdentifiers.length > 0) {
-        // Return the Ethereum address (first account identifier)
-        return sender.accountIdentifiers[0].identifier.toLowerCase();
+      // Extract the assistant's message from the response
+      const assistantMessage = data.choices?.[0]?.message?.content;
+      if (!assistantMessage) {
+        console.error('Unexpected response format:', data);
+        throw new Error('Invalid response format from agent');
       }
+      return assistantMessage;
     } catch (error) {
-      console.error('Error extracting sender address:', error);
+      console.error('Error calling Digital Ocean agent:', error);
+      throw error;
     }
-
-    return null;
   }
 
-  /**
-   * Build a contextualized message with network and page info
-   */
-  buildContextualMessage(originalMessage: string, userAddress: string, frontendContext: any): string {
-    console.log('🔧 Building contextual message with:', {
-      userAddress,
-      frontendContext,
-      keys: frontendContext ? Object.keys(frontendContext) : 'no context'
-    });
+  async processMessage(message: any): Promise<string> {
+    try {
+      const messageText = message.content as string;
+      console.log(`📨 Received message: ${messageText}`);
 
-    // Build network information
-    const network = frontendContext?.network || 'unknown';
-    const chainId = frontendContext?.chainid || 'unknown';
-    const pageType = frontendContext?.page_type || 'unknown';
-    const route = frontendContext?.route || 'unknown';
-
-    console.log('📋 Context values extracted:', {
-      network,
-      chainId,
-      pageType,
-      route
-    });
-
-    // Create a clean context section without technical details
-    const contextSection = `
-[SYSTEM CONTEXT - User: ${userAddress}]
-- Network: ${network} (Chain ID: ${chainId})
-- Page: ${pageType} at ${route}
-- User Address: ${userAddress}
-- Timestamp: ${new Date().toISOString()}
-[END CONTEXT]
-
-User Message: ${originalMessage}`;
-
-    console.log('📤 Final contextual message:', contextSection);
-
-    return contextSection;
+      const response = await this.callDigitalOceanAgent(messageText, message.conversationId);
+      this.updateConversation(message.conversationId, messageText, response);
+      return response;
+    } catch (error) {
+      console.error('Error processing message:', error);
+      return 'Sorry, there was an error processing your message. Please try again.';
+    }
   }
-
-  // ... rest of XMTP setup methods remain the same ...
 
   onModuleInit() {
     this.main().catch(console.error);
@@ -249,18 +176,13 @@ User Message: ${originalMessage}`;
     const stream = client.conversations.streamAllMessages();
 
     for await (const message of await stream) {
+      // Skip our own messages and non-text messages
       if (
         message?.senderInboxId.toLowerCase() === client.inboxId.toLowerCase() ||
         message?.contentType?.typeId !== 'text'
       ) {
         continue;
       }
-
-      console.log(
-        `Received message: ${message.content as string} by ${
-          message.senderInboxId
-        }`
-      );
 
       const conversation = await client.conversations.getConversationById(
         message.conversationId
@@ -271,19 +193,11 @@ User Message: ${originalMessage}`;
         continue;
       }
 
-      // Process message with context
       try {
-        const aiResponse = await this.processMessageWithContext(
-          message,
-          conversation
-        );
-        await conversation.send(aiResponse);
-
-        // setInterval(async () => {
-        //   await conversation.send(`This is a test message ${new Date().toISOString()}`);
-        // }, 100000);
+        const response = await this.processMessage(message);
+        await conversation.send(response);
       } catch (error) {
-        console.error(error);
+        console.error('Error processing message:', error);
         await conversation.send('There was an error processing your message. Please try again.');
       }
 

@@ -156,18 +156,23 @@ export class MarketplaceService {
       // We do this here because this event is emitted after
       // transfer of ownership. If the listing was NOT created
       // by the previous owner, we should ignore it.
-      if (phunk.prevOwner && (phunk.prevOwner !== txn.from)) {
+      // When listing, the owner should always be the marketplace contract.
+      if (
+        (phunk.prevOwner && (phunk.prevOwner !== txn.from)) ||
+        phunk.owner !== this.configSvc.contracts.market.l1.toLowerCase()
+      ) {
 
         // Write the failed listing to a file
         try { await mkdir('./failed'); } catch (error) {}
         await writeFile(`./failed/${hashId}.json`, JSON.stringify({ txn: txn.hash, phunk }));
         Logger.error(
-          'Listing not created by previous owner',
+          'Listing not created by previous owner or owner is not the marketplace contract',
           hashId
         );
 
         // Since this listing will STILL overwrite existing listings
-        // on the smart contract, we must delete it from the database
+        // on the smart contract, we must delete the existing listing
+        // from the database (sorry to the OG lister!)
         await this.storageSvc.removeListing(hashId);
         return;
       }

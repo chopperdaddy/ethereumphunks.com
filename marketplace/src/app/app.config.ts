@@ -1,6 +1,5 @@
 import { isDevMode } from '@angular/core';
 import { RouteReuseStrategy, provideRouter } from '@angular/router';
-import { provideServiceWorker } from '@angular/service-worker';
 import { provideHttpClient } from '@angular/common/http';
 
 import { TimeagoClock, TimeagoDefaultClock, TimeagoDefaultFormatter, TimeagoFormatter } from 'ngx-timeago';
@@ -8,7 +7,7 @@ import { TimeagoClock, TimeagoDefaultClock, TimeagoDefaultFormatter, TimeagoForm
 import { routes } from '@/routes/routes';
 import { CustomReuseStrategy } from '@/routes/route.strategy';
 
-import { Store, provideStore } from '@ngrx/store';
+import { provideStore } from '@ngrx/store';
 import { provideEffects } from '@ngrx/effects';
 import { provideRouterStore, routerReducer } from '@ngrx/router-store';
 import { provideStoreDevtools } from '@ngrx/store-devtools';
@@ -74,9 +73,5 @@ export const config = {
       routes,
       // withHashLocation(),
     ),
-    provideServiceWorker('ngsw-worker.js', {
-        enabled: !isDevMode(),
-        registrationStrategy: 'registerWhenStable:30000'
-    })
 ]
 }

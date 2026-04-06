@@ -336,6 +336,13 @@ export class StorageService implements OnModuleInit {
     Logger.log('Collection added', collection.slug);
   }
 
+  async fetchCollectionsWithPreviews() {
+    const res = this.supabase.rpc('fetch_collections_with_previews', { preview_limit: 4 });
+    const { data, error } = await res;
+    if (error) throw error;
+    return data;
+  }
+
   /**
    * Fetches all ethscriptions
    * @param slug - The slug of the collection
@@ -440,6 +447,23 @@ export class StorageService implements OnModuleInit {
 
     if (error) Logger.error(error.message, 'Error uploading image');
     if (data) Logger.log('Uploaded image', `${sha}`);
+  }
+
+  async uploadCardImage(
+    imageBuffer: Buffer,
+    filename: string,
+    extension: string
+  ): Promise<void> {
+    const { data, error } = await this.supabase.storage
+      .from('static/cards')
+      .upload(
+        filename,
+        imageBuffer,
+        { contentType: `image/${extension}`, upsert: true }
+      );
+
+    if (error) Logger.error(error.message, 'Error uploading card image');
+    if (data) Logger.log('Uploaded card image', `${filename}`);
   }
 
   /**
@@ -937,11 +961,11 @@ export class StorageService implements OnModuleInit {
    * @param tokenId - The token ID to look up
    * @returns The ethscription if found, undefined otherwise
    */
-  async getEthscriptionByTokenId(tokenId: string): Promise<db.Ethscription> {
+  async getEthscriptionBySha(sha: string): Promise<db.Ethscription> {
     const response: db.EthscriptionResponse = await this.supabase
       .from('ethscriptions' + this.suffix)
       .select('*')
-      .eq('tokenId', tokenId);
+      .eq('sha', sha);
 
     const { data, error } = response;
 
@@ -1328,5 +1352,32 @@ export class StorageService implements OnModuleInit {
 
     const { error } = response;
     if (error) console.log(error);
+  }
+
+  async deleteEthscription(hashId: string): Promise<void> {
+    const chainId = this.configSvc.chain.chainIdL1;
+    if (chainId !== 11155111) throw new Error('Cannot only delete ethscriptions on Sepolia');
+
+    await this.removeListing(hashId);
+    await this.removeAllEventsByHashId(hashId);
+
+    const response = await this.supabase
+      .from('ethscriptions' + this.suffix)
+      .delete()
+      .eq('hashId', hashId);
+
+    const { error } = response;
+    if (error) console.log(error);
+  }
+
+  private async removeAllEventsByHashId(hashId: string): Promise<void> {
+    const response = await this.supabase
+      .from('events' + this.suffix)
+      .delete()
+      .eq('hashId', hashId.toLowerCase());
+
+    Logger.log('Removed events', hashId);
+    const { error } = response;
+    if (error) throw error;
   }
 }

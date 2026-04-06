@@ -1,5 +1,6 @@
 # database
 data.sql
+seed.sql
 
 # Supabase
 .branches

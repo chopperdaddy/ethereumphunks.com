@@ -240,12 +240,12 @@ export class AdminAuthService {
         }
         return true;
       } else {
-        this.clearTokens();
+        this.clearAllAdminTokens();
         return false;
       }
     } catch (error) {
       console.error('Error refreshing token:', error);
-      this.clearTokens();
+      this.clearAllAdminTokens();
       return false;
     }
   }
@@ -331,24 +331,8 @@ export class AdminAuthService {
     }
 
     // Clear local tokens and reset state
-    this.clearTokens();
-    this.store.dispatch(adminAuthActions.clearAdminSession());
+    this.clearAllAdminTokens();
     console.log('✅ Logged out successfully');
-  }
-
-  /**
-   * Clears stored tokens for the current collection.
-   * Removes tokens from both memory and localStorage.
-   */
-  private clearTokens(): void {
-    const collectionSlug = localStorage.getItem('selectedCollectionSlug');
-    if (collectionSlug) {
-      this.clearTokensForCollection(collectionSlug);
-    }
-
-    // Also clear in-memory tokens
-    this.accessToken = null;
-    this.refreshToken = null;
   }
 
   /**
@@ -367,7 +351,7 @@ export class AdminAuthService {
    * Clears all admin tokens from localStorage for all collections.
    * Resets the admin state in the store.
    */
-  clearAllAdminTokens(): void {
+  private clearAllAdminTokens(): void {
     console.log('🔧 Clearing all admin tokens from localStorage...');
 
     const keysToRemove: string[] = [];

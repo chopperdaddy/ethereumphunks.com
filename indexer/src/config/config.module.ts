@@ -16,8 +16,8 @@ import { AppConfigService } from './config.service';
         abortEarly: true,
       },
       envFilePath: [
+        `.env`,
         `.env.${process.env.NETWORK}`,
-        `.env.supabase`,
       ],
       cache: true,
       expandVariables: true,

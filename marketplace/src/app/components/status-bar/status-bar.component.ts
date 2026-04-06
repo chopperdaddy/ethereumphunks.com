@@ -7,11 +7,18 @@ import * as appStateSelectors from '@/state/app/app-state.selectors';
 
 import { GasService } from '@/services/gas.service';
 
-import { combineLatest, firstValueFrom } from 'rxjs';
+import { combineLatest, firstValueFrom, map } from 'rxjs';
+
+import { ChatComponent } from '@/components/chat/chat.component';
+import { LoggerComponent } from '@/components/logger/logger.component';
+
+import { setLogsActive } from '@/state/indexer-logs/indexer-logs.actions';
+import { setChat } from '@/state/chat/chat.actions';
+
+import { selectLogsActive } from '@/state/indexer-logs/indexer-logs.selectors';
+import { selectChat, selectUnreadCount } from '@/state/chat/chat.selectors';
 
 import { environment } from '@environments/environment';
-import { setLogsActive } from '@/state/indexer-logs/indexer-logs.actions';
-import { selectLogsActive } from '@/state/indexer-logs/indexer-logs.selectors';
 
 @Component({
   selector: 'app-status-bar',
@@ -19,7 +26,10 @@ import { selectLogsActive } from '@/state/indexer-logs/indexer-logs.selectors';
   imports: [
     AsyncPipe,
     DecimalPipe,
-    NgTemplateOutlet
+    NgTemplateOutlet,
+
+    ChatComponent,
+    LoggerComponent
   ],
   templateUrl: './status-bar.component.html',
   styleUrl: './status-bar.component.scss',
@@ -40,7 +50,10 @@ export class StatusBarComponent {
     3: 'behind3'
   };
 
-  expanded$ = this.store.select(selectLogsActive);
+  config$ = this.store.select(appStateSelectors.selectConfig);
+  chatActive$ = this.store.select(selectChat).pipe(map(({ active }) => active));
+  logsActive$ = this.store.select(selectLogsActive);
+  unreadCount$ = this.store.select(selectUnreadCount);
 
   constructor(
     private store: Store<GlobalState>,
@@ -48,7 +61,12 @@ export class StatusBarComponent {
   ) {}
 
   async expandCollapse() {
-    const expanded = await firstValueFrom(this.expanded$);
+    const expanded = await firstValueFrom(this.logsActive$);
     this.store.dispatch(setLogsActive({ logsActive: !expanded }));
+  }
+
+  async toggleChat() {
+    const active = await firstValueFrom(this.chatActive$);
+    this.store.dispatch(setChat({ active: !active }));
   }
 }

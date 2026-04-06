@@ -4,13 +4,12 @@ import { ActivatedRoute, RouterModule } from '@angular/router';
 import { WaIntersectionObserver } from '@ng-web-apis/intersection-observer';
 
 import { Store } from '@ngrx/store';
-import { filter, map } from 'rxjs';
 import { TimeagoModule } from 'ngx-timeago';
 import { LazyLoadImageModule } from 'ng-lazyload-image';
 
 import { PhunkGridComponent } from '@/components/phunk-grid/phunk-grid.component';
 import { RecentActivityComponent } from '@/components/recent-activity/recent-activity.component';
-import { SplashComponent } from '@/components/splash/splash.component';
+import { SplashComponent } from '@/routes/index/splash/splash.component';
 import { BrbComponent } from '@/components/brb/brb.component';
 import { MintComponent } from '@/components/mint/mint.component';
 import { AuctionsComponent } from '@/components/auctions/auctions.component';
@@ -26,7 +25,6 @@ import { SortOption } from '@/models/sorts.model';
 import * as dataStateSelectors from '@/state/data/data-state.selectors';
 import * as appStateSelectors from '@/state/app/app-state.selectors';
 import * as marketStateSelectors from '@/state/market/market-state.selectors';
-
 @Component({
   standalone: true,
   imports: [

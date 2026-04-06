@@ -1,38 +1,29 @@
-<div class="admin-dashboard">
-  <h1>Admin Dashboard</h1>
+<app-phunk-grid
+  [marketType]="'all'"
+  [activeSort]="sortOption.ID"
+  [viewType]="'compact'"
+  [limit]="44"
+  [phunkData]="(phunkData$ | async) || []"
+  [slug]="selectedCollectionSlug() || ''"
+/>
 
-  Browser Active: {{ isBrowserActive() }}
+<div class="inner">
+  <h2>Admin Dashboard</h2>
 
-  <!-- Status Section -->
-  <div class="status-section">
-    <h2>Status</h2>
-    <div class="status-item">
-      <strong>Admin Status:</strong> {{ adminStatus() }}
+  @if (canShowMenu()) {
+    <div class="admin-actions">
+      <button (click)="logout()" class="logout">Logout</button>
     </div>
-    <div class="status-item">
-      <strong>Session Status:</strong> {{ sessionStatus() }}
-    </div>
-    <div class="status-item">
-      <strong>Has Admin Access:</strong> {{ hasAdminAccess() ? 'Yes' : 'No' }}
-    </div>
-    <div class="status-item">
-      <strong>Is Authenticated:</strong> {{ isAuthenticated() ? 'Yes' : 'No' }}
-    </div>
-    <div class="status-item">
-      <strong>Selected Collection:</strong> {{ selectedCollectionSlug() || 'None' }}
-    </div>
-    <div class="status-item">
-      <strong>Available Collections:</strong> {{ adminCollections()?.length || 0 }}
-    </div>
-  </div>
+  }
 
   <!-- Collection Selection (if has admin access but not authenticated) -->
   @if (hasAdminAccess() && !isAuthenticated() && adminCollections() && adminCollections()!.length > 0) {
-    <div class="collection-selection">
-      <h2>Select Collection</h2>
+    <section class="collection-selection">
+      <h3>Select Collection</h3>
       <div class="collection-list">
         @for (collection of adminCollections(); track collection) {
           <button
+            class="collection-select"
             (click)="selectCollection(collection)"
             [class.selected]="selectedCollectionSlug() === collection">
             {{ collection }}
@@ -41,42 +32,54 @@
       </div>
 
       @if (selectedCollectionSlug()) {
-        <button (click)="signIn()" class="sign-in-btn">
+        <button (click)="signIn()" class="sign-in">
           Sign In to {{ selectedCollectionSlug() }}
         </button>
       }
-    </div>
+    </section>
   }
 
   <!-- Admin Menu (shown when authenticated) -->
   @if (canShowMenu()) {
-    <div class="admin-menu">
-      <h2>Admin Menu - {{ selectedCollectionSlug() }}</h2>
+    <section class="admin-menu">
+      <h3>Admin Menu - {{ selectedCollectionSlug() }}</h3>
 
-      <div class="menu-items">
-        <button class="menu-item" (click)="generateCollectionMetadata()">Generate Collection Metadata</button>
+      <div class="admin-slots">
+        <div class="metadata">
+          <h4>Collection Metadata</h4>
+
+          <div class="slot-tabs">
+            <button class="tab-button" (click)="generateCollectionMetadata()">Generate</button>
+            <button class="tab-button" (click)="updateCollectionMetadata()">Update</button>
+          </div>
+
+          @if (slotsState().metadata.generate) {
+            <p>Generating collection metadata...</p>
+          }
+          @if (slotsState().metadata.update) {
+            <p>Updating collection metadata...</p>
+          }
+        </div>
+      </div>
+
+      <!-- <div class="menu-items">
         <button class="menu-item" (click)="addAttributesToDb()">Add Attributes to DB</button>
         <button class="menu-item" (click)="addFiltersFile()">Add Filters File</button>
-      </div>
-
-      <div class="admin-actions">
-        <button (click)="logout()" class="logout-btn">Logout</button>
-        <button (click)="clearAllTokens()" class="clear-tokens-btn">Clear All Tokens</button>
-      </div>
-    </div>
+      </div> -->
+    </section>
   }
 
   <!-- No Access Message -->
   @if (!hasAdminAccess()) {
-    <div class="no-access">
-      <h2>No Admin Access</h2>
+    <section class="no-access">
+      <h3>No Admin Access</h3>
       <p>Your wallet does not have admin access to any collections.</p>
-    </div>
+    </section>
   }
 
   <!-- Session Expired -->
   @if (sessionExpired()) {
-    <div class="session-expired">
+    <section class="session-expired">
       <h2>Session Expired</h2>
       <p>Your admin session has expired. Please sign in again.</p>
       @if (selectedCollectionSlug()) {
@@ -84,11 +87,11 @@
           Sign In Again
         </button>
       }
-    </div>
+    </section>
   }
 
   <!-- Debug Info -->
-  <details class="debug-info">
+  <!-- <details class="debug-info">
     <summary>Debug Info</summary>
     <div class="debug-content">
       <div><strong>hasAdminAccess():</strong> {{ hasAdminAccess() }}</div>
@@ -101,5 +104,31 @@
       <div><strong>sessionExpired():</strong> {{ sessionExpired() }}</div>
       <div><strong>canShowMenu():</strong> {{ canShowMenu() }}</div>
     </div>
-  </details>
+  </details> -->
+
 </div>
+
+<!-- Browser Active: {{ isBrowserActive() }} -->
+
+<!-- Status Section -->
+<!-- <div class="status-section">
+  <h2>Status</h2>
+  <div class="status-item">
+    <strong>Admin Status:</strong> {{ adminStatus() }}
+  </div>
+  <div class="status-item">
+    <strong>Session Status:</strong> {{ sessionStatus() }}
+  </div>
+  <div class="status-item">
+    <strong>Has Admin Access:</strong> {{ hasAdminAccess() ? 'Yes' : 'No' }}
+  </div>
+  <div class="status-item">
+    <strong>Is Authenticated:</strong> {{ isAuthenticated() ? 'Yes' : 'No' }}
+  </div>
+  <div class="status-item">
+    <strong>Selected Collection:</strong> {{ selectedCollectionSlug() || 'None' }}
+  </div>
+  <div class="status-item">
+    <strong>Available Collections:</strong> {{ adminCollections()?.length || 0 }}
+  </div>
+</div> -->

@@ -89,6 +89,8 @@ section {
       img {
         width: 100%;
         image-rendering: pixelated;
+        aspect-ratio: 1;
+        object-fit: contain;
       }
 
       &.placeholder {
@@ -116,9 +118,19 @@ section {
         font-weight: 500;
         max-width: 12rem;
 
+        .label-text {
+          display: block;
+        }
+
+        .label-value {
+          display: block;
+        }
 
         app-address {
-          display: inline;
+          display: block;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
         }
       }
 
@@ -151,11 +163,9 @@ section {
           background-color: rgba(#{$color}, 1);
         }
 
-        &.background {
-          .labels-wrapper {
-            .token-id {
-              color: rgba(#{$color}, 1);
-            }
+        .labels-wrapper {
+          .token-id {
+            color: rgba(#{$color}, 1);
           }
         }
       }

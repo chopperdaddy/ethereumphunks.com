@@ -19,6 +19,8 @@ import { selectActiveConversation } from '@/state/chat/chat.selectors';
 import { setActiveConversation, setChat } from '@/state/chat/chat.actions';
 import { selectWalletAddress } from '@/state/app/app-state.selectors';
 import { NormalizedConversationWithMessages } from '@/models/chat';
+import { selectActiveCollection } from '@/state/data/data-state.selectors';
+import { RouterLink } from '@angular/router';
 
 @Component({
   selector: 'app-conversation',
@@ -27,6 +29,7 @@ import { NormalizedConversationWithMessages } from '@/models/chat';
     AsyncPipe,
     DatePipe,
     NgTemplateOutlet,
+    RouterLink,
 
     ReactiveFormsModule,
     TimeagoModule,
@@ -58,6 +61,9 @@ export class ConversationComponent {
 
   error = signal<string | null>(null);
   messageInput: FormControl<string | null> = new FormControl(null);
+  activeSlug$ = this.store.select(selectActiveCollection).pipe(
+    map((collection) => collection?.slug)
+  );
 
   constructor(
     private store: Store<GlobalState>,

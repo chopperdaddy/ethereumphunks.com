@@ -41,7 +41,7 @@ export class DiscordService {
 
   /**
    * Posts a notification message to Discord
-   * @param data The notification message data containing title, message, image etc
+   * @param data The notification message data containing title, message, link etc
    * @returns Promise that resolves when the message is sent
    */
   async postMessage(data: NotificationMessage): Promise<void> {
@@ -53,21 +53,20 @@ export class DiscordService {
     const chainId = this.configSvc.chain.chainIdL1;
     const channel = this.client.channels.cache.get(chainId === 1 ? '1202621714127912994' : '1227387575723888722') as TextChannel;
 
-    // Create image attachment
-    const attachment = new AttachmentBuilder(data.imageBuffer, { name: `${data.filename}.png` });
+    // Build rich embed message with link - Discord will automatically fetch Open Graph image
+    const descriptionWithLink = `${codeBlock(data.message)}\n\n🔗 ${data.link}`;
 
-    // Build rich embed message
     const exampleEmbed = new EmbedBuilder()
       .setColor(0xC3FF00)
       .setTitle(data.title)
       .setURL(data.link)
-      .setDescription(codeBlock(data.message))
-      .setImage(`attachment://${data.filename}.png`)
+      .setDescription(descriptionWithLink)
+      // Discord will automatically fetch the og:image from the link
       // .setTimestamp()
       .setFooter({ text: 'Be Phree. Be Phunky. 👍' });
 
-    // Send the message with embed and attachment
-    await channel.send({ embeds: [exampleEmbed], files: [attachment] });
+    // Send the message with embed - Discord will auto-generate preview from link
+    await channel.send({ embeds: [exampleEmbed] });
   }
 }
 

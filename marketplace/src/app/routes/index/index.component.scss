@@ -27,6 +27,20 @@ app-auctions {
   }
 }
 
+app-auctions {
+  position: absolute;
+  top: calc(var(--billboard-height) - 24rem);
+  right: 50%;
+  transform: translateX(calc(50% + 16rem));
+
+  @media (max-width: $mobile) {
+    position: relative;
+    top: 0;
+    right: 0;
+    transform: translateY(-.5rem);
+  }
+}
+
 main {
   position: relative;
   z-index: 1;

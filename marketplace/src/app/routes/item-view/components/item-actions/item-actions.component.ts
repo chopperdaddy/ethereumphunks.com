@@ -6,7 +6,7 @@ import { HttpClient } from '@angular/common/http';
 
 import { Store } from '@ngrx/store';
 import { toObservable } from '@angular/core/rxjs-interop';
-import { filter, firstValueFrom, map, switchMap, tap } from 'rxjs';
+import { filter, firstValueFrom, map, switchMap } from 'rxjs';
 import { signTypedData } from '@wagmi/core';
 
 import { Phunk } from '@/models/db';
@@ -19,10 +19,10 @@ import { DataService } from '@/services/data.service';
 import { selectConfig, selectCooldowns, selectWalletAddress } from '@/state/app/app-state.selectors';
 import { upsertNotification } from '@/state/notification/notification.actions';
 import { addCooldown } from '@/state/app/app-state.actions';
+import { selectNotifications } from '@/state/notification/notification.selectors';
+import { setCreateConversationWithAddress } from '@/state/chat/chat.actions';
 
 import { environment } from '@environments/environment';
-import { selectNotifications } from '@/state/notification/notification.selectors';
-import { setChat, setCreateConversationWithAddress } from '@/state/chat/chat.actions';
 
 interface ActionsState {
   sell: boolean;
@@ -115,6 +115,8 @@ export class ItemActionsComponent {
   listToAddress = new FormControl<string | null>('');
   // revShare = new FormControl<number | undefined>(undefined);
 
+  chainId = environment.chainId;
+  isDev = !environment.production;
   escrowAddress = environment.marketAddress;
   externalMarketUrl = environment.externalMarketUrl;
   bridgeAddress = environment.bridgeAddress;
@@ -127,74 +129,129 @@ export class ItemActionsComponent {
     public dataSvc: DataService,
   ) {}
 
+  /**
+   * Opens the sell form for listing a phunk for sale
+   * Closes all other action forms and focuses the price input
+   */
   sellAction(): void {
     this.closeAll();
     this.actionsState.update((state) => ({ ...state, sell: true }));
     setTimeout(() => this.sellPriceInput?.nativeElement.focus(), 0);
   }
 
+  /**
+   * Opens the escrow form for sending a phunk to the escrow contract
+   * Closes all other action forms
+   */
   escrowAction(): void {
     this.closeAll();
     this.actionsState.update((state) => ({ ...state, escrow: true }));
   }
 
+  /**
+   * Opens the transfer form for transferring a phunk to another address
+   * Closes all other action forms and focuses the address input
+   */
   transferAction(): void {
     this.closeAll();
     this.actionsState.update((state) => ({ ...state, transfer: true }));
     setTimeout(() => this.transferAddressInput?.nativeElement.focus(), 0);
   }
 
+  /**
+   * Opens the bridge form for bridging a phunk to another chain
+   * Closes all other action forms
+   */
   bridgeAction(): void {
     this.closeAll();
     this.actionsState.update((state) => ({ ...state, bridge: true }));
   }
 
+  /**
+   * Opens the private sale form for selling a phunk to a specific address
+   * Does not close other forms as it's typically used in conjunction with sell form
+   */
   privateSaleAction(): void {
     this.actionsState.update((state) => ({ ...state, privateSale: true }));
   }
 
+  /**
+   * Opens the auction form for creating an auction for a phunk
+   * Closes all other action forms
+   */
   auctionAction(): void {
     this.closeAll();
     this.actionsState.update((state) => ({ ...state, auction: true }));
   }
 
+  /**
+   * Opens the advanced auction options form
+   * Does not close other forms as it's used in conjunction with auction form
+   */
   auctionAdvancedOptionsAction(): void {
     this.actionsState.update((state) => ({ ...state, auctionAdvancedOptions: true }));
   }
 
+  /**
+   * Closes the sell/listing form and clears all form data
+   * Also closes the private sale form as it's related
+   */
   closeListing(): void {
     this.actionsState.update((state) => ({ ...state, sell: false }));
     this.closePrivateSale();
     this.clearAll();
   }
 
+  /**
+   * Closes the escrow form
+   */
   closeEscrow(): void {
     this.actionsState.update((state) => ({ ...state, escrow: false }));
   }
 
+  /**
+   * Closes the transfer form and clears all form data
+   */
   closeTransfer(): void {
     this.actionsState.update((state) => ({ ...state, transfer: false }));
     this.clearAll();
   }
 
+  /**
+   * Closes the bridge form
+   */
   closeBridge(): void {
     this.actionsState.update((state) => ({ ...state, bridge: false }));
   }
 
+  /**
+   * Closes the private sale form
+   */
   closePrivateSale(): void {
     this.actionsState.update((state) => ({ ...state, privateSale: false }));
   }
 
+  /**
+   * Closes the auction form and clears all form data
+   * Also closes the advanced auction options form
+   */
   closeAuction(): void {
     this.actionsState.update((state) => ({ ...state, auction: false }));
     this.closeAuctionAdvancedOptions();
     this.clearAll();
   }
 
+  /**
+   * Closes the advanced auction options form
+   */
   closeAuctionAdvancedOptions(): void {
     this.actionsState.update((state) => ({ ...state, auctionAdvancedOptions: false }));
   }
 
+  /**
+   * Resets all form controls to their default values
+   * Clears all input fields across all action forms
+   */
   clearAll(): void {
     this.listPrice.reset();
     this.listToAddress.reset();
@@ -205,6 +262,10 @@ export class ItemActionsComponent {
     this.auctionDuration.reset();
   }
 
+  /**
+   * Closes all action forms and clears all form data
+   * Used when opening a new action form to ensure only one is open at a time
+   */
   closeAll(): void {
     this.closeListing();
     this.closeTransfer();
@@ -213,6 +274,13 @@ export class ItemActionsComponent {
     this.closeAuction();
   }
 
+  /**
+   * Submits a listing for a phunk to be sold on the marketplace
+   * Handles both escrowed and non-escrowed phunks, as well as L1 and L2 variants
+   * Supports private sales to specific addresses and ENS name resolution
+   *
+   * @throws {Error} If hashId is invalid or consensus is not reached
+   */
   async submitListing(): Promise<void> {
     const phunk = this.phunk();
     const hashId = phunk.hashId;
@@ -276,7 +344,9 @@ export class ItemActionsComponent {
         type: 'complete',
         hash: receipt.transactionHash,
       };
+
       this.store.dispatch(addCooldown({ cooldown: { [hashId]: Number(receipt.blockNumber) }}));
+      this.clearAll();
     } catch (err) {
       console.log(err);
 
@@ -287,10 +357,15 @@ export class ItemActionsComponent {
       };
     } finally {
       this.store.dispatch(upsertNotification({ notification }));
-      this.clearAll();
     }
   }
 
+  /**
+   * Sends a phunk to the escrow contract
+   * Required before listing phunks for sale on the marketplace
+   *
+   * @throws {Error} If hashId is invalid or consensus is not reached
+   */
   async sendToEscrow(): Promise<void> {
     const phunk = this.phunk();
     const hashId = phunk.hashId;
@@ -344,6 +419,12 @@ export class ItemActionsComponent {
     }
   }
 
+  /**
+   * Removes a phunk from sale on the marketplace
+   * Handles both L1 and L2 variants of phunks
+   *
+   * @throws {Error} If hashId is invalid or transaction cannot be processed
+   */
   async phunkNoLongerForSale(): Promise<void> {
     const phunk = this.phunk();
     const hashId = phunk.hashId;
@@ -400,6 +481,12 @@ export class ItemActionsComponent {
     }
   }
 
+  /**
+   * Purchases a phunk that is currently listed for sale
+   * Handles both L1 and L2 variants, using batch purchase for L1 phunks
+   *
+   * @throws {Error} If hashId is invalid, consensus is not reached, or prevOwner is invalid
+   */
   async buyPhunk(): Promise<void> {
     const phunk = this.phunk();
     const hashId = phunk.hashId;
@@ -461,6 +548,12 @@ export class ItemActionsComponent {
     }
   }
 
+  /**
+   * Transfers a phunk to another address
+   * Supports ENS name resolution for the destination address
+   *
+   * @throws {Error} If hashId is invalid, address is invalid, or consensus is not reached
+   */
   async transferPhunk(): Promise<void> {
     const phunk = this.phunk();
     const hashId = phunk.hashId;
@@ -517,6 +610,11 @@ export class ItemActionsComponent {
     }
   }
 
+  /**
+   * Withdraws a phunk from the escrow contract back to the owner's wallet
+   *
+   * @throws {Error} If hashId is invalid or transaction cannot be processed
+   */
   async withdrawPhunk(): Promise<void> {
     const phunk = this.phunk();
     const hashId = phunk.hashId;
@@ -564,6 +662,12 @@ export class ItemActionsComponent {
     }
   }
 
+  /**
+   * Bridges a phunk to another chain using the relay service
+   * Generates a nonce, creates a typed data signature, and locks the phunk on the current chain
+   *
+   * @throws {Error} If user address is invalid or bridge process fails
+   */
   async bridge(): Promise<void> {
     const phunk = this.phunk();
     const hashId = phunk.hashId;
@@ -682,6 +786,12 @@ export class ItemActionsComponent {
     }
   }
 
+  /**
+   * Creates an auction for a phunk with specified duration and parameters
+   * Calculates total duration from days, hours, and minutes input
+   *
+   * @throws {Error} If hashId is invalid or auction parameters are invalid
+   */
   async sendToAuction() {
     const phunk = this.phunk();
     const hashId = phunk.hashId;
@@ -710,6 +820,12 @@ export class ItemActionsComponent {
     console.log('sendToAuction', {hash});
   }
 
+  /**
+   * Checks if consensus has been reached for a phunk before allowing transactions
+   *
+   * @param phunk - The phunk to check consensus for
+   * @throws {Error} If consensus is not reached
+   */
   async checkConsenus(phunk: Phunk): Promise<void> {
     const res = await this.dataSvc.checkConsensus([phunk]);
     if (!res[0]?.consensus) throw new Error('Consensus not reached. Contact Support @etherphunks');
@@ -717,9 +833,29 @@ export class ItemActionsComponent {
 
   /**
    * Initiates the creation of a chat conversation with a specific address
-   * @param address - The wallet address to start a conversation with
+   * Currently hardcoded to a specific address for testing purposes
    */
   async createConversation() {
     this.store.dispatch(setCreateConversationWithAddress({ address: '0xf1Aa941d56041d47a9a18e99609A047707Fe96c7' }));
+  }
+
+  /**
+   * Remints an item on the Sepolia testnet
+   * Only available on Sepolia chain (chainId: 11155111)
+   *
+   * @throws {Error} If not on Sepolia chain, hashId is invalid, or sha is invalid
+   */
+  async remintItem() {
+    if (environment.chainId !== 11155111) throw new Error('Reminting is only supported on Sepolia');
+
+    const phunk = this.phunk();
+    const hashId = phunk.hashId;
+    if (!hashId) throw new Error('Invalid hashId');
+
+    const sha = phunk.sha;
+    if (!sha) throw new Error('Invalid sha');
+
+    const hash = await this.web3Svc.remintItem(hashId, sha);
+    if (!hash) throw new Error('Could not remint item');
   }
 }

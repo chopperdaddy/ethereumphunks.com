@@ -10,7 +10,7 @@ import angular from "@analogjs/vite-plugin-angular";
 import { visualizer } from "rollup-plugin-visualizer";
 import checker from "vite-plugin-checker";
 
-import { environmentSetupPlugin, coinbaseExclusionPlugin, htmlRenamingPlugin } from "./vite-plugins";
+import { environmentSetupPlugin, coinbaseExclusionPlugin, htmlRenamingPlugin, pwaPlugin } from "./vite-plugins";
 
 import fs from "fs";
 
@@ -143,6 +143,18 @@ export default defineConfig(({ command, mode }) => {
       target: "es2020", // Target ECMAScript version
       sourcemap: currentEnv.sourcemap,
       minify: currentEnv.optimization ? "esbuild" : false,
+      // Additional optimization settings
+      cssMinify: currentEnv.optimization,
+      terserOptions: currentEnv.optimization ? {
+        compress: {
+          drop_console: true, // Remove console logs in production
+          drop_debugger: true,
+          pure_funcs: ['console.log', 'console.debug', 'console.info', 'console.warn']
+        },
+        mangle: {
+          safari10: true
+        }
+      } : undefined,
       rollupOptions: {
         input: {
           main: currentEnv.indexHtml || resolve(__dirname, "src/index.html"),
@@ -203,6 +215,9 @@ export default defineConfig(({ command, mode }) => {
         enableBuild: false,
       }),
 
+      // PWA Service Worker plugin (replaces Angular CLI service worker)
+      pwaPlugin(isDevMode),
+
       // Bundle visualization plugin
       visualizer({
         filename: "./dist/stats.html",
@@ -256,8 +271,9 @@ export default defineConfig(({ command, mode }) => {
         define: {
           global: "globalThis",
         },
-        minify: !isDevMode, // Skip minification in dev mode
-        treeShaking: !isDevMode, // Skip tree shaking in dev mode
+        minify: !isDevMode,
+        treeShaking: true,
+        keepNames: false,
       },
     },
   };

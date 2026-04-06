@@ -1,0 +1,82 @@
+@use '@scss/abstracts/variables' as *;
+@use '@scss/abstracts/mixins' as *;
+
+:host {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+
+  width: 100%;
+  height: var(--billboard-height);
+
+  background-color: rgba(var(--base-color), 1);
+}
+
+.images-wrapper {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+
+  .image-wrapper {
+    width: var(--inscription-size);
+    min-width: var(--inscription-size);
+    height: var(--inscription-size);
+
+    opacity: 1;
+    filter: blur(0px);
+    @include trans($duration: .2s);
+
+    img {
+      display: block;
+      width: var(--inscription-size);
+      height: var(--inscription-size);
+      image-rendering: pixelated;
+    }
+
+    &.jpeg {
+      mix-blend-mode: darken;
+    }
+  }
+
+  &.mint-mode {
+    .image-wrapper {
+      opacity: 1;
+      filter: blur(0px);
+    }
+  }
+
+  &.is-minting {
+    .image-wrapper {
+      opacity: .5;
+      filter: blur(5px);
+
+      &.mint {
+        opacity: 1;
+        filter: blur(0px);
+      }
+    }
+  }
+
+  &.has-center-image {
+    .image-wrapper {
+      opacity: .75;
+      filter: blur(1rem);
+
+      &.center {
+        opacity: 1;
+        filter: blur(0px);
+        mix-blend-mode: normal;
+        transform: translateY(0);
+      }
+    }
+  }
+}
+
+app-collection-info {
+  position: absolute;
+  z-index: 1;
+  bottom: 0;
+  left: 0;
+}

@@ -6,7 +6,7 @@ import { GlobalState } from '@/models/global-state';
 import { Auction, Phunk } from '@/models/db';
 import { AuctionRequest, formatAuction, isValidAuction } from '@/models/auctions';
 
-import { Observable, catchError, firstValueFrom, interval, from, of, tap, switchMap, merge } from 'rxjs';
+import { Observable, catchError, firstValueFrom, interval, from, of, tap, switchMap, merge, BehaviorSubject, shareReplay } from 'rxjs';
 
 import { AppKit, createAppKit } from '@reown/appkit'
 import { WagmiAdapter } from '@reown/appkit-adapter-wagmi'
@@ -105,8 +105,6 @@ export class Web3Service {
     this.l2Client = this.config.getClient();
 
     this.createListeners();
-    this.startBlockWatcher();
-    this.startPointsWatcher();
   }
 
   /**
@@ -160,39 +158,51 @@ export class Web3Service {
   }
 
   /**
-   * Starts watching for new blocks on the L1 chain
-   * Updates the current block number in the store when new blocks arrive
+   * Returns an observable that emits block numbers from the L1 chain
+   * @returns Observable<number> that emits block numbers
    */
-  blockWatcher!: WatchBlockNumberReturnType | undefined;
-  startBlockWatcher(): void {
-    if (this.blockWatcher) return;
-    this.blockWatcher = watchBlockNumber(this.l1Client, {
-      emitOnBegin: true,
-      onBlockNumber: (blockNumber) => {
-        const currentBlock = Number(blockNumber);
-        this.store.dispatch(appStateActions.setCurrentBlock({ currentBlock }));
-      }
-    });
+  blockWatcher$(): Observable<number> {
+    return new Observable<number>(observer => {
+      const blockWatcher = watchBlockNumber(this.l1Client, {
+        emitOnBegin: true,
+        onBlockNumber: (blockNumber) => {
+          const currentBlock = Number(blockNumber);
+          observer.next(currentBlock);
+        }
+      });
+
+      // Return cleanup function
+      return () => {
+        blockWatcher();
+      };
+    }).pipe(
+      shareReplay(1)
+    );
   }
 
   /**
-   * Starts watching for points-related events from the Points contract
-   * Dispatches store actions when points are added or multipliers change
+   * Returns an observable that emits points-related events from the Points contract
+   * @returns Observable<any> that emits contract event logs
    */
-  pointsWatcher!: WatchContractEventReturnType | undefined;
-  startPointsWatcher(): void {
-    if (this.pointsWatcher) return;
-    this.pointsWatcher = watchContractEvent(this.l1Client, {
-      address: pointsAddress as `0x${string}`,
-      abi: PointsABI,
-      onLogs: (logs) => {
-        logs.forEach((log: any) => {
-          if (log.eventName === 'PointsAdded') this.store.dispatch(appStateActions.pointsChanged({ log }));
-          // TODO: Add event to smart contract
-          if (log.eventName === 'MultiplierSet') {}
-        });
-      }
-    });
+  pointsWatcher$(): Observable<any> {
+    return new Observable<any>(observer => {
+      const pointsWatcher = watchContractEvent(this.l1Client, {
+        address: pointsAddress as `0x${string}`,
+        abi: PointsABI,
+        onLogs: (logs) => {
+          logs.forEach((log: any) => {
+            observer.next(log);
+          });
+        }
+      });
+
+      // Return cleanup function
+      return () => {
+        pointsWatcher();
+      };
+    }).pipe(
+      shareReplay(1)
+    );
   }
 
   /**
@@ -1221,6 +1231,13 @@ export class Web3Service {
       signature,
       address: account.address as `0x${string}`,
     };
+  }
+
+  async remintItem(hashId: string, sha: string): Promise<string | undefined> {
+    const hash = await this.inscribe(`data:application/phunky;rule=esip6,${sha}`);
+    if (!hash) throw new Error('Could not remint item');
+
+    return hash;
   }
 }
 

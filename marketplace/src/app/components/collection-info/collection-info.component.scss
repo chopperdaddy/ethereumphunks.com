@@ -1,0 +1,48 @@
+:host {
+  display: block;
+  padding: 2rem;
+}
+
+.collection-info-wrapper {
+  display: flex;
+  align-items: center;
+
+  img {
+    width: 6rem;
+    height: 6rem;
+    object-fit: contain;
+    image-rendering: pixelated;
+    background-color: rgba(var(--base-color), 1);
+    box-shadow: .3rem .3rem 0 0 rgba(var(--pink), 1);
+  }
+
+  .collection-info-content {
+    padding: 1rem;
+
+    a {
+      padding: .5rem 1rem;
+
+      font-size: 1.2rem;
+      font-family: var(--secondary-font-stack);
+      font-weight: 400;
+      color: rgba(var(--text-color), 1);
+
+      text-decoration: none;
+
+      background-color: rgba(var(--background), 1);
+      box-shadow: .3rem .3rem 0 0 rgba(var(--pink), 1);
+    }
+  }
+}
+
+h1 {
+  padding: 1rem;
+
+  font-size: 2rem;
+  font-family: var(--secondary-font-stack);
+  font-weight: 400;
+  color: rgba(var(--text-color), 1);
+
+  background-color: rgba(var(--background), 1);
+  box-shadow: .3rem .3rem 0 0 rgba(var(--pink), 1);
+}

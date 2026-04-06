@@ -42,74 +42,74 @@ export class AuthController {
   /**
    * Verifies wallet signature and returns JWT session tokens
    */
-  @Post('verify-wallet')
-  async verifyWallet(@Body() { loginData, signature }: VerifyRequest): Promise<AuthSession> {
-    console.log('🔐 Collection admin verification request:', {
-      address: loginData.address,
-      collectionSlug: loginData.collectionSlug,
-      timestamp: loginData.timestamp
-    });
+  // @Post('verify-wallet')
+  // async verifyWallet(@Body() { loginData, signature }: VerifyRequest): Promise<AuthSession> {
+  //   console.log('🔐 Collection admin verification request:', {
+  //     address: loginData.address,
+  //     collectionSlug: loginData.collectionSlug,
+  //     timestamp: loginData.timestamp
+  //   });
 
-    try {
-      const authSession = await this.authService.verifyWalletLogin(loginData, signature);
-      console.log('✅ Collection-specific wallet verification successful');
-      return authSession;
-    } catch (error) {
-      console.error('❌ Wallet verification failed:', error.message);
-      throw error;
-    }
-  }
+  //   try {
+  //     const authSession = await this.authService.verifyWalletLogin(loginData, signature);
+  //     console.log('✅ Collection-specific wallet verification successful');
+  //     return authSession;
+  //   } catch (error) {
+  //     console.error('❌ Wallet verification failed:', error.message);
+  //     throw error;
+  //   }
+  // }
 
-  /**
-   * Check which collections an address can admin
-   */
-  @Post('check-admin-collections')
-  async checkAdminCollections(@Body() { address }: AdminCollectionsRequest): Promise<AdminCollectionsResponse> {
-    console.log('🔍 Admin collections check request:', { address });
+  // /**
+  //  * Check which collections an address can admin
+  //  */
+  // @Post('check-admin-collections')
+  // async checkAdminCollections(@Body() { address }: AdminCollectionsRequest): Promise<AdminCollectionsResponse> {
+  //   console.log('🔍 Admin collections check request:', { address });
 
-    try {
-      const result = await this.authService.getAdminCollections(address);
+  //   try {
+  //     const result = await this.authService.getAdminCollections(address);
 
-      return {
-        success: true,
-        collections: result.collections,
-        hasAdminAccess: result.hasAdminAccess
-      };
-    } catch (error) {
-      console.error('❌ Error checking admin collections:', error);
-      return {
-        success: false,
-        error: 'Failed to check admin collections'
-      };
-    }
-  }
+  //     return {
+  //       success: true,
+  //       collections: result.collections,
+  //       hasAdminAccess: result.hasAdminAccess
+  //     };
+  //   } catch (error) {
+  //     console.error('❌ Error checking admin collections:', error);
+  //     return {
+  //       success: false,
+  //       error: 'Failed to check admin collections'
+  //     };
+  //   }
+  // }
 
-  /**
-   * Refreshes access token using refresh token
-   */
-  @Post('refresh')
-  async refresh(@Body() { refreshToken }: RefreshRequest): Promise<{ accessToken: string; expiresIn: number; }> {
-    try {
-      const session = await this.authService.refreshSession(refreshToken);
-      return {
-        accessToken: session.accessToken,
-        expiresIn: session.expiresIn
-      };
-    } catch (error) {
-      throw error;
-    }
-  }
+  // /**
+  //  * Refreshes access token using refresh token
+  //  */
+  // @Post('refresh')
+  // async refresh(@Body() { refreshToken }: RefreshRequest): Promise<{ accessToken: string; expiresIn: number; }> {
+  //   try {
+  //     const session = await this.authService.refreshSession(refreshToken);
+  //     return {
+  //       accessToken: session.accessToken,
+  //       expiresIn: session.expiresIn
+  //     };
+  //   } catch (error) {
+  //     throw error;
+  //   }
+  // }
 
-  /**
-   * Logs out user by revoking refresh token
-   */
-  @Post('logout')
-  async logout(@Body() { refreshToken }: LogoutRequest): Promise<{ success: boolean }> {
-    try {
-      await this.authService.revokeSession(refreshToken);
-      return { success: true };
-    } catch (error) {
-      throw error;
-    }
-  }
+  // /**
+  //  * Logs out user by revoking refresh token
+  //  */
+  // @Post('logout')
+  // async logout(@Body() { refreshToken }: LogoutRequest): Promise<{ success: boolean }> {
+  //   try {
+  //     await this.authService.revokeSession(refreshToken);
+  //     return { success: true };
+  //   } catch (error) {
+  //     throw error;
+  //   }
+  // }
 }

@@ -28,7 +28,7 @@ export class CollectionAdminService {
     const collection = await this.dbSvc.fetchCollection(slug);
     if (!collection) throw new Error('Collection not found');
 
-    const collectionAttributes = await fetch(`${this.configSvc.supabase.url}/storage/v1/object/public/data/${slug}_attributes.json`)
+    const collectionAttributes = await fetch(`${process.env.SUPABASE_URL}/storage/v1/object/public/data/${slug}_attributes.json`)
     const collectionAttributesData = await collectionAttributes.json();
 
     const collectionMetadata = {

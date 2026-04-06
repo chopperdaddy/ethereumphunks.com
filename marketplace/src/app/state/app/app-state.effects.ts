@@ -2,26 +2,25 @@ import { Injectable } from '@angular/core';
 
 import { Store } from '@ngrx/store';
 import { ROUTER_NAVIGATION } from '@ngrx/router-store';
-
 import { Actions, createEffect, ofType } from '@ngrx/effects';
+
+import { catchError, filter, from, map, mergeMap, of, switchMap, tap, withLatestFrom } from 'rxjs';
+
+import { formatEther } from 'viem';
 
 import { Web3Service } from '@/services/web3.service';
 import { ThemeService } from '@/services/theme.service';
 import { DataService } from '@/services/data.service';
-import { LogItem, SocketService } from '@/services/socket.service';
+import { SocketService } from '@/services/socket.service';
+import { GasService } from '@/services/gas.service';
+import { StorageService } from '@/services/storage.service';
 
 import { GlobalState, LinkedAccount } from '@/models/global-state';
-
-import { catchError, EMPTY, filter, from, map, mergeMap, of, scan, startWith, switchMap, take, tap, withLatestFrom, takeUntil } from 'rxjs';
 
 import * as appStateActions from '@/state/app/app-state.actions';
 import * as appStateSelectors from '@/state/app/app-state.selectors';
 
-import { ChatService } from '@/services/chat.service';
-
 import { environment } from '@environments/environment';
-import { formatEther } from 'viem';
-import { StorageService } from '@/services/storage.service';
 @Injectable()
 export class AppStateEffects {
 
@@ -72,6 +71,21 @@ export class AppStateEffects {
     filter((action) => !!action.walletAddress),
     switchMap((action) => this.dataSvc.checkIsBanned(action.walletAddress!)),
     map(isBanned => appStateActions.setIsBanned({ isBanned })),
+  ));
+
+  onSetLinkedAccounts$ = createEffect(() => this.actions$.pipe(
+    ofType(appStateActions.setWalletAddress),
+    filter(({ walletAddress }) => !!walletAddress),
+    switchMap(({ walletAddress }) => {
+      return from(this.storageSvc.getItem<LinkedAccount[]>('accounts')).pipe(
+        filter((accounts) => !accounts?.find(account => account.address === walletAddress!)),
+        map((accounts) => {
+          const newLinkedAccounts = [...(accounts || []), { address: walletAddress! }];
+          return appStateActions.setLinkedAccounts({ linkedAccounts: newLinkedAccounts });
+        }),
+        // tap((action) => console.log({ action }))
+      );
+    }),
   ));
 
   checkHasWithdrawal$ = createEffect(() => this.actions$.pipe(
@@ -144,6 +158,19 @@ export class AppStateEffects {
       // );
     }),
   ), { dispatch: false });
+
+  onNewBlock$ = createEffect(() =>
+    this.web3Svc.blockWatcher$().pipe(
+      map(currentBlock => appStateActions.setCurrentBlock({ currentBlock }))
+    )
+  );
+
+  onPointsEvent$ = createEffect(() =>
+    this.web3Svc.pointsWatcher$().pipe(
+      filter(log => log.eventName === 'PointsAdded'),
+      map(log => appStateActions.pointsChanged({ log }))
+    )
+  );
 
   onNewBlockCheckCooldown$ = createEffect(() => this.actions$.pipe(
     ofType(appStateActions.setCurrentBlock),
@@ -218,25 +245,10 @@ export class AppStateEffects {
     })
   ));
 
-  onSetLinkedAccounts$ = createEffect(() => this.actions$.pipe(
-    ofType(appStateActions.setWalletAddress),
-    filter(({ walletAddress }) => !!walletAddress),
-    switchMap(({ walletAddress }) => {
-      return from(this.storageSvc.getItem<LinkedAccount[]>('accounts')).pipe(
-        filter((accounts) => !accounts?.find(account => account.address === walletAddress!)),
-        map((accounts) => {
-          const newLinkedAccounts = [...(accounts || []), { address: walletAddress! }];
-          return appStateActions.setLinkedAccounts({ linkedAccounts: newLinkedAccounts });
-        }),
-        // tap((action) => console.log({ action }))
-      );
-    }),
-  ));
-
   setLinkedAccounts$ = createEffect(() => this.actions$.pipe(
     ofType(appStateActions.setLinkedAccounts),
     switchMap((action) => {
-      return from(this.storageSvc.setItem('accounts', action.linkedAccounts)).pipe(
+      return from(this.storageSvc.setItem('accounts', action.linkedAccounts, true)).pipe(
         tap(() => {
           this.socketSvc.sendMessage('accounts', JSON.stringify(action.linkedAccounts.map(account => account.address)));
         })
@@ -244,14 +256,27 @@ export class AppStateEffects {
     }),
   ), { dispatch: false });
 
+  /**
+   * Handles socket reconnection when browser becomes active
+   */
+  browserActivitySocketReconnect$ = createEffect(() => this.actions$.pipe(
+    ofType(appStateActions.setBrowserActive),
+    filter(({ isBrowserActive }) => isBrowserActive), // Only when browser becomes active
+    tap(() => {
+      console.log('Browser became active, ensuring socket connections...');
+      this.socketSvc.ensureConnected();
+      this.gasSvc.ensureConnected();
+    })
+  ), { dispatch: false });
+
   constructor(
     private store: Store<GlobalState>,
     private actions$: Actions,
     private web3Svc: Web3Service,
     private themeSvc: ThemeService,
-    private chatSvc: ChatService,
     private dataSvc: DataService,
     private socketSvc: SocketService,
+    private gasSvc: GasService,
     private storageSvc: StorageService,
   ) {
     // Initialize browser activity tracking

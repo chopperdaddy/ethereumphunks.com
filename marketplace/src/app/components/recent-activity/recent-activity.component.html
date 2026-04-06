@@ -30,8 +30,7 @@
       <a
         [routerLink]="['/', 'details', event.hashId]"
         class="event-item"
-        [class]="event.type | lowercase"
-        [class.background]="collection()?.hasBackgrounds">
+        [class]="event.type | lowercase">
 
         <div class="image-wrapper">
           <img
@@ -50,7 +49,7 @@
 
           <div class="label">
             @if (event.type) {
-              <span [innerHTML]="labels[event.type] + ' '"></span>
+              <span class="label-text" [innerHTML]="labels[event.type] + ' '"></span>
             }
 
             @if (
@@ -72,7 +71,7 @@
               event.type !== 'bridgeIn' &&
               event.type !== 'bridgeOut'
             ) {
-              <span class="value">
+              <span class="label-value">
                 for Ξ{{ event.value | weiToEth }}
               </span>
             }

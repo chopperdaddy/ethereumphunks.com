@@ -117,6 +117,7 @@ export interface Collection {
   discord?: string;
   isMinting: boolean;
   hasBackgrounds: boolean;
+  hasTransparents: boolean;
   notifications: boolean;
   mintEnabled: boolean;
   defaultBackground?: string;

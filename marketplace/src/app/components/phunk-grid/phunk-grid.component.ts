@@ -65,7 +65,7 @@ export class PhunkGridComponent implements OnChanges {
 
   @Input() viewType: ViewType = 'market';
   @Input() slug!: string;
-  @Input() phunkData!: Phunk[];
+  @Input() phunkData!: Phunk[] | null;
   @Input() total: number = 0;
   @Input() limit: number = 0;
 
@@ -81,9 +81,10 @@ export class PhunkGridComponent implements OnChanges {
   @Output() selectedChange = new EventEmitter<{ [string: Phunk['hashId']]: Phunk }>();
   @Input() selected: { [string: Phunk['hashId']]: Phunk } = {};
 
-  limitArr = Array.from({length: this.limit}, (_, i) => i);
+  limitArr: number[] = [];
 
   usd$ = this.store.select(dataStateSelectors.selectUsd);
+  collections$ = this.store.select(dataStateSelectors.selectCollections);
 
   showLoadMore: boolean = false;
   ranksActive = signal(false);
@@ -95,6 +96,10 @@ export class PhunkGridComponent implements OnChanges {
   ) {}
 
   ngOnChanges(changes: SimpleChanges): void {
+    if (changes.limit) {
+      this.limitArr = Array.from({length: this.limit}, (_, i) => i);
+    }
+
     if (changes.selected && !changes.selected.firstChange) {
       this.phunkCheck?.forEach((checkbox) => {
         const hashId = checkbox.nativeElement.dataset.hashId;

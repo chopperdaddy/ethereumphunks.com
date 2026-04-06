@@ -68,13 +68,20 @@ export class PixelArtService {
    * @param node SVG node to process
    * @returns Processed SVG node with colors stripped
    */
-  stripColors(node: INode): INode {
+  stripColors(node: INode, slug: string): INode {
     const colorMap: Record<string, number> = {};
 
     // Get image dimensions from viewBox attribute
     const viewBox = node.attributes?.viewBox?.split(' ') || [];
     const width = parseInt(viewBox[2]) || 0;
     const height = parseInt(viewBox[3]) || 0;
+
+    let removable: string[] = [];
+    if (slug === 'unpunks') {
+      removable = [...new Set(node.children
+        .map((child) => child.attributes.fill)
+        .filter((fill) => fill.startsWith('#c') || fill.startsWith('#bb') || fill.startsWith('#ba') || fill.startsWith('#bd') || fill.startsWith('#be') || fill.startsWith('#bc') || fill.startsWith('#bf')))];
+    }
 
     const backgroundColors = node.children.filter((child) => child.attributes.x === '0');
     const filters = [
@@ -107,6 +114,9 @@ export class PixelArtService {
         '#79a4f8ff', // Mingos background
         '#79a5f9ff', // Mingos background
         '#648596ff', // Mingos background
+
+        // Unpunks
+        ...removable,
       ]
     ];
     // console.log({width, height, backgroundColors, filters});
@@ -114,7 +124,8 @@ export class PixelArtService {
     for (const child of node.children) {
       if (child.name === 'rect' && child.attributes?.fill) {
         const color = tinycolor(child.attributes.fill);
-        const alpha = (tinycolor(color).getBrightness() / 255);
+        const brightness = tinycolor(color).getBrightness();
+        const alpha = (brightness / 255);
         const opaque = tinycolor({ r: 0, g: 0, b: 0, a: (1 - alpha) });
 
         colorMap[child.attributes.fill] = (colorMap[child.attributes.fill] || 0) + 1;
@@ -129,6 +140,17 @@ export class PixelArtService {
 
     // console.log(colorMap);
     return node;
+
+    // // Display colors with visual styling
+    // removable.forEach(color => {
+    //   console.log(`%c${color}`, `background-color: ${color}; color: black; padding: 2px 8px; border-radius: 4px;`);
+    // });
+
+    // Or display all at once (simpler approach)
+    // console.log('Removable colors:');
+    // removable.forEach(color => {
+    //   console.log(`%c ${color} `, `background-color: ${color}; color: black; padding: 2px 8px; border-radius: 4px; margin: 2px; display: inline-block;`);
+    // });
   }
 
   /**
@@ -189,5 +211,19 @@ export class PixelArtService {
     const string = stringify(node);
     const base64 = btoa(string);
     return `data:image/svg+xml;base64,${base64}`;
+  }
+
+  /**
+   * Converts an ArrayBuffer to a base64 string
+   * @param buffer ArrayBuffer to convert
+   * @returns Base64 string
+   */
+  arrayBufferToBase64(buffer: ArrayBuffer): string {
+    const bytes = new Uint8Array(buffer);
+    let binary = '';
+    for (let i = 0; i < bytes.byteLength; i++) {
+      binary += String.fromCharCode(bytes[i]);
+    }
+    return btoa(binary);
   }
 }

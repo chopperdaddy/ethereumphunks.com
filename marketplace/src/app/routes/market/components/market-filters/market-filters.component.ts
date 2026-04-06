@@ -12,7 +12,7 @@ import { NgxSliderModule, Options, ChangeContext } from '@angular-slider/ngx-sli
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { filter, tap, debounceTime, Subject, Subscription } from 'rxjs';
 
-import { DataService } from '@/services/data.service';
+import { AttributesService } from '@/services/attributes.service';
 import { GlobalState } from '@/models/global-state';
 
 import * as appStateActions from '@/state/app/app-state.actions';
@@ -63,7 +63,7 @@ export class MarketFiltersComponent implements OnDestroy {
 
   constructor(
     private store: Store<GlobalState>,
-    public dataSvc: DataService,
+    public attributesSvc: AttributesService,
     private location: Location,
     private router: Router,
     private route: ActivatedRoute,
@@ -109,7 +109,7 @@ export class MarketFiltersComponent implements OnDestroy {
       }
 
       try {
-        const filters = await this.dataSvc.getFilters(slug);
+        const filters = await this.attributesSvc.getFilters(slug);
         // console.log('filters', filters);
         this.filterData.set(filters || {});
 

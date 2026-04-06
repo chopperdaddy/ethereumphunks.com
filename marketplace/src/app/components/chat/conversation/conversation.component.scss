@@ -7,6 +7,7 @@
   height: 100%;
 
   font-family: var(--secondary-font-stack);
+  color: rgba(var(--white), 1);
   font-weight: 400;
 }
 
@@ -56,6 +57,11 @@
 
     font-size: .8rem;
     font-weight: 400;
+
+    a {
+      color: rgba(var(--base-color), 1);
+      text-decoration: none;
+    }
 
     app-address {
       font-size: 1.4rem;
@@ -120,7 +126,7 @@
           // white-space: pre-wrap;
           overflow-wrap: anywhere;
 
-          background-color: rgba(var(--text-color), .25);
+          background-color: rgba(var(--white), .15);
           padding: .75rem 1rem;
 
           user-select: text;
@@ -201,17 +207,27 @@
     height: 4rem;
 
     input {
+      color: rgba(var(--white), 1);
+      font-size: 1.6rem;
+      font-weight: 600;
+
+      background-color: rgba(var(--white), .05);
       border-radius: 0;
 
       &::placeholder {
         font-family: var(--secondary-font-stack);
+        color: rgba(var(--white), .25);
         font-size: 1.2rem;
         font-weight: 400;
+
+        transform: translateY(-.2rem);
       }
     }
 
     button {
       font-family: var(--secondary-font-stack);
+      color: rgba(var(--base-color), 1);
+      background-color: rgba(var(--pink), 1);
       font-size: 1.4rem;
       font-weight: 400;
     }

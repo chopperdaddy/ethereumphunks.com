@@ -1,0 +1,125 @@
+// JSON Prettify Styles
+// Used for displaying formatted JSON with syntax highlighting
+
+.json-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.json-prettify {
+  margin: 0;
+  padding: 1rem;
+  background-color: rgba(var(--black), 1);
+  overflow-x: hidden; // Hide horizontal overflow instead of scrolling
+  overflow-y: visible;
+  max-width: 100%;
+  width: 100%;
+  box-sizing: border-box;
+
+  font-size: 1.4rem;
+  line-height: 1.6;
+  font-family: 'Courier New', Courier, monospace;
+  white-space: pre-wrap; // Allow wrapping while preserving formatting
+  word-break: break-all; // Break at any character for long strings like base64
+  overflow-wrap: break-word;
+
+  code {
+    color: rgba(var(--white), 1);
+    display: block;
+    max-width: 100%;
+    width: 100%;
+    word-break: break-all; // Break anywhere for base64 strings
+    overflow-wrap: break-word;
+    white-space: pre-wrap;
+  }
+
+  // Syntax highlighting colors
+  .string {
+    color: rgba(var(--transferred-color), 1);
+    word-break: break-all; // Force breaking at any character (works for base64)
+    overflow-wrap: break-word;
+    display: inline;
+  }
+
+  .key {
+    color: rgba(var(--bid-color), 1);
+    display: inline;
+  }
+
+  .number {
+    color: rgba(var(--sale-color), 1);
+    display: inline;
+  }
+
+  .boolean {
+    color: rgba(var(--escrow-color), 1);
+    display: inline;
+  }
+
+  .null {
+    color: rgba(var(--text-color), .5);
+    display: inline;
+  }
+
+  .number-line {
+    display: inline-block;
+    margin-right: 1rem;
+    padding-right: 1rem;
+    border-right: 1px solid rgba(var(--white), .3);
+    color: rgba(var(--white), .5);
+    user-select: none;
+    text-align: right;
+    min-width: 3ch;
+    flex-shrink: 0; // Prevent line numbers from shrinking
+  }
+
+  // Ensure all spans respect container bounds and can break
+  span {
+    max-width: 100%;
+    overflow-wrap: break-word;
+    word-break: break-word;
+  }
+
+  // Collapsed state - show only first 3 lines
+  &.collapsed {
+    max-height: calc((1.6em * 3) + 2rem); // 3 lines based on line-height + padding (1rem top + 1rem bottom)
+    overflow: hidden;
+    position: relative;
+
+    // Add fade effect at the bottom when collapsed
+    &::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 3em; // Fade height
+      background: linear-gradient(to bottom, transparent, rgba(var(--black), 1));
+      pointer-events: none;
+    }
+  }
+}
+
+.view-more-button {
+  width: 100%;
+  padding: 0.5rem 1rem .5rem 5rem;
+
+  background-color: rgba(var(--black), 1);
+  color: rgba(var(--white), .5);
+  border-top: .1rem solid rgba(var(--white), .1);
+
+  font-family: var(--secondary-font-stack);
+  font-size: 1rem;
+  font-weight: 400;
+  cursor: pointer;
+  transition: opacity 0.2s;
+
+  &:hover {
+    opacity: 0.8;
+  }
+
+  &:active {
+    opacity: 0.9;
+  }
+}
+

@@ -1,8 +1,10 @@
-import { Component, computed, inject } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
 import { Store } from '@ngrx/store';
-import { toSignal } from '@angular/core/rxjs-interop';
+import { toObservable, toSignal } from '@angular/core/rxjs-interop';
+
+import { PhunkGridComponent } from "@/components/phunk-grid/phunk-grid.component";
 
 import { GlobalState } from '@/models/global-state';
 import * as adminAuthSelectors from '@/state/admin-auth/admin-auth-state.selectors';
@@ -12,18 +14,41 @@ import { AdminAuthService } from '@/services/admin-auth.service';
 
 import { environment } from '@environments/environment';
 import * as appStateSelectors from '@/state/app/app-state.selectors';
+import { SortOption } from '@/models/sorts.model';
+import { DataService } from '@/services/data.service';
+import { filter, map, startWith, switchMap, tap } from 'rxjs';
+
+interface SlotState {
+  metadata: {
+    update: boolean;
+    generate: boolean;
+  };
+}
+
+const initialSlotState: SlotState = {
+  metadata: {
+    update: false,
+    generate: false,
+  },
+};
 
 @Component({
   standalone: true,
-  imports: [CommonModule],
+  imports: [
+    CommonModule,
+    PhunkGridComponent,
+  ],
   selector: 'app-admin-dashboard',
   templateUrl: './admin-dashboard.component.html',
   styleUrls: ['./admin-dashboard.component.scss'],
 })
 export class AdminDashboardComponent {
 
+  sortOption = SortOption;
+
   private store = inject(Store<GlobalState>);
   private adminAuthSvc = inject(AdminAuthService);
+  private dataSvc = inject(DataService);
 
   // Convert NgRx state to signals
   hasAdminAccess = toSignal(this.store.select(adminAuthSelectors.selectHasAdminAccess));
@@ -34,8 +59,14 @@ export class AdminDashboardComponent {
   isAuthenticated = toSignal(this.store.select(adminAuthSelectors.selectIsAdminAuthenticated));
   sessionTimeRemaining = toSignal(this.store.select(adminAuthSelectors.selectSessionTimeRemaining));
   sessionExpired = toSignal(this.store.select(adminAuthSelectors.selectSessionExpired));
-  isBrowserActive = toSignal(this.store.select(appStateSelectors.selectIsBrowserActive));
-  // Computed signals for derived state
+
+  phunkData$ = toObservable(this.selectedCollectionSlug).pipe(
+    filter((collectionSlug) => !!collectionSlug),
+    switchMap((collectionSlug) => this.dataSvc.fetchAllWithPagination(collectionSlug!, 0, 44, {}, this.sortOption.ID)),
+    map((data) => data.data),
+    startWith([])
+  );
+
   canShowMenu = computed(() => this.hasAdminAccess() && this.isAuthenticated());
 
   sessionStatus = computed(() => {
@@ -56,6 +87,8 @@ export class AdminDashboardComponent {
     return `Admin Access (${collections.length} collections)`;
   });
 
+  slotsState = signal<SlotState>(initialSlotState);
+
   selectCollection(collectionSlug: string) {
     this.store.dispatch(adminAuthActions.setSelectedCollectionSlug({ collectionSlug }));
   }
@@ -75,43 +108,34 @@ export class AdminDashboardComponent {
     await this.adminAuthSvc.logout();
   }
 
-  clearAllTokens() {
-    this.adminAuthSvc.clearAllAdminTokens();
-  }
-
   async generateCollectionMetadata() {
-    const collectionSlug = this.selectedCollectionSlug();
-    if (collectionSlug) {
-      try {
-        const response = await this.adminAuthSvc.makeAdminRequest(`${environment.relayUrl}/collection-admin/generate-collection-metadata`, { slug: collectionSlug });
-        console.log('Collection metadata generated:', response);
-      } catch (error) {
-        console.error('Failed to generate collection metadata:', error);
-      }
-    }
+
+    this.slotsState.set({
+      ...this.slotsState(),
+      metadata: {
+        update: false,
+        generate: true,
+      },
+    });
+
+    // const collectionSlug = this.selectedCollectionSlug();
+    // if (collectionSlug) {
+    //   try {
+    //     const response = await this.adminAuthSvc.makeAdminRequest(`${environment.relayUrl}/collection-admin/generate-collection-metadata`, { slug: collectionSlug });
+    //     console.log('Collection metadata generated:', response);
+    //   } catch (error) {
+    //     console.error('Failed to generate collection metadata:', error);
+    //   }
+    // }
   }
 
-  async addAttributesToDb() {
-    const collectionSlug = this.selectedCollectionSlug();
-    if (collectionSlug) {
-      try {
-        const response = await this.adminAuthSvc.makeAdminRequest(`${environment.relayUrl}/collection-admin/add-attributes-to-db`, { slug: collectionSlug });
-        console.log('Collection metadata generated:', response);
-      } catch (error) {
-        console.error('Failed to add attributes to db:', error);
-      }
-    }
-  }
-
-  async addFiltersFile() {
-    const collectionSlug = this.selectedCollectionSlug();
-    if (collectionSlug) {
-      try {
-        const response = await this.adminAuthSvc.makeAdminRequest(`${environment.relayUrl}/collection-admin/add-filters-file`, { slug: collectionSlug });
-        console.log('Filters file added:', response);
-      } catch (error) {
-        console.error('Failed to add filters file:', error);
-      }
-    }
+  async updateCollectionMetadata() {
+    this.slotsState.set({
+      ...this.slotsState(),
+      metadata: {
+        update: true,
+        generate: false,
+      },
+    });
   }
 }
