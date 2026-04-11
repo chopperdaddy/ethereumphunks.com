@@ -6,6 +6,25 @@ import { AppModule } from '@/app.module';
 import { AppConfigService } from '@/config/config.service';
 import { CustomLogger } from '@/modules/shared/services/logger.service';
 
+function formatUnhandledReason(reason: unknown): string {
+  if (reason instanceof Error) {
+    return reason.stack ?? `${reason.name}: ${reason.message}`;
+  }
+
+  try {
+    return JSON.stringify(reason, null, 2);
+  } catch {
+    return String(reason);
+  }
+}
+
+function registerProcessErrorHandlers() {
+  process.on('unhandledRejection', (reason) => {
+    Logger.error(formatUnhandledReason(reason), '', 'UnhandledRejection');
+    process.exit(1);
+  });
+}
+
 async function listenWithRetries(app, startPort: number, maxRetries = 10): Promise<number> {
   let port = startPort;
   for (let attempt = 0; attempt < maxRetries; attempt++) {
@@ -25,6 +44,8 @@ async function listenWithRetries(app, startPort: number, maxRetries = 10): Promi
 }
 
 async function bootstrap() {
+  registerProcessErrorHandlers();
+
   const app = await NestFactory.create(AppModule);
   const configSvc = app.get(AppConfigService);
 
