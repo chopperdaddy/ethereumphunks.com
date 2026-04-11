@@ -9,7 +9,7 @@ export const environment: Environment = {
   chainId: 11155111,
 
   // rpcHttpProvider: 'http://geth.sepolia-geth.dappnode:8545',
-  // rpcHttpProvider: 'https://eth-sepolia.g.alchemy.com/v2/jjX2RbY-s67eFNvHZSnNz',
+  // rpcHttpProvider: 'https://eth-sepolia.g.alchemy.com/v2/x2AuxbdXhBrm8feuu1FYM',
   rpcHttpProvider: 'https://ethereum-sepolia-rpc.publicnode.com',
   explorerUrl: 'https://sepolia.etherscan.io',
   externalMarketUrl: 'https://sepolia.ethscriptions.com',
