@@ -20,7 +20,7 @@ module.exports = {
   apps: [
     {
       name: "mainnet",
-      script: "dist/mainnet/main.js",
+      script: "dist/mainnet/src/main.js",
       env: {
         ...supabaseConfig,
         ...loadEnvFile('.env.mainnet'),
@@ -28,7 +28,7 @@ module.exports = {
     },
     {
       name: "sepolia",
-      script: "dist/sepolia/main.js",
+      script: "dist/sepolia/src/main.js",
       env: {
         ...supabaseConfig,
         ...loadEnvFile('.env.sepolia'),
