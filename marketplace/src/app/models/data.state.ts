@@ -23,6 +23,7 @@ export interface Collection {
   discord?: string;
   defaultBackground?: string;
   mainTrait?: string;
+  attributeOrder?: string[];
   contractAddress?: string;
   type?: 'nft' | 'inscription';
 

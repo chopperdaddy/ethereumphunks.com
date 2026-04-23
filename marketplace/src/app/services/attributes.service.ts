@@ -28,6 +28,28 @@ export class AttributesService {
     private storageSvc: StorageService,
   ) {}
 
+  private sortFilterKeys(
+    keys: string[],
+    attributeOrder: string[] | undefined,
+  ): string[] {
+    const order = attributeOrder || [];
+    const orderIndex = new Map(order.map((key, index) => [key, index]));
+
+    return [...keys].sort((a, b) => {
+      if (a === 'trait_count') return 1;
+      if (b === 'trait_count') return -1;
+
+      const aIndex = orderIndex.get(a);
+      const bIndex = orderIndex.get(b);
+
+      if (aIndex !== undefined && bIndex !== undefined) return aIndex - bIndex;
+      if (aIndex !== undefined) return -1;
+      if (bIndex !== undefined) return 1;
+
+      return a.localeCompare(b);
+    });
+  }
+
   /**
    * Adds attributes to an array of Phunks
    * @param slug Collection slug
@@ -193,7 +215,7 @@ export class AttributesService {
     });
 
     // Convert the Map of Sets into a plain object with arrays
-    const attributeObject: { [key: string]: string[] | number[] } = {};
+    const unorderedAttributeObject: { [key: string]: string[] | number[] } = {};
     attributeMap.forEach((values, key) => {
       // Sort values by frequency (most common first)
       const sortedValues = Array.from(values).sort((a, b) => {
@@ -210,12 +232,20 @@ export class AttributesService {
         sortedValues.unshift('none');
       }
 
-      attributeObject[key] = sortedValues;
+      unorderedAttributeObject[key] = sortedValues;
     });
 
     // Add trait count filter options
     const sortedTraitCounts = Array.from(traitCounts).sort((a, b) => a - b);
-    attributeObject['trait_count'] = sortedTraitCounts.map(count => count);
+    unorderedAttributeObject['trait_count'] = sortedTraitCounts.map(count => count);
+
+    const attributeObject: { [key: string]: string[] | number[] } = {};
+    this.sortFilterKeys(
+      Object.keys(unorderedAttributeObject),
+      collection?.attributeOrder,
+    ).forEach((key) => {
+      attributeObject[key] = unorderedAttributeObject[key];
+    });
 
     // Generate rarity data from value frequencies
     const rarityData: { [key: string]: number } = {};
