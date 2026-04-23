@@ -109,6 +109,7 @@ export interface Collection {
   description?: string;
   image?: string;
   singleName?: string;
+  attributeOrder?: string[];
   active: boolean;
   supply: number;
   id: number;
