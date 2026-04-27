@@ -169,12 +169,13 @@ contract EtherPhunksAuctionHouse is
      * @notice Create a bid for a Phunk, with a given amount.
      * @dev This contract only accepts payment in ETH.
      */
-    function createBid(bytes32 hashId, address owner) external payable override nonReentrant {
+    function createBid(bytes32 hashId, address owner) external payable override nonReentrant whenNotPaused {
         IAuctionHouse.Auction storage _auction = auctions[owner][hashId];
 
         if (_auction.startTime == 0) revert AuctionDoesNotExist();
         if (block.timestamp >= _auction.endTime) revert AuctionExpired();
         if (
+            msg.value == 0 ||
             msg.value <
                 _auction.amount +
                     ((_auction.amount * _auction.minBidIncrementPercentage) / 100)

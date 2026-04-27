@@ -429,6 +429,12 @@ describe('EtherPhunksAuctionHouse', function () {
       expect(auction.bidder).to.equal(bidder1.address);
     });
 
+    it('Should reject zero-value bids', async function () {
+      await expect(
+        auctionHouse.connect(bidder1).createBid(testHashId, seller.address, { value: 0 })
+      ).to.be.revertedWithCustomError(auctionHouse, 'InsufficientBidAmount');
+    });
+
     /** Test minimum bid increment enforcement to prevent spam bidding */
     it('Should require minimum bid increment', async function () {
       const firstBid = ethers.parseEther('1');
@@ -1131,6 +1137,22 @@ describe('EtherPhunksAuctionHouse', function () {
       await expect(
         auctionHouse.connect(bidder1).unpause()
       ).to.be.revertedWithCustomError(auctionHouse, 'OwnableUnauthorizedAccount');
+    });
+
+    it('Should reject bids when paused', async function () {
+      await auctionHouse.addToWhitelist(seller.address);
+
+      const data = encodeAuctionData(testHashId, defaultDuration, defaultMinBidIncrement, defaultTimeBuffer);
+      await seller.sendTransaction({
+        to: await auctionHouse.getAddress(),
+        data: data
+      });
+
+      await auctionHouse.pause();
+
+      await expect(
+        auctionHouse.connect(bidder1).createBid(testHashId, seller.address, { value: ethers.parseEther('1') })
+      ).to.be.revertedWithCustomError(auctionHouse, 'EnforcedPause');
     });
 
     it('Should allow settlement when paused', async function () {
