@@ -170,6 +170,7 @@ export type TxFunction =
   | 'mint'
   | 'tic'
   | 'ticDelete'
+  | 'sendToAuction'
   | 'createBid'
   | 'settleAuction';
 

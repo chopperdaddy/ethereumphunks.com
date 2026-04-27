@@ -45,6 +45,7 @@ export class NotificationPipe implements PipeTransform {
       mint: 'Inscribing %singleName%',
       tic: 'Inscribing Comment',
       ticDelete: 'Deleting Comment',
+      sendToAuction: 'Send %singleName% to Auction',
       createBid: 'Auction Bid',
       settleAuction: 'Settle Auction',
       batch: {
@@ -96,6 +97,7 @@ export class NotificationPipe implements PipeTransform {
       mint: 'mint',
       tic: 'tic',
       ticDelete: 'tic',
+      sendToAuction: 'auction',
       createBid: 'auction',
       settleAuction: 'auction',
     },

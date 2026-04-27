@@ -810,14 +810,54 @@ export class ItemActionsComponent {
 
     if (!duration || !minBidIncrementPercentage) throw new Error('Invalid auction parameters');
 
-    const hash = await this.web3Svc.sendToAuction(
+    let notification: Notification = {
+      id: this.utilSvc.createIdFromString('sendToAuction' + hashId),
+      timestamp: Date.now(),
+      slug: phunk.slug,
+      type: 'wallet',
+      function: 'sendToAuction',
       hashId,
-      duration,
-      minBidIncrementPercentage,
-      timeBufferSeconds,
-    );
+      tokenId: phunk.tokenId,
+    };
 
-    console.log('sendToAuction', {hash});
+    this.store.dispatch(upsertNotification({ notification }));
+
+    try {
+      const hash = await this.web3Svc.sendToAuction(
+        hashId,
+        duration,
+        minBidIncrementPercentage,
+        timeBufferSeconds,
+      );
+      if (!hash) throw new Error('Could not process transaction');
+
+      notification = {
+        ...notification,
+        type: 'pending',
+        hash,
+      };
+      this.store.dispatch(upsertNotification({ notification }));
+
+      const receipt = await this.web3Svc.pollReceipt(hash);
+
+      notification = {
+        ...notification,
+        type: 'complete',
+        hash: receipt.transactionHash,
+      };
+
+      this.store.dispatch(addCooldown({ cooldown: { [hashId]: Number(receipt.blockNumber) }}));
+    } catch (err) {
+      console.log(err);
+
+      notification = {
+        ...notification,
+        type: 'error',
+        detail: err,
+      };
+    } finally {
+      this.store.dispatch(upsertNotification({ notification }));
+    }
   }
 
   /**
