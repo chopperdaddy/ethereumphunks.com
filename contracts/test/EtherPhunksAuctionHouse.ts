@@ -459,6 +459,19 @@ describe('EtherPhunksAuctionHouse', function () {
       ).to.be.revertedWithCustomError(auctionHouse, 'InsufficientBidAmount');
     });
 
+    it('Should require at least 1 wei increment when percentage rounds down', async function () {
+      await auctionHouse.connect(bidder1).createBid(testHashId, seller.address, { value: 1 });
+
+      await expect(
+        auctionHouse.connect(bidder2).createBid(testHashId, seller.address, { value: 1 })
+      ).to.be.revertedWithCustomError(auctionHouse, 'InsufficientBidAmount');
+
+      await expect(
+        auctionHouse.connect(bidder2).createBid(testHashId, seller.address, { value: 2 })
+      ).to.emit(auctionHouse, 'AuctionBid')
+        .withArgs(testHashId, 1, bidder2.address, 2, false);
+    });
+
     /** Test automatic refund mechanism for outbid participants (immediate push refund) */
     it('Should refund previous bidder immediately when push refund succeeds', async function () {
       const firstBid = ethers.parseEther('1');
@@ -1125,7 +1138,10 @@ describe('EtherPhunksAuctionHouse', function () {
       const oldAddress = await auctionHouse.pointsAddress();
       const newAddress = await newPointsContract.getAddress();
 
-      await auctionHouse.setPointsAddress(newAddress);
+      await expect(auctionHouse.setPointsAddress(newAddress))
+        .to.emit(auctionHouse, 'PointsAddressUpdated')
+        .withArgs(oldAddress, newAddress);
+
       expect(await auctionHouse.pointsAddress()).to.equal(newAddress);
       expect(await auctionHouse.pointsAddress()).to.not.equal(oldAddress);
     });

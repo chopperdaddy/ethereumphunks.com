@@ -176,12 +176,12 @@ contract EtherPhunksAuctionHouse is
 
         if (_auction.startTime == 0) revert AuctionDoesNotExist();
         if (block.timestamp >= _auction.endTime) revert AuctionExpired();
-        if (
-            msg.value == 0 ||
-            msg.value <
-                _auction.amount +
-                    ((_auction.amount * _auction.minBidIncrementPercentage) / 100)
-        ) {
+        uint256 minBidIncrement = (_auction.amount * _auction.minBidIncrementPercentage) / 100;
+        if (_auction.amount > 0 && minBidIncrement == 0) {
+            minBidIncrement = 1;
+        }
+
+        if (msg.value == 0 || msg.value < _auction.amount + minBidIncrement) {
             revert InsufficientBidAmount();
         }
         if (msg.sender == owner) revert OwnerCannotBid();
@@ -290,7 +290,9 @@ contract EtherPhunksAuctionHouse is
      */
     function setPointsAddress(address _pointsAddress) external onlyOwner {
         if (_pointsAddress == address(0)) revert InvalidPointsAddress();
+        address previousPointsAddress = pointsAddress;
         pointsAddress = _pointsAddress;
+        emit PointsAddressUpdated(previousPointsAddress, _pointsAddress);
     }
 
     /**

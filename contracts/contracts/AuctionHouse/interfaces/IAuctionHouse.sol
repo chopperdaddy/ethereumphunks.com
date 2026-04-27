@@ -41,6 +41,8 @@ interface IAuctionHouse {
 
     event WhitelistEnabled(bool enabled);
 
+    event PointsAddressUpdated(address indexed previousPointsAddress, address indexed newPointsAddress);
+
     event Withdrawal(address indexed account, uint256 amount);
 
     function settleAuction(bytes32 hashId, address owner) external;
