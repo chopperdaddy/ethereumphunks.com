@@ -33,6 +33,7 @@ contract EtherPhunksAuctionHouse is
     error InvalidDuration();
     error InvalidBidIncrement();
     error InvalidTimeBuffer();
+    error InvalidAuctionSignature();
     error DataTooShort();
     error InvalidDataLength();
     error InsufficientBidAmount();
@@ -380,32 +381,34 @@ contract EtherPhunksAuctionHouse is
             signature := calldataload(32)
         }
 
-        if (signature == DEPOSIT_AND_AUCTION_SIGNATURE) {
-            if (msg.data.length < 160) revert DataTooShort(); // At least 4 * 32 bytes needed
-            if (msg.data.length % 32 != 0) revert InvalidDataLength();
-
-            bytes32 hashId;
-            uint256 duration;
-            uint8 minBidIncrementPercentage;
-            uint256 timeBuffer;
-
-            assembly {
-                hashId := calldataload(0)
-                duration := calldataload(64)
-                minBidIncrementPercentage := calldataload(96)
-                timeBuffer := calldataload(128)
-            }
-
-            // Validate parameters
-            if (hashId == bytes32(0)) revert InvalidHashId();
-            if (duration < 1 hours || duration > 30 days) revert InvalidDuration();
-            if (minBidIncrementPercentage == 0 || minBidIncrementPercentage > 100) revert InvalidBidIncrement();
-            if (timeBuffer < 5 minutes || timeBuffer > 1 hours) revert InvalidTimeBuffer();
-
-            // Create a new auction
-            _createAuction(hashId, msg.sender, duration, minBidIncrementPercentage, timeBuffer);
-            // Escrow the ethscription
-            _onPotentialDeposit(msg.sender, hashId);
+        if (signature != DEPOSIT_AND_AUCTION_SIGNATURE) {
+            revert InvalidAuctionSignature();
         }
+
+        if (msg.data.length < 160) revert DataTooShort(); // At least 4 * 32 bytes needed
+        if (msg.data.length % 32 != 0) revert InvalidDataLength();
+
+        bytes32 hashId;
+        uint256 duration;
+        uint8 minBidIncrementPercentage;
+        uint256 timeBuffer;
+
+        assembly {
+            hashId := calldataload(0)
+            duration := calldataload(64)
+            minBidIncrementPercentage := calldataload(96)
+            timeBuffer := calldataload(128)
+        }
+
+        // Validate parameters
+        if (hashId == bytes32(0)) revert InvalidHashId();
+        if (duration < 1 hours || duration > 30 days) revert InvalidDuration();
+        if (minBidIncrementPercentage == 0 || minBidIncrementPercentage > 100) revert InvalidBidIncrement();
+        if (timeBuffer < 5 minutes || timeBuffer > 1 hours) revert InvalidTimeBuffer();
+
+        // Create a new auction
+        _createAuction(hashId, msg.sender, duration, minBidIncrementPercentage, timeBuffer);
+        // Escrow the ethscription
+        _onPotentialDeposit(msg.sender, hashId);
     }
 }

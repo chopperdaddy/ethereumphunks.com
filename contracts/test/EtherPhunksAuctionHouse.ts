@@ -335,7 +335,7 @@ describe('EtherPhunksAuctionHouse', function () {
       ).to.be.revertedWithCustomError(auctionHouse, 'AuctionAlreadyExists');
     });
 
-    it('Should ignore calls without proper signature', async function () {
+    it('Should revert calls without proper signature', async function () {
       // Create data without the proper signature
       const hashIdPadded = testHashId.slice(2).padStart(64, '0');
       const wrongSignature = ethers.keccak256(ethers.toUtf8Bytes("WRONG_SIGNATURE")).slice(2);
@@ -345,15 +345,25 @@ describe('EtherPhunksAuctionHouse', function () {
 
       const dataWithWrongSignature = '0x' + hashIdPadded + wrongSignature + durationHex + minBidIncrementHex + timeBufferHex;
 
-      // This should not create an auction - fallback should ignore it
-      await seller.sendTransaction({
-        to: await auctionHouse.getAddress(),
-        data: dataWithWrongSignature
-      });
+      await expect(
+        seller.sendTransaction({
+          to: await auctionHouse.getAddress(),
+          data: dataWithWrongSignature
+        })
+      ).to.be.revertedWithCustomError(auctionHouse, 'InvalidAuctionSignature');
 
       // Verify no auction was created
       const auction = await auctionHouse.auctions(seller.address, testHashId);
       expect(auction.startTime).to.equal(0); // No auction should exist
+    });
+
+    it('Should revert arbitrary short calldata', async function () {
+      await expect(
+        seller.sendTransaction({
+          to: await auctionHouse.getAddress(),
+          data: '0x12345678'
+        })
+      ).to.be.revertedWithCustomError(auctionHouse, 'InvalidAuctionSignature');
     });
 
     it('Should revert when contract tries to create auction', async function () {
