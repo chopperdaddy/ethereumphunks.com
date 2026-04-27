@@ -575,11 +575,12 @@ describe('EtherPhunksAuctionHouse', function () {
       // Place bid from failing receiver contract
       await failingReceiver.bid(testHashId, seller.address, { value: firstBid });
 
+      // Check that failing receiver has pending withdrawal
+      const failingReceiverAddress = await failingReceiver.getAddress();
+
       // Place second bid - this should add to pending withdrawals since push refund will fail
       await auctionHouse.connect(bidder2).createBid(testHashId, seller.address, { value: secondBid });
 
-      // Check that failing receiver has pending withdrawal
-      const failingReceiverAddress = await failingReceiver.getAddress();
       const pendingAmount = await auctionHouse.pendingWithdrawals(failingReceiverAddress);
       expect(pendingAmount).to.equal(firstBid);
 
@@ -789,6 +790,39 @@ describe('EtherPhunksAuctionHouse', function () {
 
       const sellerFinalBalance = await ethers.provider.getBalance(seller.address);
       expect(sellerFinalBalance).to.be.gt(sellerInitialBalance);
+    });
+
+    it('Should credit seller proceeds to pending withdrawals when direct payout fails', async function () {
+      await auctionHouse.setWhitelistEnabled(false);
+
+      const data = encodeAuctionData(testHashId, defaultDuration, defaultMinBidIncrement, defaultTimeBuffer);
+      const ConstructingAuctionSeller = await ethers.getContractFactory('ConstructingAuctionSeller');
+      const contractSeller = await ConstructingAuctionSeller.deploy(await auctionHouse.getAddress(), data);
+      await contractSeller.waitForDeployment();
+
+      const contractSellerAddress = await contractSeller.getAddress();
+      const bidAmount = ethers.parseEther('1');
+
+      await auctionHouse.connect(bidder1).createBid(testHashId, contractSellerAddress, { value: bidAmount });
+
+      const auction = await auctionHouse.auctions(contractSellerAddress, testHashId);
+      await time.increaseTo(Number(auction.endTime) + 1);
+      await mineCooldownBlocks();
+
+      await expect(
+        auctionHouse.settleAuction(testHashId, contractSellerAddress)
+      ).to.emit(auctionHouse, 'AuctionSettled')
+        .withArgs(testHashId, auction.auctionId, bidder1.address, bidAmount);
+
+      const settledAuction = await auctionHouse.auctions(contractSellerAddress, testHashId);
+      expect(settledAuction.settled).to.be.true;
+      expect(await auctionHouse.pendingWithdrawals(contractSellerAddress)).to.equal(bidAmount);
+
+      await expect(contractSeller.withdraw())
+        .to.emit(auctionHouse, 'Withdrawal')
+        .withArgs(contractSellerAddress, bidAmount);
+
+      expect(await auctionHouse.pendingWithdrawals(contractSellerAddress)).to.equal(0);
     });
 
     it('Should revert settlement of non-existent auction', async function () {

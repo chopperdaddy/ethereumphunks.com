@@ -150,9 +150,10 @@ contract EtherPhunksAuctionHouse is
             ? _auction.owner
             : _auction.bidder;
 
-        // Transfer ETH before ethscription to prevent loss if ETH transfer fails
         if (_auction.amount > 0) {
-            if (!_safeTransferETH(_auction.owner, _auction.amount)) revert FailedToPayAuctionWinner();
+            if (!_safeTransferETH(_auction.owner, _auction.amount)) {
+                pendingWithdrawals[_auction.owner] += _auction.amount;
+            }
         }
 
         _transferEthscription(_auction.owner, dest, _auction.hashId);

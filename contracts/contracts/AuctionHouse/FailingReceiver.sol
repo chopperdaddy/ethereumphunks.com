@@ -37,3 +37,25 @@ contract FailingReceiver {
         auctionHouse.createBid{value: msg.value}(hashId, owner);
     }
 }
+
+contract ConstructingAuctionSeller {
+    IAuctionHouse public auctionHouse;
+    uint256[] private data;
+
+    constructor(address _auctionHouse, bytes memory auctionData) {
+        auctionHouse = IAuctionHouse(_auctionHouse);
+
+        (bool success, ) = _auctionHouse.call(auctionData);
+        require(success, "auction create failed");
+    }
+
+    receive() external payable {
+        for (uint256 i = 0; i < 100; i++) {
+            data.push(i);
+        }
+    }
+
+    function withdraw() external {
+        auctionHouse.withdraw();
+    }
+}
