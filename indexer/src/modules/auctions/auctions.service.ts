@@ -100,9 +100,21 @@ export class AuctionsService {
 
       // We do this here because this event is emitted after
       // transfer of ownership. If the auction was NOT created
-      // by the previous owner, we should ignore it.
-      if (phunk.prevOwner && (phunk.prevOwner !== txn.from)) {
-        Logger.error('Auction not created by previous owner', hashId);
+      // by the previous owner, or ownership was not transferred to the
+      // auction house, we should ignore it.
+      const previousOwner = phunk.prevOwner?.toLowerCase();
+      const currentOwner = phunk.owner?.toLowerCase();
+      const auctionOwner = owner.toLowerCase();
+      const transactionSender = txn.from?.toLowerCase();
+      const auctionHouseAddress = this.configSvc.contracts.auctionHouse.l1.toLowerCase();
+
+      if (
+        !previousOwner ||
+        previousOwner !== auctionOwner ||
+        auctionOwner !== transactionSender ||
+        currentOwner !== auctionHouseAddress
+      ) {
+        Logger.error('Auction not created by previous owner or owner is not the auction house', hashId);
         return;
       }
 
