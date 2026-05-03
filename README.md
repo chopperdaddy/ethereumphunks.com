@@ -62,7 +62,7 @@ Smart contracts written in Solidity that power the Ethereum Phunks ecosystem:
 - **Contract Versions**:
   - V1: Original marketplace with bidding functionality
   - V2: Enhanced marketplace with improved security and gas efficiency
-  - V2_1 & V2_2: Progressive upgrades with additional features
+  - V2_1: Latest deployed marketplace upgrade
   - Auction House: Dedicated auction system
 
 Built with:
