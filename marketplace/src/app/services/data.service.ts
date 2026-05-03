@@ -741,6 +741,8 @@ export class DataService {
    * @param phunks Array of Phunks to check
    */
   async checkConsensus(phunks: Phunk[]): Promise<Phunk[]> {
+    if (environment.chainId === 11155111) return phunks.map((phunk: Phunk) => ({ ...phunk, consensus: true }));
+
     if (!phunks.length) return [];
 
     const prefix = this.suffix.replace('_', '');
