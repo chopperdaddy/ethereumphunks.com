@@ -836,13 +836,14 @@ export class DataService {
     };
 
     // Initial fetch
-    const rpcFetch$: Observable<Collection[]> = from(
+    const rpcFetch$: Observable<Collection[]> = defer(() => from(
       supabase.rpc(
         'fetch_collections_with_previews' + this.suffix,
         params
       )
-    ).pipe(
+    )).pipe(
       map((res: any) => {
+        if (res.error) throw res.error;
         if (!res.data) return [];
         return res.data
           .map((item: any) => ({
@@ -856,6 +857,14 @@ export class DataService {
             }
             return true;
           });
+      }),
+      retry({
+        count: 2,
+        delay: (_err, retryCount) => timer(retryCount * 500),
+      }),
+      catchError((err) => {
+        console.warn('Failed to fetch collections', { onlyDisabled, err });
+        return of([]);
       }),
       // tap((res) => console.log('fetchCollections', res)),
     );
