@@ -160,6 +160,12 @@ export class MarketStateEffects {
     map((events) => dataStateActions.setEvents({ events })),
   ));
 
+  clearEventsOnMarketSlugChange$ = createEffect(() => this.actions$.pipe(
+    ofType(marketStateActions.setMarketSlug),
+    distinctUntilChanged((a, b) => a.marketSlug === b.marketSlug),
+    map(() => dataStateActions.setEvents({ events: [] })),
+  ));
+
   setActionData$ = createEffect(() => this.actions$.pipe(
     ofType(marketStateActions.setMarketData),
     map(({ marketData }) => marketData.filter((item) => !!item.auction)),
