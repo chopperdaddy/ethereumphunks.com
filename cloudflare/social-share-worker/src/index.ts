@@ -5,18 +5,43 @@
  * for NFT pages, while redirecting regular users to the eth.limo domain.
  */
 
+interface Env {
+	API_BASE_URL?: string;
+	PUBLIC_BASE_URL?: string;
+	REDIRECT_BASE_URL?: string;
+	DEFAULT_POSTER_URL?: string;
+}
+
 /**
- * Get API URL based on environment
- * In development (localhost), use local NestJS API
- * In production, use the relay API
+ * Runtime URL configuration.
+ *
+ * Defaults are intentionally conservative so local dev still works even if
+ * wrangler vars aren't set yet.
  */
-function getApiUrl(requestUrl: string): string {
+function getApiBaseUrl(requestUrl: string, env: Env): string {
+	if (env.API_BASE_URL) return env.API_BASE_URL;
 	const url = new URL(requestUrl);
 	// Check if we're running locally (localhost or 127.0.0.1)
 	if (url.hostname === 'localhost' || url.hostname === '127.0.0.1' || url.hostname.includes('localhost')) {
 		return 'http://localhost:3002';
 	}
 	return 'https://relay.ethereumphunks.com';
+}
+
+function getPublicBaseUrl(requestUrl: string, env: Env): string {
+	if (env.PUBLIC_BASE_URL) return env.PUBLIC_BASE_URL;
+	const url = new URL(requestUrl);
+	return `${url.protocol}//${url.host}`;
+}
+
+function getRedirectBaseUrl(requestUrl: string, env: Env): string {
+	if (env.REDIRECT_BASE_URL) return env.REDIRECT_BASE_URL;
+	return 'https://etherphunks.eth.limo';
+}
+
+function getDefaultPosterUrl(requestUrl: string, env: Env): string {
+	if (env.DEFAULT_POSTER_URL) return env.DEFAULT_POSTER_URL;
+	return `${getPublicBaseUrl(requestUrl, env)}/poster.png`;
 }
 
 // Social media crawler user agents
@@ -89,13 +114,27 @@ export default {
 
 		// If crawler and we have a valid route, serve HTML card
 		if (isCrawler && routeInfo.type) {
-			const apiUrl = getApiUrl(request.url);
-			return fetchCardFromAPI(routeInfo as { type: 'details' | 'collection', params: Record<string, string> }, isTestMode, apiUrl);
+			const apiBaseUrl = getApiBaseUrl(request.url, env);
+			const publicBaseUrl = getPublicBaseUrl(request.url, env);
+			const redirectBaseUrl = getRedirectBaseUrl(request.url, env);
+			const defaultPosterUrl = getDefaultPosterUrl(request.url, env);
+
+			return fetchCardFromAPI(
+				routeInfo as { type: 'details' | 'collection', params: Record<string, string> },
+				{
+					isTestMode,
+					apiBaseUrl,
+					publicBaseUrl,
+					redirectBaseUrl,
+					defaultPosterUrl,
+				},
+			);
 		}
 
 		// All other requests (non-crawlers) should be redirected to eth.limo
 		// Preserve the full pathname and query string
-		const redirectUrl = `https://etherphunks.eth.limo${url.pathname}${url.search}`;
+		const redirectBaseUrl = getRedirectBaseUrl(request.url, env);
+		const redirectUrl = `${redirectBaseUrl}${url.pathname}${url.search}`;
 		return Response.redirect(redirectUrl, 302);
 	},
 } satisfies ExportedHandler<Env>;
@@ -195,19 +234,28 @@ function isValidSlug(slug: string): boolean {
 /**
  * Fetch HTML card from NestJS API
  */
-async function fetchCardFromAPI(routeInfo: { type: string, params: Record<string, string> }, isTestMode: boolean = false, baseApiUrl: string = 'https://relay.ethereumphunks.com'): Promise<Response> {
+async function fetchCardFromAPI(
+	routeInfo: { type: string, params: Record<string, string> },
+	opts: {
+		isTestMode: boolean;
+		apiBaseUrl: string;
+		publicBaseUrl: string;
+		redirectBaseUrl: string;
+		defaultPosterUrl: string;
+	}
+): Promise<Response> {
 	try {
 		// Validate inputs before constructing URL
 		if (routeInfo.type === 'details' && routeInfo.params.hashId) {
 			if (!isValidHashId(routeInfo.params.hashId)) {
 				console.warn(`Invalid hashId format: ${routeInfo.params.hashId}`);
-				return generateFallbackHTML(routeInfo);
+				return generateFallbackHTML(routeInfo, opts);
 			}
 		}
 		if (routeInfo.type === 'collection' && routeInfo.params.slug) {
 			if (!isValidSlug(routeInfo.params.slug)) {
 				console.warn(`Invalid slug format: ${routeInfo.params.slug}`);
-				return generateFallbackHTML(routeInfo);
+				return generateFallbackHTML(routeInfo, opts);
 			}
 		}
 
@@ -215,13 +263,13 @@ async function fetchCardFromAPI(routeInfo: { type: string, params: Record<string
 
 		switch (routeInfo.type) {
 			case 'details':
-				apiUrl = `${baseApiUrl}/cards/ethscription/${encodeURIComponent(routeInfo.params.hashId)}`;
+				apiUrl = `${opts.apiBaseUrl}/cards/ethscription/${encodeURIComponent(routeInfo.params.hashId)}`;
 				break;
 			case 'collection':
-				apiUrl = `${baseApiUrl}/cards/collection/${encodeURIComponent(routeInfo.params.slug)}`;
+				apiUrl = `${opts.apiBaseUrl}/cards/collection/${encodeURIComponent(routeInfo.params.slug)}`;
 				break;
 			default:
-				return generateFallbackHTML(routeInfo);
+				return generateFallbackHTML(routeInfo, opts);
 		}
 
 		// Add timeout to prevent hanging requests (Cloudflare Workers default is 30s, but we'll be explicit)
@@ -241,7 +289,7 @@ async function fetchCardFromAPI(routeInfo: { type: string, params: Record<string
 
 			if (!response.ok) {
 				console.error(`API returned ${response.status} for ${apiUrl}`);
-				return generateFallbackHTML(routeInfo);
+				return generateFallbackHTML(routeInfo, opts);
 			}
 
 			let html = await response.text();
@@ -249,8 +297,16 @@ async function fetchCardFromAPI(routeInfo: { type: string, params: Record<string
 			// Limit response size to prevent abuse (10MB max)
 			if (html.length > 10 * 1024 * 1024) {
 				console.error(`Response too large: ${html.length} bytes`);
-				return generateFallbackHTML(routeInfo);
+				return generateFallbackHTML(routeInfo, opts);
 			}
+
+			// Rewrite URLs coming from the API to match the public domain that this Worker serves.
+			// The API currently hardcodes etherphunks.eth.limo in meta tags and fallbacks.
+			// We keep redirect behavior separate (redirectBaseUrl) since humans may be sent elsewhere.
+			html = rewriteCardHtmlUrls(html, {
+				publicBaseUrl: opts.publicBaseUrl,
+				defaultPosterUrl: opts.defaultPosterUrl,
+			});
 
 			// Strip out redirect elements - crawlers only need meta tags, not redirects
 			// Remove meta refresh redirects
@@ -277,19 +333,22 @@ async function fetchCardFromAPI(routeInfo: { type: string, params: Record<string
 			} else {
 				throw fetchError;
 			}
-			return generateFallbackHTML(routeInfo);
+			return generateFallbackHTML(routeInfo, opts);
 		}
 
 	} catch (error) {
 		console.error('Error fetching card from API:', error instanceof Error ? error.message : 'Unknown error');
-		return generateFallbackHTML(routeInfo);
+		return generateFallbackHTML(routeInfo, opts);
 	}
 }
 
 /**
  * Generate fallback HTML when API is unavailable
  */
-function generateFallbackHTML(routeInfo: { type: string, params: Record<string, string> }): Response {
+function generateFallbackHTML(
+	routeInfo: { type: string, params: Record<string, string> },
+	opts: { publicBaseUrl: string; defaultPosterUrl: string }
+): Response {
 	let title = 'Ethereum Phunks Market';
 	let description = 'Ethereum Phunks Market 👍';
 
@@ -302,18 +361,18 @@ function generateFallbackHTML(routeInfo: { type: string, params: Record<string, 
 
 	<!-- Open Graph / Facebook -->
 	<meta property="og:type" content="website">
-	<meta property="og:url" content="https://etherphunks.eth.limo${getRouteUrl(routeInfo)}">
+	<meta property="og:url" content="${escapeHtml(opts.publicBaseUrl)}${getRouteUrl(routeInfo)}">
 	<meta property="og:title" content="${escapeHtml(title)}">
 	<meta property="og:description" content="${escapeHtml(description)}">
-	<meta property="og:image" content="https://etherphunks.eth.limo/poster.png">
+	<meta property="og:image" content="${escapeHtml(opts.defaultPosterUrl)}">
 	<meta property="og:site_name" content="EtherPhunks">
 
 	<!-- Twitter -->
 	<meta name="twitter:card" content="summary_large_image">
-	<meta name="twitter:url" content="https://etherphunks.eth.limo${getRouteUrl(routeInfo)}">
+	<meta name="twitter:url" content="${escapeHtml(opts.publicBaseUrl)}${getRouteUrl(routeInfo)}">
 	<meta name="twitter:title" content="${escapeHtml(title)}">
 	<meta name="twitter:description" content="${escapeHtml(description)}">
-	<meta name="twitter:image" content="https://etherphunks.eth.limo/poster.png">
+	<meta name="twitter:image" content="${escapeHtml(opts.defaultPosterUrl)}">
 	<meta name="twitter:site" content="@ethereumphunks">
 
 	<!-- Discord -->
@@ -330,6 +389,31 @@ function generateFallbackHTML(routeInfo: { type: string, params: Record<string, 
 			'x-frame-options': 'DENY',
 		},
 	});
+}
+
+function rewriteCardHtmlUrls(
+	html: string,
+	opts: { publicBaseUrl: string; defaultPosterUrl: string }
+): string {
+	const legacyBase = 'https://etherphunks.eth.limo';
+
+	let out = html;
+
+	// Rewrite only the canonical URL meta tags (avoid touching other content blindly).
+	out = out.replace(
+		/(<meta\s+property=["']og:url["'][^>]*content=["'])([^"']*)(["'][^>]*>)/gi,
+		(_m, pre: string, content: string, post: string) => `${pre}${content.replaceAll(legacyBase, opts.publicBaseUrl)}${post}`,
+	);
+	out = out.replace(
+		/(<meta\s+name=["']twitter:url["'][^>]*content=["'])([^"']*)(["'][^>]*>)/gi,
+		(_m, pre: string, content: string, post: string) => `${pre}${content.replaceAll(legacyBase, opts.publicBaseUrl)}${post}`,
+	);
+
+	// Some older outputs may include a hardcoded poster fallback; normalize it.
+	out = out.replaceAll(`${opts.publicBaseUrl}/poster.png`, opts.defaultPosterUrl);
+	out = out.replaceAll(`${legacyBase}/poster.png`, opts.defaultPosterUrl);
+
+	return out;
 }
 
 /**

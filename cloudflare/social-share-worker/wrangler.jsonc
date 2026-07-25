@@ -14,8 +14,26 @@
 	// If needed, handle static assets explicitly in worker code
 	"workers_dev": false,
 	"preview_urls": false,
+	"routes": [
+		{ "pattern": "ethereumphunks.com/*", "zone_name": "ethereumphunks.com" },
+		{ "pattern": "www.ethereumphunks.com/*", "zone_name": "ethereumphunks.com" }
+	],
 	"observability": {
 		"enabled": true
+	},
+	"vars": {
+		// Base URL the public links should resolve to in meta tags (og:url / twitter:url).
+		// This should be the domain people share (served by this Worker).
+		"PUBLIC_BASE_URL": "https://ethereumphunks.com",
+
+		// Where non-crawler browsers should be redirected.
+		"REDIRECT_BASE_URL": "https://etherphunks.eth.limo",
+
+		// The NestJS API/relay that serves /cards/* HTML.
+		"API_BASE_URL": "https://relay.ethereumphunks.com",
+
+		// Fallback poster used if API is unreachable or returns bad data.
+		"DEFAULT_POSTER_URL": "https://ethereumphunks.com/poster.png"
 	}
 	/**
 	 * Smart Placement

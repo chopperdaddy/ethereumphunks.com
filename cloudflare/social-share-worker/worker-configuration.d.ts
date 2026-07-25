@@ -8,7 +8,12 @@ declare namespace Cloudflare {
 	interface Env {
 	}
 }
-interface Env extends Cloudflare.Env {}
+interface Env extends Cloudflare.Env {
+	API_BASE_URL?: string;
+	PUBLIC_BASE_URL?: string;
+	REDIRECT_BASE_URL?: string;
+	DEFAULT_POSTER_URL?: string;
+}
 
 // Begin runtime types
 /*! *****************************************************************************
