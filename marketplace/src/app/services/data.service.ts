@@ -26,6 +26,14 @@ const supabaseUrl = environment.supabaseUrl;
 const supabaseKey = environment.supabaseKey;
 const supabase = createClient(supabaseUrl, supabaseKey);
 
+interface EthUsdPriceResponse {
+  date: string | null;
+  priceUsd: number | null;
+}
+
+const FLOORED_ETH_PRICE_URL = 'https://data.floored.app/gfy/shared/eth-price';
+const ETH_PRICE_REFRESH_INTERVAL = 30 * 60 * 1000;
+
 @Injectable({
   providedIn: 'root'
 })
@@ -51,8 +59,14 @@ export class DataService {
       }),
     ).subscribe();
 
-    // Fetch current ETH/USD price and store it
-    this.fetchUSDPrice().pipe(
+    // Fetch current ETH/USD price and refresh it on floored's update cadence
+    timer(0, ETH_PRICE_REFRESH_INTERVAL).pipe(
+      switchMap(() => this.fetchUSDPrice().pipe(
+        catchError((error) => {
+          console.error('Failed to fetch ETH/USD price from floored', error);
+          return EMPTY;
+        })
+      )),
       tap((res) => this.store.dispatch(dataStateActions.setUsd({ usd: res }))),
     ).subscribe();
   }
@@ -1114,13 +1128,16 @@ export class DataService {
    * Fetches current USD price of ETH
    */
   fetchUSDPrice(): Observable<number> {
-    return this.http.get('https://min-api.cryptocompare.com/data/price', {
-      params: {
-        fsym: 'ETH',
-        tsyms: 'USD'
-      }
-    }).pipe(
-      map((res: any) => res?.USD || 0)
+    return this.http.get<EthUsdPriceResponse>(FLOORED_ETH_PRICE_URL).pipe(
+      map((res) => {
+        const priceUsd = Number(res?.priceUsd);
+
+        if (!Number.isFinite(priceUsd) || priceUsd <= 0) {
+          throw new Error('floored returned an invalid ETH/USD price');
+        }
+
+        return priceUsd;
+      })
     );
   }
 
