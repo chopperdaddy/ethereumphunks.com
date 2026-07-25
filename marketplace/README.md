@@ -14,6 +14,32 @@ Run `ng generate component component-name` to generate a new component. You can 
 
 Run `ng build` to build the project. The build artifacts will be stored in the `dist/` directory.
 
+## Deploying to IPFS
+
+The deployment script connects to the private Kubo RPC API over Tailscale.
+Tailscale must be connected on the deploying machine.
+
+Copy `.env.example` to `.env`, then verify connectivity:
+
+```bash
+yarn ipfs:check
+```
+
+Build and deploy one environment:
+
+```bash
+yarn build:mainnet
+yarn deploy:ipfs:mainnet
+```
+
+Use `build:sepolia` and `deploy:ipfs:sepolia` for Sepolia, or run
+`yarn build && yarn deploy:ipfs` for both.
+
+Each environment gets a stable named pin. After a new deployment is pinned
+successfully, the script unpins only that environment's previous deployment.
+Set `IPFS_RETAIN_PREVIOUS=true` to keep older deployment pins intentionally.
+Unpinned blocks remain until Kubo's garbage collector removes them.
+
 ## Running unit tests
 
 Run `ng test` to execute the unit tests via [Karma](https://karma-runner.github.io).

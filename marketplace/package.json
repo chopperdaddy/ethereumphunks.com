@@ -17,6 +17,7 @@
     "run-built": "http-server-spa dist/etherphunks-market index.html 8000",
     "translate": "ng extract-i18n --output-path src/locale",
     "translate:json": "ng extract-i18n --output-path src/locale --format=json",
+    "ipfs:check": "node deploy-ipfs.js --check",
     "deploy:ipfs:sepolia": "node deploy-ipfs.js --configuration=sepolia",
     "deploy:ipfs:mainnet": "node deploy-ipfs.js --configuration=mainnet",
     "deploy:ipfs": "yarn deploy:ipfs:mainnet && yarn deploy:ipfs:sepolia"

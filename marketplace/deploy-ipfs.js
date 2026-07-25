@@ -1,6 +1,5 @@
 import { create } from 'ipfs-http-client';
 import { fileURLToPath } from 'url';
-import moment from 'moment';
 
 import fs from 'fs';
 import path from 'path';
@@ -15,23 +14,38 @@ const __dirname = path.dirname(__filename);
 
 // Parse command line arguments
 const args = process.argv.slice(2);
+const checkOnly = args.includes('--check');
 const configArg = args.find(arg => arg.startsWith('--configuration='));
 const config = configArg ? configArg.split('=')[1] : null;
 
-if (!config || !['mainnet', 'sepolia'].includes(config)) {
-  logError('Please specify a valid configuration: --configuration=mainnet or --configuration=sepolia');
+if (!checkOnly && (!config || !['mainnet', 'sepolia'].includes(config))) {
+  logError('Please specify --configuration=mainnet, --configuration=sepolia, or --check');
   process.exit(1);
 }
 
 // IPFS configuration
-const cloudNode = process.env.IPFS_CLOUD_NODE;
-const cloudToken = process.env.IPFS_CLOUD_TOKEN;
+const cloudNode = process.env.IPFS_CLOUD_NODE?.trim();
+const cloudToken = process.env.IPFS_CLOUD_TOKEN?.trim();
+const retainPrevious = process.env.IPFS_RETAIN_PREVIOUS === 'true';
+
+if (!cloudNode) {
+  logError('IPFS_CLOUD_NODE is not set');
+  process.exit(1);
+}
+
+try {
+  new URL(cloudNode);
+} catch {
+  logError(`IPFS_CLOUD_NODE is not a valid URL: ${cloudNode}`);
+  process.exit(1);
+}
 
 // Common IPFS options for consistent hashing
 const ipfsOptions = {
   cidVersion: 1,
   hashAlg: 'sha2-256',
-  wrapWithDirectory: true
+  wrapWithDirectory: true,
+  pin: true
 };
 
 // Retry configuration
@@ -78,18 +92,71 @@ function logUrl(url) {
   console.log(chalk.hex('#00BFFF').underline(url));
 }
 
+function createCloudClient() {
+  const options = {
+    url: cloudNode,
+    timeout: '5m'
+  };
+
+  if (cloudToken) {
+    options.headers = {
+      Authorization: `Bearer ${cloudToken}`
+    };
+  }
+
+  return create(options);
+}
+
+async function checkConnection(cloudClient) {
+  const version = await retryOperation(() => cloudClient.version());
+  logSuccess(`Connected to Kubo ${version.version} at ${cloudNode}`);
+}
+
+async function listDeploymentPins(cloudClient, pinName) {
+  const pins = [];
+
+  for await (const pin of cloudClient.pin.ls({
+    type: 'recursive',
+    name: pinName
+  })) {
+    pins.push(pin.cid.toString());
+  }
+
+  return pins;
+}
+
+async function removePreviousPins(cloudClient, previousPins, rootHash) {
+  if (retainPrevious) {
+    logInfo('IPFS_RETAIN_PREVIOUS=true; retaining prior deployment pins');
+    return;
+  }
+
+  for (const previousCid of previousPins) {
+    if (previousCid === rootHash) {
+      continue;
+    }
+
+    await retryOperation(() => cloudClient.pin.rm(previousCid));
+    logSuccess(`Unpinned previous deployment: ${previousCid}`);
+  }
+}
+
 async function deployToIPFS() {
   try {
-    // Create IPFS client with timeout configuration
-    const cloudClient = create({
-      url: cloudNode,
-      timeout: '5m',
-      headers: {
-        Authorization: `Bearer ${cloudToken}`
-      }
-    });
+    const cloudClient = createCloudClient();
+    await checkConnection(cloudClient);
+
+    if (checkOnly) {
+      return;
+    }
 
     logSection(`Deploying ${config.toUpperCase()} Build`);
+    const pinName = `etherphunks-market-${config}`;
+    const previousPins = await listDeploymentPins(cloudClient, pinName);
+
+    if (previousPins.length > 0) {
+      logInfo(`Found ${previousPins.length} previous ${config} deployment pin(s)`);
+    }
 
     // Generate timestamp for build output directory (format: MMDD)
     const timestamp = new Date().toLocaleDateString("en", {
@@ -139,11 +206,26 @@ async function deployToIPFS() {
           logSuccess(`IPFS Hash: ${rootHash}`);
         }
       }
+
+      if (!rootCid) {
+        throw new Error('Kubo did not return a wrapped root CID');
+      }
+
       logSuccess(`Pinned to remote node`);
     } catch (error) {
       logError(`Failed to upload to remote node: ${error.message}`);
       throw error;
     }
+
+    // Assign a stable name so the next deployment can retire only this
+    // environment's previous pin without touching unrelated content.
+    await cloudClient.pin.add(rootCid, {
+      recursive: true,
+      name: pinName
+    });
+    logSuccess(`Named pin: ${pinName}`);
+
+    await removePreviousPins(cloudClient, previousPins, rootHash);
 
     logSection(`${config.toUpperCase()} Deployment Complete`);
     logSuccess(`IPFS Hash: ${rootHash}`);
