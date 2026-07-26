@@ -51,7 +51,7 @@ export class DiscordService {
 
     // Get appropriate channel based on chain ID
     const chainId = this.configSvc.chain.chainIdL1;
-    const channel = this.client.channels.cache.get(chainId === 1 ? '1237157518938210304' : '1227387575723888722') as TextChannel;
+    const channel = this.client.channels.cache.get(chainId === 1 ? '1202621714127912994' : '1227387575723888722') as TextChannel;
 
     // Links inside a custom embed are not unfurled by Discord. Sending the
     // details URL as message content lets Discord crawl its Open Graph tags
