@@ -2,7 +2,7 @@ import { Inject, Injectable, Logger } from '@nestjs/common';
 
 import { NotificationMessage } from '../models/message.model';
 
-import { AttachmentBuilder, Client, codeBlock, EmbedBuilder, Events, GatewayIntentBits, TextChannel } from 'discord.js';
+import { Client, Events, GatewayIntentBits, TextChannel } from 'discord.js';
 
 import { AppConfigService } from '@/config/config.service';
 
@@ -53,18 +53,15 @@ export class DiscordService {
     const chainId = this.configSvc.chain.chainIdL1;
     const channel = this.client.channels.cache.get(chainId === 1 ? '1237157518938210304' : '1227387575723888722') as TextChannel;
 
-    // Build rich embed message with link - Discord will automatically fetch Open Graph image
-    const descriptionWithLink = `${data.title}\n\n${data.message}\n${data.link}`;
+    // Links inside a custom embed are not unfurled by Discord. Sending the
+    // details URL as message content lets Discord crawl its Open Graph tags
+    // and display the generated social share card.
+    const content = `**${data.title}**\n\n${data.message}\n\n${data.link}`;
 
-    const embed = new EmbedBuilder()
-      .setColor(0xC3FF00)
-      .setTitle(data.title)
-      .setURL(data.link)
-      .setDescription(descriptionWithLink)
-      .setFooter({ text: 'Be Phree. Be Phunky. 👍' });
-
-    // Send the message with embed - Discord will auto-generate preview from link
-    await channel.send({ embeds: [embed] });
+    await channel.send({
+      content,
+      allowedMentions: { parse: [] },
+    });
   }
 }
 
