@@ -1,5 +1,5 @@
 export const appConfig = {
-  version: '1.6.8',
+  version: '1.6.9',
   standalone: false,
   defaultCollection: '',
   agent: {
