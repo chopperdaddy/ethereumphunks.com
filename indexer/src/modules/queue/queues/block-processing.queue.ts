@@ -25,15 +25,35 @@ export class BlockProcessingQueue {
 
     const existingJob = await this.queue.getJob(jobId);
     if (existingJob) {
-      await existingJob.remove();
-      Logger.warn('⚠️', `Updated existing job [${jobId}]`);
+      const state = await existingJob.getState();
+
+      // Active/waiting jobs cannot be removed safely and should be reused.
+      if (['active', 'waiting', 'delayed', 'paused'].includes(state)) {
+        return;
+      }
+
+      try {
+        await existingJob.remove();
+        Logger.warn('⚠️', `Updated existing job [${jobId}]`);
+      } catch (error) {
+        Logger.warn(`Skipped removing existing job [${jobId}]: ${error?.message || error}`);
+        return;
+      }
     }
 
-    await this.queue.add(
-      'BlockNumQueue',
-      { blockNum, chain: this.configSvc.chain.chainIdL1, timestamp, retryCount: 0, maxRetries },
-      { jobId, removeOnComplete: true, removeOnFail: true }
-    );
+    try {
+      await this.queue.add(
+        'BlockNumQueue',
+        { blockNum, chain: this.configSvc.chain.chainIdL1, timestamp, retryCount: 0, maxRetries },
+        { jobId, removeOnComplete: true, removeOnFail: true }
+      );
+    } catch (error) {
+      const message = String(error?.message || error);
+      if (message.includes('jobId') || message.includes('JobId') || message.includes('already exists')) {
+        return;
+      }
+      throw error;
+    }
 
     if (blockNum % 1000 === 0) Logger.debug(`Added block ${blockNum} to queue`);
   }

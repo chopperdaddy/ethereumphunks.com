@@ -8,7 +8,7 @@
     "assets": [
       {
         "include": "_static/**/*",
-        "outDir": "dist",
+        "outDir": "dist/src",
         "watchAssets": true
       }
     ]
@@ -21,7 +21,7 @@
         "assets": [
           {
             "include": "_static/**/*",
-            "outDir": "dist/sepolia",
+            "outDir": "dist/sepolia/src",
             "watchAssets": true
           }
         ]
@@ -34,7 +34,7 @@
         "assets": [
           {
             "include": "_static/**/*",
-            "outDir": "dist/mainnet",
+            "outDir": "dist/mainnet/src",
             "watchAssets": true
           }
         ]
