@@ -154,10 +154,19 @@ export class MarketStateEffects {
           if (page === 0) return events;
           return [...acc, ...events];
         }, [] as Event[]),
+        map((events) => ({ events, marketSlug })),
       );
     }),
+    withLatestFrom(this.store.select(marketStateSelectors.selectMarketSlug)),
+    filter(([{ marketSlug }, currentMarketSlug]) => marketSlug === currentMarketSlug),
     // tap((events) => console.log('fetchEvents$', events)),
-    map((events) => dataStateActions.setEvents({ events })),
+    map(([{ events }]) => dataStateActions.setEvents({ events })),
+  ));
+
+  clearEventsOnMarketSlugChange$ = createEffect(() => this.actions$.pipe(
+    ofType(marketStateActions.setMarketSlug),
+    distinctUntilChanged((a, b) => a.marketSlug === b.marketSlug),
+    map(() => dataStateActions.setEvents({ events: [] })),
   ));
 
   setActionData$ = createEffect(() => this.actions$.pipe(

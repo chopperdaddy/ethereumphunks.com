@@ -5,7 +5,7 @@ import { Store } from '@ngrx/store';
 
 import { createClient, RealtimePostgresUpdatePayload, RealtimePostgresInsertPayload } from '@supabase/supabase-js'
 
-import { Observable, of, from, forkJoin, firstValueFrom, EMPTY, timer, merge, filter, share, catchError, debounceTime, expand, map, reduce, switchMap, tap, distinctUntilChanged, BehaviorSubject } from 'rxjs';
+import { Observable, of, from, forkJoin, firstValueFrom, EMPTY, timer, merge, filter, share, catchError, debounceTime, expand, map, reduce, switchMap, tap, distinctUntilChanged, BehaviorSubject, defer, retry } from 'rxjs';
 
 import { Web3Service } from '@/services/web3.service';
 import { AttributesService } from '@/services/attributes.service';
@@ -330,19 +330,21 @@ export class DataService {
     type: EventType,
     slug: string,
   ): Observable<Event[]> {
-    const query = supabase.rpc(
-      'fetch_events' + this.suffix,
-      {
-        p_limit: limit,
-        p_type: type && type !== 'All' ? type : null,
-        p_collection_slug: slug,
-        p_offset: offset,
-      }
-    );
-
-    const rpcFetch$ = from(query).pipe(
+    const rpcFetch$ = defer(() => from(
+      supabase.rpc(
+        'fetch_events' + this.suffix,
+        {
+          p_limit: limit,
+          p_type: type && type !== 'All' ? type : null,
+          p_collection_slug: slug,
+          p_offset: offset,
+        }
+      )
+    )).pipe(
       map((res: any) => {
-        const result = res.data?.map((tx: any) => {
+        if (res.error) throw res.error;
+
+        const result = (res.data || []).map((tx: any) => {
           let type = tx.type;
           if (type === 'transfer') {
             if (tx.to?.toLowerCase() === environment.bridgeAddress) type = 'bridgeOut';
@@ -351,6 +353,14 @@ export class DataService {
           return { ...tx, type, } as Event;
         });
         return result;
+      }),
+      retry({
+        count: 2,
+        delay: (_err, retryCount) => timer(retryCount * 500),
+      }),
+      catchError((err) => {
+        console.warn('Failed to fetch recent activity events', { slug, type, offset, err });
+        return of([]);
       }),
     );
 
@@ -842,13 +852,14 @@ export class DataService {
     };
 
     // Initial fetch
-    const rpcFetch$: Observable<Collection[]> = from(
+    const rpcFetch$: Observable<Collection[]> = defer(() => from(
       supabase.rpc(
         'fetch_collections_with_previews' + this.suffix,
         params
       )
-    ).pipe(
+    )).pipe(
       map((res: any) => {
+        if (res.error) throw res.error;
         if (!res.data) return [];
         return res.data
           .map((item: any) => ({
@@ -862,6 +873,14 @@ export class DataService {
             }
             return true;
           });
+      }),
+      retry({
+        count: 2,
+        delay: (_err, retryCount) => timer(retryCount * 500),
+      }),
+      catchError((err) => {
+        console.warn('Failed to fetch collections', { onlyDisabled, err });
+        return of([]);
       }),
       // tap((res) => console.log('fetchCollections', res)),
     );

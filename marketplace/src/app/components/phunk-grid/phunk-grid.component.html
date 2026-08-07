@@ -7,7 +7,7 @@
   @if (data) {
     @for (
       phunk of data;
-      track phunk.sha;
+      track phunk.event?.txId || phunk.sha;
       let i = $index;
     ) {
       @if (i < limit) {

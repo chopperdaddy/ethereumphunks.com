@@ -44,9 +44,20 @@ export const marketStateReducer: ActionReducer<MarketState, Action> = createRedu
     return setMarketType
   }),
   on(actions.setMarketSlug, (state, { marketSlug }) => {
+    if (state.marketSlug === marketSlug) return state;
+
     const setMarketSlug = {
       ...state,
-      marketSlug
+      marketSlug,
+      marketData: initialState.marketData,
+      owned: initialState.owned,
+      listings: initialState.listings,
+      bids: initialState.bids,
+      all: initialState.all,
+      auctions: initialState.auctions,
+      activeMarketRouteData: initialState.activeMarketRouteData,
+      selectedPhunks: initialState.selectedPhunks,
+      pagination: initialState.pagination,
     };
     return setMarketSlug;
   }),

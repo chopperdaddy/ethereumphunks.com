@@ -13,8 +13,9 @@ import * as dataStateActions from '@/state/data/data-state.actions';
 import * as dataStateSelectors from '@/state/data/data-state.selectors';
 
 import * as marketStateSelectors from '@/state/market/market-state.selectors';
+import * as marketStateActions from '@/state/market/market-state.actions';
 
-import { filter, map, switchMap, take, tap } from 'rxjs';
+import { distinctUntilChanged, filter, map, switchMap, take, withLatestFrom } from 'rxjs';
 
 @Injectable()
 export class DataStateEffects {
@@ -46,15 +47,18 @@ export class DataStateEffects {
   ));
 
   setActiveCollection$ = createEffect(() => this.actions$.pipe(
-    ofType(dataStateActions.setCollections),
-    switchMap((action) => {
-      return this.store.select(marketStateSelectors.selectMarketSlug).pipe(
-        filter(() => !!action.collections),
-        map((slug) => action.collections.find((c) => c.slug === slug)),
-        filter((activeCollection) => !!activeCollection),
-        map((activeCollection) => dataStateActions.setActiveCollection({ activeCollection: { ...activeCollection! } }))
-      );
-    }),
+    ofType(
+      dataStateActions.setCollections,
+      marketStateActions.setMarketSlug,
+    ),
+    withLatestFrom(
+      this.store.select(dataStateSelectors.selectCollections),
+      this.store.select(marketStateSelectors.selectMarketSlug),
+    ),
+    map(([, collections, slug]) => collections.find((c) => c.slug === slug)),
+    filter((activeCollection) => !!activeCollection),
+    distinctUntilChanged((a, b) => a?.slug === b?.slug),
+    map((activeCollection) => dataStateActions.setActiveCollection({ activeCollection: { ...activeCollection! } }))
   ));
 
   fetchLeaderboard$ = createEffect(() => this.actions$.pipe(
