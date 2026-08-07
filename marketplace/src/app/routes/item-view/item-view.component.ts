@@ -1,11 +1,11 @@
 import { CommonModule } from '@angular/common';
-import { Router, ActivatedRoute, RouterModule } from '@angular/router';
+import { ActivatedRoute, RouterModule } from '@angular/router';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { Component, signal, OnDestroy } from '@angular/core';
+import { Component, signal } from '@angular/core';
 
 import { Store } from '@ngrx/store';
 import { LazyLoadImageModule } from 'ng-lazyload-image';
-import { distinctUntilChanged, filter, fromEvent, map, shareReplay, switchMap, Subject, takeUntil, tap } from 'rxjs';
+import { combineLatest, distinctUntilChanged, filter, fromEvent, map, shareReplay, switchMap, tap } from 'rxjs';
 
 import { PhunkBillboardComponent } from '@/components/phunk-billboard/phunk-billboard.component';
 import { TxHistoryComponent } from '@/components/tx-history/tx-history.component';
@@ -19,21 +19,28 @@ import { ItemAttributesComponent } from './components/item-attributes/item-attri
 
 import { WalletAddressDirective } from '@/directives/wallet-address.directive';
 
-import { TraitRarityPipe } from '@/pipes/trait-rarity.pipe';
 import { QueryParamsPipe } from '@/pipes/query-params.pipe';
 
 import { DataService } from '@/services/data.service';
+import { AttributesService } from '@/services/attributes.service';
 
 import { GlobalState } from '@/models/global-state';
 import { Phunk } from '@/models/db';
 import { Collection } from '@/models/data.state';
+import { Attribute } from '@/models/attributes';
 
 import * as appStateSelectors from '@/state/app/app-state.selectors';
 
 import { environment } from '@environments/environment';
 import { setMarketSlug } from '@/state/market/market-state.actions';
 import { selectCollections } from '@/state/data/data-state.selectors';
-import { selectMarketSlug } from '@/state/market/market-state.selectors';
+
+interface FeaturedTrait {
+  attribute: Attribute;
+  value: string;
+  rarity: string;
+  filterable: boolean;
+}
 
 @Component({
   standalone: true,
@@ -55,7 +62,6 @@ import { selectMarketSlug } from '@/state/market/market-state.selectors';
     ItemActionsComponent,
     ItemAttributesComponent,
 
-    TraitRarityPipe,
     QueryParamsPipe,
   ],
   selector: 'app-phunk-item-view',
@@ -74,11 +80,16 @@ export class ItemViewComponent {
     shareReplay({ bufferSize: 1, refCount: true }),
   );
 
-  collection$ = this.store.select(selectMarketSlug).pipe(
-    filter((slug: string) => !!slug),
-    switchMap((slug: string) => this.store.select(selectCollections).pipe(
-      map((collections: Collection[]) => collections.find((collection: Collection) => collection.slug === slug)),
+  collection$ = this.singlePhunk$.pipe(
+    switchMap((phunk: Phunk) => this.store.select(selectCollections).pipe(
+      map((collections: Collection[]) => collections.find((collection: Collection) => collection.slug === phunk.slug)),
+      filter((collection: Collection | undefined): collection is Collection => !!collection),
     )),
+    shareReplay({ bufferSize: 1, refCount: true }),
+  );
+
+  featuredTrait$ = combineLatest([this.singlePhunk$, this.collection$]).pipe(
+    switchMap(([phunk, collection]: [Phunk, Collection]) => this.getFeaturedTrait(phunk, collection)),
   );
 
   name$ = this.singlePhunk$.pipe(
@@ -104,7 +115,46 @@ export class ItemViewComponent {
     private store: Store<GlobalState>,
     public route: ActivatedRoute,
     public dataSvc: DataService,
+    private attributesSvc: AttributesService,
   ) {}
+
+  private async getFeaturedTrait(phunk: Phunk, collection: Collection): Promise<FeaturedTrait | null> {
+    const attributes = phunk.attributes || [];
+    if (!attributes.length) return null;
+
+    const configuredMainTraits = collection?.mainTraits?.filter(Boolean) || [];
+    const mainTraits = configuredMainTraits.length ? configuredMainTraits : ['Name'];
+    const priorityAttribute = mainTraits
+      .map((trait: string) => this.findAttribute(attributes, trait))
+      .find((attribute: Attribute | undefined) => !!attribute);
+
+    const attribute = priorityAttribute || attributes.find((item: Attribute) => (
+      !collection?.ignoredTraitFilters?.includes(item.k) && this.hasAttributeValue(item)
+    ));
+
+    if (!attribute) return null;
+
+    const value = String(attribute.v);
+    const rarityData = await this.attributesSvc.getRarityData(phunk.slug);
+    const rarity = attribute.k === 'Name' ? '1' : rarityData?.[value]?.toString() || '';
+
+    return {
+      attribute,
+      value,
+      rarity,
+      filterable: !collection?.ignoredTraitFilters?.includes(attribute.k),
+    };
+  }
+
+  private findAttribute(attributes: Attribute[], trait: string): Attribute | undefined {
+    return attributes.find((attribute: Attribute) => (
+      attribute.k === trait && this.hasAttributeValue(attribute)
+    ));
+  }
+
+  private hasAttributeValue(attribute: Attribute): boolean {
+    return attribute.v !== null && attribute.v !== undefined && attribute.v !== '';
+  }
 
   expandBillboard(): void {
     this.billboardExpanded.update((expanded) => !expanded);

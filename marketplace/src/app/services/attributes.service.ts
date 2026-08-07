@@ -50,9 +50,15 @@ export class AttributesService {
             return phunks.map((item: Phunk) => {
               const originalAttributes = item.sha ? res![item.sha] : [];
               if (!originalAttributes) return item;
+              const mainTraits = collection?.mainTraits?.filter(Boolean) || [];
+              const promotedTrait = mainTraits.find((trait: string) =>
+                originalAttributes.some((attribute: Attribute) => (
+                  attribute.k === trait && attribute.v !== null && attribute.v !== undefined && attribute.v !== ''
+                ))
+              );
               const attributes = [...originalAttributes]?.sort((a: Attribute, b: Attribute) => {
-                if (a.k === collection?.mainTrait) return -1;
-                if (b.k === collection?.mainTrait) return 1;
+                if (a.k === promotedTrait) return -1;
+                if (b.k === promotedTrait) return 1;
                 return 0;
               });
               return { ...item, attributes };
@@ -151,7 +157,7 @@ export class AttributesService {
         // Skip Description and Name attributes since they aren't used for filtering
         if (collection?.ignoredTraitFilters?.includes(attribute.k)) return;
 
-        // Count traits (exclude mainTrait from trait counting, but still include it as a filter)
+        // Count traits (collection-level exclusions control what is counted)
         if (!collection?.ignoredTraitFiltersForCounts?.includes(attribute.k)) {
           traitCount++;
         }

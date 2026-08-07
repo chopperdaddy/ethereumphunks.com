@@ -50,15 +50,19 @@
               </div>
             }
 
-            @if (phunk.attributes && phunk.attributes.length) {
-              <h2 i18n>One of {{ ((phunk.attributes[0].v | traitRarity : phunk.slug) | async) || '----' }}
-                <a
-                  class="highlight"
-                  [routerLink]="['/', 'curated', phunk.slug, 'market', 'all']"
-                  [queryParams]="phunk.attributes[0] | queryParams">
-
-                  {{ phunk.attributes[0].v }}
-                </a> {{ phunk.collection?.name }}.
+            @if (featuredTrait$ | async; as featuredTrait) {
+              <h2 i18n>One of {{ featuredTrait.rarity || '----' }}
+                @if (featuredTrait.filterable) {
+                  <a
+                    class="highlight"
+                    [routerLink]="['/', 'curated', phunk.slug, 'market', 'all']"
+                    [queryParams]="featuredTrait.attribute | queryParams">
+                    {{ featuredTrait.value }}
+                  </a>
+                } @else {
+                  <span class="highlight">{{ featuredTrait.value }}</span>
+                }
+                {{ phunk.collection?.name }}.
               </h2>
             }
           </div>
